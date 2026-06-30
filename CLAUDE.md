@@ -6,7 +6,7 @@
 
 ## Project
 
-흩어진 **부교역자(부목사·전도사) 청빙 공고**를 한 곳에 모아, 구조화된 정보로 검색·비교하게 해주는 채용 플랫폼. 여러 신학교·교단 게시판에 분산된 공고를 사람이 수집하고 AI로 구조화해 노출한다. 타겟 교단: 예장합동·예장통합. **단순 "모아보기"를 넘어 구조화·비교·신뢰정보(재공고 추적)로 차별화한다.** 1인 개발자(백엔드) 사이드 프로젝트, 운영 리소스 최소화가 핵심 제약.
+흩어진 **부교역자(부목사·전도사) 청빙 공고**를 한 곳에 모아, 구조화된 정보로 검색·비교하게 해주는 채용 플랫폼. 여러 신학교·교단 게시판에 분산된 공고를 사람이 수집하고 AI로 구조화해 노출한다. 타겟 시장은 한국 개신교(기독교) 교역자 청빙 전반(특정 교단에 한정하지 않음)이며, 초기 집중 거점은 예장합동·통합이다. **단순 "모아보기"를 넘어 구조화·비교·신뢰정보(재공고 추적)로 차별화한다.** 1인 개발자(백엔드) 사이드 프로젝트, 운영 리소스 최소화가 핵심 제약.
 
 **Stack**: Next.js 16 (App Router, Cache Components) · React 19 · TypeScript strict · Tailwind v4 + shadcn/ui (Base UI) · Supabase (PostgreSQL + Auth) · Vercel · npm
 
@@ -79,15 +79,18 @@ src/
 │   │   │   ├── page.tsx           공고 목록 + 검색·필터 (목록 cache, 검색은 Suspense)
 │   │   │   ├── [id]/page.tsx      공고 상세 (generateMetadata + JobPosting JSON-LD)
 │   │   │   └── *-view.tsx         목록·필터 client component
-│   │   └── churches/[id]/page.tsx 교회 상세 (그 교회 공고 + 재공고 이력)
+│   │   ├── churches/[id]/page.tsx 교회 상세 (그 교회 공고 + 재공고 이력)
+│   │   ├── about/page.tsx         서비스 소개
+│   │   └── terms · privacy/       약관·개인정보처리방침
 │   ├── (authed)/                  로그인 필요 영역 (proxy 인증 게이트)
-│   │   ├── mypage/                구직자/교회 마이페이지
+│   │   ├── mypage/                교회=내 공고 관리 / 구직자=북마크
 │   │   ├── jobs/new/              교회 공고 등록 폼 + actions.ts
-│   │   └── claim/                 소유권 인수 + actions.ts
+│   │   ├── jobs/[id]/edit/        공고 수정 폼 + actions.ts
+│   │   └── claim/                 소유권 인수 + actions.ts (Phase 2)
 │   ├── admin/                     운영자 전용 — 수집 공고 등록·구조화 도구
 │   │   ├── jobs/                  공고 admin CRUD + actions.ts
 │   │   └── ingest/                텍스트 붙여넣기 → AI 구조화 → 폼 자동 채움
-│   ├── login/                     Supabase Auth 로그인
+│   ├── login/                     Supabase Auth (카카오 간편 + 이메일)
 │   ├── sitemap.ts · robots.ts     SEO
 │   └── layout.tsx                 root layout (폰트·메타·GA)
 ├── components/
