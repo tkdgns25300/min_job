@@ -8,8 +8,9 @@
 ## Phase 0: 프로젝트 셋업
 
 ### 환경·골격 (지금 가능)
-- [ ] 첫 커밋 후 `prod`(배포)·`dev`(작업) 브랜치 구성 ※현재 `main`에 커밋 0개 — 커밋·브랜치 구성은 사용자 지시 시
-- [ ] CLAUDE.md, docs/(SPEC·ROADMAP·DATA stub), README, .gitignore, .env.example
+- [x] `prod`(배포)·`dev`(작업) 브랜치 구성 + 원격 푸시 (완료)
+- [x] CLAUDE.md, docs/(SPEC·ROADMAP·DATA stub), .gitignore 생성 (완료)
+- [ ] README, .env.example
 - [ ] Next.js 16 + React 19 + Tailwind v4 + TypeScript strict 셋업
 - [ ] shadcn/ui (Base UI) + 기본 컴포넌트
 - [ ] Supabase 프로젝트 생성
@@ -42,7 +43,7 @@
 ### 1-2. 공고 열람 (구직자, 로그인 불필요)
 - [ ] 공고 목록 (`/jobs`) — 카드 + 캐시 서빙
 - [ ] 검색·필터 (교단·지역·직분·부서·고용형태·사례비) — dynamic + URL params
-- [ ] 정렬 (최신순·사례비·마감임박) + 프리미엄 상단 고정
+- [ ] 정렬 (최신순·사례비·마감임박) — 프리미엄·광고 우선 노출은 Phase 2
 - [ ] 공고 상세 (`/jobs/[id]`) — 구조화 정보 + 교회 홈페이지·유튜브 링크 + JobPosting JSON-LD
 - [ ] 교회 상세 (`/churches/[id]`) — 교회 정보 + 그 교회 공고
 

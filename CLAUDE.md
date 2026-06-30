@@ -81,7 +81,8 @@ src/
 │   │   │   └── *-view.tsx         목록·필터 client component
 │   │   ├── churches/[id]/page.tsx 교회 상세 (그 교회 공고 + 재공고 이력)
 │   │   ├── about/page.tsx         서비스 소개
-│   │   └── terms · privacy/       약관·개인정보처리방침
+│   │   ├── terms/page.tsx         이용약관
+│   │   └── privacy/page.tsx       개인정보처리방침
 │   ├── (authed)/                  로그인 필요 영역 (proxy 인증 게이트)
 │   │   ├── mypage/                교회=내 공고 관리 / 구직자=북마크
 │   │   ├── jobs/new/              교회 공고 등록 폼 + actions.ts
