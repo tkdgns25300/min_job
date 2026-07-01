@@ -12,7 +12,19 @@
     "status": "OPEN",
     "featuredTier": "HERO",
     "postedAt": "2026-06-30",
-    "deadline": "2026-07-20"
+    "deadline": "2026-07-20",
+    "workDays": "주일·수요",
+    "requirements": [
+      "신학대학원(M.Div) 졸업 또는 재학생",
+      "예장합동 소속(예정) 목사·전도사",
+      "주일 및 주중 사역 성실히 감당 가능자",
+      "다음세대를 향한 분명한 소명을 가진 분"
+    ],
+    "preferred": ["유초등부 사역 경험이 있는 분", "자가용 소지 및 운전 가능자"],
+    "requiredDocs": ["이력서", "자기소개서", "설교영상"],
+    "description": "다음세대 교육에 헌신할 유초등부 전도사를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 사역자를 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1001"
   },
   {
     "id": "job-002",
@@ -27,7 +39,14 @@
     "status": "OPEN",
     "featuredTier": "HERO",
     "postedAt": "2026-06-29",
-    "deadline": "2026-07-25"
+    "deadline": "2026-07-25",
+    "workDays": "주일·주중 5일",
+    "requirements": ["신학대학원 재학 또는 졸업", "영유아 사역에 은사 있는 자"],
+    "preferred": ["유아교육 관련 전공자 우대"],
+    "requiredDocs": ["이력서", "자기소개서"],
+    "description": "영유아부를 따뜻하게 섬길 사역자를 찾습니다. 부모와 소통하며 다음세대의 첫 신앙을 세워갈 전도사를 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1002"
   },
   {
     "id": "job-003",
@@ -42,7 +61,14 @@
     "status": "OPEN",
     "featuredTier": "PREMIUM",
     "postedAt": "2026-06-28",
-    "deadline": null
+    "deadline": null,
+    "workDays": "주일·금요",
+    "requirements": ["신학대학원 재학 이상", "청소년 사역 경험자"],
+    "preferred": ["수련회 기획 경험", "악기 연주 가능자"],
+    "requiredDocs": ["이력서", "자기소개서", "설교 영상 링크"],
+    "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 전도사를 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1003"
   },
   {
     "id": "job-004",
@@ -57,7 +83,14 @@
     "status": "OPEN",
     "featuredTier": "PREMIUM",
     "postedAt": "2026-06-27",
-    "deadline": "2026-07-31"
+    "deadline": "2026-07-31",
+    "workDays": "주 6일 상근",
+    "requirements": ["예장합동 목사안수자", "교구 목회 경험 3년 이상"],
+    "preferred": ["심방 및 소그룹 인도 경험자"],
+    "requiredDocs": ["이력서", "자기소개서", "목사안수증 사본"],
+    "description": "성도들을 돌보고 교구를 섬길 부목사를 모십니다. 심방과 소그룹 목회에 헌신할 동역자를 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1004"
   },
   {
     "id": "job-005",
@@ -72,7 +105,14 @@
     "status": "OPEN",
     "featuredTier": "NONE",
     "postedAt": "2026-06-26",
-    "deadline": "2026-07-15"
+    "deadline": "2026-07-15",
+    "workDays": "주일·금요 (주 2~3일)",
+    "requirements": ["신학대학원 재학생", "청년 사역에 관심 있는 자"],
+    "preferred": ["찬양 인도 가능자"],
+    "requiredDocs": ["이력서", "자기소개서"],
+    "description": "개척교회 청년부를 함께 세워갈 파트 전도사를 청빙합니다. 작은 공동체지만 뜨겁게 헌신할 사역자를 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1005"
   },
   {
     "id": "job-006",
@@ -87,7 +127,14 @@
     "status": "OPEN",
     "featuredTier": "PREMIUM",
     "postedAt": "2026-06-30",
-    "deadline": "2026-07-18"
+    "deadline": "2026-07-18",
+    "workDays": "주일·주중 5일",
+    "requirements": ["신학대학원 졸업(예정)", "청년부 사역 경험자"],
+    "preferred": ["제자훈련 인도 경험 우대"],
+    "requiredDocs": ["이력서", "자기소개서", "신앙고백서"],
+    "description": "청년부 부흥을 함께 이끌 전도사를 청빙합니다. 청년들과 눈높이를 맞추고 말씀으로 세워갈 동역자를 찾습니다.",
+    "source": "CHURCH",
+    "sourceUrl": null
   },
   {
     "id": "job-007",
@@ -102,7 +149,14 @@
     "status": "OPEN",
     "featuredTier": "NONE",
     "postedAt": "2026-06-25",
-    "deadline": null
+    "deadline": null,
+    "workDays": "주일·주중 5일",
+    "requirements": ["신학대학원 재학 이상", "찬양 인도 및 팀 운영 가능자"],
+    "preferred": ["건반/기타 연주 가능자", "음향 이해자"],
+    "requiredDocs": ["이력서", "자기소개서", "찬양 인도 영상"],
+    "description": "예배와 찬양 사역을 섬길 전도사를 청빙합니다. 찬양팀을 세우고 예배를 준비할 사역자를 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1007"
   },
   {
     "id": "job-008",
@@ -117,7 +171,14 @@
     "status": "OPEN",
     "featuredTier": "NONE",
     "postedAt": "2026-06-24",
-    "deadline": "2026-07-22"
+    "deadline": "2026-07-22",
+    "workDays": "주일·주중 5일",
+    "requirements": ["신학대학원 재학 이상", "중고등부 사역 경험자"],
+    "preferred": ["학교 사역·멘토링 경험 우대"],
+    "requiredDocs": ["이력서", "자기소개서"],
+    "description": "중고등부 학생들을 말씀으로 양육할 전도사를 청빙합니다. 이전 사역자의 임기 만료로 재청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1008"
   },
   {
     "id": "job-009",
@@ -132,7 +193,14 @@
     "status": "OPEN",
     "featuredTier": "NONE",
     "postedAt": "2026-06-23",
-    "deadline": "2026-07-10"
+    "deadline": "2026-07-10",
+    "workDays": "주중 4일·주일",
+    "requirements": ["신학대학원 재학 이상", "문서 작업 및 행정 가능자"],
+    "preferred": ["교회 행정 경험자", "엑셀 활용 가능자"],
+    "requiredDocs": ["이력서", "자기소개서"],
+    "description": "교회 행정을 담당하며 부서 사역도 병행할 전도사를 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1009"
   },
   {
     "id": "job-010",
@@ -147,7 +215,14 @@
     "status": "OPEN",
     "featuredTier": "NONE",
     "postedAt": "2026-06-22",
-    "deadline": "2026-07-12"
+    "deadline": "2026-07-12",
+    "workDays": "주일·부서 모임 (주 2일)",
+    "requirements": ["신학대학원 재학생", "유초등부 사역 가능자"],
+    "preferred": ["교회학교 교사 경험자"],
+    "requiredDocs": ["이력서", "자기소개서"],
+    "description": "유초등부를 섬길 파트 전도사를 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1010"
   },
   {
     "id": "job-011",
@@ -162,7 +237,14 @@
     "status": "OPEN",
     "featuredTier": "NONE",
     "postedAt": "2026-06-21",
-    "deadline": "2026-07-28"
+    "deadline": "2026-07-28",
+    "workDays": "주 6일 상근",
+    "requirements": ["목사안수자", "심방·교구 목회 경험자"],
+    "preferred": ["장년 성경공부 인도 경험 우대"],
+    "requiredDocs": ["이력서", "자기소개서", "목사안수증 사본"],
+    "description": "교구와 심방을 전담할 부목사를 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1011"
   },
   {
     "id": "job-012",
@@ -177,7 +259,14 @@
     "status": "OPEN",
     "featuredTier": "NONE",
     "postedAt": "2026-06-20",
-    "deadline": null
+    "deadline": null,
+    "workDays": "협의",
+    "requirements": ["예장통합 강도사 고시 합격자"],
+    "preferred": ["개척교회 사역에 헌신할 수 있는 자"],
+    "requiredDocs": ["이력서", "자기소개서"],
+    "description": "함께 교회를 세워갈 강도사를 청빙합니다. 사역 범위와 대우는 면담 후 협의합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1012"
   },
   {
     "id": "job-013",
@@ -192,14 +281,21 @@
     "status": "CLOSED",
     "featuredTier": "NONE",
     "postedAt": "2026-05-30",
-    "deadline": "2026-06-15"
+    "deadline": "2026-06-15",
+    "workDays": "주일·주중 5일",
+    "requirements": ["신학대학원 졸업", "청년 사역 경험자"],
+    "preferred": ["제자훈련 경험자"],
+    "requiredDocs": ["이력서", "자기소개서"],
+    "description": "청년부 전도사를 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1013"
   },
   {
     "id": "job-014",
     "churchId": "ch-banseok",
-    "title": "유초등부 전도사 청빙",
+    "title": "중고등부 전도사 청빙",
     "position": "EVANGELIST",
-    "department": "CHILDREN",
+    "department": "YOUTH",
     "employmentType": "FULL_TIME",
     "stipendMin": 190,
     "stipendMax": 190,
@@ -207,6 +303,13 @@
     "status": "CLOSED",
     "featuredTier": "NONE",
     "postedAt": "2026-05-20",
-    "deadline": "2026-06-10"
+    "deadline": "2026-06-10",
+    "workDays": "주일·주중 5일",
+    "requirements": ["신학대학원 재학 이상", "중고등부 사역 경험자"],
+    "preferred": ["멘토링 경험자"],
+    "requiredDocs": ["이력서", "자기소개서"],
+    "description": "중고등부 전도사를 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://board.example-denom.org/recruit/1014"
   }
 ]

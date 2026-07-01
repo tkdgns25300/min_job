@@ -6,6 +6,7 @@ import type {
   EmploymentType,
   FeaturedTier,
   ChurchSize,
+  JobSource,
 } from "@/constants/domain";
 
 export type JobStatus = "OPEN" | "CLOSED";
@@ -27,8 +28,7 @@ export interface Church {
   youtubeUrl: string | null;
 }
 
-// 공고 — 스키마는 페이지 작업하며 확장한다.
-// (현재: 홈·목록에 필요한 필드. 상세/등록에서 workDays·제출서류·자격요건·본문 등 추가 예정)
+// 공고 — 스키마는 페이지 작업하며 확장한다. (상세 페이지에서 아래 상세 필드 확정)
 export interface Job {
   id: string;
   churchId: string;
@@ -43,6 +43,20 @@ export interface Job {
   featuredTier: FeaturedTier;
   postedAt: string; // "YYYY-MM-DD"
   deadline: string | null; // "YYYY-MM-DD", null = 상시모집
+  // --- 상세 필드 ---
+  workDays: string | null; // 출근 요일·시간 (자유 텍스트: "주일·수요" 등)
+  requirements: string[]; // 자격요건 (항목 리스트)
+  preferred: string[]; // 우대사항 (항목 리스트)
+  requiredDocs: string[]; // 제출 서류 (["이력서", "자기소개서", ...])
+  description: string | null; // 공고 본문 (운영자 요약 or 교회 작성 — 원문 통째 복제 X)
+  source: JobSource; // 출처 — 운영자 등록 / 교회 직접 등록 (owner nullable 가드레일)
+  sourceUrl: string | null; // 원문 링크 (운영자 수집 공고). 재호스팅 대신 링크로 안내
+}
+
+// 공고 상세 페이지용 — 공고 + 소속 교회 전체
+export interface JobDetail {
+  job: Job;
+  church: Church;
 }
 
 // 공고 카드 표시용 projection (job + church 조인 결과)

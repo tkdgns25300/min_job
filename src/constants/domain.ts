@@ -85,3 +85,10 @@ export type ChurchSize = keyof typeof CHURCH_SIZES;
 
 // 규모 미상 필터 키 (church.size = null인 공고를 필터에서 선택하기 위한 값)
 export const UNKNOWN_SIZE = "UNKNOWN";
+
+// 공고 출처 — 운영자가 수집·등록 / 교회가 직접 등록 (공고 owner nullable 가드레일)
+export const JOB_SOURCES = {
+  OPERATOR: "운영자 등록",
+  CHURCH: "교회 직접 등록",
+} as const;
+export type JobSource = keyof typeof JOB_SOURCES;

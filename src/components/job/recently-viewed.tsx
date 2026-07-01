@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { STORAGE_KEYS } from "@/constants/storage";
 
 // localStorage 기반 최근 본 공고 (로그인 불필요). 공고 상세에서 기록 예정 — 지금은 비어 있음.
 export function RecentlyViewed() {
@@ -8,7 +9,7 @@ export function RecentlyViewed() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("minjob:recentJobs");
+      const raw = localStorage.getItem(STORAGE_KEYS.recentJobs);
       // 마운트 시 클라이언트 전용 localStorage 읽기 (SSR엔 없음) — effect에서 setState가 불가피
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setItems(JSON.parse(raw));

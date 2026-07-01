@@ -145,7 +145,9 @@ supabase/migrations/               DB 마이그레이션 SQL
 - 입력은 항상 "사람이 붙여넣은 텍스트"다. 외부 사이트를 자동으로 가져오는 코드를 여기 두지 않는다 (가드레일).
 
 ### View (`app/**/*-view.tsx`)
-- `"use client"`. 인터랙티브 UI(필터·검색·폼)만. prop으로 데이터 받음, 직접 fetch X.
+- 페이지의 **프레젠테이션 뷰**. `page.tsx`는 데이터·조합만, 화면 구성은 여기로 위임.
+- **기본은 서버 컴포넌트.** 훅·상태·이벤트가 필요할 때만 `"use client"`, 그 경우에도 인터랙션 단위를 **작은 client 컴포넌트로 분리**한다(예: `JobActions`) — 클라이언트 경계를 좁게.
+- prop으로 데이터 받음, 직접 fetch X.
 
 ### Component (`components/**`)
 - 도메인 로직 없음. 재사용 UI만. `ui/` = shadcn 원본.

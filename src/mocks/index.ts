@@ -1,6 +1,7 @@
 import churchesData from "./churches.json";
 import jobsData from "./jobs.json";
-import type { Church, Job, JobCard } from "@/types/domain";
+import type { Church, Job, JobCard, JobDetail } from "@/types/domain";
+import { getRepostInfo, type RepostInfo } from "@/lib/repost-tracking";
 
 // mock 데이터 — 페이지를 만들며 채워나간다. 모든 페이지 완료 시 이 형태가 최종 스키마.
 // (실제 DB 연동 시 lib/queries/*.ts + Supabase로 대체)
@@ -51,6 +52,42 @@ export function getRecentJobs(limit = 6): JobCard[] {
 /** 전체 모집 중 공고 카드 (목록 페이지 클라이언트 필터용) */
 export function getAllJobCards(): JobCard[] {
   return openJobs.map(toCard);
+}
+
+/** 공고 상세 — 공고 + 소속 교회 (없으면 null → notFound) */
+export function getJobDetail(id: string): JobDetail | null {
+  const job = jobs.find((j) => j.id === id);
+  if (!job) return null;
+  const church = churchById.get(job.churchId);
+  if (!church) return null;
+  return { job, church };
+}
+
+/** 재공고 정보 — 같은 교회·같은 자리의 반복 공고 집계 (마감 공고 포함) */
+export function getRepost(id: string): RepostInfo | null {
+  const job = jobs.find((j) => j.id === id);
+  if (!job) return null;
+  return getRepostInfo(job, jobs);
+}
+
+/** 이 교회의 다른 모집 중 공고 (현재 공고 제외) */
+export function getChurchOtherJobs(churchId: string, excludeId: string): JobCard[] {
+  return openJobs.filter((j) => j.churchId === churchId && j.id !== excludeId).map(toCard);
+}
+
+/** 비슷한 공고 — 같은 부서 우선·같은 지역 보충 (현재 공고·같은 교회 제외) */
+export function getSimilarJobs(id: string, limit = 4): JobCard[] {
+  const base = jobs.find((j) => j.id === id);
+  if (!base) return [];
+  const baseChurch = churchById.get(base.churchId);
+  const pool = openJobs.filter((j) => j.id !== id && j.churchId !== base.churchId);
+
+  const byDept = pool.filter((j) => base.department !== null && j.department === base.department);
+  const byRegion = pool.filter(
+    (j) =>
+      !byDept.includes(j) && baseChurch != null && churchById.get(j.churchId)?.region === baseChurch.region,
+  );
+  return [...byDept, ...byRegion].slice(0, limit).map(toCard);
 }
 
 /** 홈 스탯 — 모집 중 수 / 최근 7일 새 공고 수 */
