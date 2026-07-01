@@ -79,7 +79,10 @@ src/
 │   │   │   ├── page.tsx           공고 목록 + 검색·필터 (목록 cache, 검색은 Suspense)
 │   │   │   ├── [id]/page.tsx      공고 상세 (generateMetadata + JobPosting JSON-LD)
 │   │   │   └── *-view.tsx         목록·필터 client component
-│   │   ├── churches/[id]/page.tsx 교회 상세 (그 교회 공고 + 재공고 이력)
+│   │   ├── churches/
+│   │   │   ├── page.tsx           교회 목록
+│   │   │   └── [id]/page.tsx      교회 상세 (그 교회 공고 + 재공고 이력)
+│   │   ├── pricing/page.tsx       광고·노출 안내 (요금)
 │   │   ├── about/page.tsx         서비스 소개
 │   │   ├── terms/page.tsx         이용약관
 │   │   └── privacy/page.tsx       개인정보처리방침
