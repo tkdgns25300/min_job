@@ -1,0 +1,74 @@
+[
+  {
+    "id": "ch-saesomang",
+    "name": "새소망교회",
+    "denomination": "HAPDONG",
+    "region": "GYEONGGI",
+    "city": "성남",
+    "homepageUrl": "https://example.com/saesomang",
+    "youtubeUrl": "https://youtube.com/@saesomang"
+  },
+  {
+    "id": "ch-eunhyero",
+    "name": "은혜로교회",
+    "denomination": "TONGHAP",
+    "region": "SEOUL",
+    "city": "강북",
+    "homepageUrl": "https://example.com/eunhyero",
+    "youtubeUrl": null
+  },
+  {
+    "id": "ch-hanbit",
+    "name": "한빛교회",
+    "denomination": "HAPDONG",
+    "region": "GYEONGGI",
+    "city": "용인",
+    "homepageUrl": "https://example.com/hanbit",
+    "youtubeUrl": "https://youtube.com/@hanbit"
+  },
+  {
+    "id": "ch-juane",
+    "name": "주안에교회",
+    "denomination": "TONGHAP",
+    "region": "INCHEON",
+    "city": "부평",
+    "homepageUrl": "https://example.com/juane",
+    "youtubeUrl": null
+  },
+  {
+    "id": "ch-sarangbit",
+    "name": "사랑의빛교회",
+    "denomination": "HAPDONG",
+    "region": "SEOUL",
+    "city": "송파",
+    "homepageUrl": "https://example.com/sarangbit",
+    "youtubeUrl": "https://youtube.com/@sarangbit"
+  },
+  {
+    "id": "ch-saebyeok",
+    "name": "새벽빛교회",
+    "denomination": "BAEKSEOK",
+    "region": "GYEONGGI",
+    "city": "수원",
+    "homepageUrl": "https://example.com/saebyeok",
+    "youtubeUrl": null
+  },
+  {
+    "id": "ch-bitsogeum",
+    "name": "빛과소금교회",
+    "denomination": "GOSIN",
+    "region": "BUSAN",
+    "city": "해운대",
+    "homepageUrl": "https://example.com/bitsogeum",
+    "youtubeUrl": null
+  },
+  {
+    "id": "ch-banseok",
+    "name": "반석교회",
+    "denomination": "TONGHAP",
+    "region": "DAEGU",
+    "city": "수성",
+    "homepageUrl": "https://example.com/banseok",
+    "youtubeUrl": "https://youtube.com/@banseok"
+  }
+]
