@@ -19,6 +19,7 @@ function toCard(job: Job): JobCard {
       denomination: church?.denomination ?? "ETC",
       region: church?.region ?? "SEOUL",
       city: church?.city ?? null,
+      size: church?.size ?? null,
     },
     position: job.position,
     department: job.department,
@@ -45,6 +46,11 @@ export function getRecentJobs(limit = 6): JobCard[] {
     .sort((a, b) => b.postedAt.localeCompare(a.postedAt))
     .slice(0, limit)
     .map(toCard);
+}
+
+/** 전체 모집 중 공고 카드 (목록 페이지 클라이언트 필터용) */
+export function getAllJobCards(): JobCard[] {
+  return openJobs.map(toCard);
 }
 
 /** 홈 스탯 — 모집 중 수 / 최근 7일 새 공고 수 */

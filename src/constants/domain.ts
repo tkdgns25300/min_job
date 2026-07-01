@@ -73,3 +73,15 @@ export const FEATURED_TIERS = {
   HERO: "대표광고",
 } as const;
 export type FeaturedTier = keyof typeof FEATURED_TIERS;
+
+// 교회 규모 (출석 성도 기준, 대략치). 미상은 church.size = null.
+export const CHURCH_SIZES = {
+  PLANT: "개척", // 개척·미자립 (설립 초기, 대개 ~50명)
+  SMALL: "소형", // ~300명
+  MEDIUM: "중형", // 300~1,000명
+  LARGE: "대형", // 1,000명 이상
+} as const;
+export type ChurchSize = keyof typeof CHURCH_SIZES;
+
+// 규모 미상 필터 키 (church.size = null인 공고를 필터에서 선택하기 위한 값)
+export const UNKNOWN_SIZE = "UNKNOWN";

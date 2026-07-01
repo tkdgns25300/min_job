@@ -5,6 +5,7 @@
     "denomination": "HAPDONG",
     "region": "GYEONGGI",
     "city": "성남",
+    "size": "MEDIUM",
     "homepageUrl": "https://example.com/saesomang",
     "youtubeUrl": "https://youtube.com/@saesomang"
   },
@@ -14,6 +15,7 @@
     "denomination": "TONGHAP",
     "region": "SEOUL",
     "city": "강북",
+    "size": "LARGE",
     "homepageUrl": "https://example.com/eunhyero",
     "youtubeUrl": null
   },
@@ -23,6 +25,7 @@
     "denomination": "HAPDONG",
     "region": "GYEONGGI",
     "city": "용인",
+    "size": "SMALL",
     "homepageUrl": "https://example.com/hanbit",
     "youtubeUrl": "https://youtube.com/@hanbit"
   },
@@ -32,6 +35,7 @@
     "denomination": "TONGHAP",
     "region": "INCHEON",
     "city": "부평",
+    "size": "PLANT",
     "homepageUrl": "https://example.com/juane",
     "youtubeUrl": null
   },
@@ -41,6 +45,7 @@
     "denomination": "HAPDONG",
     "region": "SEOUL",
     "city": "송파",
+    "size": "LARGE",
     "homepageUrl": "https://example.com/sarangbit",
     "youtubeUrl": "https://youtube.com/@sarangbit"
   },
@@ -50,6 +55,7 @@
     "denomination": "BAEKSEOK",
     "region": "GYEONGGI",
     "city": "수원",
+    "size": "MEDIUM",
     "homepageUrl": "https://example.com/saebyeok",
     "youtubeUrl": null
   },
@@ -59,6 +65,7 @@
     "denomination": "GOSIN",
     "region": "BUSAN",
     "city": "해운대",
+    "size": null,
     "homepageUrl": "https://example.com/bitsogeum",
     "youtubeUrl": null
   },
@@ -68,6 +75,7 @@
     "denomination": "TONGHAP",
     "region": "DAEGU",
     "city": "수성",
+    "size": "SMALL",
     "homepageUrl": "https://example.com/banseok",
     "youtubeUrl": "https://youtube.com/@banseok"
   }

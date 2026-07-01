@@ -7,6 +7,7 @@ import {
   POSITIONS,
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
+  CHURCH_SIZES,
 } from "@/constants/domain";
 import type { JobCard as JobCardData } from "@/types/domain";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,12 @@ export function JobCard({ job }: { job: JobCardData }) {
           <span>{DENOMINATIONS[job.church.denomination]}</span>
           <span className="text-border">·</span>
           <span>{location}</span>
+          {job.church.size && (
+            <>
+              <span className="text-border">·</span>
+              <span>{CHURCH_SIZES[job.church.size]}</span>
+            </>
+          )}
           {(isAd || isPremium) && (
             <Badge variant={isAd ? "default" : "secondary"} className="ml-auto shrink-0">
               {isAd ? "대표광고" : "프리미엄"}
