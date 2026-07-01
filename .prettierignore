@@ -1,0 +1,19 @@
+# build artifacts
+.next
+node_modules
+build
+out
+
+# generated / lockfiles
+package-lock.json
+next-env.d.ts
+
+# assets
+public
+
+# hand-formatted docs (프리티어가 손대지 않게)
+*.md
+docs
+
+# local
+.claude
