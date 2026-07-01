@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { JobDetailView } from "./job-detail-view";
 import { RecordRecentlyViewed } from "@/components/job/record-recently-viewed";
-import { getChurchOtherJobs, getJobDetail, getRepost, getSimilarJobs } from "@/mocks";
+import { getChurchOpenJobs, getJobDetail, getRepost, getSimilarJobs } from "@/mocks";
 import { jobPostingJsonLd, jobRoleSummary } from "@/lib/seo";
 
 type Params = { params: Promise<{ id: string }> };
@@ -37,7 +37,7 @@ async function JobDetailContent({ params }: Params) {
   if (!detail) notFound();
 
   const repost = getRepost(id);
-  const churchJobs = getChurchOtherJobs(detail.church.id, id);
+  const churchJobs = getChurchOpenJobs(detail.church.id, id);
   const similar = getSimilarJobs(id);
 
   return (

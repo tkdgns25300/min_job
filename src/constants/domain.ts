@@ -92,3 +92,13 @@ export const JOB_SOURCES = {
   CHURCH: "교회 직접 등록",
 } as const;
 export type JobSource = keyof typeof JOB_SOURCES;
+
+// 교회 채널(홈페이지·SNS) — 노출 순서 = 정의 순서(홈페이지·유튜브 우선). 채널 추가는 여기에만.
+export const CHURCH_CHANNELS = {
+  HOMEPAGE: "홈페이지",
+  YOUTUBE: "유튜브",
+  INSTAGRAM: "인스타그램",
+  FACEBOOK: "페이스북",
+  BAND: "밴드",
+} as const;
+export type ChurchChannel = keyof typeof CHURCH_CHANNELS;

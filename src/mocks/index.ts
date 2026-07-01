@@ -1,7 +1,7 @@
 import churchesData from "./churches.json";
 import jobsData from "./jobs.json";
 import type { Church, Job, JobCard, JobDetail } from "@/types/domain";
-import { getRepostInfo, type RepostInfo } from "@/lib/repost-tracking";
+import { getRepostInfo, groupByRole, type RepostInfo, type RoleHistory } from "@/lib/repost-tracking";
 
 // mock 데이터 — 페이지를 만들며 채워나간다. 모든 페이지 완료 시 이 형태가 최종 스키마.
 // (실제 DB 연동 시 lib/queries/*.ts + Supabase로 대체)
@@ -70,9 +70,21 @@ export function getRepost(id: string): RepostInfo | null {
   return getRepostInfo(job, jobs);
 }
 
-/** 이 교회의 다른 모집 중 공고 (현재 공고 제외) */
-export function getChurchOtherJobs(churchId: string, excludeId: string): JobCard[] {
-  return openJobs.filter((j) => j.churchId === churchId && j.id !== excludeId).map(toCard);
+/** 교회 단건 (없으면 null → notFound) */
+export function getChurch(id: string): Church | null {
+  return churchById.get(id) ?? null;
+}
+
+/** 교회의 현재 모집 중 공고 (excludeId 지정 시 해당 공고 제외 — 공고 상세의 "이 교회 다른 모집") */
+export function getChurchOpenJobs(churchId: string, excludeId?: string): JobCard[] {
+  return openJobs
+    .filter((j) => j.churchId === churchId && j.id !== excludeId)
+    .map(toCard);
+}
+
+/** 교회의 공고 이력 — 자리별 그룹(현재+지난, 재공고 집계). 교회 상세 차별점 */
+export function getChurchTimeline(churchId: string): RoleHistory[] {
+  return groupByRole(jobs.filter((j) => j.churchId === churchId));
 }
 
 /** 비슷한 공고 — 같은 부서 우선·같은 지역 보충 (현재 공고·같은 교회 제외) */

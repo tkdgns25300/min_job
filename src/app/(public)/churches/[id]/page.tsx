@@ -1,12 +1,57 @@
-import { Placeholder } from "@/components/layout/placeholder";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
+import { ChurchDetailView } from "./church-detail-view";
+import { churchMetaLine } from "@/lib/format";
+import { getChurch, getChurchOpenJobs, getChurchTimeline } from "@/mocks";
 
-// 스캐폴드: 정적 레이아웃만. 실제 데이터는 Phase 1에서 params + 'use cache'로 구현.
-export default function ChurchDetailPage() {
+type Params = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { id } = await params;
+  const church = getChurch(id);
+  if (!church) return { title: "교회를 찾을 수 없습니다 | 민잡" };
+
+  const openCount = getChurchOpenJobs(id).length;
+  const description = `${church.name} (${churchMetaLine(church)}) 교역자 청빙${
+    openCount > 0 ? ` · 현재 ${openCount}건 모집 중` : ""
+  }. 교회 정보·채널·재공고 이력을 민잡에서 확인하세요.`;
+  return {
+    title: `${church.name} 청빙 | 민잡`,
+    description,
+    openGraph: { title: `${church.name} 청빙`, description, type: "profile" },
+  };
+}
+
+// 교회 상세도 빌드타임 prerender 안 함 — params 의존 동적 렌더를 Suspense로 감싼다.
+export default function ChurchDetailPage({ params }: Params) {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8">
-      <Placeholder label="교회 기본 정보 (교회명 · 교단 · 지역 · 홈페이지 · 유튜브)" />
-      <h1 className="text-2xl font-bold">교회 상세</h1>
-      <Placeholder label="이 교회의 공고 목록 영역 (재공고 패턴 가시화)" className="min-h-64" />
+    <Suspense fallback={<ChurchDetailSkeleton />}>
+      <ChurchDetailContent params={params} />
+    </Suspense>
+  );
+}
+
+async function ChurchDetailContent({ params }: Params) {
+  const { id } = await params;
+  const church = getChurch(id);
+  if (!church) notFound();
+
+  const openJobs = getChurchOpenJobs(id);
+  const timeline = getChurchTimeline(id);
+
+  return <ChurchDetailView church={church} openJobs={openJobs} timeline={timeline} />;
+}
+
+function ChurchDetailSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-4xl space-y-8 px-4 py-6">
+      <div className="h-4 w-20 animate-pulse rounded bg-muted" />
+      <div className="h-16 animate-pulse rounded-xl bg-muted" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="h-32 animate-pulse rounded-xl bg-muted" />
+        <div className="h-32 animate-pulse rounded-xl bg-muted" />
+      </div>
     </div>
   );
 }

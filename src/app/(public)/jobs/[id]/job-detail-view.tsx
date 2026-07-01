@@ -1,27 +1,17 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Check,
-  ExternalLink,
-  Globe,
-  MonitorPlay,
-  RefreshCw,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, ExternalLink, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { JobActions } from "@/components/job/job-actions";
 import { JobCard } from "@/components/job/job-card";
-import { formatStipend } from "@/lib/format";
+import { ChurchChannels } from "@/components/church/church-channels";
+import { churchMetaLine, formatStipend } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
-  DENOMINATIONS,
-  REGIONS,
   POSITIONS,
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
-  CHURCH_SIZES,
   JOB_SOURCES,
   type JobSource,
 } from "@/constants/domain";
@@ -29,12 +19,6 @@ import type { Church, Job, JobCard as JobCardData, JobDetail } from "@/types/dom
 import type { RepostInfo } from "@/lib/repost-tracking";
 
 const externalLinkAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
-
-// 교회 요약 한 줄: 교단 · 지역 · 규모
-function churchMetaLine(church: Church): string {
-  const location = `${REGIONS[church.region]}${church.city ? ` ${church.city}` : ""}`;
-  return `${DENOMINATIONS[church.denomination]} · ${location}${church.size ? ` · ${CHURCH_SIZES[church.size]}` : ""}`;
-}
 
 // 본문 흐름 속 한 섹션 — 상단 구분선 + 제목 + 내용 (첫 섹션은 border 없이)
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -190,7 +174,8 @@ function SumRow({ label, children, big }: { label: string; children: ReactNode; 
 
 // 우측 요약 사이드바 (핵심 조건 + 지원 CTA + 교회 채널) — 데스크톱 sticky, 모바일 상단
 function SummaryAside({ job, church }: { job: Job; church: Church }) {
-  const applyUrl = job.sourceUrl ?? church.homepageUrl;
+  const homepage = church.links.find((l) => l.type === "HOMEPAGE")?.url ?? null;
+  const applyUrl = job.sourceUrl ?? homepage;
   const applyLabel = job.sourceUrl ? "원문 공고 보기" : "교회 홈페이지에서 지원 안내 확인";
 
   return (
@@ -226,28 +211,11 @@ function SummaryAside({ job, church }: { job: Job; church: Church }) {
         </p>
       </div>
 
-      {(church.homepageUrl || church.youtubeUrl) && (
+      {church.links.length > 0 && (
         <div className="border-t pt-4">
           <p className="text-xs font-bold text-muted-foreground">교회 채널</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {church.homepageUrl && (
-              <a
-                href={church.homepageUrl}
-                {...externalLinkAttrs}
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              >
-                <Globe /> 홈페이지
-              </a>
-            )}
-            {church.youtubeUrl && (
-              <a
-                href={church.youtubeUrl}
-                {...externalLinkAttrs}
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              >
-                <MonitorPlay /> 유튜브
-              </a>
-            )}
+          <div className="mt-2">
+            <ChurchChannels links={church.links} />
           </div>
         </div>
       )}

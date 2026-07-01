@@ -6,8 +6,12 @@
     "region": "GYEONGGI",
     "city": "성남",
     "size": "MEDIUM",
-    "homepageUrl": "https://example.com/saesomang",
-    "youtubeUrl": "https://youtube.com/@saesomang"
+    "foundedYear": 2005,
+    "links": [
+      { "type": "HOMEPAGE", "url": "https://example.com/saesomang" },
+      { "type": "YOUTUBE", "url": "https://youtube.com/@saesomang" },
+      { "type": "INSTAGRAM", "url": "https://instagram.com/saesomang" }
+    ]
   },
   {
     "id": "ch-eunhyero",
@@ -16,8 +20,8 @@
     "region": "SEOUL",
     "city": "강북",
     "size": "LARGE",
-    "homepageUrl": "https://example.com/eunhyero",
-    "youtubeUrl": null
+    "foundedYear": 1988,
+    "links": [{ "type": "HOMEPAGE", "url": "https://example.com/eunhyero" }]
   },
   {
     "id": "ch-hanbit",
@@ -26,8 +30,11 @@
     "region": "GYEONGGI",
     "city": "용인",
     "size": "SMALL",
-    "homepageUrl": "https://example.com/hanbit",
-    "youtubeUrl": "https://youtube.com/@hanbit"
+    "foundedYear": 2015,
+    "links": [
+      { "type": "HOMEPAGE", "url": "https://example.com/hanbit" },
+      { "type": "YOUTUBE", "url": "https://youtube.com/@hanbit" }
+    ]
   },
   {
     "id": "ch-juane",
@@ -36,8 +43,11 @@
     "region": "INCHEON",
     "city": "부평",
     "size": "PLANT",
-    "homepageUrl": "https://example.com/juane",
-    "youtubeUrl": null
+    "foundedYear": 2021,
+    "links": [
+      { "type": "INSTAGRAM", "url": "https://instagram.com/juane" },
+      { "type": "BAND", "url": "https://band.us/@juane" }
+    ]
   },
   {
     "id": "ch-sarangbit",
@@ -46,8 +56,12 @@
     "region": "SEOUL",
     "city": "송파",
     "size": "LARGE",
-    "homepageUrl": "https://example.com/sarangbit",
-    "youtubeUrl": "https://youtube.com/@sarangbit"
+    "foundedYear": 1995,
+    "links": [
+      { "type": "HOMEPAGE", "url": "https://example.com/sarangbit" },
+      { "type": "YOUTUBE", "url": "https://youtube.com/@sarangbit" },
+      { "type": "FACEBOOK", "url": "https://facebook.com/sarangbit" }
+    ]
   },
   {
     "id": "ch-saebyeok",
@@ -56,8 +70,8 @@
     "region": "GYEONGGI",
     "city": "수원",
     "size": "MEDIUM",
-    "homepageUrl": "https://example.com/saebyeok",
-    "youtubeUrl": null
+    "foundedYear": 2010,
+    "links": [{ "type": "HOMEPAGE", "url": "https://example.com/saebyeok" }]
   },
   {
     "id": "ch-bitsogeum",
@@ -66,8 +80,8 @@
     "region": "BUSAN",
     "city": "해운대",
     "size": null,
-    "homepageUrl": "https://example.com/bitsogeum",
-    "youtubeUrl": null
+    "foundedYear": null,
+    "links": []
   },
   {
     "id": "ch-banseok",
@@ -76,7 +90,10 @@
     "region": "DAEGU",
     "city": "수성",
     "size": "SMALL",
-    "homepageUrl": "https://example.com/banseok",
-    "youtubeUrl": "https://youtube.com/@banseok"
+    "foundedYear": 2001,
+    "links": [
+      { "type": "HOMEPAGE", "url": "https://example.com/banseok" },
+      { "type": "YOUTUBE", "url": "https://youtube.com/@banseok" }
+    ]
   }
 ]

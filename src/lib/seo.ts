@@ -60,7 +60,7 @@ export function jobPostingJsonLd(detail: JobDetail) {
     hiringOrganization: {
       "@type": "Organization",
       name: church.name,
-      sameAs: church.homepageUrl ?? undefined,
+      sameAs: church.links.find((l) => l.type === "HOMEPAGE")?.url ?? undefined,
     },
     jobLocation: {
       "@type": "Place",

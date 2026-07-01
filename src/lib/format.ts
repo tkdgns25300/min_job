@@ -1,3 +1,6 @@
+import { DENOMINATIONS, REGIONS, CHURCH_SIZES } from "@/constants/domain";
+import type { Church } from "@/types/domain";
+
 // 도메인 값 표시 포매터
 
 // 월 사례비 표시: 범위/단일/비정형(내규 등)/없음 순
@@ -6,4 +9,16 @@ export function formatStipend(min: number | null, max: number | null, note: stri
   if (min !== null) return `${min}만원`;
   if (note) return note;
   return "협의";
+}
+
+// 교회 위치: 지역(+시)
+export function churchLocation(church: Pick<Church, "region" | "city">): string {
+  return `${REGIONS[church.region]}${church.city ? ` ${church.city}` : ""}`;
+}
+
+// 교회 요약 한 줄: 교단 · 지역 · 규모
+export function churchMetaLine(
+  church: Pick<Church, "denomination" | "region" | "city" | "size">,
+): string {
+  return `${DENOMINATIONS[church.denomination]} · ${churchLocation(church)}${church.size ? ` · ${CHURCH_SIZES[church.size]}` : ""}`;
 }

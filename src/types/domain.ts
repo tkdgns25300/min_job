@@ -7,6 +7,7 @@ import type {
   FeaturedTier,
   ChurchSize,
   JobSource,
+  ChurchChannel,
 } from "@/constants/domain";
 
 export type JobStatus = "OPEN" | "CLOSED";
@@ -16,6 +17,12 @@ export type FilterDim =
   "denomination" | "region" | "position" | "department" | "employmentType" | "size";
 export type SortKey = "recent" | "stipend" | "deadline";
 
+// 교회 채널 링크 (홈페이지·SNS)
+export interface ChurchLink {
+  type: ChurchChannel;
+  url: string;
+}
+
 // 교회
 export interface Church {
   id: string;
@@ -24,8 +31,8 @@ export interface Church {
   region: Region; // 광역 (필터용)
   city: string | null; // 시·군·구 (표시용 자유 텍스트)
   size: ChurchSize | null; // 교회 규모 (출석 성도 기준, null = 미상)
-  homepageUrl: string | null;
-  youtubeUrl: string | null;
+  foundedYear: number | null; // 창립 연도 (null = 미상)
+  links: ChurchLink[]; // 교회 채널 — 없으면 빈 배열
 }
 
 // 공고 — 스키마는 페이지 작업하며 확장한다. (상세 페이지에서 아래 상세 필드 확정)

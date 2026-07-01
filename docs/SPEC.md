@@ -164,7 +164,7 @@
 우측 사이드바(sticky):
 - **핵심 조건** — 월 사례비(강조)·마감일·출근·고용형태·제출서류
 - **지원 안내** — CTA "원문 공고 보기"(`sourceUrl`) or "교회 홈페이지"; *사이트 내 지원 없음*(교회 직접 문의 안내)
-- ★ **교회 채널** — 홈페이지·유튜브 링크 (핵심 페인, 스크롤 내내 고정)
+- ★ **교회 채널** — 홈페이지·유튜브·SNS 링크(`church.links`, 공유 컴포넌트 `ChurchChannels`) (핵심 페인, 스크롤 내내 고정)
 
 2단 하단: **비슷한 공고**(같은 부서→같은 지역, JobCard 그리드) · **출처 표기**(운영자/교회) + 오류 문의
 
@@ -172,3 +172,15 @@
 - **SEO**: `generateMetadata`(title·desc·OG) + `JobPosting` JSON-LD(`lib/seo.ts`)
 - **캐싱**: params 의존 → 동적 콘텐츠를 `<Suspense>`로 분리(정적 셸 + PPR). 추후 on-demand `'use cache'`(Phase 1)
 - **이 페이지가 확정한 `jobs` 필드**: `workDays · requirements[] · preferred[] · requiredDocs[] · description · source(OPERATOR/CHURCH) · sourceUrl`. (포스터 이미지 필드는 미채택)
+
+### 교회 상세 `/churches/[id]` — 확정 2026-07-01
+**레이아웃**: 단일 컬럼(neutral). 결정 페이지가 아니라 허브라 사이드바 없음. 공고 상세의 "교회 상세 보기"에서 진입.
+1. **헤더** — 이니셜 아바타 + 교회명 + 교단·지역·규모·**창립연도**(`foundedYear`, 미상 시 생략) + **교회 채널**(`ChurchChannels` 공유 컴포넌트, 홈페이지·유튜브·인스타·페북·밴드)
+2. **현재 모집 N건** — 그 교회 OPEN 공고(JobCard 그리드, 빈 상태 처리)
+3. ★★ **공고 이력**(차별점, 시안 C) — 재공고 시 **요약 문장**("이 교회는 OO 자리를 최근 N번 공고했어요") 항상 노출 + **`<details>` 토글**(JS 없이)로 자리별 타임라인 상세(각 공고 `등록~마감`·`모집중/마감`·공고 상세 링크). `lib/repost-tracking`의 `groupByRole`.
+   - **현재 단발 공고는 이력에서 제외**(위 카드에 이미 있음), **반복·지난 공고가 없으면 섹션 숨김**(현재 공고 반복으로 비어 보이는 것 방지).
+
+- **제외**: 교회 리뷰(현직자 평가 — 명예훼손·데이터 없음 → 재공고 이력=사실 기반으로 대체) · 연봉/급여·재무·인원 통계(데이터 소스 없음) · 복리후생/BEST문화 배지 · 팔로우·채용알림(Phase 2+) · 커버/로고 이미지 · 유사 추천 교회
+- **정체성**: 의도적으로 얇음 — 순수 신규 가치 = **재공고 타임라인 + SEO 교회 허브**. 리뷰·연봉을 조작해 채우지 않는다(integrity·가드레일).
+- **채널 스키마**: `church.links: {type: ChurchChannel, url}[]` — 채널 추가는 `CHURCH_CHANNELS` enum에만(마이그레이션 X)
+- **SEO**: `generateMetadata`(title·desc·OG) · **캐싱**: params → `<Suspense>`(PPR)
