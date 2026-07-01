@@ -80,8 +80,7 @@ src/
 │   │   │   ├── [id]/page.tsx      공고 상세 (generateMetadata + JobPosting JSON-LD)
 │   │   │   └── *-view.tsx         목록·필터 client component
 │   │   ├── churches/
-│   │   │   ├── page.tsx           교회 목록
-│   │   │   └── [id]/page.tsx      교회 상세 (그 교회 공고 + 재공고 이력)
+│   │   │   └── [id]/page.tsx      교회 상세 (그 교회 공고 + 재공고 이력) — 목록 페이지 없음(공고 상세에서 진입)
 │   │   ├── pricing/page.tsx       광고·노출 안내 (요금)
 │   │   ├── about/page.tsx         서비스 소개
 │   │   ├── terms/page.tsx         이용약관

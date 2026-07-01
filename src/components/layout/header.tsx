@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/jobs", label: "공고" },
-  { href: "/churches", label: "교회" },
   { href: "/pricing", label: "광고 안내" },
   { href: "/about", label: "소개" },
 ] as const;

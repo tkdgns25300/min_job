@@ -46,8 +46,7 @@
 - [ ] 검색·필터 (교단·지역·직분·부서·고용형태·사례비) — dynamic + URL params
 - [ ] 정렬 (최신순·사례비·마감임박) — 프리미엄·광고 우선 노출은 Phase 2
 - [ ] 공고 상세 (`/jobs/[id]`) — 구조화 정보 + 교회 홈페이지·유튜브 링크 + JobPosting JSON-LD
-- [ ] 교회 목록 (`/churches`) — 교단·지역 탐색
-- [ ] 교회 상세 (`/churches/[id]`) — 교회 정보 + 그 교회 공고
+- [ ] 교회 상세 (`/churches/[id]`) — 교회 정보 + 그 교회 공고 (교회 목록 browse는 두지 않음 — SPEC 참조)
 
 ### 1-3. 운영자 도구 (admin) — manual seeding의 핵심
 - [ ] admin 수집 등록 도구 (`/admin/ingest`) — 텍스트 붙여넣기 → AI 구조화 → 폼 자동 채움 → 검토 등록
