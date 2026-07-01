@@ -14,9 +14,9 @@
 
 ## Architecture Overview
 
-### 핵심 결정: DB 기반 동적 사이트 (공고 CRUD + 검색 + 소유권 인수)
+### 핵심 결정: DB 기반 동적 사이트 (공고 CRUD + 검색)
 
-순수 SSG와 달리 MinJob은 공고 등록·검색·소유권 인수(claim)가 있어 **DB와 mutation이 필요**하다. 단 공고는 변경 빈도가 낮고 모든 방문자가 같은 목록을 보므로, **`'use cache'` + 태그 무효화** 패턴을 채택한다. 공고 상세는 빌드타임 prerender(`generateStaticParams`) 하지 않고 **on-demand `'use cache'`로 첫 요청 시 캐시**한다 (공고가 배포 후 계속 추가되므로).
+순수 SSG와 달리 MinJob은 공고 등록·수정·검색이 있어 **DB와 mutation이 필요**하다. 단 공고는 변경 빈도가 낮고 모든 방문자가 같은 목록을 보므로, **`'use cache'` + 태그 무효화** 패턴을 채택한다. 공고 상세는 빌드타임 prerender(`generateStaticParams`) 하지 않고 **on-demand `'use cache'`로 첫 요청 시 캐시**한다 (공고가 배포 후 계속 추가되므로).
 
 ```
 [브라우저]
@@ -25,7 +25,7 @@
 [Vercel Edge CDN]  ← 공고 목록·상세는 'use cache' 결과 직접 서빙
    │ ↓ MISS
    ▼
-[Vercel 함수 (Node.js)]  ← 'use cache' 실행, mutation(등록·claim), 검색
+[Vercel 함수 (Node.js)]  ← 'use cache' 실행, mutation(등록·수정), 검색
    │
    ▼
 [Supabase Seoul]
@@ -52,7 +52,7 @@
 [운영자가 검토 후 admin 등록 — '운영자 등록', 소유자 없음]
         │
         ▼
-[나중에 교회가 가입 → claim → 소유권 연결 → 자생 운영 전환]
+[교회는 가입 후 자기 공고를 직접 등록·관리 (운영자 등록 공고와 병존)]
 ```
 
 - **수집(input)은 사람이, 구조화(processing)는 AI가.** 이 경계는 법적 안전선이다 (가드레일 참조).
@@ -86,8 +86,7 @@ src/
 │   ├── (authed)/                  로그인 필요 영역 (proxy 인증 게이트)
 │   │   ├── mypage/                교회=내 공고 관리 / 구직자=북마크
 │   │   ├── jobs/new/              교회 공고 등록 폼 + actions.ts
-│   │   ├── jobs/[id]/edit/        공고 수정 폼 + actions.ts
-│   │   └── claim/                 소유권 인수 + actions.ts (Phase 2)
+│   │   └── jobs/[id]/edit/        공고 수정 폼 + actions.ts
 │   ├── admin/                     운영자 전용 — 수집 공고 등록·구조화 도구
 │   │   ├── jobs/                  공고 admin CRUD + actions.ts
 │   │   └── ingest/                텍스트 붙여넣기 → AI 구조화 → 폼 자동 채움
@@ -127,7 +126,7 @@ supabase/migrations/               DB 마이그레이션 SQL
 - 동적 segment(`[id]`)는 `generateMetadata` + JSON-LD. 빌드타임 prerender 안 함 — on-demand `'use cache'`로 캐시
 
 ### Server Action (`app/**/actions.ts`)
-- `"use server"` 디렉티브. 모든 mutation(공고 등록·수정·claim·삭제)은 여기서.
+- `"use server"` 디렉티브. 모든 mutation(공고 등록·수정·삭제)은 여기서.
 - `createClient()` (server.ts, 쿠키 기반)으로 인증 보장된 호출
 - 끝에서 `updateTag(resource)` — read-your-own-writes
 - REST API 라우트 만들지 않는다.
@@ -179,8 +178,8 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 법적·정책적 이유로 정한 원칙. 코드 작성 시 반드시 준수한다. 근거는 DATA.md.
 
 1. **자동 크롤러 구현 금지.** 외부 사이트를 프로그램이 주기적·대량으로 수집하는 코드를 만들지 않는다. "사실 정보만"이어도 금지 — DB권·부정경쟁방지법 위반 소지(잡코리아 vs 사람인 판례). 공고 수집은 사람이 한 건씩 한다. AI 구조화는 "사람이 붙여넣은 텍스트"에만 적용한다.
-2. **공고 소유자(owner)는 nullable.** 공고는 교회 계정에 필수 종속되지 않는다. 운영자 등록 공고는 소유자 없이('운영자 등록') 저장한다. 교회는 나중에 claim으로 연결한다. 공고를 user의 자식으로 강결합하지 않는다.
-3. **개인정보(연락처) 취급 주의.** 운영자 수집 공고에 개인 담당자 연락처를 임의로 저장·노출하지 않는다. 교회 대표 공개 연락처만, 또는 "원문 보기" 링크로 안내. 개인 정보는 교회가 claim 후 직접 입력하게 한다.
+2. **공고 소유자(owner)는 nullable.** 공고는 교회 계정에 필수 종속되지 않는다. 운영자 등록 공고는 소유자 없이('운영자 등록') 저장하고, 교회 직접 등록 공고는 그 교회가 소유한다. 공고를 user의 자식으로 강결합하지 않는다.
+3. **개인정보(연락처) 취급 주의.** 운영자 수집 공고에 개인 담당자 연락처를 임의로 저장·노출하지 않는다. 교회 대표 공개 연락처만, 또는 "원문 보기" 링크로 안내. 개인 정보는 교회가 직접 등록 시 입력하게 한다.
 4. **영리 청빙 사이트(청빙넷 등)를 출처로 삼지 않는다.** 사람이 수집하더라도 공공·교단·신학교 공식 게시판을 우선한다.
 
 ## Clean Code Principles
