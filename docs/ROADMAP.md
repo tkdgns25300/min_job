@@ -8,17 +8,18 @@
 ## Phase 0: 프로젝트 셋업
 
 ### 환경·골격 (지금 가능)
-- [x] `prod`(배포)·`dev`(작업) 브랜치 구성 + 원격 푸시 (완료)
-- [x] CLAUDE.md, docs/(SPEC·ROADMAP·DATA stub), .gitignore 생성 (완료)
-- [ ] README, .env.example
-- [ ] Next.js 16 + React 19 + Tailwind v4 + TypeScript strict 셋업
-- [ ] shadcn/ui (Base UI) + 기본 컴포넌트
-- [ ] Supabase 프로젝트 생성
-- [ ] Supabase 클라이언트 — `lib/supabase/{server,service,session}.ts`
-- [ ] 인증 Proxy — `src/proxy.ts` ((authed)/admin 게이트)
-- [ ] 운영자(admin) 계정 생성
-- [ ] `.env` 로컬 셋업 (gitignored — 복원 절차는 README)
-- [ ] Vercel 연결 + 첫 배포
+- [x] `prod`(배포)·`dev`(작업) 브랜치 구성 + 원격 푸시
+- [x] CLAUDE.md, docs/(SPEC·ROADMAP·DATA stub), .gitignore
+- [x] Next.js 16 + React 19 + Tailwind v4 + TS strict + Prettier (Cache Components 활성)
+- [x] Pretendard 폰트(self-host) + 라이트 디자인 토큰
+- [x] shadcn/ui (Base UI) + 시드 컴포넌트(button·card·badge·input)
+- [x] 앱 셸: 레이아웃·헤더·푸터·홈 + (public)/(authed)/admin 라우트 뼈대
+- [x] README
+- [ ] Supabase 프로젝트 생성 + 클라이언트(`lib/supabase/{server,service,session}.ts`) — Phase 1
+- [ ] 인증 Proxy — `src/proxy.ts` ((authed)/admin 게이트) — Phase 1
+- [ ] 운영자(admin) 계정 — Phase 1
+- [ ] `.env` 로컬 셋업 (Supabase 키) — Phase 1
+- [ ] Vercel 연결 + 첫 배포 — 보류(사용자 결정)
 
 ### DB 스키마 (⛔ DATA.md 확정 후 — 현재 보류)
 > DATA.md를 미뤄둔 상태라 아래는 그 문서가 채워진 뒤 진행한다. Phase 1 기능 대부분이 여기에 의존.
