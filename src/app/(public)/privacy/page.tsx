@@ -1,13 +1,63 @@
-import { Placeholder } from "@/components/layout/placeholder";
+import type { Metadata } from "next";
+import { LegalDoc, type LegalSection } from "@/components/layout/legal-doc";
+
+export const metadata: Metadata = {
+  title: "개인정보처리방침 | 민잡",
+  description: "민잡 개인정보처리방침.",
+};
+
+// ⚠️ 초안(placeholder). 서비스 정식 운영 전 반드시 법률 검토 후 확정 — ROADMAP 1-6 참조.
+const SECTIONS: LegalSection[] = [
+  {
+    title: "1. 수집하는 개인정보 항목",
+    body: [
+      "회원가입·이용 과정에서: 이메일, 소셜 로그인 식별자(예: 카카오)",
+      "교회 회원: 교회명, 공개 연락 정보 등 공고 등록에 필요한 정보",
+      "서비스 이용 과정에서: 북마크 등 이용 기록",
+    ],
+  },
+  {
+    title: "2. 개인정보의 수집·이용 목적",
+    body: "회원 식별·관리, 공고 등록·관리 기능 제공, 서비스 운영 및 개선, 문의 응대를 위해 개인정보를 이용합니다.",
+  },
+  {
+    title: "3. 개인정보의 보유·이용 기간",
+    body: "회원 탈퇴 시 또는 수집·이용 목적 달성 시 지체 없이 파기합니다. 다만 관련 법령이 정한 경우 해당 기간 동안 보관합니다.",
+  },
+  {
+    title: "4. 개인정보의 제3자 제공",
+    body: "원칙적으로 개인정보를 제3자에게 제공하지 않으며, 법령에 근거가 있거나 이용자의 동의가 있는 경우에 한합니다.",
+  },
+  {
+    title: "5. 개인정보 처리의 위탁",
+    body: "서비스 운영을 위해 클라우드 인프라 등 외부에 개인정보 처리를 위탁할 수 있으며, 위탁 시 관련 사항을 고지합니다.",
+  },
+  {
+    title: "6. 정보주체의 권리",
+    body: "이용자는 자신의 개인정보에 대한 열람·정정·삭제·처리정지를 요구할 수 있습니다.",
+  },
+  {
+    title: "7. 개인정보의 파기",
+    body: "수집·이용 목적이 달성된 개인정보는 안전한 방법으로 지체 없이 파기합니다.",
+  },
+  {
+    title: "8. 안전성 확보 조치",
+    body: "접근 권한 관리, 전송 구간 암호화 등 합리적인 보호 조치를 취합니다.",
+  },
+  {
+    title: "9. 쿠키 등 자동 수집 장치",
+    body: "서비스 이용 편의를 위해 쿠키를 사용할 수 있으며, 이용자는 브라우저 설정을 통해 이를 거부할 수 있습니다.",
+  },
+  {
+    title: "10. 개인정보 보호책임자",
+    body: "개인정보 관련 문의는 contact@minjob.kr 로 연락해 주세요.",
+  },
+  {
+    title: "11. 고지의 의무",
+    body: "본 방침의 내용이 변경되는 경우 서비스 화면을 통해 공지합니다.",
+  },
+];
 
 export default function PrivacyPage() {
-  return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10">
-      <h1 className="text-2xl font-bold">개인정보처리방침</h1>
-      <Placeholder
-        label="개인정보처리방침 본문 자리 (출시 전 법률 검토 필요)"
-        className="min-h-64"
-      />
-    </div>
-  );
+  return <LegalDoc title="개인정보처리방침" sections={SECTIONS} />;
 }
