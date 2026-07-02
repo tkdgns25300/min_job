@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "공고 노출 안내 | 민잡",
   description:
-    "청빙 공고를 더 많은 교역자에게. 공고 등록은 무료, 노출 상품(프리미엄·대표광고·끌어올리기)으로 더 눈에 띄게 보여주세요.",
+    "청빙 공고를 더 많은 교역자에게. 공고 등록은 무료, 노출 상품(프리미엄·대표광고)으로 더 눈에 띄게 보여주세요.",
 };
 
-// 노출 상품 3종 — 가격·상세는 Phase 2 확정, 지금은 "문의"
+// 노출 상품 2종 — 가격·상세는 Phase 2 확정, 지금은 "문의"
 const PRODUCTS = [
   {
     name: "프리미엄",
@@ -24,16 +24,11 @@ const PRODUCTS = [
     tagline: "홈·목록 최상단 추천 슬롯에 더 크게. 주목도가 가장 높아요.",
     where: "홈·공고 목록 상단 추천(AD)",
   },
-  {
-    name: "끌어올리기",
-    tagline: "시간이 지나 밀린 공고를 최신순 맨 위로 다시 올려요.",
-    where: "공고 목록 최신순 상단",
-  },
 ] as const;
 
 const STEPS = [
   { title: "공고 등록 (무료)", desc: "교회로 가입하고 청빙 공고를 등록하세요." },
-  { title: "노출 상품 선택", desc: "프리미엄·대표광고·끌어올리기 중 원하는 노출을 고르세요." },
+  { title: "노출 상품 선택", desc: "프리미엄·대표광고 중 원하는 노출을 고르세요." },
   { title: "문의로 진행", desc: "노출 기간·결제는 문의로 진행돼요. (자동 결제는 준비 중)" },
 ] as const;
 
@@ -71,7 +66,7 @@ export default function PricingPage() {
         </p>
       </header>
 
-      {/* 노출 상품 3종 */}
+      {/* 노출 상품 2종 */}
       <section className="space-y-4">
         <h2 className="text-lg font-bold">노출 상품</h2>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -135,9 +130,6 @@ export default function PricingPage() {
             </li>
             <li>
               <b>프리미엄</b> — 공고 목록 상단에 고정 + 강조 배지.
-            </li>
-            <li>
-              <b>끌어올리기</b> — 밀린 공고를 최신순 맨 위로 다시 올림(재게시 효과).
             </li>
           </ul>
         </div>

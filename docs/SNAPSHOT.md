@@ -210,7 +210,7 @@ src/
 
 ## 11. 다음 작업 (효율 경로)
 
-1. **정적·법적 페이지 배치** — `/pricing`(SPEC 수익화 내용: 일반/프리미엄/대표광고·끌어올리기) · `/about`(서비스 소개) · `/terms`·`/privacy`(런칭 필수). 폼 없음, 빠름. mock 방법론의 마지막 단계.
+1. **정적·법적 페이지 배치** — `/pricing`(노출 상품 프리미엄·대표광고 2종) · `/about`(서비스 소개) · `/terms`·`/privacy`(런칭 필수). 폼 없음, 빠름. mock 방법론의 마지막 단계.
 2. **DATA.md 확정** — 그동안 쌓인 mock JSON을 최종 스키마로 정리(아래 봉인 결정 7개 해결).
 3. **Phase 1 백엔드 전환** — Supabase 프로젝트·클라이언트(`lib/supabase/{server,service,session}.ts`)·마이그레이션·RLS / 인증 proxy·admin 계정 / `lib/queries/*` 이관 + `'use cache'`+태그 적용 / 인증·mutation·admin 페이지를 실 백엔드 위에서 구현.
 
@@ -238,7 +238,7 @@ src/
 3. enum 허용값 확정·확장 (개신교 전 교단)
 4. 교회 dedup/매칭 + **재공고 추적 키** (코드: `repostKey`=churchId+position+department)
 5. RLS 정책 (public/owner/service-role)
-6. 노출 등급·광고 모델 (일반/프리미엄/대표광고, featured_until, 끌어올리기)
+6. 노출 등급·광고 모델 (프리미엄/대표광고 2종, `featured_tier`+`featured_until`; 끌어올리기 제외·배너 Phase 2+)
 7. 사례비 단위·기간 (현재 월·만원. stipend_period 결정 필요)
 
 **기타 비개발 미해결**: 첫 거점 확정(전체 vs 집중), 신학교 커뮤니티 침투안, 데이터 수집 법률 검토.
