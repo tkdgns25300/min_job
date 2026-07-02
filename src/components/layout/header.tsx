@@ -2,9 +2,9 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+// 상단 nav는 구직자 중심. 노출/광고(파는 쪽) 안내는 footer + 교회 여정 맥락으로.
 const NAV_LINKS = [
   { href: "/jobs", label: "공고" },
-  { href: "/pricing", label: "광고 안내" },
   { href: "/about", label: "소개" },
 ] as const;
 
@@ -31,8 +31,9 @@ export function Header() {
           <Link href="/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
             로그인
           </Link>
+          {/* 교회(파는 쪽) 진입 CTA — 클릭 시 로그인/가입 게이트(Phase 1) */}
           <Link href="/jobs/new" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
-            공고 등록
+            교회 공고 등록
           </Link>
         </div>
       </div>
