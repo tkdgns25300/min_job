@@ -133,10 +133,10 @@ supabase/migrations/               DB 마이그레이션 SQL
 - 끝에서 `updateTag(resource)` — read-your-own-writes
 - REST API 라우트 만들지 않는다.
 
-### Query (`lib/queries/*.ts`)
-- `'use cache'` 페이지가 호출하는 read 전용 함수
-- `createServiceClient()` (service.ts, 쿠키 X)
-- fetch + transform + return. 집계·재공고 계산 등 비즈니스 로직은 여기
+### Query (`lib/queries/*.ts`) — 데이터 소스 seam (mock ↔ DB)
+- **페이지·view는 데이터를 여기서만 가져온다.** `@/mocks` 직접 import 금지 — 데이터 출처를 이 레이어에 은닉해, mock→DB 전환 시 **페이지 코드 0 변경**.
+- **함수는 `async` + `'use cache'` + `cacheTag`** (read 전용). fetch + transform + return, 집계·재공고 계산 등 비즈니스 로직은 여기.
+- **mock 단계**: 내부에서 `mocks/*` 위임(현재). **DB 전환**: 본문만 `createServiceClient()`(service.ts) Supabase 호출로 교체 — 시그니처·반환 타입 동일.
 - **쿠키·헤더 절대 만지지 마라** — cached scope 안에서 호출됨
 
 ### Ingest (`lib/ingest/*.ts`)
