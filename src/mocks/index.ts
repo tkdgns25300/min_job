@@ -2,6 +2,7 @@ import churchesData from "./churches.json";
 import jobsData from "./jobs.json";
 import type { Church, Job, JobCard, JobDetail } from "@/types/domain";
 import { getRepostInfo, groupByRole, type RepostInfo, type RoleHistory } from "@/lib/repost-tracking";
+import { DENOMINATIONS, DEPARTMENTS, POSITIONS, REGIONS } from "@/constants/domain";
 
 // mock 데이터 — 페이지를 만들며 채워나간다. 모든 페이지 완료 시 이 형태가 최종 스키마.
 // (실제 DB 연동 시 lib/queries/*.ts + Supabase로 대체)
@@ -100,6 +101,32 @@ export function getSimilarJobs(id: string, limit = 4): JobCard[] {
       !byDept.includes(j) && baseChurch != null && churchById.get(j.churchId)?.region === baseChurch.region,
   );
   return [...byDept, ...byRegion].slice(0, limit).map(toCard);
+}
+
+/**
+ * 검색어 완성 후보 어휘 — 현재 열린 공고에 실제로 존재하는
+ * 직분·부서·지역·교단 라벨 + 교회명. 공고 수 많은 순 정렬(가나다 보조).
+ * '기타(ETC)' 라벨은 검색어로 무의미해 제외. 클라이언트가 이 목록을 prefix/부분 매칭한다.
+ */
+export function getSearchSuggestions(): string[] {
+  const counts = new Map<string, number>();
+  const bump = (term: string | null | undefined) => {
+    if (!term || term === "기타") return;
+    counts.set(term, (counts.get(term) ?? 0) + 1);
+  };
+  for (const j of openJobs) {
+    const church = churchById.get(j.churchId);
+    if (church) {
+      bump(church.name);
+      bump(REGIONS[church.region]);
+      bump(DENOMINATIONS[church.denomination]);
+    }
+    bump(POSITIONS[j.position]);
+    if (j.department) bump(DEPARTMENTS[j.department]);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ko"))
+    .map(([term]) => term);
 }
 
 /** 홈 스탯 — 모집 중 수 / 최근 7일 새 공고 수 / 청빙 중 교회 수 */

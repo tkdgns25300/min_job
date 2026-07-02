@@ -5,6 +5,7 @@ import { JobDetailView } from "./job-detail-view";
 import { RecordRecentlyViewed } from "@/components/job/record-recently-viewed";
 import { getChurchOpenJobs, getJobDetail, getRepost, getSimilarJobs } from "@/lib/queries/jobs";
 import { jobPostingJsonLd, jobRoleSummary } from "@/lib/seo";
+import { REGIONS } from "@/constants/domain";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -47,7 +48,11 @@ async function JobDetailContent({ params }: Params) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingJsonLd(detail)) }}
       />
-      <RecordRecentlyViewed id={detail.job.id} title={detail.job.title} />
+      <RecordRecentlyViewed
+        id={detail.job.id}
+        title={detail.job.title}
+        subtitle={`${detail.church.name} · ${REGIONS[detail.church.region]}`}
+      />
       <JobDetailView detail={detail} repost={repost} churchJobs={churchJobs} similar={similar} />
     </>
   );

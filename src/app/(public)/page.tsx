@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { JobCard } from "@/components/job/job-card";
-import { getAdJobs, getRecentJobs, getJobStats } from "@/lib/queries/jobs";
+import { SearchBox } from "@/components/search/search-box";
+import { getAdJobs, getRecentJobs, getJobStats, getSearchSuggestions } from "@/lib/queries/jobs";
 
 function Stat({ value, unit, label }: { value: number; unit: string; label: string }) {
   return (
@@ -18,9 +16,12 @@ function Stat({ value, unit, label }: { value: number; unit: string; label: stri
 }
 
 export default async function HomePage() {
-  const adJobs = await getAdJobs();
-  const recentJobs = await getRecentJobs(6);
-  const stats = await getJobStats();
+  const [adJobs, recentJobs, stats, suggestions] = await Promise.all([
+    getAdJobs(),
+    getRecentJobs(6),
+    getJobStats(),
+    getSearchSuggestions(),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-14 px-4 py-8">
@@ -33,17 +34,7 @@ export default async function HomePage() {
           <p className="text-muted-foreground">교단·지역·사례비로 검색하고 한눈에 비교하세요.</p>
         </div>
 
-        <form action="/jobs" className="flex w-full gap-2">
-          <Input
-            name="q"
-            placeholder="교회명 · 지역 · 직분 검색"
-            aria-label="공고 검색"
-            className="h-12 flex-1"
-          />
-          <button type="submit" className={cn(buttonVariants({ size: "lg" }), "h-12 px-6")}>
-            검색
-          </button>
-        </form>
+        <SearchBox suggestions={suggestions} />
 
         <dl className="flex items-center justify-center gap-5 sm:gap-8">
           <Stat value={stats.openCount} unit="건" label="지금 모집 중" />

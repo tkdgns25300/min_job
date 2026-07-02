@@ -3,4 +3,5 @@
 export const STORAGE_KEYS = {
   bookmarks: "minjob:bookmarks",
   recentJobs: "minjob:recentJobs",
+  recentSearches: "minjob:recentSearches",
 } as const;

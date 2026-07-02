@@ -1,4 +1,11 @@
-import { REGIONS, UNKNOWN_SIZE } from "@/constants/domain";
+import {
+  DENOMINATIONS,
+  DEPARTMENTS,
+  EMPLOYMENT_TYPES,
+  POSITIONS,
+  REGIONS,
+  UNKNOWN_SIZE,
+} from "@/constants/domain";
 import type { FilterDim, JobCard, SortKey } from "@/types/domain";
 
 // mock 단계 클라이언트 필터/정렬 (순수 함수).
@@ -40,7 +47,18 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
     }
 
     if (query) {
-      const hay = `${j.church.name} ${j.title} ${REGIONS[j.church.region]} ${j.church.city ?? ""}`;
+      // 자유검색 매칭 소스 = 교회명·제목·지역·도시 + 직분·부서·교단·고용형태 라벨
+      // (검색어 완성 후보와 소스를 맞춰, 제안한 검색어가 반드시 결과로 이어지게 한다)
+      const hay = [
+        j.church.name,
+        j.title,
+        REGIONS[j.church.region],
+        j.church.city ?? "",
+        POSITIONS[j.position],
+        j.department ? DEPARTMENTS[j.department] : "",
+        DENOMINATIONS[j.church.denomination],
+        EMPLOYMENT_TYPES[j.employmentType],
+      ].join(" ");
       if (!hay.includes(query)) return false;
     }
     return true;

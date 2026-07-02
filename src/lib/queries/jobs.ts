@@ -57,3 +57,9 @@ export async function getChurchOpenJobs(churchId: string, excludeId?: string): P
   cacheTag("jobs");
   return mock.getChurchOpenJobs(churchId, excludeId);
 }
+
+export async function getSearchSuggestions(): Promise<string[]> {
+  "use cache";
+  cacheTag("jobs");
+  return mock.getSearchSuggestions();
+}

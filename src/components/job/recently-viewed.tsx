@@ -1,21 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { STORAGE_KEYS } from "@/constants/storage";
+import Link from "next/link";
+import { readRecentJobs, type RecentJob } from "@/lib/recent-jobs";
 
-// localStorage 기반 최근 본 공고 (로그인 불필요). 공고 상세에서 기록 예정 — 지금은 비어 있음.
+// localStorage 기반 최근 본 공고 (로그인 불필요). 공고 상세의 RecordRecentlyViewed가 기록한다.
 export function RecentlyViewed() {
-  const [items, setItems] = useState<{ id: string; title: string }[]>([]);
+  const [items, setItems] = useState<RecentJob[]>([]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.recentJobs);
-      // 마운트 시 클라이언트 전용 localStorage 읽기 (SSR엔 없음) — effect에서 setState가 불가피
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (raw) setItems(JSON.parse(raw));
-    } catch {
-      // 파싱 실패는 무시
-    }
+    // 마운트 시 클라이언트 전용 localStorage 읽기 (SSR엔 없음)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setItems(readRecentJobs());
   }, []);
 
   return (
@@ -26,15 +22,19 @@ export function RecentlyViewed() {
           최근 본 공고가 여기 표시됩니다.
         </p>
       ) : (
-        <ul className="space-y-1.5">
+        <ul className="space-y-2.5">
           {items.slice(0, 5).map((it) => (
             <li key={it.id}>
-              <a
-                href={`/jobs/${it.id}`}
-                className="line-clamp-1 text-sm text-muted-foreground hover:text-foreground"
-              >
-                {it.title}
-              </a>
+              <Link href={`/jobs/${it.id}`} className="group block">
+                <span className="line-clamp-1 text-sm text-muted-foreground group-hover:text-foreground">
+                  {it.title}
+                </span>
+                {it.subtitle && (
+                  <span className="line-clamp-1 text-xs text-muted-foreground/70">
+                    {it.subtitle}
+                  </span>
+                )}
+              </Link>
             </li>
           ))}
         </ul>
