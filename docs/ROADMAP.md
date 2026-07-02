@@ -1,6 +1,6 @@
 # MinJob — 작업 로드맵
 
-> 페이지·기능 명세는 [`SPEC.md`](./SPEC.md), 데이터 모델은 [`DATA.md`](./DATA.md)(작성 예정), 아키텍처는 [`../CLAUDE.md`](../CLAUDE.md).
+> 페이지·기능 명세는 [`SPEC.md`](./SPEC.md), 데이터 모델은 [`DATA.md`](./DATA.md), 아키텍처는 [`../CLAUDE.md`](../CLAUDE.md).
 > 브랜치: `prod`(배포) / `dev`(작업). commit·push·merge는 사용자 명시 요청 시에만.
 
 > **이 로드맵은 코드 작업만이 아니다.** 양면 시장 서비스라 "공고 확보(운영)"·"마케팅"·"법률 검토"가 개발과 병행돼야 한다. 각 Phase에 병행 트랙을 함께 둔다.
@@ -9,7 +9,7 @@
 
 ### 환경·골격 (지금 가능)
 - [x] `prod`(배포)·`dev`(작업) 브랜치 구성 + 원격 푸시
-- [x] CLAUDE.md, docs/(SPEC·ROADMAP·DATA stub), .gitignore
+- [x] CLAUDE.md, docs/(SPEC·ROADMAP·DATA), .gitignore
 - [x] Next.js 16 + React 19 + Tailwind v4 + TS strict + Prettier (Cache Components 활성)
 - [x] Pretendard 폰트(self-host) + 라이트 디자인 토큰
 - [x] shadcn/ui (Base UI) + 시드 컴포넌트(button·card·badge·input)
@@ -21,10 +21,10 @@
 - [ ] `.env` 로컬 셋업 (Supabase 키) — Phase 1
 - [ ] Vercel 연결 + 첫 배포 — 보류(사용자 결정)
 
-### DB 스키마 (⛔ DATA.md 확정 후 — 현재 보류)
-> DATA.md를 미뤄둔 상태라 아래는 그 문서가 채워진 뒤 진행한다. Phase 1 기능 대부분이 여기에 의존.
-- [ ] **DATA.md 작성** — 결정 대기 7개 항목 확정 (DATA.md 참조)
-- [ ] 마이그레이션 `001_init.sql` — churches·jobs·users 테이블 + enum CHECK + 인덱스 + RLS
+### DB 스키마 (DATA.md 확정 완료 — Phase 1에서 구축)
+> DATA.md에 스키마·enum·인덱스·RLS·재공고·노출 모델 확정됨. 아래는 Phase 1에서 진행.
+- [x] **DATA.md 작성** — 봉인 결정 확정(정규화/JOIN·직교화·enum·재공고키·노출 2종·사례비 period·RLS 의도)
+- [ ] 마이그레이션 `001_init.sql` — churches·church_links·jobs·users(+bookmarks Phase 2) + enum CHECK + 인덱스 + RLS (DATA.md §3·5·9)
 - [ ] DB 타입 생성 — `types/database.ts`
 
 **병행 트랙 (Phase 0~1 내내)**

@@ -1,6 +1,6 @@
 # MinJob — 기획서
 
-> 페이지·기능·역할 명세. 데이터 모델은 [`DATA.md`](./DATA.md)(작성 예정), 아키텍처·컨벤션은 [`../CLAUDE.md`](../CLAUDE.md), 작업은 [`ROADMAP.md`](./ROADMAP.md).
+> 페이지·기능·역할 명세. 데이터 모델은 [`DATA.md`](./DATA.md), 아키텍처·컨벤션은 [`../CLAUDE.md`](../CLAUDE.md), 작업은 [`ROADMAP.md`](./ROADMAP.md).
 >
 > 구체 필드·enum 허용값은 여기 적지 않는다(축·개념만). 값은 DATA.md에서 확정한다.
 
@@ -84,7 +84,7 @@
 
 ## 정렬·필터 규칙 (전역 일관)
 
-> 코드·UI 모두 이 표 기준. 구체 enum 값·SQL은 DATA.md(작성 예정).
+> 코드·UI 모두 이 표 기준. 구체 enum 값·SQL은 DATA.md.
 
 | 위치 | 정렬 |
 |---|---|

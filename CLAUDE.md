@@ -1,6 +1,6 @@
 # CLAUDE.md — MinJob
 
-> **이 파일은 HOW** — 아키텍처·데이터 수집 파이프라인·코드 컨벤션·가드레일. 페이지 기능은 [`docs/SPEC.md`](./docs/SPEC.md), 데이터 모델·테이블은 [`docs/DATA.md`](./docs/DATA.md)(작성 예정), 작업은 [`docs/ROADMAP.md`](./docs/ROADMAP.md), 환경·재개는 [`README.md`](./README.md), 시점 핸드오프는 [`docs/SNAPSHOT.md`](./docs/SNAPSHOT.md).
+> **이 파일은 HOW** — 아키텍처·데이터 수집 파이프라인·코드 컨벤션·가드레일. 페이지 기능은 [`docs/SPEC.md`](./docs/SPEC.md), 데이터 모델·테이블은 [`docs/DATA.md`](./docs/DATA.md), 작업은 [`docs/ROADMAP.md`](./docs/ROADMAP.md), 환경·재개는 [`README.md`](./README.md), 시점 핸드오프는 [`docs/SNAPSHOT.md`](./docs/SNAPSHOT.md).
 >
 > **문서 책임 분리** — 같은 사실을 두 곳에 쓰지 않는다. 아키텍처·컨벤션·가드레일은 여기, 페이지 명세는 SPEC, 데이터는 DATA, 작업은 ROADMAP.
 
