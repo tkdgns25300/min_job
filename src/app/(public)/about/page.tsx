@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "소개 | 민잡",
   description:
-    "민잡은 흩어져 있는 부교역자 청빙 공고를 한 곳에 모아, 지역·교단·직분·부서로 찾아보고 비교할 수 있게 정리하는 서비스입니다.",
+    "민잡은 흩어져 있는 교회 사역자 청빙 공고를 한 곳에 모아, 지역·교단·직분·부서로 찾아보고 비교할 수 있게 정리하는 서비스입니다.",
 };
 
 export default function AboutPage() {
@@ -12,7 +12,7 @@ export default function AboutPage() {
       <header className="space-y-3">
         <h1 className="text-2xl font-bold sm:text-3xl">소개</h1>
         <p className="leading-relaxed text-muted-foreground">
-          민잡은 여러 곳에 흩어져 있는 부교역자(부목사·전도사) 청빙 공고를 한 곳에 모아,
+          민잡은 여러 곳에 흩어져 있는 교회 사역자 청빙 공고를 한 곳에 모아,
           지역·교단·직분·부서 등으로 찾아보고 비교할 수 있게 정리하는 서비스입니다.
         </p>
       </header>

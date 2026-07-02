@@ -11,9 +11,9 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "MinJob — 부교역자 청빙 공고",
+  title: "MinJob — 사역자 청빙 공고",
   description:
-    "흩어진 부교역자(부목사·전도사) 청빙 공고를 한곳에 모아 교단·지역·사례비로 검색·비교하세요.",
+    "흩어진 교회 사역자(담임·부목사·전도사) 청빙 공고를 한곳에 모아 교단·지역·사례비로 검색·비교하세요.",
 };
 
 export default function RootLayout({

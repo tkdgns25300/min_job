@@ -11,7 +11,7 @@ export function Footer() {
   return (
     <footer className="border-t bg-muted/30">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <p>© MinJob · 부교역자 청빙 공고</p>
+        <p>© MinJob · 사역자 청빙 공고</p>
         <nav className="flex flex-wrap gap-4">
           {FOOTER_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className="hover:text-foreground">

@@ -9,7 +9,7 @@ export default async function JobsPage() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8">
       <div className="mb-6 border-b pb-6">
-        <h1 className="text-xl font-bold">부교역자 청빙</h1>
+        <h1 className="text-xl font-bold">사역자 청빙</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           교회 청빙 공고를 한곳에서. 교단·지역·사례비로 검색하고 비교하세요.
         </p>
