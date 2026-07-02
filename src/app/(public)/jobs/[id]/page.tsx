@@ -3,14 +3,14 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { JobDetailView } from "./job-detail-view";
 import { RecordRecentlyViewed } from "@/components/job/record-recently-viewed";
-import { getChurchOpenJobs, getJobDetail, getRepost, getSimilarJobs } from "@/mocks";
+import { getChurchOpenJobs, getJobDetail, getRepost, getSimilarJobs } from "@/lib/queries/jobs";
 import { jobPostingJsonLd, jobRoleSummary } from "@/lib/seo";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
-  const detail = getJobDetail(id);
+  const detail = await getJobDetail(id);
   if (!detail) return { title: "공고를 찾을 수 없습니다 | 민잡" };
 
   const description = detail.job.description ?? jobRoleSummary(detail);
@@ -33,12 +33,12 @@ export default function JobDetailPage({ params }: Params) {
 
 async function JobDetailContent({ params }: Params) {
   const { id } = await params;
-  const detail = getJobDetail(id);
+  const detail = await getJobDetail(id);
   if (!detail) notFound();
 
-  const repost = getRepost(id);
-  const churchJobs = getChurchOpenJobs(detail.church.id, id);
-  const similar = getSimilarJobs(id);
+  const repost = await getRepost(id);
+  const churchJobs = await getChurchOpenJobs(detail.church.id, id);
+  const similar = await getSimilarJobs(id);
 
   return (
     <>

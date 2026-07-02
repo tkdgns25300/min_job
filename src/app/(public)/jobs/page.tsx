@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { getAllJobCards, getAdJobs } from "@/mocks";
+import { getAdJobs, getAllJobCards } from "@/lib/queries/jobs";
 import { JobsView } from "./jobs-view";
 
-export default function JobsPage() {
-  const jobs = getAllJobCards();
-  const ads = getAdJobs();
+export default async function JobsPage() {
+  const jobs = await getAllJobCards();
+  const ads = await getAdJobs();
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8">

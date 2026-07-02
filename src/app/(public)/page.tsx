@@ -3,12 +3,12 @@ import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { JobCard } from "@/components/job/job-card";
-import { getAdJobs, getRecentJobs, getJobStats } from "@/mocks";
+import { getAdJobs, getRecentJobs, getJobStats } from "@/lib/queries/jobs";
 
-export default function HomePage() {
-  const adJobs = getAdJobs();
-  const recentJobs = getRecentJobs(6);
-  const stats = getJobStats();
+export default async function HomePage() {
+  const adJobs = await getAdJobs();
+  const recentJobs = await getRecentJobs(6);
+  const stats = await getJobStats();
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-12 px-4 py-8">

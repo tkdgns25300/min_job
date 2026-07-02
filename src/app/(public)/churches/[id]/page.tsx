@@ -3,16 +3,17 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ChurchDetailView } from "./church-detail-view";
 import { churchMetaLine } from "@/lib/format";
-import { getChurch, getChurchOpenJobs, getChurchTimeline } from "@/mocks";
+import { getChurch, getChurchTimeline } from "@/lib/queries/churches";
+import { getChurchOpenJobs } from "@/lib/queries/jobs";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
-  const church = getChurch(id);
+  const church = await getChurch(id);
   if (!church) return { title: "교회를 찾을 수 없습니다 | 민잡" };
 
-  const openCount = getChurchOpenJobs(id).length;
+  const openCount = (await getChurchOpenJobs(id)).length;
   const description = `${church.name} (${churchMetaLine(church)}) 교역자 청빙${
     openCount > 0 ? ` · 현재 ${openCount}건 모집 중` : ""
   }. 교회 정보·채널·재공고 이력을 민잡에서 확인하세요.`;
@@ -34,11 +35,11 @@ export default function ChurchDetailPage({ params }: Params) {
 
 async function ChurchDetailContent({ params }: Params) {
   const { id } = await params;
-  const church = getChurch(id);
+  const church = await getChurch(id);
   if (!church) notFound();
 
-  const openJobs = getChurchOpenJobs(id);
-  const timeline = getChurchTimeline(id);
+  const openJobs = await getChurchOpenJobs(id);
+  const timeline = await getChurchTimeline(id);
 
   return <ChurchDetailView church={church} openJobs={openJobs} timeline={timeline} />;
 }
