@@ -102,15 +102,16 @@ export function getSimilarJobs(id: string, limit = 4): JobCard[] {
   return [...byDept, ...byRegion].slice(0, limit).map(toCard);
 }
 
-/** 홈 스탯 — 모집 중 수 / 최근 7일 새 공고 수 */
-export function getJobStats(): { openCount: number; newThisWeek: number } {
+/** 홈 스탯 — 모집 중 수 / 최근 7일 새 공고 수 / 청빙 중 교회 수 */
+export function getJobStats(): { openCount: number; newThisWeek: number; churchCount: number } {
   const openCount = openJobs.length;
-  if (openCount === 0) return { openCount: 0, newThisWeek: 0 };
+  if (openCount === 0) return { openCount: 0, newThisWeek: 0, churchCount: 0 };
   // 결정성 유지: 기준일 = 최신 공고 등록일 (현재 시각 미사용)
   const latest = openJobs.reduce((m, j) => (j.postedAt > m ? j.postedAt : m), openJobs[0].postedAt);
   const ref = new Date(latest);
   ref.setDate(ref.getDate() - 7);
   const weekAgo = ref.toISOString().slice(0, 10);
   const newThisWeek = openJobs.filter((j) => j.postedAt >= weekAgo).length;
-  return { openCount, newThisWeek };
+  const churchCount = new Set(openJobs.map((j) => j.churchId)).size;
+  return { openCount, newThisWeek, churchCount };
 }

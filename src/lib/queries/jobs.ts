@@ -24,7 +24,11 @@ export async function getAllJobCards(): Promise<JobCard[]> {
   return mock.getAllJobCards();
 }
 
-export async function getJobStats(): Promise<{ openCount: number; newThisWeek: number }> {
+export async function getJobStats(): Promise<{
+  openCount: number;
+  newThisWeek: number;
+  churchCount: number;
+}> {
   "use cache";
   cacheTag("jobs");
   return mock.getJobStats();
