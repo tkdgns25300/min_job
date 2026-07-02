@@ -2,11 +2,9 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// 상단 nav는 구직자 중심. 노출/광고(파는 쪽) 안내는 footer + 교회 여정 맥락으로.
-const NAV_LINKS = [
-  { href: "/jobs", label: "공고" },
-  { href: "/about", label: "소개" },
-] as const;
+// 상단 nav = 구직자 탐색 기능만(=공고 하나). 소개는 footer, 노출/광고는 footer+교회 여정.
+// 로그인 후 마이페이지·내 공고 관리는 좌 nav가 아니라 우측 계정 영역으로 붙는다(Phase 1).
+const NAV_LINKS = [{ href: "/jobs", label: "공고" }] as const;
 
 export function Header() {
   return (
