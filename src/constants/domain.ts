@@ -40,6 +40,7 @@ export type Region = keyof typeof REGIONS;
 
 // 직분 (순수 직분만 — 전임/파트는 employmentType, 부서는 department로 분리)
 export const POSITIONS = {
+  SENIOR_PASTOR: "담임목사",
   ASSOCIATE_PASTOR: "부목사",
   EVANGELIST: "전도사",
   LICENSED_MINISTER: "강도사",
@@ -73,18 +74,6 @@ export const FEATURED_TIERS = {
   HERO: "대표광고",
 } as const;
 export type FeaturedTier = keyof typeof FEATURED_TIERS;
-
-// 교회 규모 (출석 성도 기준, 대략치). 미상은 church.size = null.
-export const CHURCH_SIZES = {
-  PLANT: "개척", // 개척·미자립 (설립 초기, 대개 ~50명)
-  SMALL: "소형", // ~300명
-  MEDIUM: "중형", // 300~1,000명
-  LARGE: "대형", // 1,000명 이상
-} as const;
-export type ChurchSize = keyof typeof CHURCH_SIZES;
-
-// 규모 미상 필터 키 (church.size = null인 공고를 필터에서 선택하기 위한 값)
-export const UNKNOWN_SIZE = "UNKNOWN";
 
 // 공고 출처 — 운영자가 수집·등록 / 교회가 직접 등록 (공고 owner nullable 가드레일)
 export const JOB_SOURCES = {

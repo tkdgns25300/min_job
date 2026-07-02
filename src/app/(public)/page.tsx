@@ -40,8 +40,6 @@ export default async function HomePage() {
           <Stat value={stats.openCount} unit="건" label="지금 모집 중" />
           <div className="h-8 w-px bg-border" />
           <Stat value={stats.newThisWeek} unit="건" label="이번 주 새 공고" />
-          <div className="h-8 w-px bg-border" />
-          <Stat value={stats.churchCount} unit="곳" label="청빙 중 교회" />
         </dl>
       </section>
 

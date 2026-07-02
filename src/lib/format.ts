@@ -1,4 +1,4 @@
-import { DENOMINATIONS, REGIONS, CHURCH_SIZES } from "@/constants/domain";
+import { DENOMINATIONS, REGIONS } from "@/constants/domain";
 import type { Church } from "@/types/domain";
 
 // 도메인 값 표시 포매터
@@ -16,9 +16,7 @@ export function churchLocation(church: Pick<Church, "region" | "city">): string 
   return `${REGIONS[church.region]}${church.city ? ` ${church.city}` : ""}`;
 }
 
-// 교회 요약 한 줄: 교단 · 지역 · 규모
-export function churchMetaLine(
-  church: Pick<Church, "denomination" | "region" | "city" | "size">,
-): string {
-  return `${DENOMINATIONS[church.denomination]} · ${churchLocation(church)}${church.size ? ` · ${CHURCH_SIZES[church.size]}` : ""}`;
+// 교회 요약 한 줄: 교단 · 지역
+export function churchMetaLine(church: Pick<Church, "denomination" | "region" | "city">): string {
+  return `${DENOMINATIONS[church.denomination]} · ${churchLocation(church)}`;
 }

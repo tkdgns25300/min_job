@@ -11,7 +11,7 @@
 ## 1. 설계 원칙
 
 - **DB는 저장 전용.** trigger·custom function·복잡한 default expression 만들지 않는다. ID 발급·timestamp·집계·재공고 판정 등 로직은 전부 Server Action / query 함수. 내장 기능만 사용(`gen_random_uuid()`, `CHECK`, `FK`, array/`jsonb`).
-- **정규화 유지 (JOIN).** 교단·지역·규모 필터는 `churches`를 JOIN해서 건다. 비정규화(공고에 교회 속성 복사) 안 함 — 우리 규모(초기 수백~수천)에선 JOIN + `'use cache'` 캐시로 충분. (대규모 인덱스 최적화 필요 시 나중에 재검토)
+- **정규화 유지 (JOIN).** 교단·지역 필터는 `churches`를 JOIN해서 건다. 비정규화(공고에 교회 속성 복사) 안 함 — 우리 규모(초기 수백~수천)에선 JOIN + `'use cache'` 캐시로 충분. (대규모 인덱스 최적화 필요 시 나중에 재검토)
 - **enum = 영어 대문자 key + 한글 라벨.** key는 DB에 저장(값)·URL params에 사용, 표시는 `constants/domain.ts`의 한글 라벨 맵. DB에서는 `CHECK` 제약으로 허용값 강제(별도 enum 타입 대신 `text + CHECK`로 확장 용이하게).
 - **컬럼명 = `snake_case`** (DB), 앱(TS)은 `camelCase`. Supabase 생성 타입이 매핑.
 - **가드레일 준수**: 공고 owner nullable · 개인 담당자 연락처 컬럼 없음 · source로 출처 구분 · 자동 크롤러 없음(사람 수집 + AI 구조화).
@@ -24,9 +24,8 @@
 |---|---|---|
 | **denomination** (교단) | `churches.denomination` | HAPDONG · TONGHAP · BAEKSEOK · GOSIN · HAPSIN · KIJANG · GAMLI · SEONGGYUL · BAPTIST · SUNBOK · ETC |
 | **region** (광역) | `churches.region` | SEOUL · GYEONGGI · INCHEON · GANGWON · CHUNGBUK · CHUNGNAM · DAEJEON · SEJONG · GYEONGBUK · GYEONGNAM · DAEGU · ULSAN · BUSAN · JEONBUK · JEONNAM · GWANGJU · JEJU · OVERSEAS |
-| **church_size** (규모) | `churches.size` | PLANT · SMALL · MEDIUM · LARGE · `NULL`(미상) |
 | **church_channel** (채널) | `church_links.type` | HOMEPAGE · YOUTUBE · INSTAGRAM · FACEBOOK · BAND |
-| **position** (직분) | `jobs.position` | ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC |
+| **position** (직분) | `jobs.position` | SENIOR_PASTOR · ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC |
 | **department** (부서) | `jobs.department` | INFANT · CHILDREN · YOUTH · YOUNG_ADULT · DISTRICT · WORSHIP · ADMIN · ETC · `NULL` |
 | **employment_type** (고용형태) | `jobs.employment_type` | FULL_TIME · SEMI_FULL_TIME · PART_TIME |
 | **stipend_period** (사례비 기간) | `jobs.stipend_period` | MONTH(기본) · YEAR |
@@ -50,7 +49,6 @@
 | `denomination` | text NOT NULL (CHECK) | 교단 |
 | `region` | text NOT NULL (CHECK) | 광역 (필터) |
 | `city` | text NULL | 시·군·구 (표시용 자유 텍스트) |
-| `size` | text NULL (CHECK) | 규모, NULL=미상 |
 | `founded_year` | int NULL | 창립 연도 |
 | `created_at` | timestamptz DEFAULT now() | |
 
@@ -142,7 +140,7 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 - `jobs(posted_at DESC)` — 최신순 정렬
 - `jobs(featured_tier, featured_until)` — 노출(프리미엄·대표광고) 조회
 - `jobs(position)`, `jobs(department)`, `jobs(employment_type)` — 목록 필터
-- `churches(denomination)`, `churches(region)`, `churches(size)` — 목록 필터(JOIN 대상)
+- `churches(denomination)`, `churches(region)` — 목록 필터(JOIN 대상)
 - `church_links(church_id)`
 - `bookmarks(user_id)`
 

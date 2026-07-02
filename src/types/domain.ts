@@ -5,7 +5,6 @@ import type {
   Department,
   EmploymentType,
   FeaturedTier,
-  ChurchSize,
   JobSource,
   ChurchChannel,
 } from "@/constants/domain";
@@ -14,7 +13,7 @@ export type JobStatus = "OPEN" | "CLOSED";
 
 // 목록 필터/정렬 (다중선택 필터 축 · 정렬 키)
 export type FilterDim =
-  "denomination" | "region" | "position" | "department" | "employmentType" | "size";
+  "denomination" | "region" | "position" | "department" | "employmentType";
 export type SortKey = "recent" | "stipend" | "deadline";
 
 // 교회 채널 링크 (홈페이지·SNS)
@@ -30,7 +29,6 @@ export interface Church {
   denomination: Denomination;
   region: Region; // 광역 (필터용)
   city: string | null; // 시·군·구 (표시용 자유 텍스트)
-  size: ChurchSize | null; // 교회 규모 (출석 성도 기준, null = 미상)
   foundedYear: number | null; // 창립 연도 (null = 미상)
   links: ChurchLink[]; // 교회 채널 — 없으면 빈 배열
 }
@@ -70,7 +68,7 @@ export interface JobDetail {
 export interface JobCard {
   id: string;
   title: string;
-  church: Pick<Church, "name" | "denomination" | "region" | "city" | "size">;
+  church: Pick<Church, "name" | "denomination" | "region" | "city">;
   position: Position;
   department: Department | null;
   employmentType: EmploymentType;

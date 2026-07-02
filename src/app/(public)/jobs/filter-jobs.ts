@@ -1,11 +1,4 @@
-import {
-  DENOMINATIONS,
-  DEPARTMENTS,
-  EMPLOYMENT_TYPES,
-  POSITIONS,
-  REGIONS,
-  UNKNOWN_SIZE,
-} from "@/constants/domain";
+import { DENOMINATIONS, DEPARTMENTS, EMPLOYMENT_TYPES, POSITIONS, REGIONS } from "@/constants/domain";
 import type { FilterDim, JobCard, SortKey } from "@/types/domain";
 
 // mock 단계 클라이언트 필터/정렬 (순수 함수).
@@ -34,7 +27,6 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
     if (s.position.size && !s.position.has(j.position)) return false;
     if (s.department.size && (!j.department || !s.department.has(j.department))) return false;
     if (s.employmentType.size && !s.employmentType.has(j.employmentType)) return false;
-    if (s.size.size && !s.size.has(j.church.size ?? UNKNOWN_SIZE)) return false;
 
     const hasNumber = j.stipendMin !== null || j.stipendMax !== null;
     if (!hasNumber) {

@@ -4,9 +4,7 @@
     "name": "새소망교회",
     "denomination": "HAPDONG",
     "region": "GYEONGGI",
-    "city": "성남",
-    "size": "MEDIUM",
-    "foundedYear": 2005,
+    "city": "성남",    "foundedYear": 2005,
     "links": [
       { "type": "HOMEPAGE", "url": "https://example.com/saesomang" },
       { "type": "YOUTUBE", "url": "https://youtube.com/@saesomang" },
@@ -18,9 +16,7 @@
     "name": "은혜로교회",
     "denomination": "TONGHAP",
     "region": "SEOUL",
-    "city": "강북",
-    "size": "LARGE",
-    "foundedYear": 1988,
+    "city": "강북",    "foundedYear": 1988,
     "links": [{ "type": "HOMEPAGE", "url": "https://example.com/eunhyero" }]
   },
   {
@@ -28,9 +24,7 @@
     "name": "한빛교회",
     "denomination": "HAPDONG",
     "region": "GYEONGGI",
-    "city": "용인",
-    "size": "SMALL",
-    "foundedYear": 2015,
+    "city": "용인",    "foundedYear": 2015,
     "links": [
       { "type": "HOMEPAGE", "url": "https://example.com/hanbit" },
       { "type": "YOUTUBE", "url": "https://youtube.com/@hanbit" }
@@ -41,9 +35,7 @@
     "name": "주안에교회",
     "denomination": "TONGHAP",
     "region": "INCHEON",
-    "city": "부평",
-    "size": "PLANT",
-    "foundedYear": 2021,
+    "city": "부평",    "foundedYear": 2021,
     "links": [
       { "type": "INSTAGRAM", "url": "https://instagram.com/juane" },
       { "type": "BAND", "url": "https://band.us/@juane" }
@@ -54,9 +46,7 @@
     "name": "사랑의빛교회",
     "denomination": "HAPDONG",
     "region": "SEOUL",
-    "city": "송파",
-    "size": "LARGE",
-    "foundedYear": 1995,
+    "city": "송파",    "foundedYear": 1995,
     "links": [
       { "type": "HOMEPAGE", "url": "https://example.com/sarangbit" },
       { "type": "YOUTUBE", "url": "https://youtube.com/@sarangbit" },
@@ -68,9 +58,7 @@
     "name": "새벽빛교회",
     "denomination": "BAEKSEOK",
     "region": "GYEONGGI",
-    "city": "수원",
-    "size": "MEDIUM",
-    "foundedYear": 2010,
+    "city": "수원",    "foundedYear": 2010,
     "links": [{ "type": "HOMEPAGE", "url": "https://example.com/saebyeok" }]
   },
   {
@@ -78,9 +66,7 @@
     "name": "빛과소금교회",
     "denomination": "GOSIN",
     "region": "BUSAN",
-    "city": "해운대",
-    "size": null,
-    "foundedYear": null,
+    "city": "해운대",    "foundedYear": null,
     "links": []
   },
   {
@@ -88,9 +74,7 @@
     "name": "반석교회",
     "denomination": "TONGHAP",
     "region": "DAEGU",
-    "city": "수성",
-    "size": "SMALL",
-    "foundedYear": 2001,
+    "city": "수성",    "foundedYear": 2001,
     "links": [
       { "type": "HOMEPAGE", "url": "https://example.com/banseok" },
       { "type": "YOUTUBE", "url": "https://youtube.com/@banseok" }

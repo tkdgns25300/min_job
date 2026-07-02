@@ -9,13 +9,10 @@ import {
   POSITIONS,
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
-  CHURCH_SIZES,
-  UNKNOWN_SIZE,
 } from "@/constants/domain";
 import type { FilterDim } from "@/types/domain";
 
 const CHIP_LIMIT = 8; // 이보다 많은 그룹은 "더보기"로 접음
-const SIZE_OPTIONS: Record<string, string> = { ...CHURCH_SIZES, [UNKNOWN_SIZE]: "미상" };
 
 const GROUPS: { dim: FilterDim; title: string; options: Record<string, string> }[] = [
   { dim: "denomination", title: "교단", options: DENOMINATIONS },
@@ -23,7 +20,6 @@ const GROUPS: { dim: FilterDim; title: string; options: Record<string, string> }
   { dim: "position", title: "직분", options: POSITIONS },
   { dim: "department", title: "담당 부서", options: DEPARTMENTS },
   { dim: "employmentType", title: "고용형태", options: EMPLOYMENT_TYPES },
-  { dim: "size", title: "교회 규모", options: SIZE_OPTIONS },
 ];
 
 function ChipGroup({

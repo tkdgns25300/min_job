@@ -25,7 +25,6 @@ const MULTI_DIMS: FilterDim[] = [
   "position",
   "department",
   "employmentType",
-  "size",
 ];
 
 function emptySelected(): Record<FilterDim, Set<string>> {
