@@ -2,15 +2,15 @@
 
 흩어진 **부교역자(부목사·전도사) 청빙 공고**를 한곳에 모아 교단·지역·사례비로 검색·비교하는 채용 플랫폼.
 
-> 문서 — 아키텍처·컨벤션·가드레일 [`CLAUDE.md`](./CLAUDE.md) · 기획 [`docs/SPEC.md`](./docs/SPEC.md) · 데이터 [`docs/DATA.md`](./docs/DATA.md)(작성 예정) · 작업 [`docs/ROADMAP.md`](./docs/ROADMAP.md)
+> 문서 — 아키텍처·컨벤션·가드레일 [`CLAUDE.md`](./CLAUDE.md) · 기획 [`docs/SPEC.md`](./docs/SPEC.md) · 데이터 [`docs/DATA.md`](./docs/DATA.md) · 작업 [`docs/ROADMAP.md`](./docs/ROADMAP.md)
 
 ## Stack
 
-Next.js 16 (App Router, Cache Components) · React 19 · TypeScript strict · Tailwind v4 + shadcn/ui (Base UI) · Pretendard(self-host) · Supabase(예정) · Vercel · npm
+Next.js 16 (App Router, Cache Components) · React 19 · TypeScript strict · Tailwind v4 + shadcn/ui (Base UI) · Pretendard(self-host) · Supabase · Vercel · npm
 
 ## 요구 사항
 
-- Node.js 20+ (개발 확인: 24)
+- Node.js 20+
 - npm
 
 ## 시작하기
