@@ -12,8 +12,7 @@ import type {
 export type JobStatus = "OPEN" | "CLOSED";
 
 // 목록 필터/정렬 (다중선택 필터 축 · 정렬 키)
-export type FilterDim =
-  "denomination" | "region" | "position" | "department" | "employmentType";
+export type FilterDim = "denomination" | "region" | "position" | "department" | "employmentType";
 export type SortKey = "recent" | "stipend" | "deadline";
 
 // 교회 채널 링크 (홈페이지·SNS)

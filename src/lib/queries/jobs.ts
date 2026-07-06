@@ -27,6 +27,7 @@ export async function getAllJobCards(): Promise<JobCard[]> {
 export async function getJobStats(): Promise<{
   openCount: number;
   newThisWeek: number;
+  churchCount: number;
 }> {
   "use cache";
   cacheTag("jobs");

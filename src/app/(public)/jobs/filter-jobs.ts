@@ -1,4 +1,10 @@
-import { DENOMINATIONS, DEPARTMENTS, EMPLOYMENT_TYPES, POSITIONS, REGIONS } from "@/constants/domain";
+import {
+  DENOMINATIONS,
+  DEPARTMENTS,
+  EMPLOYMENT_TYPES,
+  POSITIONS,
+  REGIONS,
+} from "@/constants/domain";
 import type { FilterDim, JobCard, SortKey } from "@/types/domain";
 
 // mock 단계 클라이언트 필터/정렬 (순수 함수).

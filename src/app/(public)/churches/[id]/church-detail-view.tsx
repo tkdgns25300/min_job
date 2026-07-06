@@ -50,9 +50,8 @@ function HistorySection({ timeline }: { timeline: RoleHistory[] }) {
       <h2 className="text-base font-bold">공고 이력</h2>
       {topRepost && (
         <p className="flex items-center gap-1.5 text-sm">
-          <RefreshCw className="size-4 shrink-0 text-muted-foreground" />
-          이 교회는 <b>{roleLabel(topRepost)}</b> 자리를 최근{" "}
-          <b>{topRepost.postings.length}번</b> 공고했어요.
+          <RefreshCw className="size-4 shrink-0 text-muted-foreground" />이 교회는{" "}
+          <b>{roleLabel(topRepost)}</b> 자리를 최근 <b>{topRepost.postings.length}번</b> 공고했어요.
         </p>
       )}
       <details className="group rounded-lg border">

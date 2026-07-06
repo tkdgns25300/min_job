@@ -1,7 +1,12 @@
 import churchesData from "./churches.json";
 import jobsData from "./jobs.json";
 import type { Church, Job, JobCard, JobDetail } from "@/types/domain";
-import { getRepostInfo, groupByRole, type RepostInfo, type RoleHistory } from "@/lib/repost-tracking";
+import {
+  getRepostInfo,
+  groupByRole,
+  type RepostInfo,
+  type RoleHistory,
+} from "@/lib/repost-tracking";
 import { DENOMINATIONS, DEPARTMENTS, POSITIONS, REGIONS } from "@/constants/domain";
 
 // mock 데이터 — 페이지를 만들며 채워나간다. 모든 페이지 완료 시 이 형태가 최종 스키마.
@@ -77,9 +82,7 @@ export function getChurch(id: string): Church | null {
 
 /** 교회의 현재 모집 중 공고 (excludeId 지정 시 해당 공고 제외 — 공고 상세의 "이 교회 다른 모집") */
 export function getChurchOpenJobs(churchId: string, excludeId?: string): JobCard[] {
-  return openJobs
-    .filter((j) => j.churchId === churchId && j.id !== excludeId)
-    .map(toCard);
+  return openJobs.filter((j) => j.churchId === churchId && j.id !== excludeId).map(toCard);
 }
 
 /** 교회의 공고 이력 — 자리별 그룹(현재+지난, 재공고 집계). 교회 상세 차별점 */
@@ -97,7 +100,9 @@ export function getSimilarJobs(id: string, limit = 4): JobCard[] {
   const byDept = pool.filter((j) => base.department !== null && j.department === base.department);
   const byRegion = pool.filter(
     (j) =>
-      !byDept.includes(j) && baseChurch != null && churchById.get(j.churchId)?.region === baseChurch.region,
+      !byDept.includes(j) &&
+      baseChurch != null &&
+      churchById.get(j.churchId)?.region === baseChurch.region,
   );
   return [...byDept, ...byRegion].slice(0, limit).map(toCard);
 }
@@ -128,15 +133,19 @@ export function getSearchSuggestions(): string[] {
     .map(([term]) => term);
 }
 
-/** 홈 스탯 — 모집 중 수 / 최근 7일 새 공고 수 */
-export function getJobStats(): { openCount: number; newThisWeek: number } {
+/**
+ * 홈 스탯 — 지금 모집 중 / 이번 주 새 공고 / 함께하는 교회(누적 참여).
+ * 함께하는 교회 = 공고를 올린 적 있는 교회 수(누적) — "청빙 중 교회"와 다른 개념.
+ */
+export function getJobStats(): { openCount: number; newThisWeek: number; churchCount: number } {
   const openCount = openJobs.length;
-  if (openCount === 0) return { openCount: 0, newThisWeek: 0 };
+  const churchCount = new Set(jobs.map((j) => j.churchId)).size;
+  if (openCount === 0) return { openCount: 0, newThisWeek: 0, churchCount };
   // 결정성 유지: 기준일 = 최신 공고 등록일 (현재 시각 미사용)
   const latest = openJobs.reduce((m, j) => (j.postedAt > m ? j.postedAt : m), openJobs[0].postedAt);
   const ref = new Date(latest);
   ref.setDate(ref.getDate() - 7);
   const weekAgo = ref.toISOString().slice(0, 10);
   const newThisWeek = openJobs.filter((j) => j.postedAt >= weekAgo).length;
-  return { openCount, newThisWeek };
+  return { openCount, newThisWeek, churchCount };
 }

@@ -206,8 +206,8 @@ function SummaryAside({ job, church }: { job: Job; church: Church }) {
           </a>
         )}
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          민잡은 직접 지원을 받지 않습니다. 지원 방법·서류 제출은 원문 공고와 교회 안내를 따라 교회로
-          직접 문의해 주세요.
+          민잡은 직접 지원을 받지 않습니다. 지원 방법·서류 제출은 원문 공고와 교회 안내를 따라
+          교회로 직접 문의해 주세요.
         </p>
       </div>
 

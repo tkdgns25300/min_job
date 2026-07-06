@@ -61,8 +61,8 @@ export default function PricingPage() {
           청빙 공고를 더 많은 교역자에게
         </h1>
         <p className="max-w-2xl leading-relaxed text-muted-foreground">
-          공고 등록은 <b className="font-semibold text-foreground">언제나 무료</b>입니다. 노출 상품은
-          공고를 더 눈에 띄는 위치에 보여주고 싶을 때만 선택하세요.
+          공고 등록은 <b className="font-semibold text-foreground">언제나 무료</b>입니다. 노출
+          상품은 공고를 더 눈에 띄는 위치에 보여주고 싶을 때만 선택하세요.
         </p>
       </header>
 
@@ -94,7 +94,9 @@ export default function PricingPage() {
       <section className="space-y-4">
         <div>
           <h2 className="text-lg font-bold">노출 위치 미리보기</h2>
-          <p className="mt-1 text-sm text-muted-foreground">공고 목록에서 상품별로 이렇게 보여요.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            공고 목록에서 상품별로 이렇게 보여요.
+          </p>
         </div>
         <div className="grid gap-6 md:grid-cols-[minmax(0,300px)_1fr] md:items-start">
           {/* 목록 와이어프레임 */}

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Clock, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   addRecentSearch,
@@ -114,23 +113,29 @@ export function SearchBox({ suggestions }: { suggestions: string[] }) {
           e.preventDefault();
           go(q);
         }}
-        className="flex w-full gap-2"
+        className="flex w-full items-center gap-1.5 rounded-2xl bg-white p-1.5 shadow-xl shadow-black/10"
       >
-        <Input
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setActive(-1);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={onKeyDown}
-          placeholder="교회명 · 지역 · 직분 검색"
-          aria-label="공고 검색"
-          aria-expanded={open}
-          className="h-12 flex-1"
-        />
-        <button type="submit" className={cn(buttonVariants({ size: "lg" }), "h-12 px-6")}>
+        <div className="flex flex-1 items-center gap-2 pl-3">
+          <Search className="size-[18px] shrink-0 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setActive(-1);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            onKeyDown={onKeyDown}
+            placeholder="교회명 · 지역 · 직분 검색"
+            aria-label="공고 검색"
+            aria-expanded={open}
+            className="h-11 flex-1 border-0 bg-transparent px-0 text-[15.5px] shadow-none focus-visible:ring-0"
+          />
+        </div>
+        <button
+          type="submit"
+          className="h-11 shrink-0 rounded-xl bg-primary px-6 font-bold text-primary-foreground transition-colors hover:bg-brand-700"
+        >
           검색
         </button>
       </form>

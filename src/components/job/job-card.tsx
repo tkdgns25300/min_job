@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DENOMINATIONS, REGIONS, POSITIONS, DEPARTMENTS, EMPLOYMENT_TYPES } from "@/constants/domain";
+import {
+  DENOMINATIONS,
+  REGIONS,
+  POSITIONS,
+  DEPARTMENTS,
+  EMPLOYMENT_TYPES,
+} from "@/constants/domain";
 import type { JobCard as JobCardData } from "@/types/domain";
 import { formatStipend } from "@/lib/format";
 import { cn } from "@/lib/utils";
