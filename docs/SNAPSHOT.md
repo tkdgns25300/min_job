@@ -15,7 +15,7 @@
 ## 1. 지금 어디까지 왔나 (한눈에)
 
 **완성 (mock + 섹션 확정)**
-- ✅ **홈 `/`** — **딥그린 히어로(검색+지표3) 완료**. 추천(AD)·최신 공고는 임시(리스트+사이드바로 교체 예정, §9)
+- ✅ **홈 `/`** — 딥그린 히어로(검색+지표3) · 추천 청빙(대표광고 카드) · 2단[청빙 공고 리스트(JobRow) + 사이드바(추천검색어·교회CTA)]. 남음: 3-피처·푸터(§9)
 - ✅ **공고 목록 `/jobs`** — 검색·필터·정렬·페이지네이션·우측레일·모바일 Sheet
 - ✅ **공고 상세 `/jobs/[id]`** — 2단(본문 플로우 + sticky 사이드바), 재공고 배지, JobPosting JSON-LD
 - ✅ **교회 상세 `/churches/[id]`** — 헤더·채널·창립연도 / 현재 모집 / 재공고 이력(토글)
@@ -28,7 +28,7 @@
 
 **드롭됨**: `/churches`(교회 목록 browse) · 교회 규모(대/중/소) 필드(누나 인터뷰: 기준 모호·"세상적" → 전면 제거).
 
-**아직 안 함 (전부 의도적 연기)**: Supabase 연동·인증·실데이터, `'use cache'`+태그 실적용, sitemap/robots, **딥그린+골드 브랜드 테마**, 배포(Vercel).
+**아직 안 함 (전부 의도적 연기)**: Supabase 연동·인증·실데이터, `'use cache'`+태그 실적용, sitemap/robots, 배포(Vercel). (딥그린+골드 테마·JobRow·노출등급 분리는 적용됨)
 
 > **지난 스냅샷(6672c3c) 이후 변경**: 홈 검색 오버레이 · 교회 규모 제거 · 직분에 담임목사 추가 · "사역자 청빙" 포지셔닝 통일 · 데이터접근 seam(`lib/queries`) · INTERVIEWS.md 신설 · 누나 인터뷰 반영(ROADMAP 1-7).
 
@@ -107,11 +107,11 @@ SortKey   = recent|stipend|deadline
 `src/lib/repost-tracking.ts`: `REPOST_MIN_COUNT=2`, `repostKey=churchId:position:department`, `getRepostInfo`, `groupByRole`.
 
 ### 조회 seam (`src/lib/queries/*.ts` — **이제 존재**, mock 위임)
-- `queries/jobs.ts`: getAdJobs · getRecentJobs · getAllJobCards · getJobStats(모집중·새공고) · getJobDetail · getRepost · getSimilarJobs · getChurchOpenJobs · **getSearchSuggestions**(검색어 완성 후보)
+- `queries/jobs.ts`: getAdJobs(HERO) · getListJobs(HERO 제외·프리미엄 우선) · getAllJobCards · getJobStats(모집중·새공고·함께하는교회) · getJobDetail · getRepost · getSimilarJobs · getChurchOpenJobs · **getSearchSuggestions**(검색어 완성 후보)
 - `queries/churches.ts`: getChurch · getChurchTimeline
 - 각 함수 `'use cache'` + `cacheTag`. 본문은 현재 `mocks/index.ts` 호출 → DB 전환 시 본문만 교체.
 
-### 클라 저장 (localStorage) — `src/lib/recent-jobs.ts` · `recent-searches.ts` (`constants/storage.ts` 키)
+### 클라 저장 (localStorage) — `lib/recent-jobs.ts` · `recent-searches.ts` · `bookmarks.ts` (`constants/storage.ts` 키)
 
 ### mock 데이터 현황
 - **churches.json** — 8개 교회. 채널 다양성, 창립연도(일부 null). (규모 필드 제거됨)
@@ -121,7 +121,7 @@ SortKey   = recent|stipend|deadline
 
 ## 6. 확정 페이지 섹션 (상세는 SPEC.md)
 
-**홈 `/`**: ⚠️ **재설계 직전** — 현재 코드는 중앙 히어로+검색오버레이+스탯2+추천(AD)+최신. **새 구조는 §9.**
+**홈 `/`**: 딥그린 히어로(검색 오버레이+지표3) · 추천 청빙(대표광고 = `FeaturedJobCard` 슬롯) · 2단[청빙 공고 리스트(`JobRow`: 제목 주인공·텍스트만·프리미엄=태그+상단고정) + 사이드바(추천검색어·교회CTA)]. 탭 없음. 남음: 3-피처·푸터. (진행 §9)
 
 **공고 목록 `/jobs`**: 검색(라이브 필터) · 대표광고(AD) · 좌 필터(교단·지역·직분·부서·고용형태 — **규모 제거됨**) · 정렬(최신 중심, 사례비순·마감임박순 재검토) · 리스트(프리미엄 상단) · 우측 레일(최근 본 공고·배너) · 페이지네이션(8/p) · 모바일 Sheet. mock 클라 필터(`filter-jobs.ts`).
 
@@ -146,14 +146,14 @@ src/
 │   │   ├── about · pricing · terms · privacy /page  ← 완성(정적)
 │   ├── (authed)/ mypage · jobs/new · jobs/[id]/edit  ← 스캐폴드
 │   ├── admin/ page · jobs · ingest  ← 스캐폴드 · login/page ← 스캐폴드
-│   ├── layout(root, Pretendard·메타=사역자 청빙) · globals.css(neutral 토큰) · fonts/
+│   ├── layout(root, Pretendard·메타=사역자 청빙) · globals.css(딥그린+골드 토큰·.bg-hero) · fonts/
 ├── components/
-│   ├── job/ job-card · job-filter · pagination · recently-viewed · record-recently-viewed · job-actions
-│   ├── search/ search-box(client, 오버레이)
-│   ├── church/ church-channels · layout/ header · footer · placeholder · legal-doc
+│   ├── job/ job-card · **job-row** · **featured-job-card** · **bookmark-button**(client) · job-filter · pagination · recently-viewed · record-recently-viewed · job-actions
+│   ├── home/ **home-sidebar**(추천검색어·교회CTA) · search/ search-box(client, 오버레이) · **relative-time**(client, N일 전)
+│   ├── church/ church-channels · layout/ header(딥그린) · footer · placeholder · legal-doc
 │   └── ui/ badge · button · card · input · sheet (shadcn Base UI)
 ├── constants/ domain.ts(enum) · storage.ts
-├── lib/ queries/{jobs,churches}.ts(seam) · recent-jobs.ts · recent-searches.ts · format.ts · repost-tracking.ts · seo.ts · utils.ts
+├── lib/ queries/{jobs,churches}.ts(seam) · recent-jobs · recent-searches · **bookmarks** · format(+jobRoleLine) · repost-tracking · seo · utils
 ├── mocks/ churches.json · jobs.json · index.ts
 └── types/ domain.ts
 ```
@@ -182,20 +182,18 @@ src/
 
 **색 = 딥그린 + 골드 (확정·구현 완료, `globals.css`)**: 램프 `--brand-900 #15332a · 800 #1b3f34 · 700 #234f41 · 600 #2f5d50`, `--gold #d3ad63`, `--primary`=#2f5d50, `.bg-hero`(라디얼 그라데이션). 방향성 = 잡코리아식 이미지-과밀(세상적) 회피 → **이미지 없이 완성도**(아바타·칩·깊이·아이콘·섹션 밴드).
 
-**홈 메인은 카드 그리드 아님 → 랭킹 리스트.**
+**홈 메인은 카드 그리드 아님 → 리스트(번호 없음).**
 
 ✅ **완료된 섹션**
-1. **헤더**(딥그린, 전역): 로고(골드 Min+화이트 Job) + nav(공고) + 로그인. ※교회 공고등록 CTA는 헤더에서 제거(→ 사이드바 CTA + 푸터).
-2. **히어로**(딥그린 풀블리드·중앙): eyebrow "한국교회 사역자 청빙 플랫폼" + 헤드라인 "다음 사역지, 여기서 찾으세요" + 부제 + **흰 검색바**(SearchBox restyle: 아이콘 + 그린 버튼) + **지표 3개**(지금 모집 중 · 이번 주 새 공고 · 함께하는 교회).
+1. **헤더**(딥그린, 전역): 로고(골드 Min+화이트 Job) + nav(공고) + 로그인. 교회 공고등록 CTA는 헤더에서 제거(→ 사이드바 CTA).
+2. **히어로**(딥그린 풀블리드·중앙): eyebrow + 헤드라인 "다음 사역지, 여기서 찾으세요" + 흰 검색바(SearchBox restyle) + 지표 3개(모집 중·새 공고·함께하는 교회).
+3. **추천 청빙(대표광고)**: `FeaturedJobCard`(초록 테두리 카드, 2열) 별도 슬롯.
+4. **청빙 공고 리스트**: `JobRow` — **제목 주인공 · 텍스트만(아바타·번호 없음)** · 직분/부서/고용 평문 · 지역(핀) · 사례비(초록) · N일전 · 책갈피. **프리미엄=태그+상단고정(틴트 없음)**, 대표광고는 위 슬롯. `getListJobs`(HERO 제외·프리미엄 우선+최신). **탭 없음.**
+5. **사이드바**(`home-sidebar`): 추천 검색어 8칩(큐레이션)→`/jobs?q=` · 교회 CTA(딥그린)→`/jobs/new`.
 
 ⬜ **남은 섹션**
-3. **메인 2단** ← **다음 차례**:
-   - 좌 **청빙 랭킹 리스트**: 탭(전체/전임/파트) + 로우(번호·교회 이니셜·교회명·지역·AD뱃지·제목·직분/부서/고용 칩·사례비·N일전). **정렬 = 대표광고(AD) 우선 + 최신.** → 여기서 로우 + 원자(아바타·뱃지·칩) 확정.
-   - 우 **사이드바**: 추천 검색어(운영자 큐레이션) 카드 + 교회 CTA 카드(딥그린).
-4. **하단 3-피처**: 한 곳에 모아보기 · 구조화된 비교 · 재공고 추적.
-5. **푸터** restyle (아직 light).
+6. **하단 3-피처**: 한 곳에 모아보기 · 구조화된 비교 · 재공고 추적 (아이콘+제목+설명).
+7. **푸터** restyle (아직 light).
 + 그 뒤: 톤을 `/jobs`·상세로 확산 + **공고 상세 사이드바 레이아웃 재고**(핵심조건 눈에 띄게, 누나 인터뷰).
 
-**확정 반영**: 사례비 높은 공고 사이드바 제외(세상적) → 추천 검색어 · 인기검색어→추천검색어 큐레이션(로그 없음) · eyebrow "사역자" · **지표에서 교단 제외**(모집중·새공고·함께하는 교회 3개만).
-
-**미결(구현 시 정할 것)**: 랭킹 리스트 로우 최종 디자인 · 추천 검색어 큐레이션 소스(상수?).
+**설계 확정(구현됨)**: 노출 등급 = 대표광고(별도 카드 슬롯) / 프리미엄(태그+상단고정, 틴트 없이 organic에 가깝게 — 표시광고법·신뢰) / 일반(리스트). 왼쪽 요소 없음(로고 없어 텍스트만). 북마크=책갈피. 고용형태 탭 폐기. 지표 교단 제외.
