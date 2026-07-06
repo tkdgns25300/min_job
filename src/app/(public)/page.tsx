@@ -59,8 +59,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 노출 등급 분리: 추천 청빙(대표광고 카드) + 청빙 공고(프리미엄+일반 리스트). 탭·사이드바는 다음 단계 */}
-      <div className="mx-auto w-full max-w-6xl space-y-12 px-4 py-12">
+      {/* 노출 등급 분리: 추천 청빙(대표광고 카드) + 청빙 공고(프리미엄+일반 리스트) + 사이드바 */}
+      <div className="mx-auto w-full max-w-6xl space-y-12 px-4 pt-12 pb-24">
         {/* ① 추천 청빙 = 대표광고 슬롯 */}
         {adJobs.length > 0 && (
           <section>
@@ -79,7 +79,7 @@ export default async function HomePage() {
         )}
 
         {/* ② 청빙 공고(프리미엄 상단+일반) 2단 — 좌 리스트 / 우 사이드바 */}
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold">청빙 공고</h2>

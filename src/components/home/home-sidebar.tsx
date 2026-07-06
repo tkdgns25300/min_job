@@ -16,7 +16,7 @@ const RECOMMENDED_SEARCHES = [
 
 export function HomeSidebar() {
   return (
-    <aside className="flex flex-col gap-4">
+    <aside className="flex flex-col gap-4 lg:sticky lg:top-20">
       <section className="rounded-xl border bg-card p-4 shadow-sm">
         <h3 className="mb-3 flex items-center gap-1.5 text-sm font-bold">
           <Search className="size-3.5 text-primary" />
