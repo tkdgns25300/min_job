@@ -1,26 +1,14 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  DENOMINATIONS,
-  REGIONS,
-  POSITIONS,
-  DEPARTMENTS,
-  EMPLOYMENT_TYPES,
-} from "@/constants/domain";
+import { DENOMINATIONS } from "@/constants/domain";
 import type { JobCard as JobCardData } from "@/types/domain";
-import { formatStipend } from "@/lib/format";
+import { churchLocation, formatStipend, jobRoleLine } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export function JobCard({ job }: { job: JobCardData }) {
-  const role = [
-    POSITIONS[job.position],
-    job.department ? DEPARTMENTS[job.department] : null,
-    EMPLOYMENT_TYPES[job.employmentType],
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  const location = `${REGIONS[job.church.region]}${job.church.city ? ` ${job.church.city}` : ""}`;
+  const role = jobRoleLine(job);
+  const location = churchLocation(job.church);
   const isAd = job.featuredTier === "HERO";
   const isPremium = job.featuredTier === "PREMIUM";
 

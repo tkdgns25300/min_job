@@ -1,5 +1,5 @@
-import { DENOMINATIONS, REGIONS } from "@/constants/domain";
-import type { Church } from "@/types/domain";
+import { DENOMINATIONS, DEPARTMENTS, EMPLOYMENT_TYPES, POSITIONS, REGIONS } from "@/constants/domain";
+import type { Church, JobCard } from "@/types/domain";
 
 // 도메인 값 표시 포매터
 
@@ -14,6 +14,19 @@ export function formatStipend(min: number | null, max: number | null, note: stri
 // 교회 위치: 지역(+시)
 export function churchLocation(church: Pick<Church, "region" | "city">): string {
   return `${REGIONS[church.region]}${church.city ? ` ${church.city}` : ""}`;
+}
+
+// 직분 · 부서 · 고용형태 한 줄 (카드·로우 공통)
+export function jobRoleLine(
+  job: Pick<JobCard, "position" | "department" | "employmentType">,
+): string {
+  return [
+    POSITIONS[job.position],
+    job.department ? DEPARTMENTS[job.department] : null,
+    EMPLOYMENT_TYPES[job.employmentType],
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 // 교회 요약 한 줄: 교단 · 지역

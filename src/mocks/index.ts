@@ -54,6 +54,16 @@ export function getRecentJobs(limit = 6): JobCard[] {
     .map(toCard);
 }
 
+/** 리스트 공고 — 대표광고(HERO)는 별도 추천 슬롯이라 제외. 프리미엄 우선 + 최신순 */
+export function getListJobs(limit = 8): JobCard[] {
+  const rank = (t: string) => (t === "PREMIUM" ? 0 : 1);
+  return openJobs
+    .filter((j) => j.featuredTier !== "HERO")
+    .sort((a, b) => rank(a.featuredTier) - rank(b.featuredTier) || b.postedAt.localeCompare(a.postedAt))
+    .slice(0, limit)
+    .map(toCard);
+}
+
 /** 전체 모집 중 공고 카드 (목록 페이지 클라이언트 필터용) */
 export function getAllJobCards(): JobCard[] {
   return openJobs.map(toCard);

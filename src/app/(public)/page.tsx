@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { JobCard } from "@/components/job/job-card";
+import { JobRow } from "@/components/job/job-row";
+import { FeaturedJobCard } from "@/components/job/featured-job-card";
 import { SearchBox } from "@/components/search/search-box";
-import { getAdJobs, getRecentJobs, getJobStats, getSearchSuggestions } from "@/lib/queries/jobs";
+import { getAdJobs, getListJobs, getJobStats, getSearchSuggestions } from "@/lib/queries/jobs";
 
 function HeroStat({ value, unit, label }: { value: number; unit: string; label: string }) {
   return (
@@ -16,9 +17,9 @@ function HeroStat({ value, unit, label }: { value: number; unit: string; label: 
 }
 
 export default async function HomePage() {
-  const [adJobs, recentJobs, stats, suggestions] = await Promise.all([
+  const [adJobs, listJobs, stats, suggestions] = await Promise.all([
     getAdJobs(),
-    getRecentJobs(6),
+    getListJobs(8),
     getJobStats(),
     getSearchSuggestions(),
   ]);
@@ -57,34 +58,36 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 이하 라이트 영역 — 다음 단계에서 청빙 리스트 + 사이드바 + 3피처로 재설계 예정 */}
-      <div className="mx-auto w-full max-w-6xl space-y-14 px-4 py-12">
-        {/* 추천 청빙 (대표 광고) — 패널로 구획 */}
+      {/* 노출 등급 분리: 추천 청빙(대표광고 카드) + 청빙 공고(프리미엄+일반 리스트). 탭·사이드바는 다음 단계 */}
+      <div className="mx-auto w-full max-w-6xl space-y-12 px-4 py-12">
+        {/* ① 추천 청빙 = 대표광고 슬롯 */}
         {adJobs.length > 0 && (
-          <section className="rounded-2xl border bg-muted/40 p-5 sm:p-6">
-            <h2 className="text-lg font-bold">
-              추천 청빙{" "}
-              <span className="text-sm font-normal text-muted-foreground">AD · 대표 광고</span>
-            </h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <section>
+            <div className="mb-4 flex items-center gap-2">
+              <h2 className="text-lg font-bold">추천 청빙</h2>
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                대표광고
+              </span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
               {adJobs.map((job) => (
-                <JobCard key={job.id} job={job} />
+                <FeaturedJobCard key={job.id} job={job} />
               ))}
             </div>
           </section>
         )}
 
-        {/* 최신 공고 */}
+        {/* ② 청빙 공고 = 프리미엄(상단 고정) + 일반 리스트 */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">최신 청빙 공고</h2>
+            <h2 className="text-lg font-bold">청빙 공고</h2>
             <Link href="/jobs" className="text-sm text-muted-foreground hover:text-foreground">
               전체 공고 보기 →
             </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {recentJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
+          <div className="divide-y divide-border overflow-hidden rounded-2xl border bg-card">
+            {listJobs.map((job) => (
+              <JobRow key={job.id} job={job} />
             ))}
           </div>
         </section>

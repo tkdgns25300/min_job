@@ -18,6 +18,12 @@ export async function getRecentJobs(limit = 6): Promise<JobCard[]> {
   return mock.getRecentJobs(limit);
 }
 
+export async function getListJobs(limit = 8): Promise<JobCard[]> {
+  "use cache";
+  cacheTag("jobs");
+  return mock.getListJobs(limit);
+}
+
 export async function getAllJobCards(): Promise<JobCard[]> {
   "use cache";
   cacheTag("jobs");
