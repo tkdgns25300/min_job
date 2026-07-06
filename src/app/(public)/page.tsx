@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { JobRow } from "@/components/job/job-row";
 import { FeaturedJobCard } from "@/components/job/featured-job-card";
+import { HomeSidebar } from "@/components/home/home-sidebar";
 import { SearchBox } from "@/components/search/search-box";
 import { getAdJobs, getListJobs, getJobStats, getSearchSuggestions } from "@/lib/queries/jobs";
 
@@ -77,20 +78,24 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* ② 청빙 공고 = 프리미엄(상단 고정) + 일반 리스트 */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">청빙 공고</h2>
-            <Link href="/jobs" className="text-sm text-muted-foreground hover:text-foreground">
-              전체 공고 보기 →
-            </Link>
-          </div>
-          <div className="divide-y divide-border overflow-hidden rounded-2xl border bg-card">
-            {listJobs.map((job) => (
-              <JobRow key={job.id} job={job} />
-            ))}
-          </div>
-        </section>
+        {/* ② 청빙 공고(프리미엄 상단+일반) 2단 — 좌 리스트 / 우 사이드바 */}
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">청빙 공고</h2>
+              <Link href="/jobs" className="text-sm text-muted-foreground hover:text-foreground">
+                전체 공고 보기 →
+              </Link>
+            </div>
+            <div className="divide-y divide-border overflow-hidden rounded-2xl border bg-card">
+              {listJobs.map((job) => (
+                <JobRow key={job.id} job={job} />
+              ))}
+            </div>
+          </section>
+
+          <HomeSidebar />
+        </div>
       </div>
     </>
   );
