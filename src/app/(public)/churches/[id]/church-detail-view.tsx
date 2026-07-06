@@ -50,7 +50,7 @@ function HistorySection({ timeline }: { timeline: RoleHistory[] }) {
       <h2 className="text-base font-bold">공고 이력</h2>
       {topRepost && (
         <p className="flex items-center gap-1.5 text-sm">
-          <RefreshCw className="size-4 shrink-0 text-muted-foreground" />이 교회는{" "}
+          <RefreshCw className="size-4 shrink-0 text-primary" />이 교회는{" "}
           <b>{roleLabel(topRepost)}</b> 자리를 최근 <b>{topRepost.postings.length}번</b> 공고했어요.
         </p>
       )}
@@ -113,7 +113,7 @@ export function ChurchDetailView({
       {/* 헤더 — 교회 정체성 + 채널 */}
       <header className="space-y-4">
         <div className="flex items-start gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-muted text-sm font-bold text-muted-foreground">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
             {church.name.slice(0, 2)}
           </div>
           <div className="min-w-0">

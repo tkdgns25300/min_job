@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { JobCard } from "@/components/job/job-card";
+import { JobRow } from "@/components/job/job-row";
+import { FeaturedJobCard } from "@/components/job/featured-job-card";
 import { JobFilter, type JobFilterProps } from "@/components/job/job-filter";
 import { Pagination } from "@/components/job/pagination";
 import { RecentlyViewed } from "@/components/job/recently-viewed";
@@ -124,13 +125,18 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
         </Sheet>
       </div>
 
-      {/* 대표 광고 (상단 고정, 필터와 무관하게 항상 노출) */}
+      {/* 추천 청빙 = 대표광고 슬롯 (상단 고정, 필터와 무관) */}
       {ads.length > 0 && (
-        <section className="space-y-2">
-          <p className="text-xs font-bold text-muted-foreground">추천 청빙 · 대표 광고 (AD)</p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold">추천 청빙</h2>
+            <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+              대표광고
+            </span>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
             {ads.map((job) => (
-              <JobCard key={job.id} job={job} />
+              <FeaturedJobCard key={job.id} job={job} />
             ))}
           </div>
         </section>
@@ -172,9 +178,9 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
             </div>
 
             {pageItems.length > 0 ? (
-              <div className="space-y-3">
+              <div className="divide-y divide-border overflow-hidden rounded-xl border bg-card">
                 {pageItems.map((job) => (
-                  <JobCard key={job.id} job={job} />
+                  <JobRow key={job.id} job={job} />
                 ))}
               </div>
             ) : (

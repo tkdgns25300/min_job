@@ -6,15 +6,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { JobActions } from "@/components/job/job-actions";
 import { JobCard } from "@/components/job/job-card";
 import { ChurchChannels } from "@/components/church/church-channels";
-import { churchMetaLine, formatStipend } from "@/lib/format";
+import { churchMetaLine, formatStipend, jobRoleLine } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import {
-  POSITIONS,
-  DEPARTMENTS,
-  EMPLOYMENT_TYPES,
-  JOB_SOURCES,
-  type JobSource,
-} from "@/constants/domain";
+import { EMPLOYMENT_TYPES, JOB_SOURCES, type JobSource } from "@/constants/domain";
 import type { Church, Job, JobCard as JobCardData, JobDetail } from "@/types/domain";
 import type { RepostInfo } from "@/lib/repost-tracking";
 
@@ -36,7 +30,7 @@ function CheckList({ items }: { items: string[] }) {
     <ul className="mt-3 space-y-2">
       {items.map((item) => (
         <li key={item} className="flex gap-2 text-sm">
-          <Check className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <Check className="mt-0.5 size-4 shrink-0 text-primary" />
           <span>{item}</span>
         </li>
       ))}
@@ -54,18 +48,12 @@ function PostHeader({
   church: Church;
   repost: RepostInfo | null;
 }) {
-  const roleLine = [
-    POSITIONS[job.position],
-    job.department ? DEPARTMENTS[job.department] : null,
-    EMPLOYMENT_TYPES[job.employmentType],
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const roleLine = jobRoleLine(job);
 
   return (
     <div>
       <div className="flex items-start gap-3">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-bold text-muted-foreground">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
           {church.name.slice(0, 2)}
         </div>
         <div className="min-w-0 flex-1">
@@ -82,7 +70,7 @@ function PostHeader({
 
       <div className="mt-5">
         {repost && (
-          <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-bold text-foreground">
+          <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
             <RefreshCw className="size-3" /> 재공고 {repost.count}회
           </span>
         )}
@@ -163,11 +151,29 @@ function MainContent({
 }
 
 // 요약 사이드바 행
-function SumRow({ label, children, big }: { label: string; children: ReactNode; big?: boolean }) {
+function SumRow({
+  label,
+  children,
+  big,
+  accent,
+}: {
+  label: string;
+  children: ReactNode;
+  big?: boolean;
+  accent?: boolean;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <dt className="shrink-0 text-sm text-muted-foreground">{label}</dt>
-      <dd className={cn("text-right font-semibold", big && "text-xl font-bold")}>{children}</dd>
+      <dd
+        className={cn(
+          "text-right font-semibold",
+          big && "text-xl font-bold",
+          accent && "text-primary",
+        )}
+      >
+        {children}
+      </dd>
     </div>
   );
 }
@@ -177,12 +183,13 @@ function SummaryAside({ job, church }: { job: Job; church: Church }) {
   const homepage = church.links.find((l) => l.type === "HOMEPAGE")?.url ?? null;
   const applyUrl = job.sourceUrl ?? homepage;
   const applyLabel = job.sourceUrl ? "원문 공고 보기" : "교회 홈페이지에서 지원 안내 확인";
+  const hasStipend = job.stipendMin !== null || job.stipendMax !== null;
 
   return (
     <Card className="order-first gap-4 p-5 lg:sticky lg:top-20 lg:order-none">
       <h2 className="sr-only">핵심 조건</h2>
       <dl className="space-y-3">
-        <SumRow label="월 사례비" big>
+        <SumRow label="월 사례비" big accent={hasStipend}>
           {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
         </SumRow>
         <div className="border-t" />
