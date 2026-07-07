@@ -1,36 +1,64 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AlertTriangle, ArrowLeft, Check, ExternalLink, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { JobActions } from "@/components/job/job-actions";
 import { JobCard } from "@/components/job/job-card";
 import { ChurchChannels } from "@/components/church/church-channels";
-import { churchMetaLine, formatStipend, jobRoleLine } from "@/lib/format";
+import { churchLocation, churchMetaLine, formatStipend, jobRoleLine } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { EMPLOYMENT_TYPES, JOB_SOURCES, type JobSource } from "@/constants/domain";
+import {
+  EMPLOYMENT_TYPES,
+  JOB_SOURCES,
+  JOB_STATUSES,
+  POSITIONS,
+  type JobSource,
+} from "@/constants/domain";
 import type { Church, Job, JobCard as JobCardData, JobDetail } from "@/types/domain";
 import type { RepostInfo } from "@/lib/repost-tracking";
 
 const externalLinkAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
 
-// 본문 흐름 속 한 섹션 — 상단 구분선 + 제목 + 내용 (첫 섹션은 border 없이)
-function Section({ title, children }: { title: string; children: ReactNode }) {
+interface ApplyTarget {
+  url: string;
+  label: string;
+}
+
+// 지원 동선 — 원문(수집 공고) 우선, 없으면 교회 홈페이지. 마감 공고는 사실확인용 원문 보기만.
+function getApplyTarget(job: Job, church: Church): ApplyTarget | null {
+  if (job.sourceUrl) return { url: job.sourceUrl, label: "원문 공고 보기" };
+  const homepage = church.links.find((l) => l.type === "HOMEPAGE")?.url ?? null;
+  if (job.status !== "CLOSED" && homepage) {
+    return { url: homepage, label: "교회 홈페이지에서 지원 안내 확인" };
+  }
+  return null;
+}
+
+// 본문 섹션 — 여백형(구분선 없이 여백으로만 구분). 첫 섹션은 상단 여백 없이
+function Section({
+  title,
+  children,
+  first,
+}: {
+  title: string;
+  children: ReactNode;
+  first?: boolean;
+}) {
   return (
-    <section className="mt-6 border-t pt-6">
+    <section className={first ? "" : "mt-9"}>
       <h2 className="text-base font-bold">{title}</h2>
       {children}
     </section>
   );
 }
 
-// 체크 불릿 리스트 (자격요건·우대사항)
-function CheckList({ items }: { items: string[] }) {
+// 불릿 리스트 (자격요건·우대사항) — 아이콘 없이 대시(–). break-keep로 한글 단어 안 깨지게
+function BulletList({ items }: { items: string[] }) {
   return (
     <ul className="mt-3 space-y-2">
       {items.map((item) => (
-        <li key={item} className="flex gap-2 text-sm">
-          <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+        <li key={item} className="flex gap-2 text-sm break-keep">
+          <span className="shrink-0 text-muted-foreground">–</span>
           <span>{item}</span>
         </li>
       ))}
@@ -38,7 +66,17 @@ function CheckList({ items }: { items: string[] }) {
   );
 }
 
-// 본문 상단 헤더 블록 (메인 카드 안, 카드 아님)
+// 요약 행 (라벨 좌 · 값 우)
+function InfoRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="shrink-0 text-sm text-muted-foreground">{label}</dt>
+      <dd className="text-right text-sm font-semibold break-keep">{value}</dd>
+    </div>
+  );
+}
+
+// 상단 헤더 (풀폭) — 교회 정체성 + 제목 + 재공고 배지
 function PostHeader({
   job,
   church,
@@ -48,15 +86,10 @@ function PostHeader({
   church: Church;
   repost: RepostInfo | null;
 }) {
-  const roleLine = jobRoleLine(job);
-
   return (
     <div>
-      <div className="flex items-start gap-3">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
-          {church.name.slice(0, 2)}
-        </div>
-        <div className="min-w-0 flex-1">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-sm">
             <Link href={`/churches/${church.id}`} className="font-semibold hover:underline">
               {church.name}
@@ -70,45 +103,107 @@ function PostHeader({
 
       <div className="mt-5">
         {repost && (
-          <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
-            <RefreshCw className="size-3" /> 재공고 {repost.count}회
+          <span className="mb-2 inline-block rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+            재공고 {repost.count}회
           </span>
         )}
-        <h1 className="text-2xl leading-snug font-bold">{job.title}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{roleLine}</p>
-        {repost?.previousDeadline && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            직전 공고는 {repost.previousDeadline} 마감됐어요.
-          </p>
-        )}
+        <h1 className="text-2xl leading-snug font-bold break-keep">{job.title}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{jobRoleLine(job)}</p>
       </div>
     </div>
   );
 }
 
-// 좌측 본문 — 하나의 면에서 섹션들이 구분선으로 흐름
+// 재공고 이력 (차별점) — 요약 + 해석 힌트 + 지난 공고 접이식 타임라인
+function RepostHistory({ job, repost }: { job: Job; repost: RepostInfo }) {
+  const past = repost.postings.filter((p) => p.id !== job.id);
+  return (
+    <Section title="공고 이력">
+      <p className="mt-3 text-base font-bold break-keep">
+        이 자리를 최근 <span className="text-primary">{repost.count}번</span> 공고했어요
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        자주 비는 자리일 수 있어요. 근무 환경을 확인해 보세요.
+      </p>
+      {past.length > 0 && (
+        <details className="mt-3">
+          <summary className="inline-block cursor-pointer text-sm font-semibold text-primary underline underline-offset-4 [&::-webkit-details-marker]:hidden">
+            지난 공고 {past.length}건 보기
+          </summary>
+          <ul className="mt-3 divide-y divide-border border-t">
+            {past.map((p) => (
+              <li key={p.id} className="flex items-center gap-3 py-2.5 text-sm">
+                <span className="tabular-nums text-muted-foreground">
+                  {p.postedAt} ~ {p.deadline ?? "상시"}
+                </span>
+                <span
+                  className={cn(
+                    "ml-auto rounded-full px-2 py-0.5 text-xs font-bold",
+                    p.status === "OPEN"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {JOB_STATUSES[p.status]}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </Section>
+  );
+}
+
+// 좌측 본문 — 사례비·마감·고용형태는 우측 카드, 나머지 조건·내용은 여기
 function MainContent({
   job,
   church,
   churchJobs,
   repost,
+  apply,
 }: {
   job: Job;
   church: Church;
   churchJobs: JobCardData[];
   repost: RepostInfo | null;
+  apply: ApplyTarget | null;
 }) {
+  const location = churchLocation(church);
+  const mapUrl = `https://map.naver.com/p/search/${encodeURIComponent(`${church.name} ${location}`)}`;
+
   return (
     <div>
-      <PostHeader job={job} church={church} repost={repost} />
+      <Section title="모집 조건" first>
+        <dl className="mt-3 space-y-3">
+          <div>
+            <dt className="text-xs text-muted-foreground">출근</dt>
+            <dd className="mt-0.5 text-sm font-medium break-keep">{job.workDays ?? "협의"}</dd>
+          </div>
+          {job.housingProvided !== undefined && (
+            <div>
+              <dt className="text-xs text-muted-foreground">사택</dt>
+              <dd className="mt-0.5 text-sm font-medium">
+                {job.housingProvided ? "제공" : "미제공"}
+              </dd>
+            </div>
+          )}
+          <div>
+            <dt className="text-xs text-muted-foreground">제출 서류</dt>
+            <dd className="mt-0.5 text-sm font-medium break-keep">
+              {job.requiredDocs.length > 0 ? job.requiredDocs.join(" · ") : "—"}
+            </dd>
+          </div>
+        </dl>
+      </Section>
 
       <Section title="자격 요건">
-        <CheckList items={job.requirements} />
+        <BulletList items={job.requirements} />
       </Section>
 
       {job.preferred.length > 0 && (
         <Section title="우대 사항">
-          <CheckList items={job.preferred} />
+          <BulletList items={job.preferred} />
         </Section>
       )}
 
@@ -120,28 +215,82 @@ function MainContent({
         </Section>
       )}
 
+      <Section title="위치">
+        <p className="mt-3 text-sm">{location}</p>
+        {/* 지도 자리(플레이스홀더) — 클릭 시 네이버 지도. 실제 임베드는 Phase 2(API 키+주소 필드) */}
+        <a
+          href={mapUrl}
+          {...externalLinkAttrs}
+          className="mt-3 flex h-40 flex-col items-center justify-center gap-1.5 rounded-xl border bg-muted/40 text-center transition-colors hover:bg-muted/60"
+        >
+          <span className="text-sm font-medium text-foreground">지도에서 위치 보기</span>
+          <span className="text-xs text-muted-foreground">네이버 지도에서 열기</span>
+        </a>
+      </Section>
+
+      <Section title="지원 방법">
+        <p className="mt-3 text-sm leading-relaxed text-foreground/90">
+          {job.source === "OPERATOR"
+            ? "이 공고는 외부 공식 게시판에서 수집했어요. 원문 공고와 교회 안내를 따라 교회로 직접 지원해 주세요."
+            : "지원은 교회가 안내하는 채널로 직접 해주세요. 민잡은 지원서를 대신 받지 않아요."}
+        </p>
+        {apply && (
+          <a
+            href={apply.url}
+            {...externalLinkAttrs}
+            className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4"
+          >
+            {apply.label}
+          </a>
+        )}
+      </Section>
+
+      {repost && <RepostHistory job={job} repost={repost} />}
+
       <Section title={church.name}>
-        <p className="mt-1 text-sm text-muted-foreground">{churchMetaLine(church)}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {churchMetaLine(church)}
+          {church.foundedYear ? ` · ${church.foundedYear}년 설립` : ""}
+        </p>
         <Link
           href={`/churches/${church.id}`}
-          className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
+          className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4"
         >
           교회 상세 보기 →
         </Link>
-        {churchJobs.length > 0 && (
+        {church.links.length > 0 && (
           <div className="mt-4">
+            <ChurchChannels links={church.links} />
+          </div>
+        )}
+        {churchJobs.length > 0 && (
+          <div className="mt-6">
             <p className="text-xs font-bold text-muted-foreground">이 교회의 다른 모집</p>
-            <ul className="mt-2 space-y-1.5">
-              {churchJobs.map((cj) => (
-                <li key={cj.id}>
-                  <Link
-                    href={`/jobs/${cj.id}`}
-                    className="line-clamp-1 text-sm text-muted-foreground hover:text-foreground"
-                  >
-                    {cj.title}
-                  </Link>
-                </li>
-              ))}
+            <ul className="mt-2 divide-y divide-border">
+              {churchJobs.map((cj) => {
+                const hasPay = cj.stipendMin !== null || cj.stipendMax !== null;
+                return (
+                  <li key={cj.id}>
+                    <Link
+                      href={`/jobs/${cj.id}`}
+                      className="group flex items-baseline justify-between gap-3 py-2.5 text-sm"
+                    >
+                      <span className="min-w-0 flex-1 truncate group-hover:underline">
+                        {cj.title}
+                        <span className="text-muted-foreground"> · {POSITIONS[cj.position]}</span>
+                      </span>
+                      <span
+                        className={cn(
+                          "shrink-0 font-semibold",
+                          hasPay ? "text-primary" : "text-muted-foreground",
+                        )}
+                      >
+                        {formatStipend(cj.stipendMin, cj.stipendMax, cj.stipendNote)}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -150,105 +299,85 @@ function MainContent({
   );
 }
 
-// 요약 사이드바 행
-function SumRow({
-  label,
-  children,
-  big,
-  accent,
-}: {
-  label: string;
-  children: ReactNode;
-  big?: boolean;
-  accent?: boolean;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-3">
-      <dt className="shrink-0 text-sm text-muted-foreground">{label}</dt>
-      <dd
-        className={cn(
-          "text-right font-semibold",
-          big && "text-xl font-bold",
-          accent && "text-primary",
-        )}
-      >
-        {children}
-      </dd>
-    </div>
-  );
-}
-
-// 우측 요약 사이드바 (핵심 조건 + 지원 CTA + 교회 채널) — 데스크톱 sticky, 모바일 상단
-function SummaryAside({ job, church }: { job: Job; church: Church }) {
-  const homepage = church.links.find((l) => l.type === "HOMEPAGE")?.url ?? null;
-  const applyUrl = job.sourceUrl ?? homepage;
-  const applyLabel = job.sourceUrl ? "원문 공고 보기" : "교회 홈페이지에서 지원 안내 확인";
+// 우측 카드 (B) — 사례비·마감·고용형태 + 지원. 데스크톱 sticky, 모바일 제목 아래.
+function SummaryAside({ job, apply }: { job: Job; apply: ApplyTarget | null }) {
   const hasStipend = job.stipendMin !== null || job.stipendMax !== null;
 
   return (
-    <Card className="order-first gap-4 p-5 lg:sticky lg:top-20 lg:order-none">
-      <h2 className="sr-only">핵심 조건</h2>
-      <dl className="space-y-3">
-        <SumRow label="월 사례비" big accent={hasStipend}>
-          {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
-        </SumRow>
-        <div className="border-t" />
-        <SumRow label="마감일">{job.deadline ?? "상시모집"}</SumRow>
-        <SumRow label="출근">{job.workDays ?? "협의"}</SumRow>
-        <SumRow label="고용 형태">{EMPLOYMENT_TYPES[job.employmentType]}</SumRow>
-        <SumRow label="제출 서류">
-          {job.requiredDocs.length > 0 ? job.requiredDocs.join(" · ") : "—"}
-        </SumRow>
-      </dl>
-
-      <div>
-        {applyUrl && (
+    <Card className="order-first gap-0 overflow-hidden p-0 lg:sticky lg:top-20 lg:order-none">
+      <div className="p-5">
+        {apply && (
           <a
-            href={applyUrl}
+            href={apply.url}
             {...externalLinkAttrs}
             className={cn(buttonVariants({ size: "lg" }), "w-full")}
           >
-            {applyLabel}
-            <ExternalLink />
+            지원하기
           </a>
         )}
-        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          민잡은 직접 지원을 받지 않습니다. 지원 방법·서류 제출은 원문 공고와 교회 안내를 따라
-          교회로 직접 문의해 주세요.
+        <p className={cn("text-xs leading-relaxed text-muted-foreground", apply && "mt-3")}>
+          민잡은 지원서를 직접 받지 않아요. 지원은 교회로 직접 해주세요.
         </p>
       </div>
-
-      {church.links.length > 0 && (
-        <div className="border-t pt-4">
-          <p className="text-xs font-bold text-muted-foreground">교회 채널</p>
-          <div className="mt-2">
-            <ChurchChannels links={church.links} />
-          </div>
-        </div>
-      )}
+      <dl className="space-y-3 border-t p-5">
+        <InfoRow
+          label="월 사례비"
+          value={
+            hasStipend ? (
+              <span className="text-primary">
+                {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
+              </span>
+            ) : (
+              (job.stipendNote ?? "협의")
+            )
+          }
+        />
+        <InfoRow label="마감일" value={job.deadline ?? "상시모집"} />
+        <InfoRow label="고용 형태" value={EMPLOYMENT_TYPES[job.employmentType]} />
+      </dl>
     </Card>
   );
 }
 
-// 비슷한 공고 (JobCard 포함 → 2단 아래 별도 섹션)
-function SimilarJobsSection({ jobs }: { jobs: JobCardData[] }) {
+// 비슷한 공고 (하단)
+function SimilarJobsSection({ jobs, moreHref }: { jobs: JobCardData[]; moreHref: string }) {
   return (
-    <section className="space-y-3">
+    <section id="similar-jobs" className="scroll-mt-20 space-y-3">
       <h2 className="text-base font-bold">비슷한 공고</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {jobs.map((sj) => (
           <JobCard key={sj.id} job={sj} />
         ))}
       </div>
+      <Link
+        href={moreHref}
+        className="inline-block text-sm font-semibold text-primary underline underline-offset-4"
+      >
+        비슷한 공고 더 보기 →
+      </Link>
     </section>
+  );
+}
+
+// 마감 배너 — 무채색. 페이지는 살려둔다(재공고 이력·롱테일 SEO).
+function ClosedBanner({ hasSimilar }: { hasSimilar: boolean }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+      <span className="font-semibold text-foreground">이 공고는 마감됐어요.</span>
+      <span>공고 내용은 이력 확인을 위해 남겨 둡니다.</span>
+      {hasSimilar && (
+        <a href="#similar-jobs" className="font-medium text-primary hover:underline">
+          비슷한 공고 보기
+        </a>
+      )}
+    </div>
   );
 }
 
 // 하단 — 출처·오류 문의
 function SourceNote({ source }: { source: JobSource }) {
   return (
-    <p className="flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
-      <AlertTriangle className="size-3.5 shrink-0" />
+    <p className="px-1 text-xs text-muted-foreground">
       {JOB_SOURCES[source]} 공고예요. 잘못된 정보가 있으면 문의해 주세요.
     </p>
   );
@@ -266,22 +395,37 @@ export function JobDetailView({
   similar: JobCardData[];
 }) {
   const { job, church } = detail;
+  const apply = getApplyTarget(job, church);
+  // "더 보기" — 넓은 탐색은 /jobs로 (부서 우선, 없으면 직분으로 미리 필터)
+  const moreHref = job.department
+    ? `/jobs?department=${job.department}`
+    : `/jobs?position=${job.position}`;
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6">
       <Link
         href="/jobs"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="inline-block text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> 목록으로
+        ← 목록으로
       </Link>
 
+      {job.status === "CLOSED" && <ClosedBanner hasSimilar={similar.length > 0} />}
+
+      <PostHeader job={job} church={church} repost={repost} />
+
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-        <MainContent job={job} church={church} churchJobs={churchJobs} repost={repost} />
-        <SummaryAside job={job} church={church} />
+        <MainContent
+          job={job}
+          church={church}
+          churchJobs={churchJobs}
+          repost={repost}
+          apply={apply}
+        />
+        <SummaryAside job={job} apply={apply} />
       </div>
 
-      {similar.length > 0 && <SimilarJobsSection jobs={similar} />}
+      {similar.length > 0 && <SimilarJobsSection jobs={similar} moreHref={moreHref} />}
       <SourceNote source={job.source} />
     </div>
   );

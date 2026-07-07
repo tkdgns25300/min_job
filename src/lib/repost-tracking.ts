@@ -14,8 +14,7 @@ export function repostKey(job: Pick<Job, "churchId" | "position" | "department">
 
 export interface RepostInfo {
   count: number; // 같은 자리 총 공고 수 (현재 공고 포함)
-  previousPostedAt: string | null; // 직전 공고 등록일
-  previousDeadline: string | null; // 직전 공고 마감일
+  postings: RolePosting[]; // 같은 자리 공고 전체 (최신순) — 상세 재공고 이력 타임라인용
 }
 
 // 주어진 공고와 '같은 자리'인 과거·현재 공고를 모아 재공고 정보를 만든다.
@@ -25,14 +24,13 @@ export function getRepostInfo(job: Job, allJobs: Job[]): RepostInfo | null {
   const sameRole = allJobs.filter((j) => repostKey(j) === key);
   if (sameRole.length < REPOST_MIN_COUNT) return null;
 
-  const previous = sameRole
-    .filter((j) => j.id !== job.id)
-    .sort((a, b) => b.postedAt.localeCompare(a.postedAt))[0];
+  const postings: RolePosting[] = sameRole
+    .map((j) => ({ id: j.id, postedAt: j.postedAt, deadline: j.deadline, status: j.status }))
+    .sort((a, b) => b.postedAt.localeCompare(a.postedAt));
 
   return {
     count: sameRole.length,
-    previousPostedAt: previous?.postedAt ?? null,
-    previousDeadline: previous?.deadline ?? null,
+    postings,
   };
 }
 
