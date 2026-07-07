@@ -7,9 +7,18 @@
     "city": "성남",
     "foundedYear": 2005,
     "links": [
-      { "type": "HOMEPAGE", "url": "https://example.com/saesomang" },
-      { "type": "YOUTUBE", "url": "https://youtube.com/@saesomang" },
-      { "type": "INSTAGRAM", "url": "https://instagram.com/saesomang" }
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/saesomang"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@saesomang"
+      },
+      {
+        "type": "INSTAGRAM",
+        "url": "https://instagram.com/saesomang"
+      }
     ]
   },
   {
@@ -19,7 +28,12 @@
     "region": "SEOUL",
     "city": "강북",
     "foundedYear": 1988,
-    "links": [{ "type": "HOMEPAGE", "url": "https://example.com/eunhyero" }]
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/eunhyero"
+      }
+    ]
   },
   {
     "id": "ch-hanbit",
@@ -29,8 +43,14 @@
     "city": "용인",
     "foundedYear": 2015,
     "links": [
-      { "type": "HOMEPAGE", "url": "https://example.com/hanbit" },
-      { "type": "YOUTUBE", "url": "https://youtube.com/@hanbit" }
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/hanbit"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@hanbit"
+      }
     ]
   },
   {
@@ -41,8 +61,14 @@
     "city": "부평",
     "foundedYear": 2021,
     "links": [
-      { "type": "INSTAGRAM", "url": "https://instagram.com/juane" },
-      { "type": "BAND", "url": "https://band.us/@juane" }
+      {
+        "type": "INSTAGRAM",
+        "url": "https://instagram.com/juane"
+      },
+      {
+        "type": "BAND",
+        "url": "https://band.us/@juane"
+      }
     ]
   },
   {
@@ -53,9 +79,18 @@
     "city": "송파",
     "foundedYear": 1995,
     "links": [
-      { "type": "HOMEPAGE", "url": "https://example.com/sarangbit" },
-      { "type": "YOUTUBE", "url": "https://youtube.com/@sarangbit" },
-      { "type": "FACEBOOK", "url": "https://facebook.com/sarangbit" }
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/sarangbit"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@sarangbit"
+      },
+      {
+        "type": "FACEBOOK",
+        "url": "https://facebook.com/sarangbit"
+      }
     ]
   },
   {
@@ -65,7 +100,12 @@
     "region": "GYEONGGI",
     "city": "수원",
     "foundedYear": 2010,
-    "links": [{ "type": "HOMEPAGE", "url": "https://example.com/saebyeok" }]
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/saebyeok"
+      }
+    ]
   },
   {
     "id": "ch-bitsogeum",
@@ -84,8 +124,439 @@
     "city": "수성",
     "foundedYear": 2001,
     "links": [
-      { "type": "HOMEPAGE", "url": "https://example.com/banseok" },
-      { "type": "YOUTUBE", "url": "https://youtube.com/@banseok" }
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/banseok"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@banseok"
+      }
+    ]
+  },
+  {
+    "id": "ch-dongsan",
+    "name": "동산교회",
+    "denomination": "HAPDONG",
+    "region": "SEOUL",
+    "city": "관악",
+    "foundedYear": 1979,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/dongsan"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@dongsan"
+      }
+    ]
+  },
+  {
+    "id": "ch-neulpureun",
+    "name": "늘푸른교회",
+    "denomination": "TONGHAP",
+    "region": "GYEONGGI",
+    "city": "고양",
+    "foundedYear": 1992,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/neulpureun"
+      }
+    ]
+  },
+  {
+    "id": "ch-keunnamu",
+    "name": "큰나무교회",
+    "denomination": "HAPDONG",
+    "region": "SEOUL",
+    "city": "마포",
+    "foundedYear": 2003,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/keunnamu"
+      },
+      {
+        "type": "INSTAGRAM",
+        "url": "https://instagram.com/keunnamu"
+      }
+    ]
+  },
+  {
+    "id": "ch-chambit",
+    "name": "참빛교회",
+    "denomination": "GOSIN",
+    "region": "GYEONGNAM",
+    "city": "창원",
+    "foundedYear": 1985,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/chambit"
+      }
+    ]
+  },
+  {
+    "id": "ch-haneulmun",
+    "name": "하늘문교회",
+    "denomination": "HAPSIN",
+    "region": "GYEONGGI",
+    "city": "안양",
+    "foundedYear": 1998,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/haneulmun"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@haneulmun"
+      }
+    ]
+  },
+  {
+    "id": "ch-pyeonggang",
+    "name": "평강교회",
+    "denomination": "TONGHAP",
+    "region": "DAEJEON",
+    "city": "서구",
+    "foundedYear": 1975,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/pyeonggang"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@pyeonggang"
+      }
+    ]
+  },
+  {
+    "id": "ch-somangsaem",
+    "name": "소망샘교회",
+    "denomination": "HAPDONG",
+    "region": "CHUNGNAM",
+    "city": "천안",
+    "foundedYear": 2008,
+    "links": [
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@somangsaem"
+      }
+    ]
+  },
+  {
+    "id": "ch-immanuel",
+    "name": "임마누엘교회",
+    "denomination": "SUNBOK",
+    "region": "SEOUL",
+    "city": "영등포",
+    "foundedYear": 1983,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/immanuel"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@immanuel"
+      },
+      {
+        "type": "FACEBOOK",
+        "url": "https://facebook.com/immanuel"
+      }
+    ]
+  },
+  {
+    "id": "ch-galilee",
+    "name": "갈릴리교회",
+    "denomination": "KIJANG",
+    "region": "JEONBUK",
+    "city": "전주",
+    "foundedYear": 1969,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/galilee"
+      }
+    ]
+  },
+  {
+    "id": "ch-sionseong",
+    "name": "시온성교회",
+    "denomination": "HAPDONG",
+    "region": "GWANGJU",
+    "city": "북구",
+    "foundedYear": 1990,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/sionseong"
+      }
+    ]
+  },
+  {
+    "id": "ch-yeolmae",
+    "name": "열매교회",
+    "denomination": "BAPTIST",
+    "region": "SEOUL",
+    "city": "강동",
+    "foundedYear": 2012,
+    "links": [
+      {
+        "type": "INSTAGRAM",
+        "url": "https://instagram.com/yeolmae"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@yeolmae"
+      }
+    ]
+  },
+  {
+    "id": "ch-pureunchojang",
+    "name": "푸른초장교회",
+    "denomination": "TONGHAP",
+    "region": "INCHEON",
+    "city": "연수",
+    "foundedYear": 2000,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/pureunchojang"
+      }
+    ]
+  },
+  {
+    "id": "ch-saemmul",
+    "name": "샘물교회",
+    "denomination": "HAPDONG",
+    "region": "GYEONGGI",
+    "city": "화성",
+    "foundedYear": 1997,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/saemmul"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@saemmul"
+      }
+    ]
+  },
+  {
+    "id": "ch-joeunssiat",
+    "name": "좋은씨앗교회",
+    "denomination": "GAMLI",
+    "region": "GYEONGGI",
+    "city": "부천",
+    "foundedYear": 2016,
+    "links": [
+      {
+        "type": "INSTAGRAM",
+        "url": "https://instagram.com/joeunssiat"
+      }
+    ]
+  },
+  {
+    "id": "ch-mideumdongsan",
+    "name": "믿음의동산교회",
+    "denomination": "HAPDONG",
+    "region": "DAEGU",
+    "city": "달서",
+    "foundedYear": 1987,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/mideumdongsan"
+      }
+    ]
+  },
+  {
+    "id": "ch-nanum",
+    "name": "나눔교회",
+    "denomination": "SEONGGYUL",
+    "region": "SEOUL",
+    "city": "성북",
+    "foundedYear": 2009,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/nanum"
+      },
+      {
+        "type": "INSTAGRAM",
+        "url": "https://instagram.com/nanum"
+      }
+    ]
+  },
+  {
+    "id": "ch-onsaemi",
+    "name": "온새미교회",
+    "denomination": "BAEKSEOK",
+    "region": "ULSAN",
+    "city": "남구",
+    "foundedYear": null,
+    "links": [
+      {
+        "type": "BAND",
+        "url": "https://band.us/@onsaemi"
+      }
+    ]
+  },
+  {
+    "id": "ch-bitgoeul",
+    "name": "빛고을교회",
+    "denomination": "TONGHAP",
+    "region": "GWANGJU",
+    "city": "서구",
+    "foundedYear": 1995,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/bitgoeul"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@bitgoeul"
+      }
+    ]
+  },
+  {
+    "id": "ch-hanmaum",
+    "name": "한마음교회",
+    "denomination": "HAPDONG",
+    "region": "CHUNGBUK",
+    "city": "청주",
+    "foundedYear": 1981,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/hanmaum"
+      }
+    ]
+  },
+  {
+    "id": "ch-daegwang",
+    "name": "대광교회",
+    "denomination": "TONGHAP",
+    "region": "GYEONGBUK",
+    "city": "포항",
+    "foundedYear": 1972,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/daegwang"
+      }
+    ]
+  },
+  {
+    "id": "ch-seongeun",
+    "name": "성은교회",
+    "denomination": "HAPSIN",
+    "region": "JEONNAM",
+    "city": "순천",
+    "foundedYear": 1996,
+    "links": []
+  },
+  {
+    "id": "ch-tamna",
+    "name": "탐라중앙교회",
+    "denomination": "TONGHAP",
+    "region": "JEJU",
+    "city": "제주",
+    "foundedYear": 1978,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/tamna"
+      }
+    ]
+  },
+  {
+    "id": "ch-hangang",
+    "name": "한강중앙교회",
+    "denomination": "HAPDONG",
+    "region": "SEOUL",
+    "city": "용산",
+    "foundedYear": 1993,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/hangang"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@hangang"
+      }
+    ]
+  },
+  {
+    "id": "ch-emmaus",
+    "name": "엠마오교회",
+    "denomination": "GOSIN",
+    "region": "BUSAN",
+    "city": "사하",
+    "foundedYear": 2006,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/emmaus"
+      }
+    ]
+  },
+  {
+    "id": "ch-jeonwon",
+    "name": "전원교회",
+    "denomination": "HAPDONG",
+    "region": "GYEONGGI",
+    "city": "남양주",
+    "foundedYear": 2002,
+    "links": [
+      {
+        "type": "HOMEPAGE",
+        "url": "https://example.com/jeonwon"
+      },
+      {
+        "type": "BAND",
+        "url": "https://band.us/@jeonwon"
+      }
+    ]
+  },
+  {
+    "id": "ch-gwangya",
+    "name": "광야교회",
+    "denomination": "ETC",
+    "region": "GANGWON",
+    "city": "춘천",
+    "foundedYear": 2011,
+    "links": [
+      {
+        "type": "INSTAGRAM",
+        "url": "https://instagram.com/gwangya"
+      },
+      {
+        "type": "YOUTUBE",
+        "url": "https://youtube.com/@gwangya"
+      }
+    ]
+  },
+  {
+    "id": "ch-hyanggi",
+    "name": "향기나는교회",
+    "denomination": "BAPTIST",
+    "region": "SEJONG",
+    "city": null,
+    "foundedYear": 2018,
+    "links": [
+      {
+        "type": "INSTAGRAM",
+        "url": "https://instagram.com/hyanggi"
+      }
     ]
   }
 ]

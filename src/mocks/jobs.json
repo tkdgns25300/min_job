@@ -1,126 +1,458 @@
 [
   {
     "id": "job-001",
+    "churchId": "ch-seongeun",
+    "title": "교구 담당 부목사를 모십니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": 280,
+    "stipendMax": 280,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "HERO",
+    "postedAt": "2026-07-07",
+    "deadline": "2026-08-17",
+    "workDays": "화~주일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "심방과 소그룹 목회에 헌신할 수 있는 분",
+      "예장합신 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분",
+      "심방 사역 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본",
+      "설교 영상"
+    ],
+    "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/172"
+  },
+  {
+    "id": "job-002",
+    "churchId": "ch-dongsan",
+    "title": "담임목사 청빙 공고",
+    "position": "SENIOR_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "housingProvided": true,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "교회 내규에 따름",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-07-06",
+    "deadline": "2026-08-06",
+    "workDays": null,
+    "requirements": [
+      "목사 안수 후 7년 이상의 목회 경력",
+      "예장합동 소속 목사",
+      "교단 헌법에 따른 위임(담임)목사 자격을 갖춘 분"
+    ],
+    "preferred": [
+      "개척 또는 담임 목회 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목회계획서",
+      "설교 영상"
+    ],
+    "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/122"
+  },
+  {
+    "id": "job-003",
+    "churchId": "ch-mideumdongsan",
+    "title": "청년부 전도사를 청빙합니다",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "housingProvided": true,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "교회 내규에 따름",
+    "status": "PENDING",
+    "featuredTier": "NONE",
+    "postedAt": "2026-07-06",
+    "deadline": null,
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "청년 사역에 비전을 품은 사역자를 청빙합니다. 예배 인도와 제자훈련, 새가족 정착을 함께 감당할 분을 기다립니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-mideumdongsan"
+  },
+  {
+    "id": "job-004",
+    "churchId": "ch-saebyeok",
+    "title": "찬양·예배 사역 파트 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "WORSHIP",
+    "employmentType": "PART_TIME",
+    "qualification": "SEMINARIAN",
+    "housingProvided": false,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "교회 내규에 따름",
+    "status": "PENDING",
+    "featuredTier": "NONE",
+    "postedAt": "2026-07-05",
+    "deadline": null,
+    "workDays": "주일",
+    "requirements": [
+      "신학대학원(M.Div) 재학생",
+      "찬양 인도 가능자"
+    ],
+    "preferred": [
+      "건반 연주 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "주일 예배 찬양을 섬길 파트 전도사를 청빙합니다. 파트 사역으로 학업과 병행이 가능합니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-saebyeok"
+  },
+  {
+    "id": "job-005",
+    "churchId": "ch-sionseong",
+    "title": "교육부 간사 모집",
+    "position": "ETC",
+    "department": "CHILDREN",
+    "employmentType": "SEMI_FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": 140,
+    "stipendMax": 140,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-07-05",
+    "deadline": "2026-08-11",
+    "workDays": "주 4일 (주일 포함)",
+    "requirements": [
+      "세례교인으로 신앙생활에 모범이 되는 분",
+      "교육 부서 섬김 경험이 있는 분"
+    ],
+    "preferred": [
+      "아동 사역 경험자",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1278"
+  },
+  {
+    "id": "job-006",
+    "churchId": "ch-dongsan",
+    "title": "교구 담당 부목사를 모십니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": 295,
+    "stipendMax": 295,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "PREMIUM",
+    "postedAt": "2026-07-04",
+    "deadline": "2026-07-26",
+    "workDays": "화~주일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "심방과 소그룹 목회에 헌신할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "심방 사역 경험자",
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본",
+      "설교 영상"
+    ],
+    "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/146"
+  },
+  {
+    "id": "job-007",
+    "churchId": "ch-hanbit",
+    "title": "교육 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "SEMINARIAN",
+    "housingProvided": false,
+    "stipendMin": 205,
+    "stipendMax": 205,
+    "stipendNote": null,
+    "status": "PENDING",
+    "featuredTier": "NONE",
+    "postedAt": "2026-07-04",
+    "deadline": "2026-07-28",
+    "workDays": "주일·주중 5일",
+    "requirements": [
+      "신학대학원(M.Div) 재학생",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "교회 학교와 예배 사역 전반을 함께 섬길 전도사를 청빙합니다. 부서 배치는 면담 후 협의합니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-hanbit"
+  },
+  {
+    "id": "job-008",
+    "churchId": "ch-onsaemi",
+    "title": "영유아부 사역을 함께할 파트 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "INFANT",
+    "employmentType": "PART_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": 75,
+    "stipendMax": 75,
+    "stipendNote": null,
+    "status": "PENDING",
+    "featuredTier": "NONE",
+    "postedAt": "2026-07-03",
+    "deadline": null,
+    "workDays": "주일·금요 (주 2일)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "영유아부 사역 경험자",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "인근 거주자",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "영유아부 아이들과 부모를 함께 섬길 사역자를 청빙합니다. 놀이와 말씀으로 첫 신앙의 기초를 세우고, 교사들과 협력하여 부서를 운영할 분을 기다립니다. 파트 사역으로 학업과 병행이 가능합니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-onsaemi"
+  },
+  {
+    "id": "job-009",
+    "churchId": "ch-daegwang",
+    "title": "청년부 전도사를 청빙합니다",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": true,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "교회 내규에 따름",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-07-02",
+    "deadline": "2026-08-16",
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "청년부 사역 경험자",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장통합 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/539"
+  },
+  {
+    "id": "job-010",
     "churchId": "ch-saesomang",
     "title": "다음세대를 함께 세워갈 유초등부 전도사를 청빙합니다",
     "position": "EVANGELIST",
     "department": "CHILDREN",
     "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": true,
     "stipendMin": 220,
     "stipendMax": 220,
     "stipendNote": null,
     "status": "OPEN",
-    "featuredTier": "HERO",
-    "postedAt": "2026-06-30",
-    "deadline": "2026-07-20",
+    "featuredTier": "NONE",
+    "postedAt": "2026-07-02",
+    "deadline": "2026-07-26",
     "workDays": "주일·수요",
     "requirements": [
-      "신학대학원(M.Div) 졸업 또는 재학생",
-      "예장합동 소속(예정) 목사·전도사",
-      "주일 및 주중 사역 성실히 감당 가능자",
-      "다음세대를 향한 분명한 소명을 가진 분"
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "유초등부 사역 경험자",
+      "주일 및 수요 사역 감당 가능자"
     ],
-    "preferred": ["유초등부 사역 경험이 있는 분", "자가용 소지 및 운전 가능자"],
-    "requiredDocs": ["이력서", "자기소개서", "설교영상"],
-    "description": "다음세대 교육에 헌신할 유초등부 전도사를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 사역자를 기다립니다.",
+    "preferred": [
+      "아동 사역 경험자",
+      "피아노 반주 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "다음세대 교육에 헌신할 유초등부 전도사를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 사역자를 기다립니다. 사택을 제공합니다.",
     "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1001"
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3402"
   },
   {
-    "id": "job-002",
-    "churchId": "ch-sarangbit",
-    "title": "영유아부를 섬길 따뜻한 전도사를 찾습니다",
+    "id": "job-011",
+    "churchId": "ch-banseok",
+    "title": "영유아부 전도사를 청빙합니다",
     "position": "EVANGELIST",
     "department": "INFANT",
     "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": 180,
+    "stipendMax": 190,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "HERO",
+    "postedAt": "2026-07-01",
+    "deadline": "2026-08-10",
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "영유아부 사역 경험자",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장통합 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "유아교육 전공자 우대"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "영유아부를 따뜻하게 섬길 사역자를 찾습니다. 부모와 소통하며 다음세대의 첫 신앙을 세워갈 분을 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3465"
+  },
+  {
+    "id": "job-012",
+    "churchId": "ch-galilee",
+    "title": "청년부 전도사 청빙 (상시)",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
     "stipendMin": 200,
     "stipendMax": 200,
     "stipendNote": null,
     "status": "OPEN",
-    "featuredTier": "HERO",
-    "postedAt": "2026-06-29",
-    "deadline": "2026-07-25",
-    "workDays": "주일·주중 5일",
-    "requirements": ["신학대학원 재학 또는 졸업", "영유아 사역에 은사 있는 자"],
-    "preferred": ["유아교육 관련 전공자 우대"],
-    "requiredDocs": ["이력서", "자기소개서"],
-    "description": "영유아부를 따뜻하게 섬길 사역자를 찾습니다. 부모와 소통하며 다음세대의 첫 신앙을 세워갈 전도사를 청빙합니다.",
-    "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1002"
-  },
-  {
-    "id": "job-003",
-    "churchId": "ch-eunhyero",
-    "title": "중고등부 전도사 청빙",
-    "position": "EVANGELIST",
-    "department": "YOUTH",
-    "employmentType": "FULL_TIME",
-    "stipendMin": 180,
-    "stipendMax": 200,
-    "stipendNote": null,
-    "status": "OPEN",
-    "featuredTier": "PREMIUM",
-    "postedAt": "2026-06-28",
+    "featuredTier": "NONE",
+    "postedAt": "2026-07-01",
     "deadline": null,
     "workDays": "주일·금요",
-    "requirements": ["신학대학원 재학 이상", "청소년 사역 경험자"],
-    "preferred": ["수련회 기획 경험", "악기 연주 가능자"],
-    "requiredDocs": ["이력서", "자기소개서", "설교 영상 링크"],
-    "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 전도사를 청빙합니다.",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "청년 사역에 비전이 있는 분"
+    ],
+    "preferred": [
+      "찬양 인도 가능자",
+      "소그룹 인도 경험"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "청년부 전도사를 상시 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 기다립니다.",
     "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1003"
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/529"
   },
   {
-    "id": "job-004",
-    "churchId": "ch-hanbit",
-    "title": "교구 담당 부목사를 모십니다",
-    "position": "ASSOCIATE_PASTOR",
-    "department": "DISTRICT",
-    "employmentType": "FULL_TIME",
-    "stipendMin": null,
-    "stipendMax": null,
-    "stipendNote": "내규에 따름",
-    "status": "OPEN",
-    "featuredTier": "PREMIUM",
-    "postedAt": "2026-06-27",
-    "deadline": "2026-07-31",
-    "workDays": "주 6일 상근",
-    "requirements": ["예장합동 목사안수자", "교구 목회 경험 3년 이상"],
-    "preferred": ["심방 및 소그룹 인도 경험자"],
-    "requiredDocs": ["이력서", "자기소개서", "목사안수증 사본"],
-    "description": "성도들을 돌보고 교구를 섬길 부목사를 모십니다. 심방과 소그룹 목회에 헌신할 동역자를 기다립니다.",
-    "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1004"
-  },
-  {
-    "id": "job-005",
-    "churchId": "ch-juane",
-    "title": "청년부 파트 전도사 청빙",
+    "id": "job-013",
+    "churchId": "ch-emmaus",
+    "title": "유초등부를 섬길 파트 전도사를 찾습니다",
     "position": "EVANGELIST",
-    "department": "YOUNG_ADULT",
+    "department": "CHILDREN",
     "employmentType": "PART_TIME",
-    "stipendMin": 90,
-    "stipendMax": 90,
+    "housingProvided": false,
+    "stipendMin": 105,
+    "stipendMax": 105,
     "stipendNote": null,
     "status": "OPEN",
     "featuredTier": "NONE",
-    "postedAt": "2026-06-26",
-    "deadline": "2026-07-15",
-    "workDays": "주일·금요 (주 2~3일)",
-    "requirements": ["신학대학원 재학생", "청년 사역에 관심 있는 자"],
-    "preferred": ["찬양 인도 가능자"],
-    "requiredDocs": ["이력서", "자기소개서"],
-    "description": "개척교회 청년부를 함께 세워갈 파트 전도사를 청빙합니다. 작은 공동체지만 뜨겁게 헌신할 사역자를 기다립니다.",
+    "postedAt": "2026-06-30",
+    "deadline": "2026-07-29",
+    "workDays": "주일·수요",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1005"
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/606"
   },
   {
-    "id": "job-006",
+    "id": "job-014",
     "churchId": "ch-saebyeok",
     "title": "청년부 전도사 청빙",
     "position": "EVANGELIST",
     "department": "YOUNG_ADULT",
     "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
     "stipendMin": 210,
     "stipendMax": 210,
     "stipendNote": null,
@@ -129,42 +461,438 @@
     "postedAt": "2026-06-30",
     "deadline": "2026-07-18",
     "workDays": "주일·주중 5일",
-    "requirements": ["신학대학원 졸업(예정)", "청년부 사역 경험자"],
-    "preferred": ["제자훈련 인도 경험 우대"],
-    "requiredDocs": ["이력서", "자기소개서", "신앙고백서"],
+    "requirements": [
+      "신학대학원(M.Div) 졸업 또는 졸업 예정",
+      "청년부 사역 경험자"
+    ],
+    "preferred": [
+      "제자훈련 인도 경험 우대"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
     "description": "청년부 부흥을 함께 이끌 전도사를 청빙합니다. 청년들과 눈높이를 맞추고 말씀으로 세워갈 동역자를 찾습니다.",
     "source": "CHURCH",
-    "sourceUrl": null
+    "sourceUrl": null,
+    "ownerId": "user-saebyeok"
   },
   {
-    "id": "job-007",
+    "id": "job-015",
+    "churchId": "ch-eunhyero",
+    "title": "청년부 사역을 함께할 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "SEMI_FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
+    "stipendMin": 155,
+    "stipendMax": 155,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-29",
+    "deadline": null,
+    "workDays": "주 4일 (주일 포함)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장통합 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "찬양 인도 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "청년 사역에 비전을 품은 사역자를 청빙합니다. 예배 인도와 제자훈련, 새가족 정착을 함께 감당할 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/568"
+  },
+  {
+    "id": "job-016",
+    "churchId": "ch-immanuel",
+    "title": "담임목사 청빙 공고",
+    "position": "SENIOR_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "교회 내규에 따름",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-29",
+    "deadline": "2026-07-22",
+    "workDays": null,
+    "requirements": [
+      "목사 안수 후 7년 이상의 목회 경력",
+      "순복음 소속 목사",
+      "교단 헌법에 따른 위임(담임)목사 자격을 갖춘 분"
+    ],
+    "preferred": [
+      "교회 갱신과 양육에 비전이 있는 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목회계획서",
+      "설교 영상"
+    ],
+    "description": "은퇴하시는 담임목사님의 뒤를 이어 교회를 섬길 담임목사를 청빙합니다. 말씀과 기도로 공동체를 이끌어가실 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1276"
+  },
+  {
+    "id": "job-017",
+    "churchId": "ch-pureunchojang",
+    "title": "유초등부 전도사를 청빙합니다",
+    "position": "EVANGELIST",
+    "department": "CHILDREN",
+    "employmentType": "FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": true,
+    "stipendMin": 180,
+    "stipendMax": 205,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-29",
+    "deadline": "2026-08-08",
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "아동 사역 경험자",
+      "피아노 반주 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "유초등부 아이들을 말씀으로 양육할 사역자를 청빙합니다. 주일 예배와 공과 지도, 절기 행사를 교사들과 함께 섬길 분을 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/533"
+  },
+  {
+    "id": "job-018",
+    "churchId": "ch-pyeonggang",
+    "title": "교구 담당 부목사 청빙",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": 280,
+    "stipendMax": 320,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-28",
+    "deadline": "2026-07-31",
+    "workDays": "주 6일 상근",
+    "requirements": [
+      "목사 안수자",
+      "부교역자 사역 경력 3년 이상",
+      "예장통합 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "심방 사역 경험자",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "교구 담당 부목사를 재청빙합니다. 심방과 성도 돌봄, 소그룹 목회에 헌신할 동역자를 기다립니다. 사택을 제공합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3406"
+  },
+  {
+    "id": "job-019",
+    "churchId": "ch-tamna",
+    "title": "강도사를 청빙합니다",
+    "position": "LICENSED_MINISTER",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "housingProvided": true,
+    "stipendMin": 215,
+    "stipendMax": 235,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-28",
+    "deadline": "2026-07-22",
+    "workDays": "주일·주중 5일",
+    "requirements": [
+      "강도사 고시 합격자",
+      "전임 사역 가능자",
+      "예장통합 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "함께 교회를 세워갈 강도사를 청빙합니다. 예배와 양육 사역 전반을 섬길 분을 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/169"
+  },
+  {
+    "id": "job-020",
+    "churchId": "ch-jeonwon",
+    "title": "청년부 사역을 함께할 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "면접 후 협의",
+    "status": "OPEN",
+    "featuredTier": "HERO",
+    "postedAt": "2026-06-27",
+    "deadline": "2026-08-11",
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "제자훈련·소그룹 인도 경험",
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-jeonwon"
+  },
+  {
+    "id": "job-021",
     "churchId": "ch-bitsogeum",
-    "title": "찬양·예배 사역 전도사 청빙",
+    "title": "행정 사역을 맡을 부목사를 모십니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "ADMIN",
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": true,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "면접 후 협의",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-26",
+    "deadline": null,
+    "workDays": "주 6일 상근 (월요일 휴무)",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "부교역자 사역 경력 3년 이상",
+      "담당 사역을 책임 있게 감당할 수 있는 분",
+      "예장고신 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "운전 가능자",
+      "교회 행정 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "교회 행정과 문서 업무를 담당할 사역자를 청빙합니다. 꼼꼼하고 성실하게 교회 살림을 함께 세워갈 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/179"
+  },
+  {
+    "id": "job-022",
+    "churchId": "ch-gwangya",
+    "title": "사무 간사 채용 공고",
+    "position": "ETC",
+    "department": "ADMIN",
+    "employmentType": "SEMI_FULL_TIME",
+    "housingProvided": false,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "면접 후 협의",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-26",
+    "deadline": "2026-07-27",
+    "workDays": "주 4일 (주일 포함)",
+    "requirements": [
+      "세례교인으로 신앙생활에 모범이 되는 분",
+      "문서 작성·행정 업무 가능자"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "교회 행정과 문서 업무를 담당할 사역자를 청빙합니다. 꼼꼼하고 성실하게 교회 살림을 함께 세워갈 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1277"
+  },
+  {
+    "id": "job-023",
+    "churchId": "ch-hanbit",
+    "title": "찬양·예배를 섬길 전도사를 찾습니다",
     "position": "EVANGELIST",
     "department": "WORSHIP",
     "employmentType": "FULL_TIME",
-    "stipendMin": 190,
-    "stipendMax": 210,
+    "housingProvided": false,
+    "stipendMin": 225,
+    "stipendMax": 245,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "PREMIUM",
+    "postedAt": "2026-06-26",
+    "deadline": null,
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "예배와 찬양 사역을 섬길 사역자를 청빙합니다. 찬양팀 훈련과 예배 준비를 함께할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/530"
+  },
+  {
+    "id": "job-024",
+    "churchId": "ch-emmaus",
+    "title": "찬양·예배 사역을 맡을 부목사를 모십니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "WORSHIP",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": false,
+    "stipendMin": 300,
+    "stipendMax": 300,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "PREMIUM",
+    "postedAt": "2026-06-25",
+    "deadline": "2026-07-18",
+    "workDays": "화~주일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "인근 거주자",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "주일 예배 찬양을 인도하고 찬양팀을 세워갈 사역자를 청빙합니다. 예배를 사랑하고 팀원들을 섬길 줄 아는 분을 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3450"
+  },
+  {
+    "id": "job-025",
+    "churchId": "ch-sarangbit",
+    "title": "교구 강도사 청빙",
+    "position": "LICENSED_MINISTER",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": 210,
+    "stipendMax": 230,
     "stipendNote": null,
     "status": "OPEN",
     "featuredTier": "NONE",
     "postedAt": "2026-06-25",
-    "deadline": null,
+    "deadline": "2026-07-26",
     "workDays": "주일·주중 5일",
-    "requirements": ["신학대학원 재학 이상", "찬양 인도 및 팀 운영 가능자"],
-    "preferred": ["건반/기타 연주 가능자", "음향 이해자"],
-    "requiredDocs": ["이력서", "자기소개서", "찬양 인도 영상"],
-    "description": "예배와 찬양 사역을 섬길 전도사를 청빙합니다. 찬양팀을 세우고 예배를 준비할 사역자를 기다립니다.",
+    "requirements": [
+      "강도사 고시 합격자",
+      "전임 사역 가능자"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "함께 교회를 세워갈 강도사를 청빙합니다. 예배와 양육 사역 전반을 섬길 분을 찾습니다.",
     "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1007"
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/152"
   },
   {
-    "id": "job-008",
+    "id": "job-026",
+    "churchId": "ch-somangsaem",
+    "title": "중고등부 강도사 청빙",
+    "position": "LICENSED_MINISTER",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": 215,
+    "stipendMax": 215,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-25",
+    "deadline": "2026-07-29",
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "강도사 고시 합격자",
+      "전임 사역 가능자",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분",
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "말씀 사역에 집중할 강도사를 청빙합니다. 설교와 양육 사역을 함께 감당할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/131"
+  },
+  {
+    "id": "job-027",
     "churchId": "ch-banseok",
     "title": "중고등부 전도사 청빙",
     "position": "EVANGELIST",
     "department": "YOUTH",
     "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
     "stipendMin": 200,
     "stipendMax": 200,
     "stipendNote": null,
@@ -173,187 +901,2486 @@
     "postedAt": "2026-06-24",
     "deadline": "2026-07-22",
     "workDays": "주일·주중 5일",
-    "requirements": ["신학대학원 재학 이상", "중고등부 사역 경험자"],
-    "preferred": ["학교 사역·멘토링 경험 우대"],
-    "requiredDocs": ["이력서", "자기소개서"],
-    "description": "중고등부 학생들을 말씀으로 양육할 전도사를 청빙합니다. 이전 사역자의 임기 만료로 재청빙합니다.",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "중고등부 사역 경험자"
+    ],
+    "preferred": [
+      "학생 상담 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "지난 사역자의 사임으로 중고등부 전도사를 다시 청빙합니다. 학생들과 함께 호흡하며 예배와 소그룹 양육을 감당할 분을 기다립니다.",
     "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1008"
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/104"
   },
   {
-    "id": "job-009",
-    "churchId": "ch-saesomang",
-    "title": "행정 간사 겸 전도사 청빙",
+    "id": "job-028",
+    "churchId": "ch-hanmaum",
+    "title": "전도사를 청빙합니다",
     "position": "EVANGELIST",
-    "department": "ADMIN",
-    "employmentType": "SEMI_FULL_TIME",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
     "stipendMin": 150,
-    "stipendMax": 170,
+    "stipendMax": 175,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "PREMIUM",
+    "postedAt": "2026-06-23",
+    "deadline": "2026-07-22",
+    "workDays": null,
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "교회 학교와 예배 사역 전반을 함께 섬길 전도사를 청빙합니다. 부서 배치는 면담 후 협의합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3434"
+  },
+  {
+    "id": "job-029",
+    "churchId": "ch-yeolmae",
+    "title": "담임(위임)목사 청빙 공고",
+    "position": "SENIOR_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": 345,
+    "stipendMax": 370,
     "stipendNote": null,
     "status": "OPEN",
     "featuredTier": "NONE",
     "postedAt": "2026-06-23",
-    "deadline": "2026-07-10",
-    "workDays": "주중 4일·주일",
-    "requirements": ["신학대학원 재학 이상", "문서 작업 및 행정 가능자"],
-    "preferred": ["교회 행정 경험자", "엑셀 활용 가능자"],
-    "requiredDocs": ["이력서", "자기소개서"],
-    "description": "교회 행정을 담당하며 부서 사역도 병행할 전도사를 청빙합니다.",
+    "deadline": "2026-07-26",
+    "workDays": null,
+    "requirements": [
+      "목사 안수 후 7년 이상의 목회 경력",
+      "침례교 소속 목사",
+      "교단 헌법에 따른 위임(담임)목사 자격을 갖춘 분"
+    ],
+    "preferred": [
+      "교회 갱신과 양육에 비전이 있는 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목회계획서",
+      "설교 영상"
+    ],
+    "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
     "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1009"
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/126"
   },
   {
-    "id": "job-010",
-    "churchId": "ch-hanbit",
-    "title": "유초등부 파트 전도사 청빙",
-    "position": "EVANGELIST",
-    "department": "CHILDREN",
-    "employmentType": "PART_TIME",
-    "stipendMin": 80,
-    "stipendMax": 100,
-    "stipendNote": null,
-    "status": "OPEN",
-    "featuredTier": "NONE",
-    "postedAt": "2026-06-22",
-    "deadline": "2026-07-12",
-    "workDays": "주일·부서 모임 (주 2일)",
-    "requirements": ["신학대학원 재학생", "유초등부 사역 가능자"],
-    "preferred": ["교회학교 교사 경험자"],
-    "requiredDocs": ["이력서", "자기소개서"],
-    "description": "유초등부를 섬길 파트 전도사를 청빙합니다.",
-    "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1010"
-  },
-  {
-    "id": "job-011",
-    "churchId": "ch-eunhyero",
-    "title": "심방·교구 담당 부목사 청빙",
-    "position": "ASSOCIATE_PASTOR",
-    "department": "DISTRICT",
+    "id": "job-030",
+    "churchId": "ch-hangang",
+    "title": "담임목사 청빙 공고",
+    "position": "SENIOR_PASTOR",
+    "department": null,
     "employmentType": "FULL_TIME",
-    "stipendMin": 300,
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": 345,
     "stipendMax": 350,
     "stipendNote": null,
     "status": "OPEN",
     "featuredTier": "NONE",
     "postedAt": "2026-06-21",
-    "deadline": "2026-07-28",
-    "workDays": "주 6일 상근",
-    "requirements": ["목사안수자", "심방·교구 목회 경험자"],
-    "preferred": ["장년 성경공부 인도 경험 우대"],
-    "requiredDocs": ["이력서", "자기소개서", "목사안수증 사본"],
-    "description": "교구와 심방을 전담할 부목사를 청빙합니다.",
+    "deadline": null,
+    "workDays": "협의",
+    "requirements": [
+      "목사 안수 후 7년 이상의 목회 경력",
+      "예장합동 소속 목사",
+      "교단 헌법에 따른 위임(담임)목사 자격을 갖춘 분"
+    ],
+    "preferred": [
+      "개척 또는 담임 목회 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목회계획서",
+      "설교 영상"
+    ],
+    "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
     "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1011"
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3482"
   },
   {
-    "id": "job-012",
-    "churchId": "ch-juane",
+    "id": "job-031",
+    "churchId": "ch-neulpureun",
     "title": "강도사 청빙",
     "position": "LICENSED_MINISTER",
     "department": null,
-    "employmentType": "FULL_TIME",
-    "stipendMin": null,
-    "stipendMax": null,
-    "stipendNote": "면담 후 결정",
+    "employmentType": "SEMI_FULL_TIME",
+    "housingProvided": false,
+    "stipendMin": 190,
+    "stipendMax": 190,
+    "stipendNote": null,
     "status": "OPEN",
     "featuredTier": "NONE",
-    "postedAt": "2026-06-20",
-    "deadline": null,
-    "workDays": "협의",
-    "requirements": ["예장통합 강도사 고시 합격자"],
-    "preferred": ["개척교회 사역에 헌신할 수 있는 자"],
-    "requiredDocs": ["이력서", "자기소개서"],
-    "description": "함께 교회를 세워갈 강도사를 청빙합니다. 사역 범위와 대우는 면담 후 협의합니다.",
+    "postedAt": "2026-06-21",
+    "deadline": "2026-07-23",
+    "workDays": "주 4일 (주일 포함)",
+    "requirements": [
+      "강도사 고시 합격자",
+      "예장통합 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "말씀 사역에 집중할 강도사를 청빙합니다. 설교와 양육 사역을 함께 감당할 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
     "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1012"
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/163"
   },
   {
-    "id": "job-013",
-    "churchId": "ch-sarangbit",
-    "title": "청년부 전도사 청빙",
-    "position": "EVANGELIST",
-    "department": "YOUNG_ADULT",
-    "employmentType": "FULL_TIME",
-    "stipendMin": 200,
-    "stipendMax": 200,
-    "stipendNote": null,
-    "status": "CLOSED",
-    "featuredTier": "NONE",
-    "postedAt": "2026-05-30",
-    "deadline": "2026-06-15",
-    "workDays": "주일·주중 5일",
-    "requirements": ["신학대학원 졸업", "청년 사역 경험자"],
-    "preferred": ["제자훈련 경험자"],
-    "requiredDocs": ["이력서", "자기소개서"],
-    "description": "청년부 전도사를 청빙합니다.",
-    "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1013"
-  },
-  {
-    "id": "job-014",
-    "churchId": "ch-banseok",
+    "id": "job-032",
+    "churchId": "ch-yeolmae",
     "title": "중고등부 전도사 청빙",
     "position": "EVANGELIST",
     "department": "YOUTH",
     "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": 195,
+    "stipendMax": 195,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "PREMIUM",
+    "postedAt": "2026-06-21",
+    "deadline": null,
+    "workDays": "주일·주중 5일",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "중고등부 사역 경험자",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1243"
+  },
+  {
+    "id": "job-033",
+    "churchId": "ch-juane",
+    "title": "청년부 파트 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "PART_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": 105,
+    "stipendMax": 105,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-20",
+    "deadline": "2026-07-31",
+    "workDays": "주일 및 부서 모임",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "인근 거주자",
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다. 파트 사역으로 학업과 병행이 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1229"
+  },
+  {
+    "id": "job-034",
+    "churchId": "ch-neulpureun",
+    "title": "찬양·예배 사역을 함께할 파트 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "WORSHIP",
+    "employmentType": "PART_TIME",
+    "housingProvided": true,
+    "stipendMin": 70,
+    "stipendMax": 95,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-20",
+    "deadline": "2026-07-18",
+    "workDays": "주일",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "예배와 찬양 사역을 섬길 사역자를 청빙합니다. 찬양팀 훈련과 예배 준비를 함께할 분을 기다립니다. 파트 사역으로 학업과 병행이 가능합니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-neulpureun"
+  },
+  {
+    "id": "job-035",
+    "churchId": "ch-saemmul",
+    "title": "청년부 사역을 함께할 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "housingProvided": true,
+    "stipendMin": 230,
+    "stipendMax": 230,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "PREMIUM",
+    "postedAt": "2026-06-20",
+    "deadline": "2026-07-15",
+    "workDays": "주일·주중 5일",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/540"
+  },
+  {
+    "id": "job-036",
+    "churchId": "ch-gwangya",
+    "title": "행정 간사 겸 파트 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "ADMIN",
+    "employmentType": "PART_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
+    "stipendMin": 70,
+    "stipendMax": 70,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-19",
+    "deadline": "2026-08-02",
+    "workDays": "주일 및 부서 모임",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분",
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "행정 업무와 부서 사역을 병행할 사역자를 모십니다. 문서 작성과 회계 보조 등 교회 행정 전반을 담당합니다. 파트 사역으로 학업과 병행이 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1221"
+  },
+  {
+    "id": "job-037",
+    "churchId": "ch-seongeun",
+    "title": "찬양·예배 전도사를 청빙합니다",
+    "position": "EVANGELIST",
+    "department": "WORSHIP",
+    "employmentType": "SEMI_FULL_TIME",
+    "qualification": "SEMINARIAN",
+    "housingProvided": false,
+    "stipendMin": 145,
+    "stipendMax": 145,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-19",
+    "deadline": null,
+    "workDays": "주 4일 (주일 포함)",
+    "requirements": [
+      "신학대학원(M.Div) 재학생",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "주일 예배 찬양을 인도하고 찬양팀을 세워갈 사역자를 청빙합니다. 예배를 사랑하고 팀원들을 섬길 줄 아는 분을 찾습니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3411"
+  },
+  {
+    "id": "job-038",
+    "churchId": "ch-bitsogeum",
+    "title": "중고등부 전도사를 청빙합니다",
+    "position": "EVANGELIST",
+    "department": "YOUTH",
+    "employmentType": "SEMI_FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": 155,
+    "stipendMax": 155,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-17",
+    "deadline": "2026-07-15",
+    "workDays": "주일·수·금",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장고신 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "학생 상담 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3423"
+  },
+  {
+    "id": "job-039",
+    "churchId": "ch-chambit",
+    "title": "교구 사역 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "qualification": "SEMINARIAN",
+    "housingProvided": true,
+    "stipendMin": 190,
+    "stipendMax": 205,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-15",
+    "deadline": "2026-07-25",
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "신학대학원(M.Div) 재학생",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장고신 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-chambit"
+  },
+  {
+    "id": "job-040",
+    "churchId": "ch-pyeonggang",
+    "title": "중고등부 담당 부목사를 청빙합니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": false,
+    "stipendMin": 300,
+    "stipendMax": 310,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-15",
+    "deadline": "2026-07-12",
+    "workDays": "주 6일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3468"
+  },
+  {
+    "id": "job-041",
+    "churchId": "ch-hanmaum",
+    "title": "교구 목회를 함께할 부목사 청빙",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": true,
+    "stipendMin": 325,
+    "stipendMax": 325,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-14",
+    "deadline": "2026-07-24",
+    "workDays": "주 6일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "부교역자 사역 경력 3년 이상",
+      "심방과 소그룹 목회에 헌신할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본",
+      "설교 영상"
+    ],
+    "description": "성도들을 돌보고 교구를 섬길 사역자를 모십니다. 심방과 소그룹 목회에 헌신할 동역자를 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1260"
+  },
+  {
+    "id": "job-042",
+    "churchId": "ch-somangsaem",
+    "title": "다음세대를 세워갈 중고등부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": 225,
+    "stipendMax": 225,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-14",
+    "deadline": "2026-07-29",
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "중고등부 사역 경험자",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "학생 상담 경험자",
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/170"
+  },
+  {
+    "id": "job-043",
+    "churchId": "ch-keunnamu",
+    "title": "찬양·예배 사역을 맡을 부목사를 모십니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "WORSHIP",
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "사역 경력에 따라 협의",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-13",
+    "deadline": "2026-07-18",
+    "workDays": "주 6일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "부교역자 사역 경력 3년 이상",
+      "담당 사역을 책임 있게 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "미디어·음향 이해가 있는 분",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "주일 예배 찬양을 인도하고 찬양팀을 세워갈 사역자를 청빙합니다. 예배를 사랑하고 팀원들을 섬길 줄 아는 분을 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/553"
+  },
+  {
+    "id": "job-044",
+    "churchId": "ch-saemmul",
+    "title": "찬양·예배를 섬길 전도사를 찾습니다",
+    "position": "EVANGELIST",
+    "department": "WORSHIP",
+    "employmentType": "FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": true,
+    "stipendMin": 220,
+    "stipendMax": 235,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-13",
+    "deadline": "2026-07-14",
+    "workDays": null,
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "건반 또는 기타 연주 가능자",
+      "미디어·음향 이해가 있는 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "예배와 찬양 사역을 섬길 사역자를 청빙합니다. 찬양팀 훈련과 예배 준비를 함께할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1266"
+  },
+  {
+    "id": "job-045",
+    "churchId": "ch-somangsaem",
+    "title": "담임목사 청빙 공고",
+    "position": "SENIOR_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": false,
+    "stipendMin": 330,
+    "stipendMax": 335,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-13",
+    "deadline": "2026-07-11",
+    "workDays": null,
+    "requirements": [
+      "목사 안수 후 7년 이상의 목회 경력",
+      "예장합동 소속 목사",
+      "교단 헌법에 따른 위임(담임)목사 자격을 갖춘 분"
+    ],
+    "preferred": [
+      "교회 갱신과 양육에 비전이 있는 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목회계획서",
+      "설교 영상"
+    ],
+    "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3457"
+  },
+  {
+    "id": "job-046",
+    "churchId": "ch-keunnamu",
+    "title": "협동 전도사 모집",
+    "position": "EVANGELIST",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": true,
+    "stipendMin": 195,
+    "stipendMax": 195,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-12",
+    "deadline": "2026-07-23",
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "교회 학교와 예배 사역 전반을 함께 섬길 전도사를 청빙합니다. 부서 배치는 면담 후 협의합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/564"
+  },
+  {
+    "id": "job-047",
+    "churchId": "ch-nanum",
+    "title": "청년부 사역을 함께할 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": 180,
+    "stipendMax": 180,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-12",
+    "deadline": "2026-07-21",
+    "workDays": "주 5일 (주일 포함)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "청년부 사역 경험자",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "찬양 인도 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1281"
+  },
+  {
+    "id": "job-048",
+    "churchId": "ch-onsaemi",
+    "title": "중고등부 파트 전도사를 청빙합니다",
+    "position": "EVANGELIST",
+    "department": "YOUTH",
+    "employmentType": "PART_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": 90,
+    "stipendMax": 110,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-12",
+    "deadline": "2026-07-25",
+    "workDays": null,
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "중고등부 사역 경험자",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "운전 가능자",
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다. 파트 사역으로 학업과 병행이 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/558"
+  },
+  {
+    "id": "job-049",
+    "churchId": "ch-gwangya",
+    "title": "강도사를 청빙합니다",
+    "position": "LICENSED_MINISTER",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "사역 경력에 따라 협의",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-11",
+    "deadline": "2026-07-13",
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "강도사 고시 합격자",
+      "전임 사역 가능자"
+    ],
+    "preferred": [
+      "인근 거주자",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "말씀 사역에 집중할 강도사를 청빙합니다. 설교와 양육 사역을 함께 감당할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/151"
+  },
+  {
+    "id": "job-050",
+    "churchId": "ch-hyanggi",
+    "title": "다음세대를 세워갈 영유아부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "INFANT",
+    "employmentType": "FULL_TIME",
+    "qualification": "SEMINARIAN",
+    "housingProvided": true,
+    "stipendMin": 215,
+    "stipendMax": 235,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-09",
+    "deadline": null,
+    "workDays": null,
+    "requirements": [
+      "신학대학원(M.Div) 재학생",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "침례교 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분",
+      "유아교육 전공자 우대"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "영유아부를 따뜻하게 섬길 사역자를 찾습니다. 부모와 소통하며 다음세대의 첫 신앙을 세워갈 분을 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/537"
+  },
+  {
+    "id": "job-051",
+    "churchId": "ch-dongsan",
+    "title": "부목사 청빙 공고",
+    "position": "ASSOCIATE_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": true,
+    "stipendMin": 325,
+    "stipendMax": 325,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-08",
+    "deadline": "2026-07-25",
+    "workDays": "주 6일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "부교역자 사역 경력 3년 이상",
+      "담당 사역을 책임 있게 감당할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본",
+      "설교 영상"
+    ],
+    "description": "교회 사역 전반을 함께 감당할 부목사를 모십니다. 예배 인도와 성도 돌봄에 헌신할 동역자를 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/591"
+  },
+  {
+    "id": "job-052",
+    "churchId": "ch-hangang",
+    "title": "다음세대를 세워갈 중고등부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": 225,
+    "stipendMax": 225,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-06",
+    "deadline": "2026-07-16",
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "인근 거주자",
+      "학생 상담 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/155"
+  },
+  {
+    "id": "job-053",
+    "churchId": "ch-immanuel",
+    "title": "행정 담당 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "ADMIN",
+    "employmentType": "FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
+    "stipendMin": 230,
+    "stipendMax": 230,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-05",
+    "deadline": null,
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "순복음 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "교회 행정과 문서 업무를 담당할 사역자를 청빙합니다. 꼼꼼하고 성실하게 교회 살림을 함께 세워갈 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1256"
+  },
+  {
+    "id": "job-054",
+    "churchId": "ch-saesomang",
+    "title": "유초등부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "CHILDREN",
+    "employmentType": "FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
+    "stipendMin": 210,
+    "stipendMax": 220,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-05",
+    "deadline": "2026-06-26",
+    "workDays": "주일·수요",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능",
+      "주일 및 수요 사역 감당 가능자"
+    ],
+    "preferred": [
+      "아동 사역 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "유초등부 전도사를 다시 청빙합니다. 아이들을 사랑으로 양육하고 교사들과 협력할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3401"
+  },
+  {
+    "id": "job-055",
+    "churchId": "ch-hangang",
+    "title": "교구 담당 부목사를 모십니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": false,
+    "stipendMin": 285,
+    "stipendMax": 285,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-04",
+    "deadline": "2026-07-22",
+    "workDays": "주 6일 상근 (월요일 휴무)",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "심방과 소그룹 목회에 헌신할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "심방 사역 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/130"
+  },
+  {
+    "id": "job-056",
+    "churchId": "ch-joeunssiat",
+    "title": "교구 목회를 함께할 부목사 청빙",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "교회 내규에 따름",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-04",
+    "deadline": "2026-07-16",
+    "workDays": "화~주일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "심방과 소그룹 목회에 헌신할 수 있는 분",
+      "감리교 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3480"
+  },
+  {
+    "id": "job-057",
+    "churchId": "ch-joeunssiat",
+    "title": "청년부 담당 부목사를 청빙합니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": 330,
+    "stipendMax": 330,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-03",
+    "deadline": "2026-07-15",
+    "workDays": "주 6일 상근 (월요일 휴무)",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분",
+      "감리교 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "청년 사역에 비전을 품은 사역자를 청빙합니다. 예배 인도와 제자훈련, 새가족 정착을 함께 감당할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3436"
+  },
+  {
+    "id": "job-058",
+    "churchId": "ch-nanum",
+    "title": "교구 담당 부목사를 모십니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "housingProvided": true,
+    "stipendMin": 290,
+    "stipendMax": 300,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-03",
+    "deadline": "2026-07-23",
+    "workDays": "화~주일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "심방과 소그룹 목회에 헌신할 수 있는 분"
+    ],
+    "preferred": [
+      "심방 사역 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/147"
+  },
+  {
+    "id": "job-059",
+    "churchId": "ch-saemmul",
+    "title": "중고등부 담당 부목사 청빙",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": false,
+    "stipendMin": 290,
+    "stipendMax": 290,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-03",
+    "deadline": null,
+    "workDays": "화~주일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/557"
+  },
+  {
+    "id": "job-060",
+    "churchId": "ch-galilee",
+    "title": "청년부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
+    "stipendMin": 180,
+    "stipendMax": 200,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-02",
+    "deadline": "2026-06-24",
+    "workDays": "주일·금요",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능"
+    ],
+    "preferred": [
+      "소그룹 인도 경험"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "청년부 전도사를 다시 청빙합니다. 청년들과 함께 예배와 공동체를 세워갈 분을 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/108"
+  },
+  {
+    "id": "job-061",
+    "churchId": "ch-neulpureun",
+    "title": "유초등부 전도사를 청빙합니다",
+    "position": "EVANGELIST",
+    "department": "CHILDREN",
+    "employmentType": "FULL_TIME",
+    "qualification": "SEMINARIAN",
+    "housingProvided": false,
+    "stipendMin": 230,
+    "stipendMax": 230,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-02",
+    "deadline": "2026-07-10",
+    "workDays": "주일·주중 5일",
+    "requirements": [
+      "신학대학원(M.Div) 재학생",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "아동 사역 경험자",
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/153"
+  },
+  {
+    "id": "job-062",
+    "churchId": "ch-chambit",
+    "title": "찬양 사역자(간사) 모집",
+    "position": "ETC",
+    "department": "WORSHIP",
+    "employmentType": "FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": 195,
+    "stipendMax": 205,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-01",
+    "deadline": "2026-06-20",
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "세례교인으로 신앙생활에 모범이 되는 분",
+      "찬양 인도 또는 세션 가능자"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분",
+      "미디어·음향 이해가 있는 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "주일 예배 찬양을 인도하고 찬양팀을 세워갈 사역자를 청빙합니다. 예배를 사랑하고 팀원들을 섬길 줄 아는 분을 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1218"
+  },
+  {
+    "id": "job-063",
+    "churchId": "ch-sionseong",
+    "title": "중고등부 사역을 함께할 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": 155,
+    "stipendMax": 155,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-06-01",
+    "deadline": "2026-07-10",
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "중고등부 사역 경험자",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/559"
+  },
+  {
+    "id": "job-064",
+    "churchId": "ch-bitgoeul",
+    "title": "유초등부 담당 부목사를 청빙합니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "CHILDREN",
+    "employmentType": "FULL_TIME",
+    "housingProvided": false,
+    "stipendMin": 300,
+    "stipendMax": 300,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-30",
+    "deadline": "2026-07-15",
+    "workDays": "주 6일 상근 (월요일 휴무)",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분",
+      "예장통합 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "피아노 반주 가능자",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/560"
+  },
+  {
+    "id": "job-065",
+    "churchId": "ch-yeolmae",
+    "title": "교육 사역을 함께할 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "ETC",
+    "employmentType": "FULL_TIME",
+    "housingProvided": false,
+    "stipendMin": 225,
+    "stipendMax": 225,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-30",
+    "deadline": "2026-06-27",
+    "workDays": "주 5일 (주일 포함)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "침례교 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "교육 부서 전반을 함께 섬길 사역자를 청빙합니다. 부서 간 협력과 교육 프로그램 운영을 담당할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3484"
+  },
+  {
+    "id": "job-066",
+    "churchId": "ch-sarangbit",
+    "title": "다음세대를 세워갈 유초등부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "CHILDREN",
+    "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
+    "stipendMin": 165,
+    "stipendMax": 165,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-26",
+    "deadline": null,
+    "workDays": "주일·주중 5일",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "유초등부 사역 경험자",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "아동 사역 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "유초등부 아이들을 말씀으로 양육할 사역자를 청빙합니다. 주일 예배와 공과 지도, 절기 행사를 교사들과 함께 섬길 분을 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/593"
+  },
+  {
+    "id": "job-067",
+    "churchId": "ch-eunhyero",
+    "title": "찬양 사역자(간사) 모집",
+    "position": "ETC",
+    "department": "WORSHIP",
+    "employmentType": "FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": 185,
+    "stipendMax": 200,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-24",
+    "deadline": null,
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "세례교인으로 신앙생활에 모범이 되는 분",
+      "찬양 인도 또는 세션 가능자"
+    ],
+    "preferred": [
+      "운전 가능자",
+      "미디어·음향 이해가 있는 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "예배와 찬양 사역을 섬길 사역자를 청빙합니다. 찬양팀 훈련과 예배 준비를 함께할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3462"
+  },
+  {
+    "id": "job-068",
+    "churchId": "ch-tamna",
+    "title": "중고등부 사역을 함께할 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "SEMINARIAN",
+    "housingProvided": true,
+    "stipendMin": 230,
+    "stipendMax": 230,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-23",
+    "deadline": "2026-06-11",
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "신학대학원(M.Div) 재학생",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장통합 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "운전 가능자",
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1249"
+  },
+  {
+    "id": "job-069",
+    "churchId": "ch-chambit",
+    "title": "다음세대를 세워갈 중고등부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": true,
+    "stipendMin": 220,
+    "stipendMax": 240,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-22",
+    "deadline": "2026-07-26",
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장고신 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "수련회·캠프 기획 경험",
+      "학생 상담 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/164"
+  },
+  {
+    "id": "job-070",
+    "churchId": "ch-tamna",
+    "title": "담임(위임)목사 청빙 공고",
+    "position": "SENIOR_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "교회 내규에 따름",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-22",
+    "deadline": "2026-07-18",
+    "workDays": "협의",
+    "requirements": [
+      "목사 안수 후 7년 이상의 목회 경력",
+      "예장통합 소속 목사",
+      "교단 헌법에 따른 위임(담임)목사 자격을 갖춘 분"
+    ],
+    "preferred": [
+      "개척 또는 담임 목회 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목회계획서",
+      "설교 영상"
+    ],
+    "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3414"
+  },
+  {
+    "id": "job-071",
+    "churchId": "ch-bitgoeul",
+    "title": "청년부를 섬길 전도사를 찾습니다",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "SEMI_FULL_TIME",
+    "qualification": "SEMINARIAN",
+    "housingProvided": false,
+    "stipendMin": 165,
+    "stipendMax": 165,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-20",
+    "deadline": "2026-06-17",
+    "workDays": "주일·수·금",
+    "requirements": [
+      "신학대학원(M.Div) 재학생",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "운전 가능자",
+      "찬양 인도 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/128"
+  },
+  {
+    "id": "job-072",
+    "churchId": "ch-keunnamu",
+    "title": "부목사 청빙 공고",
+    "position": "ASSOCIATE_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": 275,
+    "stipendMax": 275,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-19",
+    "deadline": "2026-06-12",
+    "workDays": "주 6일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "운전 가능자",
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "담임목사를 도와 교회 전반의 목회를 함께할 부목사를 청빙합니다. 설교와 심방, 행정 사역을 균형 있게 감당할 분을 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/595"
+  },
+  {
+    "id": "job-073",
+    "churchId": "ch-mideumdongsan",
+    "title": "담임목사를 청빙합니다",
+    "position": "SENIOR_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": false,
+    "stipendMin": 335,
+    "stipendMax": 340,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-19",
+    "deadline": "2026-07-21",
+    "workDays": "협의",
+    "requirements": [
+      "목사 안수 후 7년 이상의 목회 경력",
+      "예장합동 소속 목사",
+      "교단 헌법에 따른 위임(담임)목사 자격을 갖춘 분"
+    ],
+    "preferred": [
+      "개척 또는 담임 목회 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목회계획서",
+      "설교 영상"
+    ],
+    "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/552"
+  },
+  {
+    "id": "job-074",
+    "churchId": "ch-joeunssiat",
+    "title": "다음세대를 세워갈 유초등부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "CHILDREN",
+    "employmentType": "FULL_TIME",
+    "qualification": "SEMINARIAN",
+    "housingProvided": true,
+    "stipendMin": 180,
+    "stipendMax": 195,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-18",
+    "deadline": null,
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "신학대학원(M.Div) 재학생",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/159"
+  },
+  {
+    "id": "job-075",
+    "churchId": "ch-nanum",
+    "title": "유초등부 사역을 함께할 전도사를 모십니다",
+    "position": "EVANGELIST",
+    "department": "CHILDREN",
+    "employmentType": "FULL_TIME",
+    "housingProvided": true,
+    "stipendMin": 205,
+    "stipendMax": 205,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-18",
+    "deadline": "2026-06-09",
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "성결교 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "피아노 반주 가능자",
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "유초등부 아이들을 말씀으로 양육할 사역자를 청빙합니다. 주일 예배와 공과 지도, 절기 행사를 교사들과 함께 섬길 분을 찾습니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-nanum"
+  },
+  {
+    "id": "job-076",
+    "churchId": "ch-sarangbit",
+    "title": "담임(위임)목사 청빙 공고",
+    "position": "SENIOR_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "교회 내규에 따름",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-17",
+    "deadline": "2026-07-18",
+    "workDays": "협의",
+    "requirements": [
+      "목사 안수 후 7년 이상의 목회 경력",
+      "예장합동 소속 목사",
+      "교단 헌법에 따른 위임(담임)목사 자격을 갖춘 분"
+    ],
+    "preferred": [
+      "교회 갱신과 양육에 비전이 있는 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목회계획서",
+      "설교 영상"
+    ],
+    "description": "은퇴하시는 담임목사님의 뒤를 이어 교회를 섬길 담임목사를 청빙합니다. 말씀과 기도로 공동체를 이끌어가실 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/547"
+  },
+  {
+    "id": "job-077",
+    "churchId": "ch-daegwang",
+    "title": "영유아부를 섬길 파트 전도사를 찾습니다",
+    "position": "EVANGELIST",
+    "department": "INFANT",
+    "employmentType": "PART_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": 85,
+    "stipendMax": 85,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-15",
+    "deadline": "2026-07-16",
+    "workDays": null,
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "유아교육 전공자 우대"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "영유아부를 따뜻하게 섬길 사역자를 찾습니다. 부모와 소통하며 다음세대의 첫 신앙을 세워갈 분을 청빙합니다. 파트 사역으로 학업과 병행이 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/145"
+  },
+  {
+    "id": "job-078",
+    "churchId": "ch-hanbit",
+    "title": "청년부 담당 부목사를 청빙합니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": 265,
+    "stipendMax": 265,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-14",
+    "deadline": null,
+    "workDays": "주 6일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "제자훈련·소그룹 인도 경험",
+      "찬양 인도 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-hanbit"
+  },
+  {
+    "id": "job-079",
+    "churchId": "ch-haneulmun",
+    "title": "사무 간사 채용 공고",
+    "position": "ETC",
+    "department": "ADMIN",
+    "employmentType": "PART_TIME",
+    "housingProvided": false,
+    "stipendMin": 65,
+    "stipendMax": 80,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-12",
+    "deadline": null,
+    "workDays": "주일·금요 (주 2일)",
+    "requirements": [
+      "세례교인으로 신앙생활에 모범이 되는 분",
+      "문서 작성·행정 업무 가능자"
+    ],
+    "preferred": [
+      "엑셀 등 문서 도구 활용 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "교회 행정과 문서 업무를 담당할 사역자를 청빙합니다. 꼼꼼하고 성실하게 교회 살림을 함께 세워갈 분을 기다립니다. 파트 사역으로 학업과 병행이 가능합니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-haneulmun"
+  },
+  {
+    "id": "job-080",
+    "churchId": "ch-saebyeok",
+    "title": "중고등부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
     "stipendMin": 190,
     "stipendMax": 190,
     "stipendNote": null,
     "status": "CLOSED",
     "featuredTier": "NONE",
-    "postedAt": "2026-05-20",
-    "deadline": "2026-06-10",
-    "workDays": "주일·주중 5일",
-    "requirements": ["신학대학원 재학 이상", "중고등부 사역 경험자"],
-    "preferred": ["멘토링 경험자"],
-    "requiredDocs": ["이력서", "자기소개서"],
-    "description": "중고등부 전도사를 청빙합니다.",
-    "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1014"
+    "postedAt": "2026-05-12",
+    "deadline": "2026-06-07",
+    "workDays": "주일·금요",
+    "requirements": [
+      "신학대학원(M.Div) 재학 이상",
+      "중고등부 사역에 소명이 있는 분"
+    ],
+    "preferred": [
+      "수련회 기획 경험"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "중고등부를 섬길 전도사를 청빙했던 공고입니다.",
+    "source": "CHURCH",
+    "sourceUrl": null,
+    "ownerId": "user-saebyeok"
   },
   {
-    "id": "job-015",
+    "id": "job-081",
+    "churchId": "ch-immanuel",
+    "title": "중고등부 담당 부목사를 청빙합니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": false,
+    "stipendMin": 280,
+    "stipendMax": 280,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-11",
+    "deadline": "2026-06-07",
+    "workDays": "화~주일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분",
+      "순복음 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/555"
+  },
+  {
+    "id": "job-082",
+    "churchId": "ch-pureunchojang",
+    "title": "강도사 청빙",
+    "position": "LICENSED_MINISTER",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": true,
+    "stipendMin": 205,
+    "stipendMax": 205,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-11",
+    "deadline": "2026-06-05",
+    "workDays": "주일·수요 외 주중 협의",
+    "requirements": [
+      "강도사 고시 합격자",
+      "전임 사역 가능자",
+      "예장통합 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "장기 사역 가능한 분",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "함께 교회를 세워갈 강도사를 청빙합니다. 예배와 양육 사역 전반을 섬길 분을 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/578"
+  },
+  {
+    "id": "job-083",
+    "churchId": "ch-banseok",
+    "title": "중고등부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "YOUTH",
+    "employmentType": "FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
+    "stipendMin": 190,
+    "stipendMax": 190,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-10",
+    "deadline": "2026-06-01",
+    "workDays": "주일·주중 5일",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능"
+    ],
+    "preferred": [
+      "수련회·캠프 기획 경험"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "중고등부 학생들을 말씀으로 양육할 전도사를 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3403"
+  },
+  {
+    "id": "job-084",
+    "churchId": "ch-bitgoeul",
+    "title": "유초등부를 섬길 전도사를 찾습니다",
+    "position": "EVANGELIST",
+    "department": "CHILDREN",
+    "employmentType": "FULL_TIME",
+    "housingProvided": true,
+    "stipendMin": 205,
+    "stipendMax": 205,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-10",
+    "deadline": "2026-06-01",
+    "workDays": "주 5일 (주일 포함)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "피아노 반주 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "유초등부 아이들을 말씀으로 양육할 사역자를 청빙합니다. 주일 예배와 공과 지도, 절기 행사를 교사들과 함께 섬길 분을 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/603"
+  },
+  {
+    "id": "job-085",
+    "churchId": "ch-eunhyero",
+    "title": "유초등부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "CHILDREN",
+    "employmentType": "FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "교회 내규에 따름",
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-10",
+    "deadline": "2026-05-29",
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장통합 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "피아노 반주 가능자",
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3425"
+  },
+  {
+    "id": "job-086",
+    "churchId": "ch-hyanggi",
+    "title": "다음세대 교육 전도사를 찾습니다",
+    "position": "EVANGELIST",
+    "department": "ETC",
+    "employmentType": "FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": 200,
+    "stipendMax": 225,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-10",
+    "deadline": "2026-07-27",
+    "workDays": "화~주일 (월요일 휴무)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "인근 거주자",
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "설교 영상"
+    ],
+    "description": "교육 부서 전반을 함께 섬길 사역자를 청빙합니다. 부서 간 협력과 교육 프로그램 운영을 담당할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/141"
+  },
+  {
+    "id": "job-087",
+    "churchId": "ch-haneulmun",
+    "title": "찬양·예배 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "WORSHIP",
+    "employmentType": "FULL_TIME",
+    "qualification": "ENTRY",
+    "housingProvided": false,
+    "stipendMin": 195,
+    "stipendMax": 195,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-09",
+    "deadline": "2026-06-03",
+    "workDays": "주 5일 (주일 포함)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "신규 사역자 지원 가능",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "미디어·음향 이해가 있는 분",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "예배와 찬양 사역을 섬길 사역자를 청빙합니다. 찬양팀 훈련과 예배 준비를 함께할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/116"
+  },
+  {
+    "id": "job-088",
+    "churchId": "ch-onsaemi",
+    "title": "담임목사를 청빙합니다",
+    "position": "SENIOR_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "면접 후 협의",
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-08",
+    "deadline": "2026-05-28",
+    "workDays": null,
+    "requirements": [
+      "목사 안수 후 7년 이상의 목회 경력",
+      "예장백석 소속 목사",
+      "교단 헌법에 따른 위임(담임)목사 자격을 갖춘 분"
+    ],
+    "preferred": [
+      "개척 또는 담임 목회 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목회계획서",
+      "설교 영상"
+    ],
+    "description": "은퇴하시는 담임목사님의 뒤를 이어 교회를 섬길 담임목사를 청빙합니다. 말씀과 기도로 공동체를 이끌어가실 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3474"
+  },
+  {
+    "id": "job-089",
+    "churchId": "ch-sionseong",
+    "title": "청년부 담당 부목사 청빙",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "housingProvided": true,
+    "stipendMin": 260,
+    "stipendMax": 260,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-08",
+    "deadline": "2026-07-13",
+    "workDays": "주 6일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분",
+      "예장합동 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "제자훈련·소그룹 인도 경험"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3415"
+  },
+  {
+    "id": "job-090",
+    "churchId": "ch-bitsogeum",
+    "title": "교구 담당 부목사를 모십니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": 295,
+    "stipendMax": 295,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-07",
+    "deadline": "2026-06-01",
+    "workDays": "화~주일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "심방과 소그룹 목회에 헌신할 수 있는 분"
+    ],
+    "preferred": [
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "성도들을 돌보고 교구를 섬길 사역자를 모십니다. 심방과 소그룹 목회에 헌신할 동역자를 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1242"
+  },
+  {
+    "id": "job-091",
+    "churchId": "ch-juane",
+    "title": "부목사 청빙 공고",
+    "position": "ASSOCIATE_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": 305,
+    "stipendMax": 325,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-06",
+    "deadline": "2026-05-24",
+    "workDays": "주 6일 상근 (월요일 휴무)",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "운전 가능자",
+      "장기 사역 가능한 분"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "교회 사역 전반을 함께 감당할 부목사를 모십니다. 예배 인도와 성도 돌봄에 헌신할 동역자를 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/161"
+  },
+  {
+    "id": "job-092",
+    "churchId": "ch-pyeonggang",
+    "title": "교구 담당 부목사 청빙",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "DISTRICT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": true,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "교회 내규에 따름",
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-06",
+    "deadline": "2026-05-30",
+    "workDays": "주 6일 상근",
+    "requirements": [
+      "목사 안수자",
+      "예장통합 소속 또는 이명 가능한 분",
+      "심방과 소그룹 목회에 헌신할 수 있는 분"
+    ],
+    "preferred": [
+      "심방 사역 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "성도들을 돌보고 교구를 섬길 부목사를 모십니다. 심방과 소그룹 목회에 헌신할 동역자를 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/105"
+  },
+  {
+    "id": "job-093",
+    "churchId": "ch-seongeun",
+    "title": "중고등부를 섬길 파트 전도사를 찾습니다",
+    "position": "EVANGELIST",
+    "department": "YOUTH",
+    "employmentType": "PART_TIME",
+    "housingProvided": false,
+    "stipendMin": 80,
+    "stipendMax": 110,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-05",
+    "deadline": "2026-07-16",
+    "workDays": "주일·수요",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "학생 상담 경험자",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "신앙고백서"
+    ],
+    "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다. 파트 사역으로 학업과 병행이 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1254"
+  },
+  {
+    "id": "job-094",
+    "churchId": "ch-emmaus",
+    "title": "교구 심방 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "DISTRICT",
+    "employmentType": "SEMI_FULL_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": null,
+    "stipendMax": null,
+    "stipendNote": "사역 경력에 따라 협의",
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-04",
+    "deadline": "2026-07-25",
+    "workDays": "주 4일 (주일 포함)",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "주일 및 부서 모임 사역을 성실히 감당할 수 있는 분",
+      "예장고신 소속 또는 이명 가능한 분"
+    ],
+    "preferred": [
+      "운전 가능자",
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/544"
+  },
+  {
+    "id": "job-095",
+    "churchId": "ch-galilee",
+    "title": "청년부 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "qualification": "SEMINARIAN",
+    "housingProvided": false,
+    "stipendMin": 180,
+    "stipendMax": 180,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-04",
+    "deadline": "2026-05-25",
+    "workDays": "주일·금요",
+    "requirements": [
+      "신학대학원(M.Div) 재학생",
+      "청년 사역에 관심 있는 분"
+    ],
+    "preferred": [
+      "찬양 인도 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "청년부를 함께 세워갈 전도사를 청빙합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/527"
+  },
+  {
+    "id": "job-096",
+    "churchId": "ch-hyanggi",
+    "title": "청년부 담당 부목사 청빙",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "YOUNG_ADULT",
+    "employmentType": "FULL_TIME",
+    "qualification": "ORDAINED",
+    "housingProvided": false,
+    "stipendMin": 245,
+    "stipendMax": 245,
+    "stipendNote": null,
+    "status": "CLOSED",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-04",
+    "deadline": "2026-05-25",
+    "workDays": "주 6일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "담당 사역을 책임 있게 감당할 수 있는 분"
+    ],
+    "preferred": [
+      "인근 거주자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본",
+      "설교 영상"
+    ],
+    "description": "청년 사역에 비전을 품은 사역자를 청빙합니다. 예배 인도와 제자훈련, 새가족 정착을 함께 감당할 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/607"
+  },
+  {
+    "id": "job-097",
+    "churchId": "ch-jeonwon",
+    "title": "청년부 간사 모집",
+    "position": "ETC",
+    "department": "YOUNG_ADULT",
+    "employmentType": "PART_TIME",
+    "qualification": "ANY",
+    "housingProvided": false,
+    "stipendMin": 70,
+    "stipendMax": 70,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-02",
+    "deadline": "2026-07-18",
+    "workDays": "주일",
+    "requirements": [
+      "세례교인으로 신앙생활에 모범이 되는 분",
+      "교육 부서 섬김 경험이 있는 분"
+    ],
+    "preferred": [
+      "찬양 인도 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다. 파트 사역으로 학업과 병행이 가능합니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/532"
+  },
+  {
+    "id": "job-098",
     "churchId": "ch-saesomang",
     "title": "유초등부 전도사 청빙",
     "position": "EVANGELIST",
     "department": "CHILDREN",
     "employmentType": "FULL_TIME",
+    "qualification": "EXPERIENCED",
+    "housingProvided": false,
     "stipendMin": 210,
     "stipendMax": 210,
     "stipendNote": null,
     "status": "CLOSED",
     "featuredTier": "NONE",
-    "postedAt": "2026-02-01",
-    "deadline": "2026-03-15",
+    "postedAt": "2026-05-02",
+    "deadline": "2026-05-24",
     "workDays": "주일·수요",
-    "requirements": ["신학대학원 재학 이상", "유초등부 사역 경험자"],
-    "preferred": ["반주 가능자"],
-    "requiredDocs": ["이력서", "자기소개서"],
-    "description": "유초등부 전도사를 청빙합니다.",
+    "requirements": [
+      "신학대학원(M.Div) 재학 또는 졸업",
+      "유초등부 사역 경험자",
+      "주일 및 수요 사역 감당 가능자"
+    ],
+    "preferred": [
+      "피아노 반주 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서"
+    ],
+    "description": "유초등부 아이들을 말씀으로 양육할 전도사를 청빙합니다. 주일 예배와 공과, 절기 행사를 교사들과 함께 섬길 분을 찾습니다.",
     "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1015"
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3400"
   },
   {
-    "id": "job-016",
-    "churchId": "ch-saesomang",
-    "title": "유초등부 전도사 청빙",
-    "position": "EVANGELIST",
-    "department": "CHILDREN",
+    "id": "job-099",
+    "churchId": "ch-daegwang",
+    "title": "교구 담당 부목사를 모십니다",
+    "position": "ASSOCIATE_PASTOR",
+    "department": "DISTRICT",
     "employmentType": "FULL_TIME",
-    "stipendMin": 200,
-    "stipendMax": 200,
+    "qualification": "EXPERIENCED",
+    "housingProvided": true,
+    "stipendMin": 275,
+    "stipendMax": 275,
     "stipendNote": null,
-    "status": "CLOSED",
+    "status": "OPEN",
     "featuredTier": "NONE",
-    "postedAt": "2025-09-05",
-    "deadline": "2025-10-20",
-    "workDays": "주일·수요",
-    "requirements": ["신학대학원 재학 이상"],
-    "preferred": [],
-    "requiredDocs": ["이력서", "자기소개서"],
-    "description": "유초등부 전도사를 청빙합니다.",
+    "postedAt": "2026-05-01",
+    "deadline": "2026-07-15",
+    "workDays": "화~주일 상근",
+    "requirements": [
+      "목사 안수자(또는 안수 예정자)",
+      "부교역자 사역 경력 3년 이상",
+      "심방과 소그룹 목회에 헌신할 수 있는 분"
+    ],
+    "preferred": [
+      "운전 가능자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목사안수증 사본"
+    ],
+    "description": "성도들을 돌보고 교구를 섬길 사역자를 모십니다. 심방과 소그룹 목회에 헌신할 동역자를 기다립니다.",
     "source": "OPERATOR",
-    "sourceUrl": "https://board.example-denom.org/recruit/1016"
+    "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3485"
+  },
+  {
+    "id": "job-100",
+    "churchId": "ch-hanmaum",
+    "title": "담임목사 청빙 공고",
+    "position": "SENIOR_PASTOR",
+    "department": null,
+    "employmentType": "FULL_TIME",
+    "housingProvided": true,
+    "stipendMin": 340,
+    "stipendMax": 355,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-05-01",
+    "deadline": null,
+    "workDays": null,
+    "requirements": [
+      "목사 안수 후 7년 이상의 목회 경력",
+      "예장합동 소속 목사",
+      "교단 헌법에 따른 위임(담임)목사 자격을 갖춘 분"
+    ],
+    "preferred": [
+      "개척 또는 담임 목회 경험자"
+    ],
+    "requiredDocs": [
+      "이력서",
+      "자기소개서",
+      "목회계획서",
+      "설교 영상"
+    ],
+    "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-nohoe.or.kr/board/call/167"
   }
 ]
