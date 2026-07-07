@@ -28,6 +28,7 @@
 | **position** (직분) | `jobs.position` | SENIOR_PASTOR · ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC |
 | **department** (부서) | `jobs.department` | INFANT · CHILDREN · YOUTH · YOUNG_ADULT · DISTRICT · WORSHIP · ADMIN · ETC · `NULL` |
 | **employment_type** (고용형태) | `jobs.employment_type` | FULL_TIME · SEMI_FULL_TIME · PART_TIME |
+| **qualification** (자격/경력) | `jobs.qualification` | ANY · ENTRY · EXPERIENCED · ORDAINED · SEMINARIAN · `NULL`(=무관) |
 | **stipend_period** (사례비 기간) | `jobs.stipend_period` | MONTH(기본) · YEAR |
 | **job_status** | `jobs.status` | OPEN(기본) · CLOSED |
 | **job_source** (출처) | `jobs.source` | OPERATOR · CHURCH |
@@ -73,6 +74,8 @@
 | `position` | text NOT NULL (CHECK) | 직분 |
 | `department` | text NULL (CHECK) | 부서 |
 | `employment_type` | text NOT NULL (CHECK) | 고용형태 |
+| `qualification` | text NULL (CHECK) | 자격/경력 요건 (필터). NULL=무관 |
+| `housing_provided` | boolean NOT NULL DEFAULT false | 사택 제공 여부 (필터) |
 | `stipend_min` | int NULL | 월/연 금액, **만원 단위** |
 | `stipend_max` | int NULL | |
 | `stipend_note` | text NULL | 비정형 표현("내규에 따름"·"면담 후 결정") 보존 |

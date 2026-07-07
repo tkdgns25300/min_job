@@ -4,15 +4,24 @@ import type {
   Position,
   Department,
   EmploymentType,
+  Qualification,
   FeaturedTier,
   JobSource,
+  JobStatus,
   ChurchChannel,
 } from "@/constants/domain";
 
-export type JobStatus = "OPEN" | "CLOSED";
+// 상태 enum은 constants(라벨 맵)로 이동 — 기존 import 경로 호환을 위해 재노출
+export type { JobStatus };
 
 // 목록 필터/정렬 (다중선택 필터 축 · 정렬 키)
-export type FilterDim = "denomination" | "region" | "position" | "department" | "employmentType";
+export type FilterDim =
+  | "denomination"
+  | "region"
+  | "position"
+  | "department"
+  | "employmentType"
+  | "qualification";
 export type SortKey = "recent" | "stipend" | "deadline";
 
 // 교회 채널 링크 (홈페이지·SNS)
@@ -40,6 +49,8 @@ export interface Job {
   position: Position;
   department: Department | null;
   employmentType: EmploymentType;
+  qualification?: Qualification; // 자격/경력 요건 (필터). 미지정 = 무관 취급. 실데이터에선 필수화 예정
+  housingProvided?: boolean; // 사택 제공 여부 (필터). 실데이터에선 필수화 예정
   stipendMin: number | null; // 월 사례비, 만원 단위
   stipendMax: number | null;
   stipendNote: string | null; // "내규에 따름" 등 비정형 표현 보존
@@ -55,6 +66,15 @@ export interface Job {
   description: string | null; // 공고 본문 (운영자 요약 or 교회 작성 — 원문 통째 복제 X)
   source: JobSource; // 출처 — 운영자 등록 / 교회 직접 등록 (owner nullable 가드레일)
   sourceUrl: string | null; // 원문 링크 (운영자 수집 공고). 재호스팅 대신 링크로 안내
+  ownerId?: string | null; // 소유 계정(교회 직접 등록만) — 운영자 공고는 없음. 가드레일 #2: 공고를 user에 강결합하지 않는다
+}
+
+// 로그인 사용자 — mock 단계 형태. Phase 1에서 Supabase Auth 세션 기반으로 대체.
+// TODO(design): ❓ 교회-계정 연결 모델(계정 1:1 교회? 1:N?)은 DATA.md 확정 필요 (fable.md #9)
+export interface CurrentUser {
+  id: string;
+  email: string;
+  churchId: string | null; // 교회 계정이면 소속 교회
 }
 
 // 공고 상세 페이지용 — 공고 + 소속 교회 전체
@@ -71,6 +91,8 @@ export interface JobCard {
   position: Position;
   department: Department | null;
   employmentType: EmploymentType;
+  qualification?: Qualification;
+  housingProvided?: boolean;
   stipendMin: number | null;
   stipendMax: number | null;
   stipendNote: string | null;

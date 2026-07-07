@@ -9,6 +9,7 @@ import {
   POSITIONS,
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
+  QUALIFICATIONS,
 } from "@/constants/domain";
 import type { FilterDim } from "@/types/domain";
 
@@ -20,6 +21,7 @@ const GROUPS: { dim: FilterDim; title: string; options: Record<string, string> }
   { dim: "position", title: "직분", options: POSITIONS },
   { dim: "department", title: "담당 부서", options: DEPARTMENTS },
   { dim: "employmentType", title: "고용형태", options: EMPLOYMENT_TYPES },
+  { dim: "qualification", title: "자격 / 경력", options: QUALIFICATIONS },
 ];
 
 function ChipGroup({
@@ -79,6 +81,8 @@ export interface JobFilterProps {
   onStipend: (which: "min" | "max", value: string) => void;
   includeNego: boolean;
   onIncludeNego: (value: boolean) => void;
+  housingOnly: boolean;
+  onHousingOnly: (value: boolean) => void;
   onReset: () => void;
 }
 
@@ -90,6 +94,8 @@ export function JobFilter({
   onStipend,
   includeNego,
   onIncludeNego,
+  housingOnly,
+  onHousingOnly,
   onReset,
 }: JobFilterProps) {
   return (
@@ -142,6 +148,19 @@ export function JobFilter({
             className="size-4 accent-primary"
           />
           협의 공고 포함
+        </label>
+      </div>
+
+      <div>
+        <h3 className="mb-2 text-xs font-bold text-muted-foreground">주거</h3>
+        <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={housingOnly}
+            onChange={(e) => onHousingOnly(e.target.checked)}
+            className="size-4 accent-primary"
+          />
+          사택 제공만 보기
         </label>
       </div>
     </div>

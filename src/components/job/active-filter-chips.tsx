@@ -7,6 +7,7 @@ import {
   POSITIONS,
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
+  QUALIFICATIONS,
 } from "@/constants/domain";
 import type { FilterDim } from "@/types/domain";
 
@@ -16,6 +17,7 @@ const DIM_OPTIONS: Record<FilterDim, Record<string, string>> = {
   position: POSITIONS,
   department: DEPARTMENTS,
   employmentType: EMPLOYMENT_TYPES,
+  qualification: QUALIFICATIONS,
 };
 
 // 사례비 입력값 → 요약 라벨 ("200~300만원" / "200만원 이상" / "300만원 이하")
@@ -52,6 +54,8 @@ export function ActiveFilterChips({
   onClearStipend,
   includeNego,
   onIncludeNego,
+  housingOnly,
+  onClearHousing,
   onReset,
 }: {
   selected: Record<FilterDim, Set<string>>;
@@ -61,11 +65,14 @@ export function ActiveFilterChips({
   onClearStipend: () => void;
   includeNego: boolean;
   onIncludeNego: (value: boolean) => void;
+  housingOnly: boolean;
+  onClearHousing: () => void;
   onReset: () => void;
 }) {
   const dims = Object.keys(DIM_OPTIONS) as FilterDim[];
   const stipend = stipendLabel(stipendMin, stipendMax);
-  const hasAny = dims.some((d) => selected[d].size > 0) || stipend !== null || !includeNego;
+  const hasAny =
+    dims.some((d) => selected[d].size > 0) || stipend !== null || !includeNego || housingOnly;
   if (!hasAny) return null;
 
   return (
@@ -81,6 +88,7 @@ export function ActiveFilterChips({
       )}
       {stipend && <Chip label={stipend} onRemove={onClearStipend} />}
       {!includeNego && <Chip label="협의 공고 제외" onRemove={() => onIncludeNego(true)} />}
+      {housingOnly && <Chip label="사택 제공만" onRemove={onClearHousing} />}
       <button
         type="button"
         onClick={onReset}

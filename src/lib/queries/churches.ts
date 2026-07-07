@@ -1,4 +1,4 @@
-import { cacheTag } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import * as mock from "@/mocks";
 import type { Church } from "@/types/domain";
 import type { RoleHistory } from "@/lib/repost-tracking";
@@ -9,11 +9,13 @@ import type { RoleHistory } from "@/lib/repost-tracking";
 export async function getChurch(id: string): Promise<Church | null> {
   "use cache";
   cacheTag("churches");
+  cacheLife("days");
   return mock.getChurch(id);
 }
 
 export async function getChurchTimeline(churchId: string): Promise<RoleHistory[]> {
   "use cache";
   cacheTag("jobs");
+  cacheLife("days");
   return mock.getChurchTimeline(churchId);
 }

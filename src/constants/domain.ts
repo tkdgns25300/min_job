@@ -67,6 +67,24 @@ export const EMPLOYMENT_TYPES = {
 } as const;
 export type EmploymentType = keyof typeof EMPLOYMENT_TYPES;
 
+// 자격/경력 요건 — 공고가 요구하는 자격 수준 (필터·표시). 성별·결혼여부는 채용차별 금지라 두지 않는다.
+export const QUALIFICATIONS = {
+  ANY: "무관",
+  ENTRY: "신규 가능",
+  EXPERIENCED: "경력",
+  ORDAINED: "목사안수",
+  SEMINARIAN: "신학생",
+} as const;
+export type Qualification = keyof typeof QUALIFICATIONS;
+
+// 공고 상태 — 모집중/마감 + 검수중(신규 교회 첫 공고는 검수 후 게재, ROADMAP 1-4)
+export const JOB_STATUSES = {
+  OPEN: "모집중",
+  CLOSED: "마감",
+  PENDING: "검수중",
+} as const;
+export type JobStatus = keyof typeof JOB_STATUSES;
+
 // 노출 등급 (수익화) — 일반/프리미엄/대표광고
 export const FEATURED_TIERS = {
   NONE: "일반",
@@ -81,6 +99,12 @@ export const JOB_SOURCES = {
   CHURCH: "교회 직접 등록",
 } as const;
 export type JobSource = keyof typeof JOB_SOURCES;
+
+// 공고 등록 폼 프리셋 — 인터뷰 반영: 사례비는 "거의 내규에 따름"(비정형 경로를 숫자와 동급으로)
+export const STIPEND_NOTE_PRESETS = ["교회 내규에 따름", "면접 후 협의"] as const;
+
+// 제출 서류 프리셋 — 자주 쓰는 항목 원탭 추가
+export const REQUIRED_DOC_PRESETS = ["이력서", "자기소개서", "신앙고백서", "설교 영상"] as const;
 
 // 교회 채널(홈페이지·SNS) — 노출 순서 = 정의 순서(홈페이지·유튜브 우선). 채널 추가는 여기에만.
 export const CHURCH_CHANNELS = {

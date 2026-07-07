@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -29,6 +30,7 @@ const MULTI_DIMS: FilterDim[] = [
   "position",
   "department",
   "employmentType",
+  "qualification",
 ];
 
 function emptySelected(): Record<FilterDim, Set<string>> {
@@ -51,6 +53,7 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
   const [stipendMin, setStipendMin] = useState(sp.get("stipendMin") ?? "");
   const [stipendMax, setStipendMax] = useState(sp.get("stipendMax") ?? "");
   const [includeNego, setIncludeNego] = useState(true);
+  const [housingOnly, setHousingOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>((sp.get("sort") as SortKey) || "recent");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(20);
@@ -78,12 +81,18 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
       setIncludeNego(v);
       setPage(1);
     },
+    housingOnly,
+    onHousingOnly: (v) => {
+      setHousingOnly(v);
+      setPage(1);
+    },
     onReset: () => {
       setQ("");
       setSelected(emptySelected());
       setStipendMin("");
       setStipendMax("");
       setIncludeNego(true);
+      setHousingOnly(false);
       setPage(1);
     },
   };
@@ -96,9 +105,10 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
         stipendMin: stipendMin ? Number(stipendMin) : null,
         stipendMax: stipendMax ? Number(stipendMax) : null,
         includeNego,
+        housingOnly,
         sort,
       }),
-    [jobs, q, selected, stipendMin, stipendMax, includeNego, sort],
+    [jobs, q, selected, stipendMin, stipendMax, includeNego, housingOnly, sort],
   );
 
   const total = filtered.length;
@@ -112,24 +122,28 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
   const activeFilterCount =
     MULTI_DIMS.reduce((n, dim) => n + selected[dim].size, 0) +
     (stipendMin || stipendMax ? 1 : 0) +
-    (includeNego ? 0 : 1);
+    (includeNego ? 0 : 1) +
+    (housingOnly ? 1 : 0);
 
   return (
     <div className="space-y-4">
       {/* 검색 + 모바일 필터 트리거 */}
       <div className="flex gap-2">
-        <Input
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setPage(1);
-          }}
-          placeholder="교회명 · 지역 · 직분 검색"
-          aria-label="공고 검색"
-          className="h-10 flex-1"
-        />
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-primary" />
+          <Input
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setPage(1);
+            }}
+            placeholder="교회명 · 지역 · 직분 검색"
+            aria-label="공고 검색"
+            className="h-12 rounded-xl pl-12 text-base"
+          />
+        </div>
         <Sheet>
-          <SheetTrigger className={cn(buttonVariants({ variant: "outline" }), "md:hidden")}>
+          <SheetTrigger className={cn(buttonVariants({ variant: "outline" }), "h-12 md:hidden")}>
             필터
             {activeFilterCount > 0 && (
               <span className="rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
@@ -155,27 +169,44 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
 
           {/* 목록 — 대표광고 최상단 통합 → 프리미엄 상단 고정 → 일반 */}
           <div className="min-w-0 space-y-4">
-            <div className="flex items-center justify-between border-b pb-2">
+            <div className="flex flex-wrap items-center justify-between gap-y-2 border-b pb-2">
               <p className="text-sm text-muted-foreground">
                 총 <b className="text-foreground">{total}</b>건
               </p>
-              <div className="flex gap-3 text-sm">
-                {SORTS.map((s) => (
-                  <button
-                    key={s.key}
-                    type="button"
-                    onClick={() => {
-                      setSort(s.key);
-                      setPage(1);
-                    }}
-                    className={cn(
-                      "text-muted-foreground hover:text-foreground",
-                      sort === s.key && "font-bold text-foreground",
-                    )}
-                  >
-                    {s.label}
-                  </button>
-                ))}
+              <div className="flex items-center gap-3 text-sm">
+                <div className="flex gap-3">
+                  {SORTS.map((s) => (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => {
+                        setSort(s.key);
+                        setPage(1);
+                      }}
+                      className={cn(
+                        "text-muted-foreground hover:text-foreground",
+                        sort === s.key && "font-bold text-foreground",
+                      )}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="rounded-md border bg-card px-2 py-1 text-muted-foreground"
+                  aria-label="페이지당 공고 수"
+                >
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <option key={n} value={n}>
+                      {n}개씩
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -192,6 +223,11 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
               }}
               includeNego={includeNego}
               onIncludeNego={filterProps.onIncludeNego}
+              housingOnly={housingOnly}
+              onClearHousing={() => {
+                setHousingOnly(false);
+                setPage(1);
+              }}
               onReset={filterProps.onReset}
             />
 
@@ -219,27 +255,7 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
               </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                페이지당
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setPage(1);
-                  }}
-                  className="rounded-md border bg-card px-2 py-1 text-sm text-foreground"
-                  aria-label="페이지당 공고 수"
-                >
-                  {PAGE_SIZE_OPTIONS.map((n) => (
-                    <option key={n} value={n}>
-                      {n}개
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <Pagination page={currentPage} totalPages={totalPages} onPageChange={setPage} />
-            </div>
+            <Pagination page={currentPage} totalPages={totalPages} onPageChange={setPage} />
           </div>
         </div>
 

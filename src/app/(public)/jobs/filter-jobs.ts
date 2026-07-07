@@ -3,6 +3,7 @@ import {
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
   POSITIONS,
+  QUALIFICATIONS,
   REGIONS,
 } from "@/constants/domain";
 import type { FilterDim, JobCard, SortKey } from "@/types/domain";
@@ -19,6 +20,7 @@ export interface JobFilterCriteria {
   stipendMin: number | null;
   stipendMax: number | null;
   includeNego: boolean;
+  housingOnly: boolean;
   sort: SortKey;
 }
 
@@ -33,6 +35,9 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
     if (s.position.size && !s.position.has(j.position)) return false;
     if (s.department.size && (!j.department || !s.department.has(j.department))) return false;
     if (s.employmentType.size && !s.employmentType.has(j.employmentType)) return false;
+    if (s.qualification.size && (!j.qualification || !s.qualification.has(j.qualification)))
+      return false;
+    if (c.housingOnly && !j.housingProvided) return false;
 
     const hasNumber = j.stipendMin !== null || j.stipendMax !== null;
     if (!hasNumber) {
@@ -56,6 +61,7 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
         j.department ? DEPARTMENTS[j.department] : "",
         DENOMINATIONS[j.church.denomination],
         EMPLOYMENT_TYPES[j.employmentType],
+        j.qualification ? QUALIFICATIONS[j.qualification] : "",
       ].join(" ");
       if (!hay.includes(query)) return false;
     }

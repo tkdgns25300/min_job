@@ -1,6 +1,6 @@
 import churchesData from "./churches.json";
 import jobsData from "./jobs.json";
-import type { Church, Job, JobCard, JobDetail } from "@/types/domain";
+import type { Church, CurrentUser, Job, JobCard, JobDetail } from "@/types/domain";
 import {
   getRepostInfo,
   groupByRole,
@@ -30,6 +30,8 @@ function toCard(job: Job): JobCard {
     position: job.position,
     department: job.department,
     employmentType: job.employmentType,
+    qualification: job.qualification,
+    housingProvided: job.housingProvided,
     stipendMin: job.stipendMin,
     stipendMax: job.stipendMax,
     stipendNote: job.stipendNote,
@@ -51,7 +53,9 @@ export function getListJobs(limit = 8): JobCard[] {
   const rank = (t: string) => (t === "PREMIUM" ? 0 : 1);
   return openJobs
     .filter((j) => j.featuredTier !== "HERO")
-    .sort((a, b) => rank(a.featuredTier) - rank(b.featuredTier) || b.postedAt.localeCompare(a.postedAt))
+    .sort(
+      (a, b) => rank(a.featuredTier) - rank(b.featuredTier) || b.postedAt.localeCompare(a.postedAt),
+    )
     .slice(0, limit)
     .map(toCard);
 }
@@ -87,9 +91,9 @@ export function getChurchOpenJobs(churchId: string, excludeId?: string): JobCard
   return openJobs.filter((j) => j.churchId === churchId && j.id !== excludeId).map(toCard);
 }
 
-/** 교회의 공고 이력 — 자리별 그룹(현재+지난, 재공고 집계). 교회 상세 차별점 */
+/** 교회의 공고 이력 — 자리별 그룹(현재+지난, 재공고 집계). 검수 중(PENDING)은 공개 전이라 제외 */
 export function getChurchTimeline(churchId: string): RoleHistory[] {
-  return groupByRole(jobs.filter((j) => j.churchId === churchId));
+  return groupByRole(jobs.filter((j) => j.churchId === churchId && j.status !== "PENDING"));
 }
 
 /** 비슷한 공고 — 같은 부서 우선·같은 지역 보충 (현재 공고·같은 교회 제외) */
@@ -107,6 +111,40 @@ export function getSimilarJobs(id: string, limit = 4): JobCard[] {
       churchById.get(j.churchId)?.region === baseChurch.region,
   );
   return [...byDept, ...byRegion].slice(0, limit).map(toCard);
+}
+
+// --- 인증(mock) — 실제 인증은 Phase 1 Supabase Auth. 아래는 인증 페이지 렌더용 mock 세션 ---
+
+// mock 로그인 사용자 — 교회 계정 1개(새벽빛교회). 항상 로그인 상태로 취급한다.
+const MOCK_CURRENT_USER: CurrentUser = {
+  id: "user-saebyeok",
+  email: "office@saebyeok.example.com",
+  churchId: "ch-saebyeok",
+};
+
+export function getCurrentUser(): CurrentUser | null {
+  return MOCK_CURRENT_USER;
+}
+
+/** 내가 등록한 공고 — ownerId 일치만. 운영자 등록 공고는 owner가 없어 잡히지 않는다(가드레일 #2). 최신순 */
+export function getOwnedJobs(userId: string) {
+  return jobs
+    .filter((j) => j.ownerId === userId)
+    .sort((a, b) => b.postedAt.localeCompare(a.postedAt))
+    .map(({ id, title, status, featuredTier, postedAt, deadline }) => ({
+      id,
+      title,
+      status,
+      featuredTier,
+      postedAt,
+      deadline,
+    }));
+}
+
+/** 수정 가능 공고 — 본인 소유만. 남의 공고·운영자 공고는 null(존재 노출 최소화 → notFound) */
+export function getEditableJob(id: string, userId: string): Job | null {
+  const job = jobs.find((j) => j.id === id);
+  return job && job.ownerId === userId ? job : null;
 }
 
 /**
