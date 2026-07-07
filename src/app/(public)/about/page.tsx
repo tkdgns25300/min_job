@@ -28,7 +28,7 @@ export default function AboutPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold">무엇을 할 수 있나요</h2>
         <ul className="list-disc space-y-1.5 pl-5 leading-relaxed text-muted-foreground marker:text-muted-foreground/40">
-          <li>지역·교단·직분·부서·고용형태·교회 규모 등으로 검색하고 거릅니다.</li>
+          <li>지역·교단·직분·부서·고용형태 등으로 검색하고 거릅니다.</li>
           <li>사례비·출근·자격요건 등 정리된 정보로 공고를 비교합니다.</li>
           <li>교회 홈페이지·유튜브 등 채널로 바로 이동해 확인합니다.</li>
           <li>같은 자리의 지난 공고 이력을 함께 봅니다.</li>

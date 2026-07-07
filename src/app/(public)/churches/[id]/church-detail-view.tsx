@@ -31,6 +31,8 @@ function PostingRow({ posting }: { posting: RoleHistory["postings"][number] }) {
       <span className="tabular-nums">
         {posting.postedAt} ~ {posting.deadline ?? "상시"}
       </span>
+      {/* TODO(design): ❓ "모집중" Badge(variant=default)가 광고 배지와 톤이 겹침 —
+          상태 표시를 점(dot)+텍스트로 낮출지(광고=배지, 상태=평문 위계 분리) 사람 결정 (fable.md #5) */}
       <Badge variant={posting.status === "OPEN" ? "default" : "secondary"} className="ml-auto">
         {posting.status === "OPEN" ? "모집중" : "마감"}
       </Badge>

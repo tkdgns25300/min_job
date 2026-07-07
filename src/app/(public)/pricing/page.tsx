@@ -69,7 +69,8 @@ export default function PricingPage() {
       {/* 노출 상품 2종 */}
       <section className="space-y-4">
         <h2 className="text-lg font-bold">노출 상품</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
+        {/* 상품은 2종 — 2열이 빈 칸 없이 균형 (fable.md /pricing) */}
+        <div className="grid gap-4 sm:grid-cols-2">
           {PRODUCTS.map((product) => (
             <Card key={product.name} className="gap-4 p-6">
               <div>
@@ -170,6 +171,8 @@ export default function PricingPage() {
       </section>
 
       {/* CTA */}
+      {/* TODO(design): ❓ CTA 밴드를 홈 사이드바 교회 CTA와 같은 딥그린 면(bg-primary + 흰 버튼)으로
+          통일할지 — 정적 페이지의 조용한 톤과 긴장, 사람 판단 필요 (fable.md #6) */}
       <section className="space-y-4 rounded-xl border bg-muted/30 p-8 text-center">
         <div>
           <h2 className="text-lg font-bold">공고를 등록하고 노출을 시작하세요</h2>
