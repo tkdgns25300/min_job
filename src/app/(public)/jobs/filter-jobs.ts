@@ -29,7 +29,6 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
   const s = c.selected;
 
   const result = jobs.filter((j) => {
-    if (j.featuredTier === "HERO") return false; // 대표광고는 목록이 아닌 상단 AD 섹션에서 노출
     if (s.denomination.size && !s.denomination.has(j.church.denomination)) return false;
     if (s.region.size && !s.region.has(j.church.region)) return false;
     if (s.position.size && !s.position.has(j.position)) return false;
@@ -68,7 +67,7 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
     return true;
   });
 
-  // 프리미엄 → 일반 순 고정 후 선택 정렬 (대표광고는 위에서 제외됨)
+  // 대표광고 → 프리미엄 → 일반 순 고정 후 선택 정렬
   result.sort((a, b) => {
     const tier = TIER_RANK[a.featuredTier] - TIER_RANK[b.featuredTier];
     if (tier !== 0) return tier;

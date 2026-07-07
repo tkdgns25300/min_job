@@ -1,10 +1,9 @@
 import { Suspense } from "react";
-import { getAdJobs, getAllJobCards, getJobStats } from "@/lib/queries/jobs";
+import { getAllJobCards, getJobStats } from "@/lib/queries/jobs";
 import { JobsView } from "./jobs-view";
 
 export default async function JobsPage() {
   const jobs = await getAllJobCards();
-  const ads = await getAdJobs();
   const stats = await getJobStats();
 
   return (
@@ -20,7 +19,7 @@ export default async function JobsPage() {
         </p>
       </div>
       <Suspense fallback={<JobsListSkeleton />}>
-        <JobsView jobs={jobs} ads={ads} />
+        <JobsView jobs={jobs} />
       </Suspense>
     </div>
   );

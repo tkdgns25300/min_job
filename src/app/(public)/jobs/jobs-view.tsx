@@ -40,7 +40,7 @@ function emptySelected(): Record<FilterDim, Set<string>> {
   >;
 }
 
-export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[] }) {
+export function JobsView({ jobs }: { jobs: JobCardData[] }) {
   // TODO(design): ❓ 필터 상태 ↔ URL 동기화(공유·뒤로가기·SEO)를 mock 단계에 선반영할지,
   // DB 전환(URL을 단일 소스로 승격)과 함께 할지 — 사람 결정 필요 (fable.md #2)
   const sp = useSearchParams();
@@ -115,8 +115,6 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  // 대표광고(HERO)는 리스트 최상단에 통합 — 필터와 무관, 1페이지에만 노출
-  const showAds = currentPage === 1 && ads.length > 0;
 
   // 활성 필터 수 — 모바일 트리거 배지 + 빈 상태 초기화 버튼 노출 판단
   const activeFilterCount =
@@ -231,16 +229,13 @@ export function JobsView({ jobs, ads }: { jobs: JobCardData[]; ads: JobCardData[
               onReset={filterProps.onReset}
             />
 
-            {showAds || pageItems.length > 0 ? (
+            {pageItems.length > 0 ? (
               <div className="divide-y divide-border overflow-hidden rounded-xl border bg-card">
-                {showAds && ads.map((job) => <JobRow key={job.id} job={job} />)}
                 {pageItems.map((job) => (
                   <JobRow key={job.id} job={job} />
                 ))}
               </div>
-            ) : null}
-
-            {pageItems.length === 0 && (
+            ) : (
               <div className="space-y-4 py-12 text-center">
                 <p className="text-sm text-muted-foreground">조건에 맞는 공고가 없어요.</p>
                 {(activeFilterCount > 0 || q.trim() !== "") && (
