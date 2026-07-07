@@ -1,199 +1,125 @@
 # SNAPSHOT — MinJob 작업 시점 핸드오프
 
-> **이 문서는 "지금 이 순간의 전체 컨텍스트"** — 다른 환경/시점에서 이어 작업할 때 이거 하나로 상황 파악. 역할 분리는 [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(사용자 인터뷰).
+> **이 문서 하나로 "지금 상황" 파악.** 역할 분리: [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처·가드레일), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(인터뷰).
 >
-> **작성 시점**: 2026-07-06 · **HEAD**: `d0f80c2` (dev = prod = origin) · 이 커밋으로 갱신
+> **작성 시점**: 2026-07-07 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `1073005`) · **dev = prod = origin**
 
 ---
 
 ## 0. 한 문장 요약
 
-교회 **사역자 청빙 공고**(부목사·전도사 중심, 담임목사 포함)를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. 현재 **mock 데이터로 공개 페이지를 구현하며 스키마를 확정하는 단계**. 공개 읽기 페이지 4개 + 정적/법적 페이지 완성. **홈 딥그린 재디자인 완료 + 전 페이지 톤 확산 완료.** 다음 = 공고 상세 레이아웃 재고(§9). 백엔드(Supabase)·인증·admin은 아직.
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. 현재 **mock 데이터로 공개 페이지를 한 페이지씩 디자인하며 스키마를 확정하는 단계**. **홈·공고목록(/jobs)·공고상세(/jobs/[id]) = 디자인·검수·커밋 완료.** 나머지 페이지는 **Fable(AI)가 스캐폴드한 초안이 repo에 있고(검수 전)**, 그 위에서 페이지별로 다듬는 중. 백엔드(Supabase)·인증·admin·배포는 Phase 1(아직).
 
 ---
 
-## 1. 지금 어디까지 왔나 (한눈에)
+## 1. 페이지 현황 (핵심)
 
-**완성 (mock + 섹션 확정)**
-- ✅ **홈 `/`** — 딥그린 히어로(검색+지표3) · 추천 청빙(대표광고 카드) · 2단[청빙 공고 리스트(JobRow) + 사이드바(추천검색어·교회CTA, sticky)] · 딥그린 푸터. **완성**
-- ✅ **공고 목록 `/jobs`** — 검색·필터·정렬·페이지네이션·우측레일·모바일 Sheet
-- ✅ **공고 상세 `/jobs/[id]`** — 2단(본문 플로우 + sticky 사이드바), 재공고 배지, JobPosting JSON-LD
-- ✅ **교회 상세 `/churches/[id]`** — 헤더·채널·창립연도 / 현재 모집 / 재공고 이력(토글)
-- ✅ **검색 오버레이** — 홈 히어로 진입 검색: 최근 검색어 + 최근 본 공고 + 검색어 완성(자동완성), IME 조합 가드. (`components/search/search-box.tsx`)
-- ✅ **정적/법적** — `/about` `/pricing`(완성, 가격 "문의") · `/terms` `/privacy`(초안, ⚠️법률검토 전)
+**범례**: ✅ 완료(검수+커밋) · 🟡 Fable 초안(코드 있음·검수 전) · ⬜ 스캐폴드(미착수)
 
-**스캐폴드만 (placeholder, 미구현)**
-- `/login` `/mypage` `/jobs/new` `/jobs/[id]/edit` (인증)
-- `/admin` `/admin/jobs` `/admin/ingest` (운영자)
+| 페이지 | 섹션 | 디자인 | 검수 | 커밋 | 데이터 |
+|---|:--:|:--:|:--:|---|:--:|
+| `/` 홈 | ✅ | ✅ | ✅ | ✅ (이전 세션) | mock |
+| `/jobs` 목록 | ✅ | ✅ | ✅ | ✅ `af391ce`·`0119de9`·`03d2758` | mock |
+| `/jobs/[id]` 공고 상세 | ✅ | ✅ | ✅ | ✅ `85f53bb` | mock |
+| `/churches/[id]` 교회 상세 | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
+| `/about` 소개 | 🟡 | 🟡 | ⬜ | WIP `1073005` | 정적 |
+| `/pricing` 노출 안내 | 🟡 | 🟡 | ⬜ | WIP `1073005` | 정적 |
+| `/terms`·`/privacy` | 🟡 | ⬜ | ⬜ | (Fable 미변경) | — (법률검토) |
+| `/login` | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
+| `/mypage` | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
+| `/jobs/new` 공고 등록 | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
+| `/jobs/[id]/edit` 수정 | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
+| `/admin/jobs`·`/admin/ingest` | ⬜ | ⬜ | ⬜ | 스캐폴드 | — |
 
-**드롭됨**: `/churches`(교회 목록 browse) · 교회 규모(대/중/소) 필드(누나 인터뷰: 기준 모호·"세상적" → 전면 제거).
-
-**아직 안 함 (전부 의도적 연기)**: Supabase 연동·인증·실데이터, `'use cache'`+태그 실적용, sitemap/robots, 배포(Vercel). (딥그린+골드 테마·JobRow·노출등급 분리는 적용됨)
-
-> **지난 스냅샷(6672c3c) 이후 변경**: 홈 검색 오버레이 · 교회 규모 제거 · 직분에 담임목사 추가 · "사역자 청빙" 포지셔닝 통일 · 데이터접근 seam(`lib/queries`) · INTERVIEWS.md 신설 · 누나 인터뷰 반영(ROADMAP 1-7).
+> **완료 = 홈 + /jobs + /jobs/[id] 3개.** 나머지 공개·인증은 **Fable 초안(🟡)** — 커밋돼 있어 집에서 pull하면 그대로 있음. **초안 ≠ 검수 완료** — 페이지별로 시안→검수→재디자인 필요. admin은 아직 안 건드림.
+> **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
 
 ---
 
-## 2. 실행 / 검증
+## 2. Fable(AI)로 한 것
+
+이 프로젝트는 **Fable 모델로 "전체 개괄"을 먼저 깔고, 그 위에서 페이지별로 상세히 다듬는** 방식을 씀. Fable가 한 3가지:
+
+1. **`docs/fable.md`** — 전 페이지(공개·인증·admin) **섹션+디자인 제안서**. 사람 검토용 초안. (SPEC로 흡수 후 삭제 가능)
+2. **공개+인증 페이지에 디자인 코드 적용** — Fable가 홈 디자인 언어(딥그린)로 각 페이지를 코드로 스캐폴드. 이게 지금 `🟡` 초안들.
+   - 이후 **`/jobs`·`/jobs/[id]`는 사람 검수로 전면 재디자인**(Fable 초안 → 확정). 나머지(교회상세·about·pricing·인증)는 **Fable 초안 그대로 대기**.
+3. **100 mock 데이터 생성** — 교회 35 + 공고 100 (아래 §5).
+
+> Fable 산출물은 **검증 통과 후에만** 채택했음(build·규칙·가드레일 스캔). Fable = 스캐폴드/드래프트, **확정은 사람 검수**.
+
+---
+
+## 3. 작업 방식 (계속 이렇게)
+
+**"Fable로 전체 스캐폴드 → 페이지 하나씩: 시안으로 디자인 확정 → 코드 → SPEC/DATA 갱신 → 페이지별 커밋+푸시+머지."**
+
+- **시안**: `scratchpad/*.html`을 만들어 브라우저에서 여러 안 비교 → 사용자가 택1 → 코드. (예: `detail-*-mockup.html`, `jobs-*-mockup.html`)
+- **디자인은 섹션 구조/레이아웃 먼저** → 컴포넌트 → 조합. 색은 토큰이라 나중 스왑 가능.
+- **아이콘**: 공고 상세는 **전부 제거**(텍스트/점). 저장·공유(JobActions) 버튼만 아이콘 유지. → 앞으로도 아이콘 최소/텍스트 지향.
+- **데이터 seam**: 페이지·뷰는 `@/mocks` 직접 import 금지 → `lib/queries/*`만. mock JSON에 필드 채우며 스키마 확정 → 완료 시 DATA.md.
+- **인증/admin**: 원칙은 "mock 안 만들고 Phase 1 실백엔드"였으나, **디자인 미리보기 위해 Fable가 mock으로 스캐폴드**함(결정 변경). Phase 1에서 실 인증·백엔드로 재작업.
+- **커밋**: 페이지 완료 시 그 페이지 파일 + 관련 docs를 함께. dev→prod **ff-only 머지**. (커밋/푸시/머지는 사용자 요청 시에만)
+
+---
+
+## 4. 실행 / 검증
 
 ```bash
-npm run dev          # 로컬 개발 (http://localhost:3000)
-npm run build        # 프로덕션 빌드 = TS + Cache Components 검증 (가장 중요한 게이트)
-npm run lint         # eslint
-npm run format       # prettier --write
+npm run dev      # http://localhost:3000 (다른 프로젝트가 :3000 점유 시 :3001+)
+npm run build    # TS + Cache Components 검증 (핵심 게이트)
+npm run lint     # eslint
+npx prettier --check <file>   # 포맷
 ```
-
-**코드 작성 후 항상**: `npm run build` + `npm run lint` 통과 확인. 확인 URL:
-- `/jobs/job-001`(재공고 3회) · `/churches/ch-saesomang`(유초등부 재공고 3회 + 창립연도 + 채널3) · `/churches/ch-saebyeok`(이력 없음→섹션 숨김) · `/churches/ch-bitsogeum`(채널 없음)
+**확인 URL(mock)**: `/jobs`(공고 100·필터·정렬·페이지당) · `/jobs/job-010`(재공고 3회·유초등부) · `/jobs/job-004`(owned·제출서류 긴 것) · `/jobs/job-054`(CLOSED 배너) · `/churches/ch-saesomang`(재공고).
 
 ---
 
-## 3. 기술 스택 & 핵심 아키텍처 결정
+## 5. 데이터 (mock 스키마 = 확정 진행 중)
 
-- **Next.js 16.2.9** (App Router, **Cache Components** = `cacheComponents:true`), **React 19.2**, **TypeScript strict**
-- **Tailwind v4** (CSS-first `@theme`), **shadcn/ui with Base UI**, **lucide-react ^1.22** (⚠️ 브랜드 아이콘 없음 — Youtube/Instagram 등은 generic 아이콘으로 대체)
-- **Pretendard** self-host (`src/app/fonts/PretendardVariable.woff2`, `next/font/local`)
-- 색: **딥그린 + 골드 확정·적용**(`globals.css` 토큰 — brand 램프 + gold + `--primary`=딥그린 + `.bg-hero`). 중립 neutral 위에 브랜드 그린. 다크 모드는 나중.
-- **Supabase 미연동** (`@supabase/*` 미설치 — Phase 1)
+### mock 현황 (`src/mocks/`)
+- **churches.json 35개** · **jobs.json 100개** (`7475f4f`). 분포: OPEN 74 / CLOSED 22 / PENDING 4 · HERO 3 / PREMIUM 7 · OPERATOR 88(owner 없음) / CHURCH 12(owner 있음). **재공고 데모 4교회**(새소망 유초등부 3회 등) · **owned 3건**(`user-saebyeok`, mypage용).
 
-**아키텍처 핵심 (CLAUDE.md 참조)**
-- 공고는 변경 빈도 낮음 → 목표는 `'use cache'` + 태그 무효화. **단 지금은 mock 단계라 미적용**(seam만 준비됨).
-- 상세(`[id]`)는 빌드타임 prerender 안 함 → 현재 params 의존 콘텐츠를 `<Suspense>`로 감싸 PPR(`◐`). 추후 on-demand `'use cache'` 전환. 홈은 `○` Static.
-- **레이어**: `page.tsx`=조합만 / `*-view.tsx`=프레젠테이션(**기본 서버**, 인터랙션만 작은 client) / **`lib/queries/*`=데이터 소스 seam**(현재 `mocks/index.ts` 위임, DB 전환 시 본문만 교체) / `actions.ts`=mutation(아직 없음) / `components/**`=재사용 UI.
+### enum (`src/constants/domain.ts`)
+DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·**PENDING**) · FEATURED_TIERS · JOB_SOURCES · CHURCH_CHANNELS · STIPEND_NOTE_PRESETS · REQUIRED_DOC_PRESETS
 
----
+### 타입 (`src/types/domain.ts`) — 이번에 추가된 것
+- `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)** · `ownerId?`(교회 직접 등록 소유). — 전부 additive/optional.
+- `CurrentUser`(인증 mock), `FilterDim`에 `qualification` 추가.
+- `repost-tracking`: `RepostInfo` = `{ count, postings: RolePosting[] }` (상세 재공고 타임라인용).
 
-## 4. 방법론 (계속 이렇게)
-
-**"페이지를 하나씩 만들며 필요한 필드를 mock JSON에 채운다 → 완료 시 이 JSON이 최종 스키마 → DATA.md 확정 → Phase 1에서 실 DB·인증."**
-
-- mock: `src/mocks/{churches,jobs}.json` + `src/mocks/index.ts`. **페이지·뷰는 `@/mocks` 직접 import 금지 → `lib/queries/*`만** (seam).
-- **디자인은 섹션 구조 먼저 → 컴포넌트 → 조합**(2026-07-02 방식 전환). 색·컴포넌트를 단독으로 던지면 판단이 안 됨 → 섹션 골격부터.
-- 인증·mutation 페이지(로그인/등록/수정/mypage/admin)는 **mock으로 만들지 않는다** — 실 백엔드 위에서.
+### seam (`src/lib/queries/*.ts`, `'use cache'`+`cacheTag`+`cacheLife("days")`)
+- `jobs.ts`: getAdJobs·getListJobs·getAllJobCards·getJobStats·getJobDetail·getRepost·getSimilarJobs·getChurchOpenJobs·getSearchSuggestions
+- `churches.ts`: getChurch·getChurchTimeline
+- `users.ts`(**Fable, 인증 mock**): getCurrentUser·getOwnedJobs·getEditableJob (`'use cache'` 없음 — 인증 의존)
 
 ---
 
-## 5. 데이터 모델 (현재 mock 스키마 = 확정 진행 중)
+## 6. 이번 세션 확정 설계 (되돌리지 말 것)
 
-### enum (`src/constants/domain.ts`) — 영어 대문자 key + 한글 라벨
-| enum | 값 |
-|---|---|
-| `DENOMINATIONS` | HAPDONG 예장합동 · TONGHAP 예장통합 · BAEKSEOK 예장백석 · GOSIN 예장고신 · HAPSIN 예장합신 · KIJANG 기장 · GAMLI 감리교 · SEONGGYUL 성결교 · BAPTIST 침례교 · SUNBOK 순복음 · ETC 기타 |
-| `REGIONS` | 18개 광역 (SEOUL 서울 … OVERSEAS 해외) |
-| `POSITIONS` (직분) | **SENIOR_PASTOR 담임목사** · ASSOCIATE_PASTOR 부목사 · EVANGELIST 전도사 · LICENSED_MINISTER 강도사 · ETC 기타 |
-| `DEPARTMENTS` (부서) | INFANT 영유아부 · CHILDREN 유초등부 · YOUTH 중고등부 · YOUNG_ADULT 청년부 · DISTRICT 장년·교구 · WORSHIP 찬양·예배 · ADMIN 행정 · ETC 기타 |
-| `EMPLOYMENT_TYPES` | FULL_TIME 전임 · SEMI_FULL_TIME 준전임 · PART_TIME 파트 |
-| `FEATURED_TIERS` (노출) | NONE 일반 · PREMIUM 프리미엄 · HERO 대표광고 |
-| `JOB_SOURCES` | OPERATOR 운영자 등록 · CHURCH 교회 직접 등록 |
-| `CHURCH_CHANNELS` | HOMEPAGE 홈페이지 · YOUTUBE 유튜브 · INSTAGRAM 인스타그램 · FACEBOOK 페이스북 · BAND 밴드 (노출 순서 = 정의 순서) |
-
-> **직교화 원칙**: 직분·부서·고용형태를 **분리된 축**으로. 혼합 라벨("전임전도사") 안 만듦.
-> ⚠️ **교회 규모(CHURCH_SIZES) 제거됨**(2026-07-02). **부서 재설계 예정**(세분화+복수선택+교단별 별칭 — ROADMAP 1-7, 미착수).
-
-### 타입 (`src/types/domain.ts`)
-```ts
-Church  = { id, name, denomination, region, city|null, foundedYear|null, links: ChurchLink[] }   // size 제거됨
-ChurchLink = { type: ChurchChannel, url: string }
-Job     = { id, churchId, title, position, department|null, employmentType,
-            stipendMin|null, stipendMax|null, stipendNote|null,   // 만원 단위, note="내규에 따름" 등 비정형 보존
-            status: "OPEN"|"CLOSED", featuredTier, postedAt("YYYY-MM-DD"), deadline|null,
-            workDays|null, requirements: string[], preferred: string[], requiredDocs: string[],
-            description|null, source: "OPERATOR"|"CHURCH", sourceUrl|null }
-JobCard = 목록 카드 projection (job + church:{name,denomination,region,city})   // size 제거됨
-JobDetail = { job, church }
-FilterDim = denomination|region|position|department|employmentType   // size 제거됨
-SortKey   = recent|stipend|deadline
-```
-`src/lib/repost-tracking.ts`: `REPOST_MIN_COUNT=2`, `repostKey=churchId:position:department`, `getRepostInfo`, `groupByRole`.
-
-### 조회 seam (`src/lib/queries/*.ts` — **이제 존재**, mock 위임)
-- `queries/jobs.ts`: getAdJobs(HERO) · getListJobs(HERO 제외·프리미엄 우선) · getAllJobCards · getJobStats(모집중·새공고·함께하는교회) · getJobDetail · getRepost · getSimilarJobs · getChurchOpenJobs · **getSearchSuggestions**(검색어 완성 후보)
-- `queries/churches.ts`: getChurch · getChurchTimeline
-- 각 함수 `'use cache'` + `cacheTag`. 본문은 현재 `mocks/index.ts` 호출 → DB 전환 시 본문만 교체.
-
-### 클라 저장 (localStorage) — `lib/recent-jobs.ts` · `recent-searches.ts` · `bookmarks.ts` (`constants/storage.ts` 키)
-
-### mock 데이터 현황
-- **churches.json** — 8개 교회. 채널 다양성, 창립연도(일부 null). (규모 필드 제거됨)
-- **jobs.json** — 16개(job-001~016). featuredTier(HERO 2·PREMIUM 3), status(OPEN 12·CLOSED 4). 재공고 데모: 새소망 유초등부 3회, 반석 중고등부 2회.
+- **/jobs**: 대표광고를 **리스트 안에 통합**(별도 밴드 폐기, 배경 틴트 없이 작은 "광고" 태그, 티어 차이=노출 위치) · **검색 존**(옅은 초록 밴드: H1+설명+"모집 중 N건") · **결과 툴바**(정렬 + **페이지당 20/50/100**) · **자격/경력·사택 필터 추가**(성별·결혼 필터 금지) · 최근 본 공고 정보형 · 교회 CTA 위젯 · 좌필터 스크롤(우레일만 sticky). "총 N건" = 모집 중(HERO 포함).
+- **/jobs/[id]**: **단일 흐름 본문(여백형)** + **우측 요약 카드 B**(지원하기 상단 + 사례비·마감·고용) + **재공고 이력 접이식** + 비슷한 6개+더보기 + **아이콘 없음** + 지도 placeholder.
+- **지원 모델**: **사이트 내 지원 안 받음** — 원문/교회로 안내. 교회 직접 등록은 나중 `applyMethod` 필드(Phase 1). 사이트 내 지원 중개는 Phase 3.
+- **지도**: Phase 1 = 링크/placeholder, Phase 2 = 네이버/카카오 임베드(주소 필드+API 키).
 
 ---
 
-## 6. 확정 페이지 섹션 (상세는 SPEC.md)
+## 7. ▶ 다음 작업 (집에서 이어서)
 
-**홈 `/`**: 딥그린 히어로(검색 오버레이+지표3) · 추천 청빙(대표광고 = `FeaturedJobCard` 슬롯) · 2단[청빙 공고 리스트(`JobRow`: 제목 주인공·텍스트만·프리미엄=태그+상단고정) + 사이드바(추천검색어·교회CTA, sticky)]. 탭 없음. 딥그린 푸터. **완성**.
+**유저플로우 순서로 페이지별 검수·재디자인:**
+1. **`/churches/[id]` 교회 상세** ← 다음 (Fable 초안 있음. 시안→검수→재디자인)
+2. `/about` · `/pricing` 검수 · `/terms`·`/privacy` 법률 검토(내용)
+3. **인증 4개**(`/login`·`/mypage`·`/jobs/new`·`/jobs/[id]/edit`) 검수 — Fable mock 초안 위에서
+4. **admin 2개**(`/admin/jobs`·`/admin/ingest`) — 미착수
+5. **Phase 1**: Supabase·인증(proxy)·`'use cache'` 실적용·sitemap/robots·Vercel 배포
 
-**공고 목록 `/jobs`** (딥그린 톤): 검색(라이브 필터) · 대표광고 = `FeaturedJobCard` 슬롯 · 좌 필터(교단·지역·직분·부서·고용형태) · 정렬(최신 중심, 사례비순·마감임박순 재검토) · 목록 = `JobRow`(프리미엄 상단) · 우측 레일(최근 본 공고·배너) · 페이지네이션(8/p) · 모바일 Sheet. mock 클라 필터(`filter-jobs.ts`).
-
-**공고 상세 `/jobs/[id]`** (2단, 딥그린 톤 적용 — 초록 사례비·아바타·재공고·체크):
-- 좌: 헤더 / 자격요건 / 우대사항 / 공고안내 / 교회정보(+다른 모집)
-- 우 sticky: 핵심조건 / 지원안내(원문·교회홈피 CTA, 사이트 내 지원 없음) / ★교회 채널
-- 하단: 비슷한 공고(JobCard) · 출처 / SEO: JobPosting JSON-LD
-- ⚠️ **레이아웃 재고 — 시안 확정**: 핵심 조건을 **우측 sticky → 좌측 본문 상단**(제목 아래, 사례비 강조 박스)으로, 우측은 지원 CTA + 교회 채널만. (누나 인터뷰, ROADMAP 1-7) — **실제 코드는 다음 작업** (시안: `scratchpad/detail-rethink.html`)
-
-**교회 상세 `/churches/[id]`** (단일 컬럼): 헤더(이니셜 아바타+교단·지역·창립연도+채널) / 현재 모집 / ★공고 이력("시안 C": 요약문장 + `<details>` 토글, 단발 제외·없으면 숨김). 제외: 리뷰·연봉·통계(integrity·데이터 없음).
+**미결 TODO**(코드에 표시): 정렬 "사례비순"(인터뷰 "세상적") 유지/축소 · 필터↔URL 동기화 시점 · 부서 세분화(ROADMAP 1-7) · CLOSED 공고 JSON-LD 제거 여부 · 아이콘 제거 범위(홈·목록의 지역핀·검색 돋보기도 뺄지).
 
 ---
 
-## 7. 파일 맵 (실제 존재)
+## 8. 스택 · 아키텍처 (요약 — 상세는 CLAUDE.md)
 
-```
-src/
-├── app/
-│   ├── (public)/ layout · page(홈)
-│   │   ├── jobs/ page · jobs-view(client) · filter-jobs(순수) · [id]/{page, job-detail-view}
-│   │   ├── churches/[id]/{page, church-detail-view}
-│   │   ├── about · pricing · terms · privacy /page  ← 완성(정적)
-│   ├── (authed)/ mypage · jobs/new · jobs/[id]/edit  ← 스캐폴드
-│   ├── admin/ page · jobs · ingest  ← 스캐폴드 · login/page ← 스캐폴드
-│   ├── layout(root, Pretendard·메타=사역자 청빙) · globals.css(딥그린+골드 토큰·.bg-hero) · fonts/
-├── components/
-│   ├── job/ job-card · **job-row** · **featured-job-card** · **bookmark-button**(client) · job-filter · pagination · recently-viewed · record-recently-viewed · job-actions
-│   ├── home/ **home-sidebar**(추천검색어·교회CTA) · search/ search-box(client, 오버레이) · **relative-time**(client, N일 전)
-│   ├── church/ church-channels · layout/ header(딥그린) · footer · placeholder · legal-doc
-│   └── ui/ badge · button · card · input · sheet (shadcn Base UI)
-├── constants/ domain.ts(enum) · storage.ts
-├── lib/ queries/{jobs,churches}.ts(seam) · recent-jobs · recent-searches · **bookmarks** · format(+jobRoleLine) · repost-tracking · seo · utils
-├── mocks/ churches.json · jobs.json · index.ts
-└── types/ domain.ts
-```
-> ⚠️ `lib/supabase/*` · `lib/ingest/*` · `proxy.ts` · `actions.ts` · `types/database.ts` — CLAUDE 트리엔 있지만 **아직 없음**(Phase 1).
-
----
-
-## 8. 확정된 설계 결정 로그 (되돌리지 말 것)
-
-- **공고 상세 = 시안 A**(본문 플로우 + sticky 사이드바). "네모네모" 카드 파편화 폐기.
-- **교회 상세 이력 = 시안 C**(요약 문장 + `<details>` 토글).
-- **`/churches` 목록 드롭** · **포스터 이미지 미채택**(재호스팅 저작권+YAGNI → `sourceUrl`) · **교회 채널 일반화**(`links[]`+enum) · **claim 제거**.
-- **창립연도 추가**. 담임목사 이름·전체주소·예배시간은 교회 **필드**로 미채택(개인정보·지도 Phase 2). ※ 직분 enum 담임목사와 무관.
-- **교회 규모(대/중/소) 전면 제거**(2026-07-02, 누나·어머니: 기준 모호·"세상적").
-- **직분에 담임목사 추가 + "사역자 청빙"으로 포지셔닝 통일**(2026-07-02). 주력은 부교역자, SPEC 스코프·전 카피 정리 완료.
-- **홈 스탯 "청빙 중 교회" 제거**(모집중과 혼동).
-- **검색: 진입=오버레이**(홈, 최근검색어+최근본공고+검색어완성) / **목록=라이브 필터**(/jobs) / **별도 검색 페이지 없음**(결과=`/jobs?q=`). 검색어 완성 후보 = 열린 공고의 직분·부서·지역·교단 라벨+교회명(결과 0건 제외).
-- **데이터접근 seam**(`lib/queries`, async+`'use cache'`+`cacheTag`, mock↔DB 본문만 교체).
-- **CLAUDE View 규칙**: `*-view.tsx` 기본 서버 컴포넌트, 인터랙션만 작은 client.
-
----
-
-## 9. ▶ 홈 재디자인 진행 (여기서 이어서)
-
-**방식**: 섹션 구조 먼저 → 컴포넌트 → 조합. 색은 토큰이라 나중 스왑 가능.
-
-**색 = 딥그린 + 골드 (확정·구현 완료, `globals.css`)**: 램프 `--brand-900 #15332a · 800 #1b3f34 · 700 #234f41 · 600 #2f5d50`, `--gold #d3ad63`, `--primary`=#2f5d50, `.bg-hero`(라디얼 그라데이션). 방향성 = 잡코리아식 이미지-과밀(세상적) 회피 → **이미지 없이 완성도**(아바타·칩·깊이·아이콘·섹션 밴드).
-
-**홈 메인은 카드 그리드 아님 → 리스트(번호 없음).**
-
-✅ **완료된 섹션**
-1. **헤더**(딥그린, 전역): 로고(골드 Min+화이트 Job) + nav(공고) + 로그인. 교회 공고등록 CTA는 헤더에서 제거(→ 사이드바 CTA).
-2. **히어로**(딥그린 풀블리드·중앙): eyebrow + 헤드라인 "다음 사역지, 여기서 찾으세요" + 흰 검색바(SearchBox restyle) + 지표 3개(모집 중·새 공고·함께하는 교회).
-3. **추천 청빙(대표광고)**: `FeaturedJobCard`(초록 테두리 카드, 2열) 별도 슬롯.
-4. **청빙 공고 리스트**: `JobRow` — **제목 주인공 · 텍스트만(아바타·번호 없음)** · 직분/부서/고용 평문 · 지역(핀) · 사례비(초록) · N일전 · 책갈피. **프리미엄=태그+상단고정(틴트 없음)**, 대표광고는 위 슬롯. `getListJobs`(HERO 제외·프리미엄 우선+최신). **탭 없음.**
-5. **사이드바**(`home-sidebar`): 추천 검색어 8칩(큐레이션)→`/jobs?q=` · 교회 CTA(딥그린)→`/jobs/new`.
-
-✅ 6. **푸터**(딥그린, 전역 bookend) 완료 → **홈 재디자인 전부 완료.**
-✅ **전 페이지 톤 확산 완료** — /jobs(JobRow·FeaturedJobCard) · 공고상세·교회상세 초록 악센트 · 정적은 토큰 정합.
-
-▶ **다음 작업(집에서 이어서)**: **공고 상세 레이아웃 재고 — 실제 코드**. 시안 확정 = 핵심 조건을 좌측 본문 상단(제목 아래, 사례비 강조 박스)으로 이동, 우측 sticky는 지원 CTA + 교회 채널만. (시안 `scratchpad/detail-rethink.html`, 누나 인터뷰·ROADMAP 1-7). 그 외: 홈/전체 모바일 실기기 폴리시.
-
-**설계 확정(구현됨)**: 노출 등급 = 대표광고(별도 카드 슬롯) / 프리미엄(태그+상단고정, 틴트 없이 organic에 가깝게 — 표시광고법·신뢰) / 일반(리스트). 왼쪽 요소 없음(로고 없어 텍스트만). 북마크=책갈피. 고용형태 탭 폐기. 지표 교단 제외. **3-피처(기능 소개 스트립) 제외** — 홈 콘텐츠가 가치를 이미 증명 + /about 중복 + 세상적 회피.
+- **Next.js 16.2.9**(App Router, `cacheComponents:true`) · **React 19** · **TS strict** · **Tailwind v4** · **shadcn/ui(Base UI)** · **Pretendard** · **Supabase 미연동**(Phase 1).
+- 색 = **딥그린+골드**(`globals.css` 토큰). 아이콘 = lucide(최소 사용).
+- 레이어: `page.tsx`=조합 / `*-view.tsx`=프레젠테이션(기본 서버) / `lib/queries/*`=데이터 seam(mock↔DB 본문만 교체) / `components/**`=재사용 UI.
+- 캐시: 홈·/jobs = `○ Static`(쿼리 `'use cache'`+`cacheTag`+`cacheLife`), 상세·인증 = `◐ PPR`(params/auth 의존 `<Suspense>`).
+- ⚠️ `lib/supabase/*`·`lib/ingest/*`·`proxy.ts`·`actions.ts`·`types/database.ts` — CLAUDE 트리엔 있지만 **아직 없음**(Phase 1).
