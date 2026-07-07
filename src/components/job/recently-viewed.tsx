@@ -22,16 +22,20 @@ export function RecentlyViewed() {
           최근 본 공고가 여기 표시됩니다.
         </p>
       ) : (
-        <ul className="space-y-2.5">
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border bg-card">
           {items.slice(0, 5).map((it) => (
             <li key={it.id}>
-              <Link href={`/jobs/${it.id}`} className="group block">
-                <span className="line-clamp-1 text-sm text-muted-foreground group-hover:text-foreground">
-                  {it.title}
-                </span>
-                {it.subtitle && (
-                  <span className="line-clamp-1 text-xs text-muted-foreground/70">
-                    {it.subtitle}
+              <Link
+                href={`/jobs/${it.id}`}
+                className="block px-3 py-2.5 transition-colors hover:bg-muted/40"
+              >
+                <span className="line-clamp-1 text-sm font-medium text-foreground">{it.title}</span>
+                {(it.location ?? it.subtitle ?? it.pay) && (
+                  <span className="mt-1 flex items-center justify-between gap-2 text-xs">
+                    <span className="truncate text-muted-foreground">
+                      {it.location ?? it.subtitle}
+                    </span>
+                    {it.pay && <span className="shrink-0 font-bold text-primary">{it.pay}</span>}
                   </span>
                 )}
               </Link>

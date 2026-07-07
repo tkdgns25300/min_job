@@ -14,9 +14,26 @@ export default async function JobsPage() {
           교회 청빙 공고를 한곳에서. 교단·지역·사례비로 검색하고 비교하세요.
         </p>
       </div>
-      <Suspense fallback={<p className="text-sm text-muted-foreground">불러오는 중…</p>}>
+      <Suspense fallback={<JobsListSkeleton />}>
         <JobsView jobs={jobs} ads={ads} />
       </Suspense>
+    </div>
+  );
+}
+
+// 목록 영역 스켈레톤 — JobRow 6행 높이로 레이아웃 시프트 방지
+function JobsListSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="h-10 animate-pulse rounded-lg bg-muted" />
+      <div className="divide-y divide-border overflow-hidden rounded-xl border bg-card">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="space-y-2.5 px-4 py-4 sm:px-5">
+            <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

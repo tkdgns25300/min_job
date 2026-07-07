@@ -5,7 +5,9 @@ import { STORAGE_KEYS } from "@/constants/storage";
 export interface RecentJob {
   id: string;
   title: string;
-  subtitle?: string; // "교회명 · 지역" (구버전 기록엔 없을 수 있어 optional)
+  subtitle?: string; // "교회명 · 지역" (구버전 기록·검색 오버레이 호환용)
+  location?: string; // "경기 수원" — 정보형 표시용
+  pay?: string; // 사례비 금액 있을 때만 (예: "210만원"). 비공개·협의는 미저장
 }
 
 const MAX = 10;

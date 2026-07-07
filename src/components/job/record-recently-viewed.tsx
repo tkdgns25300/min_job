@@ -9,14 +9,18 @@ export function RecordRecentlyViewed({
   id,
   title,
   subtitle,
+  location,
+  pay,
 }: {
   id: string;
   title: string;
   subtitle?: string;
+  location?: string;
+  pay?: string;
 }) {
   useEffect(() => {
-    addRecentJob({ id, title, subtitle });
-  }, [id, title, subtitle]);
+    addRecentJob({ id, title, subtitle, location, pay });
+  }, [id, title, subtitle, location, pay]);
 
   return null;
 }
