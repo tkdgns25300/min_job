@@ -16,12 +16,7 @@ export type { JobStatus };
 
 // 목록 필터/정렬 (다중선택 필터 축 · 정렬 키)
 export type FilterDim =
-  | "denomination"
-  | "region"
-  | "position"
-  | "department"
-  | "employmentType"
-  | "qualification";
+  "denomination" | "region" | "position" | "department" | "employmentType" | "qualification";
 export type SortKey = "recent" | "stipend" | "deadline";
 
 // 교회 채널 링크 (홈페이지·SNS)
@@ -38,6 +33,7 @@ export interface Church {
   region: Region; // 광역 (필터용)
   city: string | null; // 시·군·구 (표시용 자유 텍스트)
   foundedYear: number | null; // 창립 연도 (null = 미상)
+  photos?: string[]; // 교회 사진(첫 장 = 커버). 없으면 기본 커버. 실 업로드는 Phase 1
   links: ChurchLink[]; // 교회 채널 — 없으면 빈 배열
 }
 

@@ -6,6 +6,13 @@
     "region": "GYEONGGI",
     "city": "성남",
     "foundedYear": 2005,
+    "photos": [
+      "/mock/church/exterior.svg",
+      "/mock/church/sanctuary.svg",
+      "/mock/church/around.svg",
+      "/mock/church/education.svg",
+      "/mock/church/fellowship.svg"
+    ],
     "links": [
       {
         "type": "HOMEPAGE",

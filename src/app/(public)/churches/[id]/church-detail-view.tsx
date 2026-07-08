@@ -1,92 +1,47 @@
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, RefreshCw } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { JobCard } from "@/components/job/job-card";
 import { ChurchChannels } from "@/components/church/church-channels";
-import { churchMetaLine } from "@/lib/format";
-import { POSITIONS, DEPARTMENTS } from "@/constants/domain";
+import { ChurchGallery } from "@/components/church/church-gallery";
+import { churchLocation, churchMetaLine, formatStipend, jobRoleLine } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { DEPARTMENTS, POSITIONS } from "@/constants/domain";
 import type { Church, JobCard as JobCardData } from "@/types/domain";
 import { REPOST_MIN_COUNT, type RoleHistory } from "@/lib/repost-tracking";
 
-// 자리 이름: 부서 + 직분 (예: "유초등부 전도사", "강도사")
-function roleLabel(role: RoleHistory): string {
+const externalAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
+
+// 자리 이름: 부서 + 직분 (예: "유초등부 전도사")
+function roleLabel(role: Pick<RoleHistory, "position" | "department">): string {
   return [role.department ? DEPARTMENTS[role.department] : null, POSITIONS[role.position]]
     .filter(Boolean)
     .join(" ");
 }
 
-// 이력에 노출할 자리: 현재 단발 공고(위 카드에 이미 있음)는 제외 — 반복됐거나 지난 공고가 있는 것만
-function toHistoryRoles(timeline: RoleHistory[]): RoleHistory[] {
-  return timeline.filter(
-    (role) => !(role.postings.length === 1 && role.postings[0].status === "OPEN"),
-  );
-}
-
-function PostingRow({ posting }: { posting: RoleHistory["postings"][number] }) {
+// 현재 모집 카드 — 교회 상세 컨텍스트(교회명 반복 없음). 재공고면 배지.
+function OpenJobCard({ job, repostCount }: { job: JobCardData; repostCount: number }) {
+  const hasStipend = job.stipendMin !== null || job.stipendMax !== null;
   return (
     <Link
-      href={`/jobs/${posting.id}`}
-      className="flex items-center gap-3 py-1 text-sm text-muted-foreground hover:text-foreground"
+      href={`/jobs/${job.id}`}
+      className="flex h-full flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-ring"
     >
-      <span className="tabular-nums">
-        {posting.postedAt} ~ {posting.deadline ?? "상시"}
-      </span>
-      {/* TODO(design): ❓ "모집중" Badge(variant=default)가 광고 배지와 톤이 겹침 —
-          상태 표시를 점(dot)+텍스트로 낮출지(광고=배지, 상태=평문 위계 분리) 사람 결정 (fable.md #5) */}
-      <Badge variant={posting.status === "OPEN" ? "default" : "secondary"} className="ml-auto">
-        {posting.status === "OPEN" ? "모집중" : "마감"}
-      </Badge>
+      <div className="flex items-start gap-2">
+        <h3 className="flex-1 leading-snug font-bold break-keep">{job.title}</h3>
+        {repostCount >= REPOST_MIN_COUNT && (
+          <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
+            재공고 {repostCount}회
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-muted-foreground">{jobRoleLine(job)}</p>
+      <p
+        className={cn(
+          "mt-auto pt-1 font-bold",
+          hasStipend ? "text-primary" : "text-muted-foreground",
+        )}
+      >
+        {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
+      </p>
     </Link>
-  );
-}
-
-// 공고 이력 — 요약 문장(재공고 시) + <details> 토글 상세 (시안 C). JS 없이 <details>로.
-function HistorySection({ timeline }: { timeline: RoleHistory[] }) {
-  const roles = toHistoryRoles(timeline);
-  if (roles.length === 0) return null;
-
-  const topRepost = roles.find((role) => role.postings.length >= REPOST_MIN_COUNT);
-
-  return (
-    <section className="space-y-3">
-      <h2 className="text-base font-bold">공고 이력</h2>
-      {topRepost && (
-        <p className="flex items-center gap-1.5 text-sm">
-          <RefreshCw className="size-4 shrink-0 text-primary" />이 교회는{" "}
-          <b>{roleLabel(topRepost)}</b> 자리를 최근 <b>{topRepost.postings.length}번</b> 공고했어요.
-        </p>
-      )}
-      <details className="group rounded-lg border">
-        <summary className="flex cursor-pointer list-none items-center gap-2 p-4 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
-          {topRepost ? "공고 이력 자세히" : "지난 공고 보기"}
-          <ChevronRight className="ml-auto size-4 transition-transform group-open:rotate-90" />
-        </summary>
-        <div className="space-y-4 px-4 pb-4">
-          {roles.map((role, i) => (
-            <div
-              key={`${role.position}-${role.department ?? "none"}`}
-              className={i > 0 ? "border-t pt-4" : ""}
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-bold">{roleLabel(role)}</span>
-                {role.postings.length >= REPOST_MIN_COUNT && (
-                  <Badge variant="secondary" className="gap-1">
-                    <RefreshCw className="size-3" /> 재공고 {role.postings.length}회
-                  </Badge>
-                )}
-              </div>
-              <ul className="mt-2 space-y-1">
-                {role.postings.map((posting) => (
-                  <li key={posting.id}>
-                    <PostingRow posting={posting} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </details>
-    </section>
   );
 }
 
@@ -102,50 +57,111 @@ export function ChurchDetailView({
   const meta = church.foundedYear
     ? `${churchMetaLine(church)} · ${church.foundedYear}년 설립`
     : churchMetaLine(church);
+  const location = churchLocation(church);
+  const mapUrl = `https://map.naver.com/p/search/${encodeURIComponent(`${church.name} ${location}`)}`;
+
+  // 자리별 총 공고 수(재공고 배지용) — position+department로 매칭
+  const repostCountFor = (job: JobCardData) =>
+    timeline.find((r) => r.position === job.position && r.department === job.department)?.postings
+      .length ?? 1;
+
+  // 지난 공고(마감) — 자리 라벨 붙여 최신순
+  const pastPostings = timeline
+    .flatMap((r) =>
+      r.postings.filter((p) => p.status === "CLOSED").map((p) => ({ ...p, role: roleLabel(r) })),
+    )
+    .sort((a, b) => b.postedAt.localeCompare(a.postedAt));
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-8 px-4 py-6">
-      <Link
-        href="/jobs"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" /> 공고 목록
-      </Link>
-
-      {/* 헤더 — 교회 정체성 + 채널 */}
-      <header className="space-y-4">
-        <div className="flex items-start gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
-            {church.name.slice(0, 2)}
+    <div className="mx-auto w-full max-w-4xl space-y-8 px-4 pt-6 pb-24">
+      {/* 커버 헤더 — 사진 있으면 갤러리(라이트박스), 없으면 딥그린 기본 */}
+      <div>
+        {church.photos && church.photos.length > 0 ? (
+          <ChurchGallery photos={church.photos} name={church.name} meta={meta} />
+        ) : (
+          <div className="relative overflow-hidden rounded-2xl">
+            {/* TODO: 기본 커버 이미지 제작 시 교체 (지금은 딥그린 그라데이션) */}
+            <div className="bg-hero h-56 w-full" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            <Link
+              href="/jobs"
+              className="absolute top-4 left-4 text-sm text-white/85 transition-colors hover:text-white"
+            >
+              ← 목록으로
+            </Link>
+            <div className="absolute inset-x-0 bottom-0 p-6">
+              <h1 className="text-2xl leading-snug font-bold break-keep text-white">
+                {church.name}
+              </h1>
+              <p className="mt-1 text-sm text-white/85">{meta}</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 className="text-2xl leading-snug font-bold">{church.name}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{meta}</p>
+        )}
+        {church.links.length > 0 && (
+          <div className="mt-4">
+            <ChurchChannels links={church.links} variant="brand" />
           </div>
-        </div>
-        {church.links.length > 0 && <ChurchChannels links={church.links} />}
-      </header>
+        )}
+      </div>
 
-      {/* 현재 모집 공고 */}
+      {/* 청빙 공고 — 방문 의도(공고)라 최상단. 현재 모집 + 지난 공고 접이식 (통합) */}
       <section className="space-y-3">
         <h2 className="text-base font-bold">
-          현재 모집 <span className="text-primary">{openJobs.length}</span>건
+          청빙 공고 <span className="text-primary">모집 중 {openJobs.length}</span>
         </h2>
         {openJobs.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {openJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
+              <OpenJobCard key={job.id} job={job} repostCount={repostCountFor(job)} />
             ))}
           </div>
         ) : (
-          <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
             현재 모집 중인 공고가 없어요.
           </p>
         )}
+
+        {pastPostings.length > 0 && (
+          <details className="mt-1">
+            <summary className="inline-block cursor-pointer text-sm font-semibold text-primary underline underline-offset-4 [&::-webkit-details-marker]:hidden">
+              지난 공고 {pastPostings.length}건 보기
+            </summary>
+            <ul className="mt-3 divide-y divide-border border-t">
+              {pastPostings.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    href={`/jobs/${p.id}`}
+                    className="flex items-center gap-3 py-2.5 text-sm hover:text-foreground"
+                  >
+                    <span className="min-w-0 flex-1 truncate">{p.role}</span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      {p.postedAt} ~ {p.deadline ?? "상시"}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground">
+                      마감
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </section>
 
-      {/* 공고 이력 — 자리별 재공고 패턴 (차별점, 접이식) */}
-      <HistorySection timeline={timeline} />
+      {/* 위치 — 공고 아래 supporting info */}
+      <section className="space-y-3">
+        <h2 className="text-base font-bold">위치</h2>
+        <p className="text-sm">{location}</p>
+        {/* 지도 자리(placeholder) — 클릭 시 네이버 지도. 임베드는 Phase 2(주소 필드+API 키) */}
+        <a
+          href={mapUrl}
+          {...externalAttrs}
+          className="flex h-40 flex-col items-center justify-center gap-1.5 rounded-xl border bg-muted/40 text-center transition-colors hover:bg-muted/60"
+        >
+          <span className="text-sm font-medium text-foreground">지도에서 위치 보기</span>
+          <span className="text-xs text-muted-foreground">네이버 지도에서 열기</span>
+        </a>
+      </section>
     </div>
   );
 }
