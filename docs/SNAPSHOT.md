@@ -2,13 +2,13 @@
 
 > **이 문서 하나로 "지금 상황" 파악.** 역할 분리: [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처·가드레일), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(인터뷰).
 >
-> **작성 시점**: 2026-07-07 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `1073005`) · **dev = prod = origin**
+> **작성 시점**: 2026-07-08 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `e1efa16`) · **dev = prod = origin**
 
 ---
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. 현재 **mock 데이터로 공개 페이지를 한 페이지씩 디자인하며 스키마를 확정하는 단계**. **홈·공고목록(/jobs)·공고상세(/jobs/[id]) = 디자인·검수·커밋 완료.** 나머지 페이지는 **Fable(AI)가 스캐폴드한 초안이 repo에 있고(검수 전)**, 그 위에서 페이지별로 다듬는 중. 백엔드(Supabase)·인증·admin·배포는 Phase 1(아직).
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. 현재 **mock 데이터로 공개 페이지를 한 페이지씩 디자인하며 스키마를 확정하는 단계**. **홈·공고목록(/jobs)·공고상세(/jobs/[id])·교회상세(/churches/[id]) = 디자인·검수·커밋 완료.** 나머지 페이지는 **Fable(AI)가 스캐폴드한 초안이 repo에 있고(검수 전)**, 그 위에서 페이지별로 다듬는 중. 백엔드(Supabase)·인증·admin·배포는 Phase 1(아직).
 
 ---
 
@@ -21,7 +21,7 @@
 | `/` 홈 | ✅ | ✅ | ✅ | ✅ (이전 세션) | mock |
 | `/jobs` 목록 | ✅ | ✅ | ✅ | ✅ `af391ce`·`0119de9`·`03d2758` | mock |
 | `/jobs/[id]` 공고 상세 | ✅ | ✅ | ✅ | ✅ `85f53bb` | mock |
-| `/churches/[id]` 교회 상세 | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
+| `/churches/[id]` 교회 상세 | ✅ | ✅ | ✅ | ✅ `e586fe0`·`38e6432`·`e1efa16` | mock |
 | `/about` 소개 | 🟡 | 🟡 | ⬜ | WIP `1073005` | 정적 |
 | `/pricing` 노출 안내 | 🟡 | 🟡 | ⬜ | WIP `1073005` | 정적 |
 | `/terms`·`/privacy` | 🟡 | ⬜ | ⬜ | (Fable 미변경) | — (법률검토) |
@@ -31,7 +31,7 @@
 | `/jobs/[id]/edit` 수정 | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
 | `/admin/jobs`·`/admin/ingest` | ⬜ | ⬜ | ⬜ | 스캐폴드 | — |
 
-> **완료 = 홈 + /jobs + /jobs/[id] 3개.** 나머지 공개·인증은 **Fable 초안(🟡)** — 커밋돼 있어 집에서 pull하면 그대로 있음. **초안 ≠ 검수 완료** — 페이지별로 시안→검수→재디자인 필요. admin은 아직 안 건드림.
+> **완료 = 홈 + /jobs + /jobs/[id] + /churches/[id] 4개.** 나머지 공개·인증은 **Fable 초안(🟡)** — 커밋돼 있어 집에서 pull하면 그대로 있음. **초안 ≠ 검수 완료** — 페이지별로 시안→검수→재디자인 필요. admin은 아직 안 건드림.
 > **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
 
 ---
@@ -42,7 +42,7 @@
 
 1. **`docs/fable.md`** — 전 페이지(공개·인증·admin) **섹션+디자인 제안서**. 사람 검토용 초안. (SPEC로 흡수 후 삭제 가능)
 2. **공개+인증 페이지에 디자인 코드 적용** — Fable가 홈 디자인 언어(딥그린)로 각 페이지를 코드로 스캐폴드. 이게 지금 `🟡` 초안들.
-   - 이후 **`/jobs`·`/jobs/[id]`는 사람 검수로 전면 재디자인**(Fable 초안 → 확정). 나머지(교회상세·about·pricing·인증)는 **Fable 초안 그대로 대기**.
+   - 이후 **`/jobs`·`/jobs/[id]`·`/churches/[id]`는 사람 검수로 전면 재디자인**(Fable 초안 → 확정). 나머지(about·pricing·인증)는 **Fable 초안 그대로 대기**.
 3. **100 mock 데이터 생성** — 교회 35 + 공고 100 (아래 §5).
 
 > Fable 산출물은 **검증 통과 후에만** 채택했음(build·규칙·가드레일 스캔). Fable = 스캐폴드/드래프트, **확정은 사람 검수**.
@@ -86,6 +86,7 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 - `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)** · `ownerId?`(교회 직접 등록 소유). — 전부 additive/optional.
 - `CurrentUser`(인증 mock), `FilterDim`에 `qualification` 추가.
 - `repost-tracking`: `RepostInfo` = `{ count, postings: RolePosting[] }` (상세 재공고 타임라인용).
+- `Church`에 **`photos?: string[]`**(첫 장=커버; DATA `church_photos` 1:N 테이블). 기존 `photoUrl` 폐기.
 
 ### seam (`src/lib/queries/*.ts`, `'use cache'`+`cacheTag`+`cacheLife("days")`)
 - `jobs.ts`: getAdJobs·getListJobs·getAllJobCards·getJobStats·getJobDetail·getRepost·getSimilarJobs·getChurchOpenJobs·getSearchSuggestions
@@ -98,6 +99,7 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 
 - **/jobs**: 대표광고를 **리스트 안에 통합**(별도 밴드 폐기, 배경 틴트 없이 작은 "광고" 태그, 티어 차이=노출 위치) · **검색 존**(옅은 초록 밴드: H1+설명+"모집 중 N건") · **결과 툴바**(정렬 + **페이지당 20/50/100**) · **자격/경력·사택 필터 추가**(성별·결혼 필터 금지) · 최근 본 공고 정보형 · 교회 CTA 위젯 · 좌필터 스크롤(우레일만 sticky). "총 N건" = 모집 중(HERO 포함).
 - **/jobs/[id]**: **단일 흐름 본문(여백형)** + **우측 요약 카드 B**(지원하기 상단 + 사례비·마감·고용) + **재공고 이력 접이식** + 비슷한 6개+더보기 + **아이콘 없음** + 지도 placeholder.
+- **/churches/[id]**(재설계): 얇은 허브 — 순서 **커버(사진 갤러리·라이트박스) → 채널(brand 색·아이콘) → 청빙 공고(현재+지난 통합, 재공고 배지) → 위치(지도)**. 공고가 방문 의도라 위로. **아바타 폐기** · **교회 소개 텍스트 미채택**(채널·유튜브로 파악 대체) · 카드 hover=`bg-muted/40`. 사진 = `Church.photos[]`(mock placeholder SVG, 업로드 Phase 1).
 - **지원 모델**: **사이트 내 지원 안 받음** — 원문/교회로 안내. 교회 직접 등록은 나중 `applyMethod` 필드(Phase 1). 사이트 내 지원 중개는 Phase 3.
 - **지도**: Phase 1 = 링크/placeholder, Phase 2 = 네이버/카카오 임베드(주소 필드+API 키).
 
@@ -106,11 +108,10 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 ## 7. ▶ 다음 작업 (집에서 이어서)
 
 **유저플로우 순서로 페이지별 검수·재디자인:**
-1. **`/churches/[id]` 교회 상세** ← 다음 (Fable 초안 있음. 시안→검수→재디자인)
-2. `/about` · `/pricing` 검수 · `/terms`·`/privacy` 법률 검토(내용)
-3. **인증 4개**(`/login`·`/mypage`·`/jobs/new`·`/jobs/[id]/edit`) 검수 — Fable mock 초안 위에서
-4. **admin 2개**(`/admin/jobs`·`/admin/ingest`) — 미착수
-5. **Phase 1**: Supabase·인증(proxy)·`'use cache'` 실적용·sitemap/robots·Vercel 배포
+1. **`/about` · `/pricing` 검수** ← 다음 (공개 surface 마무리) · `/terms`·`/privacy`는 디자인만, 문구는 법률검토
+2. **인증 4개**(`/login`·`/mypage`·`/jobs/new`·`/jobs/[id]/edit`) 검수 — Fable mock 초안 위에서
+3. **admin 2개**(`/admin/jobs`·`/admin/ingest`) — 미착수
+4. **Phase 1**: Supabase·인증(proxy)·`'use cache'` 실적용·sitemap/robots·Vercel 배포
 
 **미결 TODO**(코드에 표시): 정렬 "사례비순"(인터뷰 "세상적") 유지/축소 · 필터↔URL 동기화 시점 · 부서 세분화(ROADMAP 1-7) · CLOSED 공고 JSON-LD 제거 여부 · 아이콘 제거 범위(홈·목록의 지역핀·검색 돋보기도 뺄지).
 
