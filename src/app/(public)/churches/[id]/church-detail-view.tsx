@@ -22,7 +22,7 @@ function OpenJobCard({ job, repostCount }: { job: JobCardData; repostCount: numb
   return (
     <Link
       href={`/jobs/${job.id}`}
-      className="flex h-full flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-ring"
+      className="flex h-full flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/40"
     >
       <div className="flex items-start gap-2">
         <h3 className="flex-1 leading-snug font-bold break-keep">{job.title}</h3>
