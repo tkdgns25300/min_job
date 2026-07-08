@@ -24,7 +24,7 @@
 ### DB 스키마 (DATA.md 확정 완료 — Phase 1에서 구축)
 > DATA.md에 스키마·enum·인덱스·RLS·재공고·노출 모델 확정됨. 아래는 Phase 1에서 진행.
 - [x] **DATA.md 작성** — 봉인 결정 확정(정규화/JOIN·직교화·enum·재공고키·노출 2종·사례비 period·RLS 의도)
-- [ ] 마이그레이션 `001_init.sql` — churches·church_links·jobs·users(+bookmarks Phase 2) + enum CHECK + 인덱스 + RLS (DATA.md §3·5·9)
+- [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·users(+bookmarks Phase 2) + enum CHECK + 인덱스 + RLS (DATA.md §3·5·9)
 - [ ] DB 타입 생성 — `types/database.ts`
 
 **병행 트랙 (Phase 0~1 내내)**
@@ -95,7 +95,7 @@
 
 **신규 기능 (Phase 2 성격)**
 - [ ] 교회 위치 **지도 연결** → 2-1에 통합. 주소→링크는 저비용이라 Phase 1 링크만 먼저 가능
-- [ ] 교회 **건물 사진** 선택 업로드 — 교회 직접 등록 시만(운영자 수집분은 저작권 이슈로 제외, 포스터 이미지와 동일 논리)
+- [ ] 교회 **사진 업로드**(Supabase Storage) → 교회 상세 **사진 갤러리·라이트박스**(`ChurchGallery` UI 완료) 노출 — 교회 직접 등록 시만(운영자 수집분은 저작권 이슈로 제외, 포스터 이미지와 동일 논리)
 
 > **Phase 1 완료 기준**: 공고 검색·열람 동작 + 교회 홈페이지 링크 노출 + admin으로 공고 등록 가능 + 배포됨.
 

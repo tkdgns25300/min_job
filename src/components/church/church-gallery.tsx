@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
+const MAX_STRIP_THUMBS = 3; // 커버 아래 썸네일 스트립에 노출할 최대 장수 (나머지는 +N)
+
 // 교회 사진 갤러리 — 커버(클릭 시 확대) + 썸네일 스트립 + 라이트박스(좌우·키보드·ESC).
 // 사진 있는 교회에서만 렌더 → client 경계를 이 컴포넌트로 좁힘. 첫 장이 커버.
 export function ChurchGallery({
@@ -42,7 +44,7 @@ export function ChurchGallery({
   }, [isOpen, close, move]);
 
   const cover = photos[0];
-  const thumbs = photos.slice(1, 4); // 커버 외 최대 3장 스트립
+  const thumbs = photos.slice(1, 1 + MAX_STRIP_THUMBS); // 커버 외 스트립
   const hidden = photos.length - 1 - thumbs.length; // 스트립에 못 담은 나머지 (+N)
 
   return (
