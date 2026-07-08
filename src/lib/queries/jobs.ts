@@ -38,6 +38,18 @@ export async function getJobStats(): Promise<{
   return mock.getJobStats();
 }
 
+export async function getCoverageStats(): Promise<{
+  openCount: number;
+  churchCount: number;
+  regionCount: number;
+  denominationCount: number;
+}> {
+  "use cache";
+  cacheTag("jobs", "churches");
+  cacheLife("days");
+  return mock.getCoverageStats();
+}
+
 export async function getJobDetail(id: string): Promise<JobDetail | null> {
   "use cache";
   cacheTag("jobs", `job-${id}`);

@@ -1,61 +1,180 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { getCoverageStats } from "@/lib/queries/jobs";
 
 export const metadata: Metadata = {
   title: "소개 | 민잡",
   description:
-    "민잡은 흩어져 있는 교회 사역자 청빙 공고를 한 곳에 모아, 지역·교단·직분·부서로 찾아보고 비교할 수 있게 정리하는 서비스입니다.",
+    "민잡은 여러 신학교·교단 게시판에 흩어진 교회 사역자 청빙 공고를 한 곳에 모아, 지역·교단·직분·부서로 찾아볼 수 있게 정리하는 서비스입니다.",
 };
 
-export default function AboutPage() {
+// 페이지 카피 — 도메인 값 아님(화면 문구). 유지보수 위해 배열로.
+const BENEFITS = [
+  {
+    title: "여기저기 안 돌아다녀도 됩니다",
+    body: "여러 게시판에 흩어진 청빙 공고를 한 곳에서 확인합니다.",
+  },
+  {
+    title: "원하는 조건만 빠르게",
+    body: "지역·교단·직분·부서로 걸러, 필요한 공고만 골라 봅니다.",
+  },
+  {
+    title: "반복되는 자리도 보입니다",
+    body: "같은 자리가 여러 번 청빙됐는지 지난 이력까지 확인합니다.",
+  },
+] as const;
+
+const FAQS = [
+  {
+    q: "민잡은 무료인가요?",
+    a: "청빙 자리를 찾는 교역자는 열람·검색을 무료로 이용합니다.",
+  },
+  {
+    q: "공고는 어떻게 올라오나요?",
+    a: "교회가 직접 등록하거나, 공개된 청빙 공고를 운영자가 직접 확인해 같은 형식으로 정리하고 원문 링크로 안내합니다.",
+  },
+  {
+    q: "지원은 민잡에서 하나요?",
+    a: "사이트 안에서 지원을 받지 않습니다. 교회의 공개 접수처나 원문으로 안내해 드립니다.",
+  },
+  {
+    q: "어느 교단·지역을 다루나요?",
+    a: "특정 교단에 한정하지 않는 한국 개신교 교역자 청빙 전반입니다. 초기에는 예장합동·통합을 중심으로 넓혀가고 있습니다.",
+  },
+] as const;
+
+function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-10 px-4 py-12">
-      <header className="space-y-3">
-        <h1 className="text-2xl font-bold sm:text-3xl">소개</h1>
-        <p className="leading-relaxed text-muted-foreground">
-          민잡은 여러 곳에 흩어져 있는 교회 사역자 청빙 공고를 한 곳에 모아, 지역·교단·직분·부서
-          등으로 찾아보고 비교할 수 있게 정리하는 서비스입니다.
-        </p>
-      </header>
-
-      <section className="space-y-2">
-        <h2 className="text-lg font-bold">왜 만들었나요</h2>
-        <p className="leading-relaxed text-muted-foreground">
-          청빙 공고는 신학교·교단 게시판 등 여러 곳에 나뉘어 있어 한눈에 보기 어렵습니다. 흩어진
-          공고를 모아 같은 형식으로 정리해, 필요한 조건을 빠르게 찾도록 돕습니다.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-bold">무엇을 할 수 있나요</h2>
-        <ul className="list-disc space-y-1.5 pl-5 leading-relaxed text-muted-foreground marker:text-muted-foreground/40">
-          <li>지역·교단·직분·부서·고용형태 등으로 검색하고 거릅니다.</li>
-          <li>사례비·출근·자격요건 등 정리된 정보로 공고를 비교합니다.</li>
-          <li>교회 홈페이지·유튜브 등 채널로 바로 이동해 확인합니다.</li>
-          <li>같은 자리의 지난 공고 이력을 함께 봅니다.</li>
-        </ul>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-bold">이런 분들께</h2>
-        <ul className="list-disc space-y-1.5 pl-5 leading-relaxed text-muted-foreground marker:text-muted-foreground/40">
-          <li>청빙 자리를 찾는 교역자</li>
-          <li>함께 사역할 사람을 찾는 교회</li>
-        </ul>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-lg font-bold">문의</h2>
-        <p className="leading-relaxed text-muted-foreground">
-          서비스 관련 문의는{" "}
-          <a
-            href="mailto:contact@minjob.kr"
-            className="font-medium text-foreground hover:underline"
-          >
-            contact@minjob.kr
-          </a>
-          로 보내 주세요.
-        </p>
-      </section>
+    <div className="bg-card p-5 text-center">
+      <div className="text-2xl font-bold tabular-nums text-primary">{value}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{label}</div>
     </div>
+  );
+}
+
+export default async function AboutPage() {
+  const stats = await getCoverageStats();
+
+  return (
+    <>
+      {/* 히어로 — 풀블리드 딥그린 (헤더와 이어짐) */}
+      <section className="bg-hero text-white">
+        <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:py-20">
+          <p className="text-sm font-semibold tracking-wide text-gold">
+            교회 사역자 청빙, 한 곳에서
+          </p>
+          <h1 className="mt-3.5 text-3xl leading-[1.32] font-extrabold tracking-[-0.02em] break-keep sm:text-4xl">
+            여기저기 흩어진 청빙 공고를
+            <br className="hidden sm:block" /> 한 곳에서 확인하세요.
+          </h1>
+          <p className="mt-4 max-w-xl leading-relaxed break-keep text-white/75">
+            여러 신학교·교단 게시판에 나뉘어 있던 교회 사역자 청빙 공고를 한 곳에 모아,
+            지역·교단·직분·부서로 찾아볼 수 있게 정리합니다.
+          </p>
+          <p className="mt-3.5 font-semibold text-gold">
+            부교역자부터 담임까지, 청빙의 길목을 조금 더 밝게.
+          </p>
+          <Link
+            href="/jobs"
+            className="mt-7 inline-block rounded-xl bg-white px-6 py-3 font-bold text-primary transition-colors hover:bg-white/90"
+          >
+            공고 보러 가기
+          </Link>
+        </div>
+      </section>
+
+      <div className="mx-auto w-full max-w-3xl space-y-12 px-4 pt-12 pb-24">
+        {/* 무엇이 좋은가요 — 텍스트형(박스 없음) */}
+        <section>
+          <h2 className="mb-5 text-xl font-bold">무엇이 좋은가요</h2>
+          <div className="space-y-6">
+            {BENEFITS.map((b, i) => (
+              <div key={b.title} className="flex gap-3.5">
+                <span className="w-6 shrink-0 pt-0.5 font-bold text-primary/45 tabular-nums">
+                  0{i + 1}
+                </span>
+                <div>
+                  <h3 className="font-bold">{b.title}</h3>
+                  <p className="mt-1 leading-relaxed break-keep text-muted-foreground">{b.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 이런 분들께 — 텍스트형 */}
+        <section>
+          <h2 className="mb-5 text-xl font-bold">이런 분들께</h2>
+          <div className="space-y-3">
+            <p className="break-keep">
+              <span className="font-bold">교역자</span>
+              <span className="text-muted-foreground">
+                {" "}
+                — 청빙 자리를 찾는 분. 조건으로 빠르게 찾습니다.
+              </span>
+            </p>
+            <p className="break-keep">
+              <span className="font-bold">교회</span>
+              <span className="text-muted-foreground">
+                {" "}
+                — 함께 사역할 사람을 찾는 곳. 공고를 등록·관리합니다.
+              </span>
+            </p>
+          </div>
+        </section>
+
+        {/* 현재 등록 현황 — 실 데이터 집계(getCoverageStats). 유일한 박스 섹션 */}
+        <section>
+          <h2 className="mb-5 text-xl font-bold">현재 등록 현황</h2>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border sm:grid-cols-4">
+            <Stat value={stats.openCount} label="모집 중 공고" />
+            <Stat value={stats.churchCount} label="교회" />
+            <Stat value={stats.regionCount} label="지역" />
+            <Stat value={stats.denominationCount} label="교단" />
+          </div>
+        </section>
+
+        {/* 자주 묻는 질문 */}
+        <section>
+          <h2 className="mb-5 text-xl font-bold">자주 묻는 질문</h2>
+          <div className="border-t">
+            {FAQS.map((f) => (
+              <div key={f.q} className="border-b py-4">
+                <h3 className="font-semibold">{f.q}</h3>
+                <p className="mt-1.5 leading-relaxed break-keep text-muted-foreground">{f.a}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 문의 */}
+        <section>
+          <h2 className="mb-5 text-xl font-bold">문의</h2>
+          <div className="rounded-2xl border bg-muted/30 p-5">
+            <p className="font-semibold">도움이 필요하신가요?</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              서비스 관련 문의는{" "}
+              <a
+                href="mailto:contact@minjob.kr"
+                className="font-medium text-foreground hover:underline"
+              >
+                contact@minjob.kr
+              </a>{" "}
+              로 보내 주세요.
+            </p>
+          </div>
+        </section>
+
+        {/* 하단 CTA */}
+        <div className="text-center">
+          <Link
+            href="/jobs"
+            className="inline-block rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            공고 보러 가기 →
+          </Link>
+        </div>
+      </div>
+    </>
   );
 }

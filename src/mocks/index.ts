@@ -189,3 +189,20 @@ export function getJobStats(): { openCount: number; newThisWeek: number; churchC
   const newThisWeek = openJobs.filter((j) => j.postedAt >= weekAgo).length;
   return { openCount, newThisWeek, churchCount };
 }
+
+/**
+ * about 커버리지 스탯 — 모집 중 공고 / 등록 교회 / 지역·교단 폭. 실 데이터 집계라 항상 정확.
+ */
+export function getCoverageStats(): {
+  openCount: number;
+  churchCount: number;
+  regionCount: number;
+  denominationCount: number;
+} {
+  return {
+    openCount: openJobs.length,
+    churchCount: churches.length,
+    regionCount: new Set(churches.map((c) => c.region)).size,
+    denominationCount: new Set(churches.map((c) => c.denomination)).size,
+  };
+}
