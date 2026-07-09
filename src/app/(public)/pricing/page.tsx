@@ -1,195 +1,389 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { getCoverageStats } from "@/lib/queries/jobs";
+import { ExposurePreview } from "@/components/pricing/exposure-preview";
 
 export const metadata: Metadata = {
   title: "공고 노출 안내 | 민잡",
   description:
-    "청빙 공고를 더 많은 교역자에게. 공고 등록은 무료, 노출 상품(프리미엄·대표광고)으로 더 눈에 띄게 보여주세요.",
+    "무료로 공고를 올리고, 더 많은 교역자에게 빠르게 닿고 싶을 때만 노출을 더하세요. 프리미엄·대표광고 노출 상품 안내.",
 };
 
-// 노출 상품 2종 — 가격·상세는 Phase 2 확정, 지금은 "문의"
-const PRODUCTS = [
+// 상품 카드 데이터 — 화면 문구(도메인 값 아님)
+const PLANS = [
+  {
+    name: "기본 공고",
+    price: "무료",
+    unit: "",
+    aud: "모든 교회 — 먼저 공고를 올려보세요",
+    features: ["공고 등록·수정", "최신순 목록·검색 노출", "교회 페이지·재공고 이력"],
+    cta: { label: "공고 등록", href: "/jobs/new", primary: false },
+    highlight: false,
+  },
   {
     name: "프리미엄",
-    tagline: "공고를 목록 상단에 고정하고 강조 배지로 눈에 띄게.",
-    where: "공고 목록 상단 고정",
+    price: "7만원",
+    unit: "/ 주",
+    aud: "노출을 넓히고 싶은 교회 — 어디서 찾든 위에",
+    features: [
+      "목록 상단 고정",
+      "검색·필터 결과 상단",
+      "비슷한 공고 슬롯 노출",
+      "“광고” 표시 · 4주 24만원",
+    ],
+    cta: { label: "문의하기", href: "#contact", primary: true },
+    highlight: true,
+    badge: "가장 많이 찾는",
   },
   {
     name: "대표광고",
-    tagline: "홈·목록 최상단 추천 슬롯에 더 크게. 주목도가 가장 높아요.",
-    where: "홈·공고 목록 상단 추천(AD)",
+    price: "15만원",
+    unit: "/ 주",
+    aud: "가장 크게 알리고 싶을 때 — 소수 구좌만",
+    features: [
+      "홈 배너 + 목록 최상단",
+      "프리미엄 노출 전부 포함",
+      "구좌 한정(매진제)",
+      "4주 묶음 50만원",
+    ],
+    cta: { label: "문의하기", href: "#contact", primary: true },
+    highlight: false,
+    badge: "구좌 한정",
+    gold: true,
   },
-] as const;
-
-const STEPS = [
-  { title: "공고 등록 (무료)", desc: "교회로 가입하고 청빙 공고를 등록하세요." },
-  { title: "노출 상품 선택", desc: "프리미엄·대표광고 중 원하는 노출을 고르세요." },
-  { title: "문의로 진행", desc: "노출 기간·결제는 문의로 진행돼요. (자동 결제는 준비 중)" },
 ] as const;
 
 const FAQS = [
   {
-    q: "공고 등록도 돈을 내야 하나요?",
-    a: "아니요. 공고 등록은 언제나 무료입니다. 노출 상품을 선택할 때만 비용이 발생해요.",
+    q: "결제는 어떻게 하나요?",
+    a: "지금은 문의로 진행합니다(온라인 결제는 준비 중). 문의 주시면 노출 기간·금액을 안내하고 게재해 드려요.",
   },
   {
-    q: "노출은 언제부터 되나요?",
-    a: "신청·확인 후 노출됩니다. 노출 기간은 상품별로 안내해 드려요.",
+    q: "무료 공고도 노출되나요?",
+    a: "네. 기본 공고는 최신순 목록·검색에 노출됩니다. 유료 상품은 상단·홈 등 더 눈에 띄는 자리를 더하는 것입니다.",
   },
   {
-    q: "지금 바로 결제할 수 있나요?",
-    a: "현재는 문의로 진행됩니다. 자동 결제는 준비 중이에요.",
+    q: "노출 기간은요?",
+    a: "주 단위이고, 4주 묶음은 할인됩니다. 대표광고는 구좌가 한정이라 조기 마감될 수 있어요.",
   },
   {
-    q: "세금계산서 발행이 되나요?",
-    a: "문의 주시면 발행 절차를 안내해 드립니다.",
+    q: "지원도 민잡에서 받나요?",
+    a: "아니요. 지원은 교회의 공개 접수처나 원문으로 안내합니다.",
   },
 ] as const;
 
-export default function PricingPage() {
+function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
+  const badge = "badge" in plan ? plan.badge : undefined;
+  const gold = "gold" in plan ? plan.gold : false;
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-12 px-4 py-10">
-      {/* 헤더 — 가치 제안 + 등록 무료 */}
-      <header className="space-y-3">
-        <p className="text-sm font-semibold text-muted-foreground">공고 노출 안내</p>
-        <h1 className="text-2xl leading-snug font-bold tracking-tight text-balance sm:text-3xl">
-          청빙 공고를 더 많은 교역자에게
-        </h1>
-        <p className="max-w-2xl leading-relaxed text-muted-foreground">
-          공고 등록은 <b className="font-semibold text-foreground">언제나 무료</b>입니다. 노출
-          상품은 공고를 더 눈에 띄는 위치에 보여주고 싶을 때만 선택하세요.
-        </p>
-      </header>
+    <div
+      className={`relative flex flex-col rounded-2xl border bg-card p-5 ${
+        plan.highlight
+          ? "border-[1.5px] border-primary shadow-lg shadow-primary/5"
+          : "border-border"
+      }`}
+    >
+      {badge && (
+        <span
+          className={`absolute -top-3 left-5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+            gold ? "bg-gold text-[#3d3011]" : "bg-primary text-primary-foreground"
+          }`}
+        >
+          {badge}
+        </span>
+      )}
+      <div className="font-bold">{plan.name}</div>
+      <div
+        className={`mt-2 text-2xl font-bold ${plan.price === "무료" ? "text-foreground" : "text-primary"}`}
+      >
+        {plan.price}
+        {plan.unit && (
+          <span className="text-sm font-semibold text-muted-foreground"> {plan.unit}</span>
+        )}
+      </div>
+      <p className="mt-1 min-h-8 text-xs break-keep text-muted-foreground">{plan.aud}</p>
+      <ul className="mt-3.5 flex flex-col gap-2 border-t pt-3.5">
+        {plan.features.map((f) => (
+          <li key={f} className="relative pl-4.5 text-sm break-keep">
+            <span className="absolute left-0 font-bold text-primary">✓</span>
+            {f}
+          </li>
+        ))}
+      </ul>
+      <Link
+        href={plan.cta.href}
+        className={`mt-4 rounded-xl px-4 py-2.5 text-center text-sm font-bold transition-colors ${
+          plan.cta.primary
+            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+            : "border border-primary/30 text-primary hover:bg-primary/5"
+        }`}
+      >
+        {plan.cta.label}
+      </Link>
+      {plan.cta.primary && (
+        <div className="mt-2 text-center text-[11px] text-muted-foreground">
+          VAT 포함 · 숨은 비용 없음
+        </div>
+      )}
+    </div>
+  );
+}
 
-      {/* 노출 상품 2종 */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-bold">노출 상품</h2>
-        {/* 상품은 2종 — 2열이 빈 칸 없이 균형 (fable.md /pricing) */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {PRODUCTS.map((product) => (
-            <Card key={product.name} className="gap-4 p-6">
-              <div>
-                <h3 className="text-base font-bold">{product.name}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                  {product.tagline}
-                </p>
-              </div>
-              <div className="mt-auto space-y-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">노출 위치</p>
-                  <p className="mt-0.5 text-sm font-medium">{product.where}</p>
-                </div>
-                <Badge variant="secondary">가격 문의</Badge>
-              </div>
-            </Card>
-          ))}
+function Yes({ label }: { label?: string }) {
+  return <span className="font-bold text-primary">✓{label ? ` ${label}` : ""}</span>;
+}
+function No() {
+  return <span className="text-border">–</span>;
+}
+
+export default async function PricingPage() {
+  const stats = await getCoverageStats();
+
+  return (
+    <>
+      {/* 히어로 */}
+      <section className="bg-hero text-white">
+        <div className="mx-auto w-full max-w-5xl px-4 py-14 sm:py-16">
+          <p className="text-sm font-semibold text-gold">공고 노출 안내</p>
+          <h1 className="mt-3 text-2xl leading-snug font-extrabold tracking-[-0.02em] break-keep sm:text-3xl">
+            공고를 더 많은 교역자에게 노출하세요
+          </h1>
+          <p className="mt-3.5 max-w-xl leading-relaxed break-keep text-white/80">
+            무료로 공고를 올리고, 더 빨리 채우고 싶을 때만 노출을 더하면 됩니다. 아래에서 어떻게
+            보이는지 직접 확인하세요.
+          </p>
+          <span className="mt-4 inline-block rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold">
+            온라인 결제는 준비 중 — 지금은 문의로 진행해요
+          </span>
         </div>
       </section>
 
-      {/* 노출 위치 미리보기 — 목록에서 어디에 뜨는지 */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-lg font-bold">노출 위치 미리보기</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            공고 목록에서 상품별로 이렇게 보여요.
+      <div className="mx-auto w-full max-w-5xl space-y-14 px-4 pt-12 pb-24">
+        {/* 상품 카드 */}
+        <section className="grid gap-4 md:grid-cols-3 md:items-start">
+          {PLANS.map((plan) => (
+            <PlanCard key={plan.name} plan={plan} />
+          ))}
+        </section>
+
+        {/* 노출 미리보기 (client) */}
+        <section>
+          <h2 className="text-xl font-bold">이렇게 노출됩니다</h2>
+          <p className="mt-1 mb-5 text-sm text-muted-foreground">
+            상품별로 실제 화면을 옆으로 넘기며 보고, 탭하면 크게 확인하세요.
           </p>
-        </div>
-        <div className="grid gap-6 md:grid-cols-[minmax(0,300px)_1fr] md:items-start">
-          {/* 목록 와이어프레임 */}
-          <div className="space-y-2 rounded-xl border bg-muted/20 p-3">
-            <div className="rounded-lg border border-primary/40 bg-primary/5 p-2.5">
-              <p className="text-[11px] font-bold">대표광고 · 추천</p>
-              <div className="mt-1.5 flex gap-1.5">
-                <div className="h-8 flex-1 rounded bg-background shadow-sm" />
-                <div className="h-8 flex-1 rounded bg-background shadow-sm" />
-                <div className="h-8 flex-1 rounded bg-background shadow-sm" />
-              </div>
+          <ExposurePreview />
+        </section>
+
+        {/* 비교표 */}
+        <section>
+          <h2 className="mb-5 text-xl font-bold">한눈에 비교</h2>
+          <div className="overflow-x-auto rounded-2xl border">
+            <table className="w-full min-w-[420px] border-collapse text-sm">
+              <thead>
+                <tr className="bg-primary/5">
+                  <th className="p-3 text-left font-semibold text-muted-foreground">노출 위치</th>
+                  <th className="p-3 font-bold">기본</th>
+                  <th className="p-3 font-bold text-primary">프리미엄</th>
+                  <th className="p-3 font-bold text-primary">대표광고</th>
+                </tr>
+              </thead>
+              <tbody className="[&_td]:border-t [&_td]:p-3 [&_td]:text-center [&_td:first-child]:text-left [&_td:first-child]:font-medium [&_td:first-child]:text-muted-foreground">
+                <tr>
+                  <td>최신순 목록</td>
+                  <td>
+                    <Yes />
+                  </td>
+                  <td>
+                    <Yes />
+                  </td>
+                  <td>
+                    <Yes />
+                  </td>
+                </tr>
+                <tr>
+                  <td>목록 상단 고정</td>
+                  <td>
+                    <No />
+                  </td>
+                  <td>
+                    <Yes />
+                  </td>
+                  <td>
+                    <Yes label="최상단" />
+                  </td>
+                </tr>
+                <tr>
+                  <td>검색·필터 결과 상단</td>
+                  <td>
+                    <No />
+                  </td>
+                  <td>
+                    <Yes />
+                  </td>
+                  <td>
+                    <Yes />
+                  </td>
+                </tr>
+                <tr>
+                  <td>비슷한 공고 슬롯</td>
+                  <td>
+                    <No />
+                  </td>
+                  <td>
+                    <Yes />
+                  </td>
+                  <td>
+                    <Yes />
+                  </td>
+                </tr>
+                <tr>
+                  <td>홈 배너</td>
+                  <td>
+                    <No />
+                  </td>
+                  <td>
+                    <No />
+                  </td>
+                  <td>
+                    <Yes />
+                  </td>
+                </tr>
+                <tr className="font-bold [&_td]:text-foreground">
+                  <td>가격</td>
+                  <td>0원</td>
+                  <td>7만원/주</td>
+                  <td>15만원/주</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            ※ 표시가는 VAT 포함. 주 단위 · 4주 묶음 할인. 실제 단가·묶음·구좌는 문의 시 안내.
+          </p>
+        </section>
+
+        {/* 신뢰 */}
+        <section>
+          <h2 className="mb-5 text-xl font-bold">믿고 노출하세요</h2>
+          <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+            <div className="grid grid-cols-4 gap-px overflow-hidden rounded-2xl border bg-border">
+              {[
+                { v: stats.openCount, k: "청빙 공고" },
+                { v: stats.churchCount, k: "교회" },
+                { v: stats.regionCount, k: "지역" },
+                { v: stats.denominationCount, k: "교단" },
+              ].map((s) => (
+                <div key={s.k} className="bg-card p-4 text-center">
+                  <div className="text-xl font-bold tabular-nums text-primary">{s.v}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">{s.k}</div>
+                </div>
+              ))}
             </div>
-            <div className="rounded-lg border border-primary/25 p-2.5">
-              <p className="text-[11px] font-bold">프리미엄 · 상단 고정</p>
-              <div className="mt-1.5 space-y-1.5">
-                <div className="h-5 rounded bg-background shadow-sm" />
-                <div className="h-5 rounded bg-background shadow-sm" />
-              </div>
-            </div>
-            <div className="p-2.5">
-              <p className="text-[11px] text-muted-foreground">일반 공고</p>
-              <div className="mt-1.5 space-y-1.5">
-                <div className="h-5 rounded bg-muted" />
-                <div className="h-5 rounded bg-muted" />
-                <div className="h-5 rounded bg-muted" />
-              </div>
+            <div className="flex flex-col justify-center gap-1.5 rounded-2xl border border-primary/15 bg-primary/5 p-4 text-sm">
+              <span>
+                <b className="text-primary">운영자 검수</b> — 모든 공고를 사람이 확인
+              </span>
+              <span>
+                <b className="text-primary">투명 가격</b> — VAT 포함, 숨은 비용 없음
+              </span>
             </div>
           </div>
-          {/* 설명 */}
-          <ul className="space-y-3 text-sm leading-relaxed">
-            <li>
-              <b>대표광고</b> — 홈·공고 목록 최상단 추천 슬롯에 크게. 주목도 최고.
-            </li>
-            <li>
-              <b>프리미엄</b> — 공고 목록 상단에 고정 + 강조 배지.
-            </li>
-          </ul>
-        </div>
-      </section>
+        </section>
 
-      {/* 이용 방법 */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-bold">이용 방법</h2>
-        <ol className="grid gap-3 sm:grid-cols-3">
-          {STEPS.map((step, i) => (
-            <li key={step.title} className="rounded-lg border p-4">
-              <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                {i + 1}
-              </span>
-              <p className="mt-3 font-semibold">{step.title}</p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* FAQ */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-bold">자주 묻는 질문</h2>
-        <div className="space-y-2">
-          {FAQS.map((faq) => (
-            <details key={faq.q} className="group rounded-lg border">
-              <summary className="flex cursor-pointer list-none items-center gap-2 p-4 text-sm font-medium [&::-webkit-details-marker]:hidden">
-                {faq.q}
-                <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
-              </summary>
-              <p className="px-4 pb-4 text-sm leading-relaxed text-muted-foreground">{faq.a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA */}
-      {/* TODO(design): ❓ CTA 밴드를 홈 사이드바 교회 CTA와 같은 딥그린 면(bg-primary + 흰 버튼)으로
-          통일할지 — 정적 페이지의 조용한 톤과 긴장, 사람 판단 필요 (fable.md #6) */}
-      <section className="space-y-4 rounded-xl border bg-muted/30 p-8 text-center">
-        <div>
-          <h2 className="text-lg font-bold">공고를 등록하고 노출을 시작하세요</h2>
-          <p className="mt-1 text-sm text-muted-foreground">등록은 무료 · 노출 상품은 선택</p>
-        </div>
-        <div className="flex flex-wrap justify-center gap-2">
-          <Link href="/jobs/new" className={cn(buttonVariants({ size: "lg" }))}>
-            공고 등록하기
-          </Link>
-          <a
-            href="mailto:contact@minjob.kr?subject=공고 노출 문의"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
+        {/* 문의 */}
+        <section id="contact" className="scroll-mt-20">
+          <h2 className="text-xl font-bold">노출 문의</h2>
+          <p className="mt-1 mb-4 text-sm text-muted-foreground">
+            원하는 상품·기간을 남겨주시면 게재를 도와드려요. 보내기를 누르면 메일 앱이 열립니다.
+          </p>
+          <form
+            action="mailto:contact@minjob.kr"
+            method="post"
+            encType="text/plain"
+            className="rounded-2xl border bg-card p-5"
           >
-            노출 문의
-          </a>
-        </div>
-      </section>
-    </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="flex flex-col gap-1.5 text-xs font-bold">
+                교회명
+                <input
+                  name="교회명"
+                  required
+                  placeholder="○○교회"
+                  className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-xs font-bold">
+                연락처
+                <input
+                  name="연락처"
+                  required
+                  placeholder="이메일 또는 전화"
+                  className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-xs font-bold">
+                관심 상품
+                <select
+                  name="관심상품"
+                  className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
+                >
+                  <option>프리미엄</option>
+                  <option>대표광고</option>
+                  <option>둘 다 / 상담</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1.5 text-xs font-bold">
+                공고(선택)
+                <input
+                  name="공고"
+                  placeholder="공고 제목 또는 링크"
+                  className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-xs font-bold sm:col-span-2">
+                문의 내용
+                <textarea
+                  name="내용"
+                  rows={3}
+                  placeholder="원하시는 노출 기간 등"
+                  className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
+                />
+              </label>
+            </div>
+            <button
+              type="submit"
+              className="mt-3 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              문의 보내기
+            </button>
+            <p className="mt-3 text-xs text-muted-foreground">
+              영업일 기준 1일 내 연락드려요 · 급하시면{" "}
+              <a
+                href="mailto:contact@minjob.kr"
+                className="font-medium text-foreground hover:underline"
+              >
+                contact@minjob.kr
+              </a>
+            </p>
+          </form>
+        </section>
+
+        {/* FAQ */}
+        <section>
+          <h2 className="mb-5 text-xl font-bold">자주 묻는 질문</h2>
+          <div className="border-t">
+            {FAQS.map((f) => (
+              <div key={f.q} className="border-b py-4">
+                <h3 className="font-semibold">{f.q}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed break-keep text-muted-foreground">
+                  {f.a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </>
   );
 }
