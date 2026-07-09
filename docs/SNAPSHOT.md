@@ -2,13 +2,13 @@
 
 > **이 문서 하나로 "지금 상황" 파악.** 역할 분리: [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처·가드레일), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(인터뷰).
 >
-> **작성 시점**: 2026-07-08 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `f787c3d`) · **dev = prod = origin**
+> **작성 시점**: 2026-07-09 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `a0d4cdd`) · **dev = prod = origin**
 
 ---
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. 현재 **mock 데이터로 공개 페이지를 한 페이지씩 디자인하며 스키마를 확정하는 단계**. **홈·공고목록(/jobs)·공고상세(/jobs/[id])·교회상세(/churches/[id])·소개(/about) = 디자인·검수·커밋 완료.** `/pricing`은 **수익모델·노출상품 BM 확정(§9)**, 페이지 시안 대기. 나머지 페이지는 **Fable(AI)가 스캐폴드한 초안이 repo에 있고(검수 전)**, 그 위에서 페이지별로 다듬는 중. 백엔드(Supabase)·인증·admin·배포는 Phase 1(아직).
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. 현재 **mock 데이터로 공개 페이지를 한 페이지씩 디자인하며 스키마를 확정하는 단계**. **홈·공고목록(/jobs)·공고상세(/jobs/[id])·교회상세(/churches/[id])·소개(/about)·노출안내(/pricing) = 디자인·검수·커밋 완료.** 나머지 페이지는 **Fable(AI)가 스캐폴드한 초안이 repo에 있고(검수 전)**, 그 위에서 페이지별로 다듬는 중. 백엔드(Supabase)·인증·admin·배포는 Phase 1(아직).
 
 ---
 
@@ -23,7 +23,7 @@
 | `/jobs/[id]` 공고 상세 | ✅ | ✅ | ✅ | ✅ `85f53bb` | mock |
 | `/churches/[id]` 교회 상세 | ✅ | ✅ | ✅ | ✅ `e586fe0`·`38e6432`·`e1efa16` | mock |
 | `/about` 소개 | ✅ | ✅ | ✅ | ✅ `f787c3d` | 정적(+실집계) |
-| `/pricing` 노출 안내 | 🟡 | 🟡 | ⬜ | WIP `1073005` | 정적 |
+| `/pricing` 노출 안내 | ✅ | ✅ | ✅ | ✅ `e35fcb8`·`59c7aa6`·`a0d4cdd` | 정적(+실집계) |
 | `/terms`·`/privacy` | 🟡 | ⬜ | ⬜ | (Fable 미변경) | — (법률검토) |
 | `/login` | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
 | `/mypage` | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
@@ -31,7 +31,7 @@
 | `/jobs/[id]/edit` 수정 | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
 | `/admin/jobs`·`/admin/ingest` | ⬜ | ⬜ | ⬜ | 스캐폴드 | — |
 
-> **완료 = 홈 + /jobs + /jobs/[id] + /churches/[id] + /about 5개.** 나머지 공개·인증은 **Fable 초안(🟡)** — 커밋돼 있어 집에서 pull하면 그대로 있음. **초안 ≠ 검수 완료** — 페이지별로 시안→검수→재디자인 필요. admin은 아직 안 건드림.
+> **완료 = 홈 + /jobs + /jobs/[id] + /churches/[id] + /about + /pricing 6개.** 나머지 공개·인증은 **Fable 초안(🟡)** — 커밋돼 있어 집에서 pull하면 그대로 있음. **초안 ≠ 검수 완료** — 페이지별로 시안→검수→재디자인 필요. admin은 아직 안 건드림.
 > **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
 
 ---
@@ -107,9 +107,9 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 
 ## 7. ▶ 다음 작업 (집에서 이어서)
 
-**유저플로우 순서로 페이지별 검수·재디자인:**
-1. **`/pricing`** ← 다음 (수익모델·노출상품 BM 확정 §9 → 페이지 시안). `/terms`·`/privacy`는 디자인만, 문구는 법률검토
-2. **인증 4개**(`/login`·`/mypage`·`/jobs/new`·`/jobs/[id]/edit`) 검수 — Fable mock 초안 위에서
+**유저플로우 순서로 페이지별 검수·재디자인:** (공개 surface = 홈·목록·상세·교회·about·pricing 완료)
+1. **인증 4개**(`/login`·`/mypage`·`/jobs/new`·`/jobs/[id]/edit`) 검수 ← 다음 큰 덩어리 (Fable mock 초안 위에서)
+2. **`/terms`·`/privacy`** — 디자인만 훑고, 문구는 법률검토 후 확정
 3. **admin 2개**(`/admin/jobs`·`/admin/ingest`) — 미착수
 4. **Phase 1**: Supabase·인증(proxy)·`'use cache'` 실적용·sitemap/robots·Vercel 배포
 
@@ -184,3 +184,6 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 ### F. 포지셔닝
 
 청빙넷·기독정보넷이 유료화 못 한 자리를, **갓피플보다 더 단순·투명한 2단 상품(프리미엄·대표광고)** 으로 선점. 대형사의 복잡한 매트릭스는 1인 운영엔 부적합 — **단순성이 차별점.**
+
+### G. `/pricing` 페이지 구현 (2026-07-09)
+히어로 → **상품 3카드**(무료·프리미엄 7만/주·대표광고 15만/주, 가격 공개 + "문의하기") → **한눈에 비교** → **믿고 노출하세요**(getCoverageStats 실집계 + 하단 슬림 바 "운영자 검수·VAT 포함") → **문의**(mailto) → **FAQ**. 유료 카드의 **"노출 화면 미리보기" → 풀스크린 모달**(`components/pricing/exposure-preview.tsx`, client): PC/모바일 토글(뷰포트 기본) + 상품별 **전체 페이지 장면 캐러셀**(footer 제외). 결제는 문의 기반(라이브 결제 Phase 2). 상세 SPEC `/pricing`.
