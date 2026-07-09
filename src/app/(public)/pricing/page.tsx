@@ -121,9 +121,7 @@ function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
         {plan.cta.label}
       </Link>
       {plan.cta.primary && (
-        <div className="mt-2 text-center text-[11px] text-muted-foreground">
-          VAT 포함 · 숨은 비용 없음
-        </div>
+        <div className="mt-2 text-center text-[11px] text-muted-foreground">VAT 포함</div>
       )}
     </div>
   );
@@ -266,28 +264,24 @@ export default async function PricingPage() {
         {/* 신뢰 */}
         <section>
           <h2 className="mb-5 text-xl font-bold">믿고 노출하세요</h2>
-          <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
-            <div className="grid grid-cols-4 gap-px overflow-hidden rounded-2xl border bg-border">
-              {[
-                { v: stats.openCount, k: "청빙 공고" },
-                { v: stats.churchCount, k: "교회" },
-                { v: stats.regionCount, k: "지역" },
-                { v: stats.denominationCount, k: "교단" },
-              ].map((s) => (
-                <div key={s.k} className="bg-card p-4 text-center">
-                  <div className="text-xl font-bold tabular-nums text-primary">{s.v}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{s.k}</div>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-col justify-center gap-1.5 rounded-2xl border border-primary/15 bg-primary/5 p-4 text-sm">
-              <span>
-                <b className="text-primary">운영자 검수</b> — 모든 공고를 사람이 확인
-              </span>
-              <span>
-                <b className="text-primary">투명 가격</b> — VAT 포함, 숨은 비용 없음
-              </span>
-            </div>
+          <div className="grid grid-cols-4 gap-px overflow-hidden rounded-2xl border bg-border">
+            {[
+              { v: stats.openCount, k: "청빙 공고" },
+              { v: stats.churchCount, k: "교회" },
+              { v: stats.regionCount, k: "지역" },
+              { v: stats.denominationCount, k: "교단" },
+            ].map((s) => (
+              <div key={s.k} className="bg-card p-4 text-center">
+                <div className="text-xl font-bold tabular-nums text-primary">{s.v}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{s.k}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1.5 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm">
+            <span>
+              <b className="text-primary">✓ 모든 공고 운영자 검수</b>
+            </span>
+            <span className="text-muted-foreground">VAT 포함</span>
           </div>
         </section>
 
