@@ -2,13 +2,13 @@
 
 > **이 문서 하나로 "지금 상황" 파악.** 역할 분리: [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처·가드레일), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(인터뷰).
 >
-> **작성 시점**: 2026-07-09 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `a0d4cdd`) · **dev = prod = origin**
+> **작성 시점**: 2026-07-10 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `c517faf`) · **dev = prod = origin**
 
 ---
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. 현재 **mock 데이터로 공개 페이지를 한 페이지씩 디자인하며 스키마를 확정하는 단계**. **홈·공고목록(/jobs)·공고상세(/jobs/[id])·교회상세(/churches/[id])·소개(/about)·노출안내(/pricing) = 디자인·검수·커밋 완료.** 나머지 페이지는 **Fable(AI)가 스캐폴드한 초안이 repo에 있고(검수 전)**, 그 위에서 페이지별로 다듬는 중. 백엔드(Supabase)·인증·admin·배포는 Phase 1(아직).
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. 현재 **mock 데이터로 공개 페이지를 한 페이지씩 디자인하며 스키마를 확정하는 단계**. **홈·공고목록(/jobs)·공고상세(/jobs/[id])·교회상세(/churches/[id])·소개(/about)·노출안내(/pricing) = 디자인·검수·커밋 완료.** **로그인(/login)도 완료**(첫 인증 페이지 — 전용 미니멀 레이아웃). 나머지 페이지는 **Fable(AI)가 스캐폴드한 초안이 repo에 있고(검수 전)**, 그 위에서 페이지별로 다듬는 중. 백엔드(Supabase)·인증·admin·배포는 Phase 1(아직).
 
 ---
 
@@ -25,13 +25,13 @@
 | `/about` 소개 | ✅ | ✅ | ✅ | ✅ `f787c3d` | 정적(+실집계) |
 | `/pricing` 노출 안내 | ✅ | ✅ | ✅ | ✅ `e35fcb8`·`59c7aa6`·`a0d4cdd` | 정적(+실집계) |
 | `/terms`·`/privacy` | 🟡 | ⬜ | ⬜ | (Fable 미변경) | — (법률검토) |
-| `/login` | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
+| `/login` | ✅ | ✅ | ✅ | ✅ `c517faf` | 정적(전용 레이아웃) |
 | `/mypage` | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
 | `/jobs/new` 공고 등록 | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
 | `/jobs/[id]/edit` 수정 | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
 | `/admin/jobs`·`/admin/ingest` | ⬜ | ⬜ | ⬜ | 스캐폴드 | — |
 
-> **완료 = 홈 + /jobs + /jobs/[id] + /churches/[id] + /about + /pricing 6개.** 나머지 공개·인증은 **Fable 초안(🟡)** — 커밋돼 있어 집에서 pull하면 그대로 있음. **초안 ≠ 검수 완료** — 페이지별로 시안→검수→재디자인 필요. admin은 아직 안 건드림.
+> **완료 = 홈 + /jobs + /jobs/[id] + /churches/[id] + /about + /pricing + /login 7개.** 나머지 공개·인증은 **Fable 초안(🟡)** — 커밋돼 있어 집에서 pull하면 그대로 있음. **초안 ≠ 검수 완료** — 페이지별로 시안→검수→재디자인 필요. admin은 아직 안 건드림.
 > **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
 
 ---
@@ -107,8 +107,8 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 
 ## 7. ▶ 다음 작업 (집에서 이어서)
 
-**유저플로우 순서로 페이지별 검수·재디자인:** (공개 surface = 홈·목록·상세·교회·about·pricing 완료)
-1. **인증 4개**(`/login`·`/mypage`·`/jobs/new`·`/jobs/[id]/edit`) 검수 ← 다음 큰 덩어리 (Fable mock 초안 위에서)
+**유저플로우 순서로 페이지별 검수·재디자인:** (공개 surface + 로그인 완료)
+1. **인증 나머지 3개**(`/mypage`·`/jobs/new`·`/jobs/[id]/edit`) 검수 ← 다음 (Fable mock 초안 위에서). 로그인은 완료
 2. **`/terms`·`/privacy`** — 디자인만 훑고, 문구는 법률검토 후 확정
 3. **admin 2개**(`/admin/jobs`·`/admin/ingest`) — 미착수
 4. **Phase 1**: Supabase·인증(proxy)·`'use cache'` 실적용·sitemap/robots·Vercel 배포
