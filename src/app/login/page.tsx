@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 export const metadata: Metadata = {
   title: "로그인 / 회원가입 | 민잡",
   description: "민잡 로그인 — 카카오·네이버·구글 간편 로그인 또는 이메일로 시작하세요.",
+  robots: { index: false }, // 로그인은 검색 색인 제외(SEO 위생)
 };
 
 // 간편 로그인 프로바이더. 색은 각 브랜드 공식색(우리 테마 토큰 예외).
 // 실제 OAuth 배선(Supabase Auth)은 Phase 1 — 지금은 정적 UI.
-const OAUTH: { key: string; label: string; className: string; icon: ReactNode }[] = [
+type OAuthProvider = { key: string; label: string; className: string; icon: ReactNode };
+const OAUTH: OAuthProvider[] = [
   {
     key: "kakao",
     label: "카카오로 시작하기",
@@ -73,14 +75,14 @@ export default function LoginPage() {
 
       {/* 간편 로그인 */}
       <div className="mt-8 space-y-2.5">
-        {OAUTH.map((p) => (
+        {OAUTH.map((provider) => (
           <button
-            key={p.key}
+            key={provider.key}
             type="button"
-            className={`relative flex h-12 w-full items-center justify-center rounded-xl text-sm font-bold transition-opacity hover:opacity-90 ${p.className}`}
+            className={`relative flex h-12 w-full items-center justify-center rounded-xl text-sm font-bold transition-opacity hover:opacity-90 ${provider.className}`}
           >
-            <span className="absolute left-4 flex">{p.icon}</span>
-            {p.label}
+            <span className="absolute left-4 flex">{provider.icon}</span>
+            {provider.label}
           </button>
         ))}
       </div>
@@ -92,18 +94,31 @@ export default function LoginPage() {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      {/* 이메일 로그인 */}
-      <div className="space-y-2.5">
-        <Input type="email" aria-label="이메일" placeholder="이메일" className="h-12" />
-        <Input type="password" aria-label="비밀번호" placeholder="비밀번호" className="h-12" />
-      </div>
-      <button
-        type="button"
-        className="mt-3 h-12 w-full rounded-xl bg-primary text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
-      >
-        로그인
-      </button>
+      {/* 이메일 로그인 — Phase 1에서 onSubmit 배선(현재는 정적, 자동완성·엔터·비번관리자 위해 form 구조) */}
+      <form className="space-y-2.5">
+        <Input
+          type="email"
+          autoComplete="email"
+          aria-label="이메일"
+          placeholder="이메일"
+          className="h-12"
+        />
+        <Input
+          type="password"
+          autoComplete="current-password"
+          aria-label="비밀번호"
+          placeholder="비밀번호"
+          className="h-12"
+        />
+        <button
+          type="submit"
+          className="h-12 w-full rounded-xl bg-primary text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          로그인
+        </button>
+      </form>
 
+      {/* TODO(Phase 1): /signup·비밀번호 재설정 라우트로 교체 (현재 placeholder) */}
       <div className="mt-5 flex items-center justify-center gap-3 text-sm text-muted-foreground">
         <Link href="/login" className="font-semibold text-foreground hover:underline">
           회원가입
