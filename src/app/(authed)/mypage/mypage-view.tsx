@@ -9,7 +9,9 @@ export function MypageView({ user, allCards }: { user: CurrentUser; allCards: Jo
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-bold">마이페이지</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">{user.name ?? user.email}</p>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          {user.name ? `${user.name}님` : user.email}
+        </p>
       </header>
 
       <MinisterActivity allCards={allCards} />

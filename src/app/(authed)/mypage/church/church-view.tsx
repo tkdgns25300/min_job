@@ -126,7 +126,9 @@ function ChurchGate({ user }: { user: CurrentUser }) {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold">교회 공고 관리</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">{user.name ?? user.email}</p>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          {user.name ? `${user.name}님` : user.email}
+        </p>
       </header>
 
       {status === null && (

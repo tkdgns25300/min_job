@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getAccount, SESSION_COOKIE } from "@/lib/mock-auth";
-import { hasChurchAccess } from "@/types/domain";
+import { hasChurchAccess } from "@/lib/auth";
 import type { CurrentUser } from "@/types/domain";
 
 // 헤더 우측 계정 영역 — client island. 세션 쿠키(mj_session)를 클라이언트에서 읽어

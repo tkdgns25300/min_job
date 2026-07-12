@@ -31,20 +31,11 @@ export function MyJobRow({ job }: { job: MyJob }) {
           <Badge variant={STATUS_BADGE_VARIANT[job.status]} className="shrink-0">
             {JOB_STATUSES[job.status]}
           </Badge>
-          {/* 노출 등급 — 결제 상태의 가시화(정보). 일반은 표시 안 함 */}
-          {job.featuredTier !== "NONE" && (
-            <span
-              className={cn(
-                "shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold",
-                job.featuredTier === "HERO" ? "bg-gold/20 text-foreground" : "bg-primary/10 text-primary",
-              )}
-            >
-              {FEATURED_TIERS[job.featuredTier]}
-            </span>
-          )}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{roleLine}</p>
+        {/* 노출 등급 = 텍스트 라벨(정보, 장식 아님 — 틴트·색 배지 금지). 일반은 표시 안 함 */}
         <p className="mt-0.5 text-xs text-muted-foreground">
+          {job.featuredTier !== "NONE" && `${FEATURED_TIERS[job.featuredTier]} 노출 · `}
           {job.postedAt} 게시 · {job.deadline ? `${job.deadline} 마감` : "상시모집"}
         </p>
         {job.status === "PENDING" && (

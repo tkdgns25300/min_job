@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { ChurchView } from "./church-view";
 import { getChurchDashboard, getCurrentUser } from "@/lib/queries/users";
 import type { ChurchDashboard } from "@/lib/queries/users";
-import { hasChurchAccess } from "@/types/domain";
+import { hasChurchAccess } from "@/lib/auth";
 import type { CurrentUser } from "@/types/domain";
 
 export const metadata: Metadata = { title: "교회 공고 관리 | 민잡" };

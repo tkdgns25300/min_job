@@ -78,11 +78,6 @@ export interface CurrentUser {
   churchVerificationStatus: ChurchVerificationStatus | null; // null = 미신청
 }
 
-// 교회 view 개방 조건 — churchId 연결 + 인증 완료. (DATA §3 파생 규칙)
-export function hasChurchAccess(user: CurrentUser): boolean {
-  return user.churchId !== null && user.churchVerificationStatus === "APPROVED";
-}
-
 // 공고 상세 페이지용 — 공고 + 소속 교회 전체
 export interface JobDetail {
   job: Job;

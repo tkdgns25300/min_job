@@ -16,7 +16,7 @@ const ACCOUNTS: MockAccount[] = [
     id: "user-saebyeok",
     email: "church@test.com",
     password: "test1234",
-    name: "이도현 전도사", // 개인(사역자)이자 새벽빛교회 인증 담당자 — 단일 계정
+    name: "이도현", // 이름만(SNS 닉네임/가입 입력) — 직분은 가입 시 안 받음. 개인이자 새벽빛교회 인증 담당자
     churchId: "ch-saebyeok",
     churchName: "새벽빛교회",
     churchVerificationStatus: "APPROVED",
@@ -25,7 +25,7 @@ const ACCOUNTS: MockAccount[] = [
     id: "user-seeker",
     email: "minister@test.com",
     password: "test1234",
-    name: "김사역 전도사", // 순수 사역자(교회 인증 없음)
+    name: "박서연", // 순수 사역자(교회 인증 없음)
     churchId: null,
     churchName: null,
     churchVerificationStatus: null,
