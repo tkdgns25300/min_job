@@ -29,3 +29,11 @@ export function addRecentJob(job: RecentJob): void {
     // 저장 실패 무시 (프라이빗 모드 등)
   }
 }
+
+export function clearRecentJobs(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.recentJobs);
+  } catch {
+    // 무시
+  }
+}

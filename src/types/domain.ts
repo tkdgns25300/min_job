@@ -9,6 +9,7 @@ import type {
   JobSource,
   JobStatus,
   ChurchChannel,
+  ChurchVerificationStatus,
 } from "@/constants/domain";
 
 // 상태 enum은 constants(라벨 맵)로 이동 — 기존 import 경로 호환을 위해 재노출
@@ -65,12 +66,21 @@ export interface Job {
   ownerId?: string | null; // 소유 계정(교회 직접 등록만) — 운영자 공고는 없음. 가드레일 #2: 공고를 user에 강결합하지 않는다
 }
 
-// 로그인 사용자 — mock 단계 형태. Phase 1에서 Supabase Auth 세션 기반으로 대체.
-// TODO(design): ❓ 교회-계정 연결 모델(계정 1:1 교회? 1:N?)은 DATA.md 확정 필요 (fable.md #9)
+// 로그인 사용자 — 단일 계정 모델(DATA §3). 모든 계정은 기본 사역자(MINISTER).
+// 교회 인증(증빙+운영자 승인) 통과 시 churchId 연결 + status=APPROVED → 교회 view 개방.
+// Phase 1에서 Supabase Auth 세션 기반으로 대체.
 export interface CurrentUser {
   id: string;
   email: string;
-  churchId: string | null; // 교회 계정이면 소속 교회
+  name: string | null; // 담당자 표시명 (헤더·드롭다운)
+  churchId: string | null; // 관리하는 교회 (인증 신청/완료 시). null = 일반 사역자
+  churchName: string | null; // 표시용 (게이트·헤더) — 실구현은 join
+  churchVerificationStatus: ChurchVerificationStatus | null; // null = 미신청
+}
+
+// 교회 view 개방 조건 — churchId 연결 + 인증 완료. (DATA §3 파생 규칙)
+export function hasChurchAccess(user: CurrentUser): boolean {
+  return user.churchId !== null && user.churchVerificationStatus === "APPROVED";
 }
 
 // 공고 상세 페이지용 — 공고 + 소속 교회 전체

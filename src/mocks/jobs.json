@@ -3382,5 +3382,28 @@
     "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/167"
+  },
+  {
+    "id": "job-101",
+    "churchId": "ch-saebyeok",
+    "title": "유초등부 교육 전도사 청빙",
+    "position": "EVANGELIST",
+    "department": "CHILDREN",
+    "employmentType": "FULL_TIME",
+    "housingProvided": false,
+    "stipendMin": 190,
+    "stipendMax": 210,
+    "stipendNote": null,
+    "status": "OPEN",
+    "featuredTier": "NONE",
+    "postedAt": "2026-04-20",
+    "deadline": null,
+    "workDays": null,
+    "requirements": ["신학대학원 재학 또는 졸업", "다음세대를 향한 사명이 있는 분"],
+    "preferred": ["유초등부 사역 경험자"],
+    "requiredDocs": ["이력서", "자기소개서", "신앙고백서"],
+    "description": "새벽빛교회 유초등부를 섬길 교육 전도사를 청빙합니다. 다음세대를 향한 마음이 있는 분을 기다립니다.",
+    "source": "OPERATOR",
+    "sourceUrl": "https://www.example-board.or.kr/call/saebyeok-1"
   }
 ]

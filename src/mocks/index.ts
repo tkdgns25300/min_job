@@ -1,6 +1,6 @@
 import churchesData from "./churches.json";
 import jobsData from "./jobs.json";
-import type { Church, CurrentUser, Job, JobCard, JobDetail } from "@/types/domain";
+import type { Church, Job, JobCard, JobDetail } from "@/types/domain";
 import {
   getRepostInfo,
   groupByRole,
@@ -113,35 +113,49 @@ export function getSimilarJobs(id: string, limit = 4): JobCard[] {
   return [...byDept, ...byRegion].slice(0, limit).map(toCard);
 }
 
-// --- 인증(mock) — 실제 인증은 Phase 1 Supabase Auth. 아래는 인증 페이지 렌더용 mock 세션 ---
+// --- 인증(mock) — 세션·계정은 lib/mock-auth.ts. 아래는 마이페이지 데이터 조회. ---
 
-// mock 로그인 사용자 — 교회 계정 1개(새벽빛교회). 항상 로그인 상태로 취급한다.
-const MOCK_CURRENT_USER: CurrentUser = {
-  id: "user-saebyeok",
-  email: "office@saebyeok.example.com",
-  churchId: "ch-saebyeok",
-};
-
-export function getCurrentUser(): CurrentUser | null {
-  return MOCK_CURRENT_USER;
+// 마이페이지 관리 행 projection — 관리·표시에 필요한 필드만
+function toMyJob(j: Job) {
+  return {
+    id: j.id,
+    title: j.title,
+    status: j.status,
+    featuredTier: j.featuredTier,
+    postedAt: j.postedAt,
+    deadline: j.deadline,
+    position: j.position,
+    department: j.department,
+    employmentType: j.employmentType,
+    source: j.source,
+  };
 }
 
-/** 내가 등록한 공고 — ownerId 일치만. 운영자 등록 공고는 owner가 없어 잡히지 않는다(가드레일 #2). 최신순 */
-export function getOwnedJobs(userId: string) {
-  return jobs
-    .filter((j) => j.ownerId === userId)
-    .sort((a, b) => b.postedAt.localeCompare(a.postedAt))
-    .map(({ id, title, status, featuredTier, postedAt, deadline }) => ({
-      id,
-      title,
-      status,
-      featuredTier,
-      postedAt,
-      deadline,
-    }));
+/**
+ * 교회 관리 대시보드 — 그 교회 공고 전부(church_id 기준). 권한 = 교회 인증 멤버십(owner 일치 아님).
+ * managed = 교회 직접 등록(source=CHURCH, 편집 대상) / claimableCount = 운영자 등록(owner 없음) 건수.
+ * 운영자 등록 공고를 "가져와 관리"(클레임)하면 source가 CHURCH로 전환된다(Phase 1).
+ */
+export function getChurchDashboard(churchId: string) {
+  const church = churchById.get(churchId);
+  const churchJobs = jobs
+    .filter((j) => j.churchId === churchId)
+    .sort((a, b) => b.postedAt.localeCompare(a.postedAt));
+  return {
+    church: church
+      ? {
+          name: church.name,
+          denomination: church.denomination,
+          region: church.region,
+          city: church.city,
+        }
+      : null,
+    managed: churchJobs.filter((j) => j.source === "CHURCH").map(toMyJob),
+    claimableCount: churchJobs.filter((j) => j.source === "OPERATOR").length,
+  };
 }
 
-/** 수정 가능 공고 — 본인 소유만. 남의 공고·운영자 공고는 null(존재 노출 최소화 → notFound) */
+/** 수정 가능 공고 — mock: owner 일치. 실구현은 "그 공고 church_id의 인증 관리자"로 판정(DATA §4). 불일치 → null(notFound) */
 export function getEditableJob(id: string, userId: string): Job | null {
   const job = jobs.find((j) => j.id === id);
   return job && job.ownerId === userId ? job : null;

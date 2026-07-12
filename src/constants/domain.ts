@@ -100,6 +100,15 @@ export const JOB_SOURCES = {
 } as const;
 export type JobSource = keyof typeof JOB_SOURCES;
 
+// 교회 인증 상태 — 증빙 서류(고유번호증/사업자등록증) 제출 → 운영자 승인.
+// null(미신청) = 일반 사역자, APPROVED만 공고 게재 가능. (단일 계정 모델, DATA §2·§3)
+export const CHURCH_VERIFICATION_STATUSES = {
+  PENDING: "검수중",
+  APPROVED: "인증 완료",
+  REJECTED: "반려",
+} as const;
+export type ChurchVerificationStatus = keyof typeof CHURCH_VERIFICATION_STATUSES;
+
 // 공고 등록 폼 프리셋 — 인터뷰 반영: 사례비는 "거의 내규에 따름"(비정형 경로를 숫자와 동급으로)
 export const STIPEND_NOTE_PRESETS = ["교회 내규에 따름", "면접 후 협의"] as const;
 
