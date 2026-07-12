@@ -125,7 +125,7 @@
 - **이동**: 담당자가 다른 교회로 옮기면 기존 링크 해제(그 교회 공고는 `owner_id NULL`로 교회에 잔류·운영자 관리 가능·재공고 이력 보존) → 새 교회 재인증. 인증은 **교회별**.
 - 운영자(admin)는 공개 필드로 두지 않는다 — allowlist/flag(Phase 1). 개인정보 최소 수집.
 
-### `bookmarks` — 구직자 북마크 (Phase 2)
+### `bookmarks` — 사역자 북마크 (Phase 1 — 단일 계정이라 이동. 지금은 localStorage)
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
 | `user_id` | uuid FK→users | |
