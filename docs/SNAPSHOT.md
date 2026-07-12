@@ -2,13 +2,13 @@
 
 > **이 문서 하나로 "지금 상황" 파악.** 역할 분리: [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처·가드레일), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(인터뷰).
 >
-> **작성 시점**: 2026-07-10 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `5c51797`) · **dev = prod = origin**
+> **작성 시점**: 2026-07-12 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `3498f52`) · **dev = prod = origin**
 
 ---
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. 현재 **mock 데이터로 공개 페이지를 한 페이지씩 디자인하며 스키마를 확정하는 단계**. **홈·공고목록(/jobs)·공고상세(/jobs/[id])·교회상세(/churches/[id])·소개(/about)·노출안내(/pricing) = 디자인·검수·커밋 완료.** **로그인(/login)도 완료**(첫 인증 페이지 — 전용 미니멀 레이아웃). 나머지 페이지는 **Fable(AI)가 스캐폴드한 초안이 repo에 있고(검수 전)**, 그 위에서 페이지별로 다듬는 중. 백엔드(Supabase)·인증·admin·배포는 Phase 1(아직).
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자 view)**. **단일 계정 모델 + mock 세션 로그인(이메일/비번 테스트 계정)이 실제 동작**하고, 헤더 아바타 드롭다운으로 사역자↔교회 전환. **교회 관리(/mypage/church)는 UI만**(공고 액션·클레임·인증 승인 = Phase 1 Server Actions). 남은 것: 교회 인증 폼·공고 등록/수정(Fable 초안)·admin. 백엔드(Supabase)·배포는 Phase 1.
 
 ---
 
@@ -25,13 +25,16 @@
 | `/about` 소개 | ✅ | ✅ | ✅ | ✅ `f787c3d` | 정적(+실집계) |
 | `/pricing` 노출 안내 | ✅ | ✅ | ✅ | ✅ `e35fcb8`·`59c7aa6`·`a0d4cdd` | 정적(+실집계) |
 | `/terms`·`/privacy` | 🟡 | ⬜ | ⬜ | (Fable 미변경) | — (법률검토) |
-| `/login` | ✅ | ✅ | ✅ | ✅ `c517faf` | 정적(전용 레이아웃) |
-| `/mypage` | ✅ | 🟡 시안 | ⬜ | Fable `1073005` | 교회뷰 **설계·시안 확정, 코드 전** (§10) |
-| `/jobs/new` 공고 등록 | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
-| `/jobs/[id]/edit` 수정 | 🟡 | 🟡 | ⬜ | WIP `1073005` | mock |
+| `/login` | ✅ | ✅ | ✅ | ✅ `c517faf` | **mock 로그인 동작** `b4d5174` |
+| `/mypage` 사역자 view | ✅ | ✅ | ✅ | ✅ `f3703f8`·`3498f52` | mock(북마크·최근본 localStorage) |
+| `/mypage/church` 교회 관리 | ✅ | ✅ | 🟡 | `f3703f8` | **UI만** — 액션·클레임·인증승인 Phase 1 |
+| `/mypage/verify` 교회 인증 폼 | ⬜ | ⬜ | ⬜ | 스캐폴드 | 실 폼 미구현 |
+| `/jobs/new` 공고 등록 | 🟡 | 🟡 | ⬜ | Fable `1073005` | 인증 게이트·새 모델 미반영 |
+| `/jobs/[id]/edit` 수정 | 🟡 | 🟡 | ⬜ | Fable `1073005` | 권한 옛 모델(owner) |
+| `/terms`·`/privacy` | 🟡 | ⬜ | ⬜ | (Fable 미변경) | — (법률검토) |
 | `/admin/jobs`·`/admin/ingest` | ⬜ | ⬜ | ⬜ | 스캐폴드 | — |
 
-> **완료 = 홈 + /jobs + /jobs/[id] + /churches/[id] + /about + /pricing + /login 7개.** 나머지 공개·인증은 **Fable 초안(🟡)** — 커밋돼 있어 집에서 pull하면 그대로 있음. **초안 ≠ 검수 완료** — 페이지별로 시안→검수→재디자인 필요. admin은 아직 안 건드림.
+> **완료(mock) 8개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자). **단일 계정 + mock 세션 로그인 실동작**(테스트 계정 §5), 헤더 아바타 드롭다운 전환. **교회 쪽(/mypage/church·verify·공고 등록/수정)은 UI/초안까지 — 실 mutation은 Phase 1 Server Actions.**
 > **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
 
 ---
@@ -42,7 +45,7 @@
 
 1. **`docs/fable.md`** — 전 페이지(공개·인증·admin) **섹션+디자인 제안서**. 사람 검토용 초안. (SPEC로 흡수 후 삭제 가능)
 2. **공개+인증 페이지에 디자인 코드 적용** — Fable가 홈 디자인 언어(딥그린)로 각 페이지를 코드로 스캐폴드. 이게 지금 `🟡` 초안들.
-   - 이후 **`/jobs`·`/jobs/[id]`·`/churches/[id]`는 사람 검수로 전면 재디자인**(Fable 초안 → 확정). 나머지(about·pricing·인증)는 **Fable 초안 그대로 대기**.
+   - 이후 사람 검수로 재디자인·확정: `/jobs`·`/jobs/[id]`·`/churches/[id]`·`/about`·`/pricing`·`/login`·`/mypage`(사역자·교회). 남은 Fable 초안 = `/jobs/new`·`/jobs/[id]/edit`·`/terms`·`/privacy`·admin.
 3. **100 mock 데이터 생성** — 교회 35 + 공고 100 (아래 §5).
 
 > Fable 산출물은 **검증 통과 후에만** 채택했음(build·규칙·가드레일 스캔). Fable = 스캐폴드/드래프트, **확정은 사람 검수**.
@@ -77,21 +80,22 @@ npx prettier --check <file>   # 포맷
 ## 5. 데이터 (mock 스키마 = 확정 진행 중)
 
 ### mock 현황 (`src/mocks/`)
-- **churches.json 35개** · **jobs.json 100개** (`7475f4f`). 분포: OPEN 74 / CLOSED 22 / PENDING 4 · HERO 3 / PREMIUM 7 · OPERATOR 88(owner 없음) / CHURCH 12(owner 있음). **재공고 데모 4교회**(새소망 유초등부 3회 등) · **owned 3건**(`user-saebyeok`, mypage용).
+- **churches.json 35개** · **jobs.json 101개**. 분포: OPEN 75 / CLOSED 22 / PENDING 4 · OPERATOR(owner 없음)·CHURCH 혼합. 재공고 데모 4교회 · **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**.
+- **mock 로그인 계정**(`src/lib/mock-auth.ts`, 비번 `test1234`): `church@test.com`(이도현·새벽빛교회 인증) · `minister@test.com`(박서연·순수 사역자). 세션 = 비httpOnly 쿠키 `mj_session`.
 
 ### enum (`src/constants/domain.ts`)
-DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·**PENDING**) · FEATURED_TIERS · JOB_SOURCES · CHURCH_CHANNELS · STIPEND_NOTE_PRESETS · REQUIRED_DOC_PRESETS
+DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·**PENDING**) · FEATURED_TIERS · JOB_SOURCES · CHURCH_CHANNELS · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · STIPEND_NOTE_PRESETS · REQUIRED_DOC_PRESETS
 
 ### 타입 (`src/types/domain.ts`) — 이번에 추가된 것
 - `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)** · `ownerId?`(교회 직접 등록 소유). — 전부 additive/optional.
-- `CurrentUser`(인증 mock), `FilterDim`에 `qualification` 추가.
+- `CurrentUser` = `{id, email, name|null, churchId|null, churchName|null, churchVerificationStatus|null}` — **배타적 role 없음**(단일 계정). 권한 파생 `hasChurchAccess` = `lib/auth.ts`. `FilterDim`에 `qualification`.
 - `repost-tracking`: `RepostInfo` = `{ count, postings: RolePosting[] }` (상세 재공고 타임라인용).
 - `Church`에 **`photos?: string[]`**(첫 장=커버; DATA `church_photos` 1:N 테이블). 기존 `photoUrl` 폐기.
 
 ### seam (`src/lib/queries/*.ts`, `'use cache'`+`cacheTag`+`cacheLife("days")`)
 - `jobs.ts`: getAdJobs·getListJobs·getAllJobCards·getJobStats·getJobDetail·getRepost·getSimilarJobs·getChurchOpenJobs·getSearchSuggestions
 - `churches.ts`: getChurch·getChurchTimeline
-- `users.ts`(**Fable, 인증 mock**): getCurrentUser·getOwnedJobs·getEditableJob (`'use cache'` 없음 — 인증 의존)
+- `users.ts`(**인증 mock**): getCurrentUser(**세션 쿠키** 읽음)·getChurchDashboard(church_id 기준)·getEditableJob. (`getOwnedJobs` 폐기, `'use cache'` 없음 — 인증 의존)
 
 ---
 
@@ -107,12 +111,13 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 
 ## 7. ▶ 다음 작업 (집에서 이어서)
 
-**유저플로우 순서로 페이지별 검수·재디자인:** (공개 surface + 로그인 완료)
-1. **`/mypage` 교회 view 코드 구현** ← 다음 (단일 계정 + 인증으로 교회 view 개방 모델 확정 = §10; **SPEC/DATA/§10 반영 완료 2026-07-12**; mock 위에서, 서류 업로드·운영자 승인 실동작은 Phase 1)
-2. **`/jobs/new`(공고 등록)·`/jobs/[id]/edit`(수정)** — 교회 인증·PENDING 흐름과 연결. /mypage **구직자 view는 Phase 2**
-3. **`/terms`·`/privacy`** — 디자인만 훑고, 문구는 법률검토 후 확정
-4. **admin 2개**(`/admin/jobs`·`/admin/ingest`) — 미착수
-5. **Phase 1**: Supabase·인증(proxy)·`'use cache'` 실적용·sitemap/robots·Vercel 배포
+**유저플로우 순서 (사역자 view ✅ → 인증 → 교회 관리 → 등록):**
+1. **`/mypage/verify` 교회 인증 폼** ← 다음 (교회 선택/생성 + 증빙 업로드 + 담당자 정보. mock UI/흐름, 실 승인은 Phase 1)
+2. **`/jobs/new` 인증 게이트 + 새 모델 반영** → **`/jobs/[id]/edit`** 권한 = 교회 인증 멤버십(owner 아님)
+3. **`/mypage/church` 실동작** — 공고 액션(수정·마감·복사·삭제)·클레임·교회정보 = Phase 1 Server Actions
+4. **`/terms`·`/privacy`** 디자인 훑기(문구 법률검토 후) · **admin 2개**(`/admin/jobs`·`/admin/ingest`)
+5. **Phase 1**: Supabase·인증(proxy)·`'use cache'` 실적용·계정 북마크·sitemap/robots·배포
+> **온보딩 결정(2026-07-12)**: 가입 시 프로필 모달 없음 — 이름=SNS 닉네임/이메일 가입폼, 직분은 안 받음(인재 프로필 Phase 3), 담당자 정보=교회 인증 폼에서. 구직자 관심교회·알림 = Phase 2.
 
 **미결 TODO**(코드에 표시): 정렬 "사례비순"(인터뷰 "세상적") 유지/축소 · 필터↔URL 동기화 시점 · 부서 세분화(ROADMAP 1-7) · CLOSED 공고 JSON-LD 제거 여부 · 아이콘 제거 범위(홈·목록의 지역핀·검색 돋보기도 뺄지).
 
@@ -123,7 +128,8 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 - **Next.js 16.2.9**(App Router, `cacheComponents:true`) · **React 19** · **TS strict** · **Tailwind v4** · **shadcn/ui(Base UI)** · **Pretendard** · **Supabase 미연동**(Phase 1).
 - 색 = **딥그린+골드**(`globals.css` 토큰). 아이콘 = lucide(최소 사용).
 - 레이어: `page.tsx`=조합 / `*-view.tsx`=프레젠테이션(기본 서버) / `lib/queries/*`=데이터 seam(mock↔DB 본문만 교체) / `components/**`=재사용 UI.
-- 캐시: 홈·/jobs = `○ Static`(쿼리 `'use cache'`+`cacheTag`+`cacheLife`), 상세·인증 = `◐ PPR`(params/auth 의존 `<Suspense>`).
+- 캐시: 홈·/jobs·/about·/pricing = `○ Static`(쿼리 `'use cache'`+`cacheTag`+`cacheLife`), 상세·인증(/mypage·/mypage/church·/jobs/new·edit) = `◐ PPR`(params/auth 의존 `<Suspense>`).
+- **mock 인증**: 세션 = 비httpOnly 쿠키 `mj_session`(`lib/mock-auth`). 서버는 authed 페이지에서 `getCurrentUser`가 `cookies()` 읽음 · 헤더는 **client island**(`header-account`)에서 읽어 **공개 페이지 캐시 유지**. 권한 파생 = `lib/auth.hasChurchAccess`. 실 인증(Supabase)은 Phase 1.
 - ⚠️ `lib/supabase/*`·`lib/ingest/*`·`proxy.ts`·`actions.ts`·`types/database.ts` — CLAUDE 트리엔 있지만 **아직 없음**(Phase 1).
 
 ---
