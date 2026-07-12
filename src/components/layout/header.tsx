@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeaderAccount } from "./header-account";
 
 // 상단 nav = 구직자 탐색 기능만(=공고 하나). 소개는 footer, 노출/광고는 footer+교회 여정.
 // 딥그린 브랜드 헤더 — 홈에선 히어로와 이어지고, 다른 페이지에선 상단 브랜드 바.
@@ -23,13 +24,8 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        {/* 교회(파는 쪽) 진입 CTA는 헤더에서 제거 — 홈 사이드바 "교회 CTA 카드" + 푸터로 안내 */}
-        <Link
-          href="/login"
-          className="ml-auto text-sm text-white/70 transition-colors hover:text-white"
-        >
-          로그인
-        </Link>
+        {/* 계정 영역(로그인/아바타 드롭다운) — 세션 쿠키를 클라에서 읽는 island. 교회↔사역자 전환도 여기 */}
+        <HeaderAccount />
       </div>
     </header>
   );

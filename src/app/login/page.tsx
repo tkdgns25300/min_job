@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
+import { EmailLoginForm } from "./login-form";
 
 export const metadata: Metadata = {
   title: "로그인 / 회원가입 | 민잡",
@@ -94,29 +94,8 @@ export default function LoginPage() {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      {/* 이메일 로그인 — Phase 1에서 onSubmit 배선(현재는 정적, 자동완성·엔터·비번관리자 위해 form 구조) */}
-      <form className="space-y-2.5">
-        <Input
-          type="email"
-          autoComplete="email"
-          aria-label="이메일"
-          placeholder="이메일"
-          className="h-12"
-        />
-        <Input
-          type="password"
-          autoComplete="current-password"
-          aria-label="비밀번호"
-          placeholder="비밀번호"
-          className="h-12"
-        />
-        <button
-          type="submit"
-          className="h-12 w-full rounded-xl bg-primary text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          로그인
-        </button>
-      </form>
+      {/* 이메일 로그인 (mock 동작 — lib/mock-auth) */}
+      <EmailLoginForm />
 
       {/* TODO(Phase 1): /signup·비밀번호 재설정 라우트로 교체 (현재 placeholder) */}
       <div className="mt-5 flex items-center justify-center gap-3 text-sm text-muted-foreground">
@@ -128,6 +107,14 @@ export default function LoginPage() {
           비밀번호 찾기
         </Link>
       </div>
+
+      {/* mock 테스트 계정 안내 — 실 인증(Phase 1)에서 제거 */}
+      <p className="mt-6 rounded-lg bg-muted/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+        테스트 계정 · 비밀번호 <b className="font-semibold text-foreground">test1234</b>
+        <br />
+        교회 <b className="font-semibold text-foreground">church@test.com</b> · 사역자{" "}
+        <b className="font-semibold text-foreground">minister@test.com</b>
+      </p>
     </div>
   );
 }
