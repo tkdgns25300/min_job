@@ -108,7 +108,7 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 ## 7. ▶ 다음 작업 (집에서 이어서)
 
 **유저플로우 순서로 페이지별 검수·재디자인:** (공개 surface + 로그인 완료)
-1. **`/mypage` 교회 view 코드 구현** ← 다음 (설계·시안·계정/인증 모델 확정 = §10; mock 위에서, 서류 업로드·운영자 승인 실동작은 Phase 1) + **SPEC/DATA에 역할(users.role)·교회 인증 정식 반영**
+1. **`/mypage` 교회 view 코드 구현** ← 다음 (단일 계정 + 인증으로 교회 view 개방 모델 확정 = §10; **SPEC/DATA/§10 반영 완료 2026-07-12**; mock 위에서, 서류 업로드·운영자 승인 실동작은 Phase 1)
 2. **`/jobs/new`(공고 등록)·`/jobs/[id]/edit`(수정)** — 교회 인증·PENDING 흐름과 연결. /mypage **구직자 view는 Phase 2**
 3. **`/terms`·`/privacy`** — 디자인만 훑고, 문구는 법률검토 후 확정
 4. **admin 2개**(`/admin/jobs`·`/admin/ingest`) — 미착수
@@ -195,10 +195,13 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 
 > `/mypage`는 **설계·시안·모델 확정, 코드 미착수**. 집에서 이어서. 시안: `scratchpad/mypage-church-mockup.html`(A. 인증완료 관리뷰 / B. 인증 검수중 게이트). **아래 결정은 되돌리지 말 것.**
 
-### A. 계정/역할 모델 (그동안 미확정이던 것 — 확정)
-- **가입 시 역할 구분**(구직자 / 교회) — 채용사이트 정석(사람인·잡코리아·원티드 개인/기업 분리). "일반 가입 후 교회 업그레이드"형은 **기각**.
-- `users.role = SEEKER | CHURCH`(교회면 `church_id` 연결). nullable church_id만으론 "가입했지만 연결 전"이 애매 → **명시적 role 필드**.
-- Phase: **교회 가입·공고관리 = Phase 1**, 구직자 가입·북마크 = Phase 2.
+### A. 계정/역할 모델 (2026-07-12 refinement — 되돌리지 말 것)
+> ⚠️ 이전 "가입 시 역할 하드 분기 + `users.role = SEEKER|CHURCH`"는 **폐기**. 아래 단일 계정 모델로 대체(타 플랫폼 재조사 근거 §E + LinkedIn/원티드/Indeed 중간형).
+- **단일 계정 + 역할 view**: 계정은 하나, 모든 계정은 기본 **사역자(MINISTER)**. **교회 인증(증빙 + 운영자 승인) 통과 시** 같은 계정에 **교회(CHURCH) view** 개방. 부교역자가 구직자이면서 자기 교회 담당자인 케이스를 단일 정체성이 자연 처리.
+- **"교회 계정" 없음**: 교회는 `churches` 엔티티, 사람 계정은 관리 자격. `users`에서 `role` 제거 → **`church_id`(nullable·다대일=다중 담당자) + `church_verification_status`(PENDING/APPROVED/REJECTED)**. 파생 `hasChurchAccess = church_id && APPROVED`. **가입 시 역할 선택 불필요**.
+- **공고 소유 = 교회 엔티티**. `jobs.owner_id`는 작성자(감사)로 강등 — **편집 권한 = 그 교회 인증 관리자 여부**(owner 일치 X). 담당자 이동 시 공고는 교회 잔류(owner NULL)·클레임으로 회수. 인증은 **교회별**.
+- Phase: **로그인·교회 인증·공고관리 = Phase 1**, 사역자 view 편의(북마크·팔로우·알림) = Phase 2.
+- 상세 스키마 = DATA §2·§3(users)·§4·§9. 페이지 명세 = SPEC 사용자 모델·§B·/mypage 블록.
 
 ### B. 교회 인증 (공고 게재 게이트 — "누구나" 차단)
 - **증빙 서류 제출 + 운영자 승인**: 가입 시 **고유번호증(또는 사업자등록증)** 사본 + 교회정보 → 운영자 검토·승인 → **인증 교회만 공고 게재**. 승인 전 게재 불가(작성 게이트).
@@ -217,6 +220,6 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 - **니치**: 청빙넷·기독정보넷 = 게시판형(통합 관리 UI 없음). **갓피플만** 마이페이지+유료노출+공고 CRUD 보유(사업자등록증 증빙 필수).
 
 ### F. TODO (집에서)
-1. **SPEC/DATA 정식 반영**: `users.role`(SEEKER/CHURCH) · 교회 인증(증빙 서류 + 운영자 승인, 상태 enum) · /mypage 교회/구직자 섹션 · 로그인 온보딩(역할 선택 + 교회 서류)
-2. **/mypage 교회 view 코드 구현**(mock 위, 업로드·승인·클레임 실동작은 Phase 1)
-3. 로그인 페이지에 **역할 선택**(구직자/교회) 흐름 추가 검토(현재 로그인 UI는 방식 무관 정적)
+1. ✅ **SPEC/DATA/§10 반영 완료(2026-07-12)**: role 제거 → `church_id` + `church_verification_status` · owner_id 작성자로 강등 · 교회 인증(증빙+승인) · /mypage 상태별 섹션 (DATA §2·§3·§4·§9, SPEC 사용자 모델·§B·/mypage)
+2. **/mypage 교회 view 코드 구현**(mock 위, 업로드·승인·클레임 실동작은 Phase 1) ← 다음
+3. ~~로그인 역할 선택 흐름~~ → **불필요 확정**: 단일 계정(로그인=사역자), 교회는 인증으로 승격. 로그인 UI 변경 없음

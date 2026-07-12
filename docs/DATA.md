@@ -33,7 +33,9 @@
 | **job_status** | `jobs.status` | OPEN(기본) · CLOSED |
 | **job_source** (출처) | `jobs.source` | OPERATOR · CHURCH |
 | **featured_tier** (노출) | `jobs.featured_tier` | NONE(기본) · PREMIUM · HERO(=대표광고) |
-| **user_role** (역할) | `users.role` | SEEKER · CHURCH |
+| **church_verification_status** (교회 인증) | `users.church_verification_status` | PENDING · APPROVED · REJECTED · `NULL`(=미신청) |
+
+> **역할 enum 없음**: 모든 계정은 기본 **사역자(MINISTER)**. 교회(CHURCH)는 저장된 role이 아니라 **인증으로 열리는 view/능력**(§3 users). MINISTER/CHURCH는 화면 라벨.
 
 > **직교화 원칙**: 직분(position)·부서(department)·고용형태(employment_type)는 분리된 축. "전임전도사·교육전도사"처럼 섞지 않는다 → 모순 데이터(파트+전임) 불가능.
 > **확장**: 값 추가는 `constants/domain.ts` enum + DB `CHECK`만 수정(마이그레이션 1줄). 교단은 개신교 전 교단으로 확장 가능, 초기 거점 = 예장합동·통합.
@@ -79,7 +81,7 @@
 |---|---|---|
 | `id` | uuid PK | |
 | `church_id` | uuid FK→churches | 소속 교회 |
-| `owner_id` | uuid FK→users **NULL** | 운영자 등록=NULL (가드레일 #2) |
+| `owner_id` | uuid FK→users **NULL** | **작성자(감사용)** — 운영자 등록=NULL (가드레일 #2). ⚠️ 편집 권한 게이트 아님 → 권한 = 그 공고 `church_id`의 인증 관리자 |
 | `title` | text NOT NULL | |
 | `position` | text NOT NULL (CHECK) | 직분 |
 | `department` | text NULL (CHECK) | 부서 |
@@ -106,15 +108,22 @@
 | `updated_at` | timestamptz DEFAULT now() | Server Action에서 갱신 |
 
 ### `users` — 계정 프로필 (Supabase `auth.users`와 1:1)
+
+> **단일 계정 모델**: 모든 계정은 기본 **사역자(MINISTER)** — 배타적 role 없음. 검색·북마크·관심 교회는 누구나. **교회 인증(증빙 서류 + 운영자 승인)을 통과하면** 같은 계정에 **교회(CHURCH) view가 열려** 자기 교회 공고를 관리. "교회 전용 계정"은 없다(교회는 `churches` 엔티티, 사람 계정은 관리 자격).
+
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
 | `id` | uuid PK, FK→`auth.users.id` | |
 | `email` | text | |
-| `role` | text NOT NULL (CHECK: SEEKER/CHURCH) | 운영자는 지금 구분 안 함(별도 처리 Phase 1) |
-| `church_id` | uuid FK→churches NULL | **CHURCH 역할**의 소속 교회(가입 시 연결) |
+| `church_id` | uuid FK→churches NULL | 이 계정이 관리하는 교회(인증 후 연결). NULL=일반 사역자 |
+| `church_verification_status` | text NULL (CHECK) | PENDING/APPROVED/REJECTED. NULL=미신청 |
+| `verification_doc_path` | text NULL | 증빙(고유번호증/사업자등록증) **비공개 Storage 경로**. 보관·파기 정책은 개인정보 검토와 연결(§11) |
 | `created_at` | timestamptz DEFAULT now() | |
 
-> 운영자(admin)는 공개 role로 두지 않는다 — Phase 1에서 별도 식별(예: allowlist/flag). 개인 정보 최소 수집.
+- **교회 view 개방 조건** = `church_id IS NOT NULL AND church_verification_status='APPROVED'` → 파생 `hasChurchAccess`.
+- **다중 담당자**: 여러 user가 같은 `church_id`(다대일) → 한 교회에 담당자 여럿. 권한은 "그 교회 인증 관리자인가"로 판정(공고 owner 일치 X). Phase 1은 각자 독립 인증, 초대형은 Phase 2(→ `church_members` 조인 테이블로 승격).
+- **이동**: 담당자가 다른 교회로 옮기면 기존 링크 해제(그 교회 공고는 `owner_id NULL`로 교회에 잔류·운영자 관리 가능·재공고 이력 보존) → 새 교회 재인증. 인증은 **교회별**.
+- 운영자(admin)는 공개 필드로 두지 않는다 — allowlist/flag(Phase 1). 개인정보 최소 수집.
 
 ### `bookmarks` — 구직자 북마크 (Phase 2)
 | 컬럼 | 타입 | 비고 |
@@ -129,20 +138,20 @@
 ## 4. 관계
 
 ```
-users (SEEKER/CHURCH)
-  └─ church_id ─────────┐ (CHURCH 계정의 교회, nullable)
+users (기본 MINISTER · 인증 시 CHURCH view)
+  └─ church_id ─────────┐ (관리하는 교회, nullable · 다대일=다중 담당자)
                         ▼
-churches ──1:N──▶ church_links   (교회 채널)
+churches ──1:N──▶ church_links · church_photos  (채널·사진)
    │
    │ 1:N
    ▼
-jobs ── owner_id ─▶ users        (교회 직접 등록 공고의 소유자, nullable)
+jobs ── owner_id ─▶ users        (작성자, nullable — 권한 게이트 아님)
    ▲
    │ N:1 (bookmarks)
 users ──▶ bookmarks ◀── jobs     (Phase 2)
 ```
-- 공고 owner: **운영자 등록** = `owner_id NULL`, `source=OPERATOR` / **교회 직접 등록** = `owner_id`=교회 user, `source=CHURCH`.
-- 교회 계정: `users.church_id`로 자기 교회 연결(가입 시). 공고 등록 시 그 교회로.
+- **공고 소유 = 교회 엔티티(`jobs.church_id`)**. `owner_id`는 작성자 기록용 — **편집 권한은 그 교회의 인증 관리자 여부로 판정**(owner 일치 X). 운영자 등록=`owner_id NULL`/`source=OPERATOR`, 교회 등록=`owner_id`=작성 user/`source=CHURCH`.
+- **교회 관리 링크**: 인증 승인 시 `users.church_id` 연결(다대일 → 다중 담당자). 담당자 이동 = 링크 해제(공고는 교회 잔류·owner NULL) → 새 교회 재인증. 인증은 교회별.
 
 ---
 
@@ -193,9 +202,9 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 
 | 테이블 | SELECT | INSERT/UPDATE/DELETE |
 |---|---|---|
-| `jobs` | **public (OPEN + CLOSED 모두)** ← 재공고 이력·교회 타임라인이 마감 공고 노출 | owner(교회 자기 공고) + operator(전체, owner NULL 포함) |
-| `churches` · `church_links` | public | operator (+ 교회가 자기 교회 row) |
-| `users` | 본인 | 본인 |
+| `jobs` | **public (OPEN + CLOSED 모두)** ← 재공고 이력·교회 타임라인이 마감 공고 노출 | **인증 관리자(그 공고 church_id)** + operator(전체, owner NULL 포함) |
+| `churches` · `church_links` · `church_photos` | public | operator (+ 인증 관리자가 자기 교회 row) |
+| `users` | 본인 | 본인 (`church_verification_status`는 운영자만 승인/변경) |
 | `bookmarks` | 본인 | 본인 |
 
 - `lib/supabase/service.ts`(service-role)는 RLS 우회 — **공개 cached read 전용**(공개 공고/교회 조회).
@@ -216,4 +225,6 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 - **노출 상품 상세** — 가격·기간·묶음할인·부가세·결제 수단 (Phase 2, ROADMAP 2-3)
 - **이용약관·개인정보처리방침** — 현재 초안, **정식 운영 전 법률 검토 필수** (ROADMAP 1-6). privacy의 수집항목·위탁·보유기간은 검토 시 스키마와 정합 확인
 - **자동 결제 연동** (Phase 3)
-- **인재 DB**(`seeker_profiles`) — 구직자 프로필 (Phase 3, 개인정보 동의 필요)
+- **인재 DB**(`minister_profiles`, 계정에 1:1) — 사역자 프로필 (Phase 3, 개인정보 동의). "구직 중" opt-in 노출 + "제외 교회"(자기 교회엔 숨김)
+- **관심 교회 팔로우**(`church_follows`) + 재공고 알림 (Phase 2, 사역자 view)
+- **교회 인증 증빙 문서 보관·파기 정책** (`users.verification_doc_path` — 개인정보 검토와 함께 확정)
