@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MinisterActivity } from "./minister-activity";
+import { AccountActions } from "./account-actions";
 import { hasChurchAccess } from "@/lib/auth";
 import type { CurrentUser, JobCard } from "@/types/domain";
 
@@ -60,6 +61,12 @@ export function MypageView({ user, allCards }: { user: CurrentUser; allCards: Jo
             </span>
           </Link>
         )}
+      </section>
+
+      {/* 계정 — 로그아웃 · 회원탈퇴 (헤더 아바타는 마이페이지 직행이라 여기로 이동) */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold">계정</h2>
+        <AccountActions />
       </section>
     </div>
   );

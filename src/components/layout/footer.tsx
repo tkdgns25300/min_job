@@ -10,7 +10,7 @@ const FOOTER_LINKS = [
 // 딥그린 푸터 — 딥그린 헤더와 위아래로 맞물리는 브랜드 bookend.
 export function Footer() {
   return (
-    <footer className="bg-brand-900 text-white">
+    <footer className="mt-16 bg-brand-900 text-white sm:mt-20">
       <div className="mx-auto w-full max-w-6xl px-4 py-10">
         <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
           <div>
