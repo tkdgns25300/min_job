@@ -14,7 +14,7 @@ interface MockAccount extends CurrentUser {
 const ACCOUNTS: MockAccount[] = [
   {
     id: "user-saebyeok",
-    email: "church@test.com",
+    email: "test1@test.com", // 인증된 계정
     password: "test1234",
     name: "이도현", // 이름만(SNS 닉네임/가입 입력) — 직분은 가입 시 안 받음. 개인이자 새벽빛교회 인증 담당자
     churchId: "ch-saebyeok",
@@ -23,7 +23,7 @@ const ACCOUNTS: MockAccount[] = [
   },
   {
     id: "user-seeker",
-    email: "minister@test.com",
+    email: "test2@test.com", // 미인증 계정(순수 사역자)
     password: "test1234",
     name: "박서연", // 순수 사역자(교회 인증 없음)
     churchId: null,

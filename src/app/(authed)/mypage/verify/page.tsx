@@ -1,21 +1,73 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/queries/users";
+import { VerifyForm } from "./verify-form";
 
-export const metadata: Metadata = { title: "교회 인증 | 민잡" };
+export const metadata: Metadata = { title: "교회 인증 | 민잡", robots: { index: false } };
 
-// 스캐폴드 — 교회 선택/생성 + 증빙 서류(고유번호증/사업자등록증) 업로드 폼은 다음 단계.
-// 설계: SPEC "마이페이지 /mypage + 교회 인증" 블록. 실 업로드·승인은 Phase 1.
+// 교회 인증 — 사역자 → 교회 담당자 승격 관문. dynamic(인증 의존).
+// 실 업로드·이메일 발송·운영자 승인은 Phase 1(Server Actions). 지금은 mock UI.
 export default function ChurchVerifyPage() {
   return (
-    <div className="mx-auto w-full max-w-lg px-4 py-16 text-center sm:py-24">
-      <h1 className="text-2xl font-bold">교회 인증</h1>
-      <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
-        교회를 선택하고 고유번호증(또는 사업자등록증)을 올리면 운영자 확인 후 공고를 등록할 수 있어요.
-        인증 신청 폼은 준비 중입니다.
-      </p>
-      <Link href="/mypage" className="mt-6 inline-block text-sm text-primary hover:underline">
-        ← 마이페이지로 돌아가기
-      </Link>
+    <div className="mx-auto w-full max-w-xl px-4 py-8 sm:py-10">
+      <Suspense fallback={<div className="h-[32rem] animate-pulse rounded-2xl bg-muted" />}>
+        <VerifyContent />
+      </Suspense>
     </div>
+  );
+}
+
+async function VerifyContent() {
+  await connection();
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (user.churchVerificationStatus === "APPROVED") redirect("/mypage/church");
+
+  return (
+    <>
+      <Link
+        href="/mypage"
+        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        ← 마이페이지
+      </Link>
+      <h1 className="mt-2.5 text-2xl font-bold">교회 인증</h1>
+
+      {user.churchVerificationStatus === "PENDING" ? (
+        <div className="mt-4 rounded-2xl border border-gold/40 bg-gold/10 p-6 text-center">
+          <p className="font-bold text-gold-ink">인증 검토 중이에요</p>
+          <p className="mt-2 text-sm leading-relaxed break-keep text-muted-foreground">
+            {user.churchName ? `${user.churchName} ` : ""}인증 서류를 운영자가 확인하고
+            있어요(영업일 1~2일). 승인되면 공고를 등록·게재할 수 있어요.
+          </p>
+          <Link
+            href="/mypage"
+            className="mt-4 inline-block text-sm font-semibold text-primary hover:underline"
+          >
+            마이페이지로
+          </Link>
+        </div>
+      ) : (
+        <>
+          <p className="mt-1.5 text-sm leading-relaxed break-keep text-muted-foreground">
+            공고를 직접 등록·관리하려면 교회 인증이 필요해요. 제출하면 운영자가 확인하고(영업일
+            1~2일) 승인되면 공고를 등록할 수 있어요.
+          </p>
+          <VerifyForm defaultName={user.name ?? ""} defaultEmail={user.email} />
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            서류가 없는 교회인가요?{" "}
+            <a
+              href="mailto:contact@minjob.kr"
+              className="font-semibold text-primary hover:underline"
+            >
+              운영자에게 공고 등록 요청하기 →
+            </a>
+          </p>
+        </>
+      )}
+    </>
   );
 }

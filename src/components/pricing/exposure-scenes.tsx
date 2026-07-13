@@ -75,7 +75,7 @@ function Card({
         {tag && (
           <span
             className={`ml-1.5 rounded-[5px] px-1.5 py-px align-middle text-[9px] font-extrabold ${
-              tag === "대표광고" ? "bg-gold/30 text-[#8a6d2f]" : "bg-primary/15 text-primary"
+              tag === "대표광고" ? "bg-gold/30 text-gold-ink" : "bg-primary/15 text-primary"
             }`}
           >
             {tag}

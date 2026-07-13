@@ -112,8 +112,8 @@ export default function LoginPage() {
       <p className="mt-6 rounded-lg bg-muted/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
         테스트 계정 · 비밀번호 <b className="font-semibold text-foreground">test1234</b>
         <br />
-        교회 <b className="font-semibold text-foreground">church@test.com</b> · 사역자{" "}
-        <b className="font-semibold text-foreground">minister@test.com</b>
+        인증 교회 <b className="font-semibold text-foreground">test1@test.com</b> · 미인증{" "}
+        <b className="font-semibold text-foreground">test2@test.com</b>
       </p>
     </div>
   );

@@ -86,7 +86,7 @@ export function HeaderAccount() {
           >
             마이페이지 <span className="text-xs text-muted-foreground">사역자</span>
           </Link>
-          {canChurch && (
+          {canChurch ? (
             <Link
               href="/mypage/church"
               onClick={() => setOpen(false)}
@@ -96,6 +96,15 @@ export function HeaderAccount() {
               <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
                 인증
               </span>
+            </Link>
+          ) : (
+            <Link
+              href="/mypage/verify"
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-between px-3 py-2 text-sm hover:bg-muted"
+            >
+              교회 공고 등록
+              <span className="text-xs text-muted-foreground">인증 필요</span>
             </Link>
           )}
           <button

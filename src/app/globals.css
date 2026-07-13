@@ -32,6 +32,7 @@
   --brand-700: #234f41;
   --brand-600: #2f5d50;
   --gold: #d3ad63;
+  --gold-ink: #8a6d2f; /* 밝은 골드-틴트 배경 위 대비용 진한 골드 텍스트 */
 }
 
 @theme inline {
@@ -58,6 +59,7 @@
   --color-brand-700: var(--brand-700);
   --color-brand-600: var(--brand-600);
   --color-gold: var(--gold);
+  --color-gold-ink: var(--gold-ink);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
