@@ -107,6 +107,8 @@
 | `created_at` | timestamptz DEFAULT now() | |
 | `updated_at` | timestamptz DEFAULT now() | Server Action에서 갱신 |
 
+> ⚠️ **`/jobs/new` mock 폼이 스키마보다 앞선 필드**(Phase 1에서 반영 여부 확정): **모집 인원 · 부임 시기**(현재 `description`에 녹이거나 신규 컬럼) · **전형 절차**(text[]) · **접수 방법**(이메일·링크·전화·우편 + 접수처 — 현재 `source_url`만 존재) · **제출 서류 항목별 필수/선택**(현재 `required_docs`는 text[]로 필수여부 없음) · **사택**(폼은 제공/미제공/**협의** 3상태인데 `housing_provided`는 boolean이라 "협의" 미표현 → enum화 검토). `preferred`(우대사항)는 폼에서 제외됨(자격 요건 자유추가로 흡수). 성별·연령·결혼 컬럼은 두지 않는다(가드레일).
+
 ### `users` — 계정 프로필 (Supabase `auth.users`와 1:1)
 
 > **단일 계정 모델**: 모든 계정은 기본 **사역자(MINISTER)** — 배타적 role 없음. 검색·북마크·관심 교회는 누구나. **교회 인증(증빙 서류 + 운영자 승인)을 통과하면** 같은 계정에 **교회(CHURCH) view가 열려** 자기 교회 공고를 관리. "교회 전용 계정"은 없다(교회는 `churches` 엔티티, 사람 계정은 관리 자격).

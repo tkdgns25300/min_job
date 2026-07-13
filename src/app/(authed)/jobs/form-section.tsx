@@ -23,11 +23,13 @@ export function FormSection({
 export function Field({
   label,
   optional,
+  required,
   hint,
   children,
 }: {
   label: string;
   optional?: boolean;
+  required?: boolean;
   hint?: string;
   children: ReactNode;
 }) {
@@ -35,6 +37,7 @@ export function Field({
     <div>
       <p className="mb-1.5 text-sm font-medium">
         {label}
+        {required && <span className="ml-0.5 text-destructive">*</span>}
         {optional && <span className="ml-1.5 text-xs font-normal text-muted-foreground">선택</span>}
       </p>
       {children}

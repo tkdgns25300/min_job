@@ -112,8 +112,43 @@ export type ChurchVerificationStatus = keyof typeof CHURCH_VERIFICATION_STATUSES
 // 공고 등록 폼 프리셋 — 인터뷰 반영: 사례비는 "거의 내규에 따름"(비정형 경로를 숫자와 동급으로)
 export const STIPEND_NOTE_PRESETS = ["교회 내규에 따름", "면접 후 협의"] as const;
 
-// 제출 서류 프리셋 — 자주 쓰는 항목 원탭 추가
-export const REQUIRED_DOC_PRESETS = ["이력서", "자기소개서", "신앙고백서", "설교 영상"] as const;
+// 자격 요건 프리셋 — 청빙 공고 조사(교단 게시판 실공고) 반영. 성별·연령·결혼은 가드레일상 제외.
+export const QUALIFICATION_PRESETS = [
+  "본 교단 소속",
+  "신학대학원(M.Div) 졸업(예정)",
+  "목사 안수 (예정 포함)",
+  "해당 부서 사역 경험",
+  "운전면허 소지",
+  "교단법·사회법에 무흠한 자",
+] as const;
+
+// 제출 서류 프리셋 — 청빙 공고 조사 반영(담임용 목회계획서·설교영상·추천서 포함)
+export const REQUIRED_DOC_PRESETS = [
+  "이력서",
+  "자기소개서",
+  "가족관계증명서",
+  "목회계획서·사역계획서",
+  "설교 영상·음성",
+  "추천서",
+  "졸업·성적 증명서",
+] as const;
+
+// 사택 제공 여부 — 청빙 공고에서 사례비보다 명시율 높음
+export const HOUSING_OPTIONS = {
+  PROVIDED: "제공",
+  NONE: "미제공",
+  NEGOTIABLE: "협의",
+} as const;
+export type HousingOption = keyof typeof HOUSING_OPTIONS;
+
+// 지원(접수) 방법 — 사이트 내 지원 없음(가드레일). 교회 채널로 안내만.
+export const APPLY_METHODS = {
+  EMAIL: "이메일",
+  LINK: "홈페이지·양식 링크",
+  TEL: "전화",
+  POST: "우편·방문",
+} as const;
+export type ApplyMethod = keyof typeof APPLY_METHODS;
 
 // 교회 채널(홈페이지·SNS) — 노출 순서 = 정의 순서(홈페이지·유튜브 우선). 채널 추가는 여기에만.
 export const CHURCH_CHANNELS = {

@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "공고 수정 | 민잡" };
 // 인증 + 소유권 페이지 — dynamic. 등록 폼을 그대로 공유(초기값·카피만 다름).
 export default function JobEditPage({ params }: Params) {
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8">
       <Suspense fallback={<EditSkeleton />}>
         <EditContent params={params} />
       </Suspense>

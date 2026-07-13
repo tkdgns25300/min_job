@@ -33,9 +33,7 @@ const EMPTY_DRAFT: ChurchDraft = {
 export function ChurchSummaryCard({ church }: { church: Church }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-muted/30 p-4">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
-        {church.name.slice(0, 2)}
-      </div>
+      {/* 교회 로고/아바타 데이터 없음 — 이니셜 플레이스홀더 대신 이름·메타만 표시 */}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold">{church.name}</p>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">{churchMetaLine(church)}</p>

@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "공고 등록 | 민잡" };
 // 인증 페이지 — dynamic. 등록 무료 강조(거부감 완화, pricing과 동일 메시지).
 export default function JobNewPage() {
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8">
       <header>
         <h1 className="text-2xl font-bold">공고 등록</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
