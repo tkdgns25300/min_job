@@ -157,5 +157,6 @@ export const CHURCH_CHANNELS = {
   INSTAGRAM: "인스타그램",
   FACEBOOK: "페이스북",
   BAND: "밴드",
+  ETC: "기타",
 } as const;
 export type ChurchChannel = keyof typeof CHURCH_CHANNELS;

@@ -38,6 +38,13 @@ const CHANNEL_ICON: Record<ChurchChannel, ReactNode> = {
       <path d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.4 4.6 3.6 6L5 21l4.2-2.1c.9.2 1.8.3 2.8.3 5.5 0 10-3.6 10-8.2S17.5 3 12 3Z" />
     </svg>
   ),
+  ETC: (
+    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M9 15l6-6" />
+      <path d="M11 6l1-1a4 4 0 0 1 6 6l-1 1" />
+      <path d="M13 18l-1 1a4 4 0 0 1-6-6l1-1" />
+    </svg>
+  ),
 };
 
 // 브랜드 색(틴트 배경 + 아이콘/텍스트 색). 홈페이지는 우리 그린.
@@ -47,6 +54,7 @@ const CHANNEL_BRAND: Record<ChurchChannel, string> = {
   INSTAGRAM: "bg-[#C1275F]/10 text-[#C1275F]",
   FACEBOOK: "bg-[#1877F2]/10 text-[#1877F2]",
   BAND: "bg-[#03C75A]/12 text-[#04A94C]",
+  ETC: "bg-muted text-muted-foreground",
 };
 
 // 교회 채널 — 없으면 렌더 X. variant: plain(텍스트 칩) / brand(브랜드 색·아이콘 틴트 버튼)
