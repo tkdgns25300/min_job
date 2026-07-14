@@ -119,7 +119,7 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 1. **`/jobs/new` 인증 게이트** — 미인증 접근 시 `/mypage/verify`로(현재 안 막힘) · `/jobs/[id]/edit` 권한 = 교회 인증 멤버십(owner 아님)
 2. **`/mypage/verify` REJECTED 화면** 보강 · **`/terms`·`/privacy`** 문구(법률검토 후)
 3. **admin 3종**(`/admin`·`/admin/jobs`·`/admin/ingest` = 현재 Placeholder → 특히 `/admin/ingest` 수집→구조화 파이프라인)
-4. **기본 페이지(admin 제외) 완성 후 → NHN KCP 심사용 배포**(ROADMAP 참조, ⏳ 결정 대기 — 아래 미결)
+4. **배포 & NHN KCP 심사 선행**(ROADMAP 1-8) — admin 제외 기본 페이지 완성(+취소/환불 규정·사업자정보 표기) → JSON 더미 그대로 **배포** → KCP 가맹 신청·사이트 심사(느림, 먼저) → **승인 후 온라인 결제 연동**. 결제는 KCP 승인 후 붙임("문의 결제"는 과도기)
 5. **Phase 1**: Supabase·인증(proxy)·모든 mutation `actions.ts`·`'use cache'` 실적용·계정 북마크·sitemap/robots·배포 · DATA 스키마 반영(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처)
 > ✅ **완료(2026-07-14)**: `/mypage/church` 대시보드 재설계 + `/mypage/church/info` 신규(시안 = `docs/mockups/church-dashboard.html`).
 > **온보딩 결정(2026-07-12)**: 가입 시 프로필 모달 없음 — 이름=SNS 닉네임/이메일 가입폼, 직분은 안 받음(인재 프로필 Phase 3), 담당자 정보=교회 인증 폼에서. 구직자 관심교회·알림 = Phase 2.
