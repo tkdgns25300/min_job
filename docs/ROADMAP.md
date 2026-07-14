@@ -56,7 +56,7 @@
 
 ### 1-4. 인증 + 마이페이지 + 교회 등록 (단일 계정 모델 — DATA §3, SPEC 사용자 모델)
 - [~] 로그인 (`/login`) — **mock UI 완료**(간편 로그인 버튼 + 이메일 mock 로그인 `lib/mock-auth`, 세션=`mj_session` 쿠키). 실 Supabase Auth 배선 Phase 1. **단일 계정 = 기본 사역자**(가입 시 역할 선택 없음)
-- [~] 마이페이지 (`/mypage`) — **mock UI 완료**: 사역자 view(최근 본 + **북마크**) + 교회 view(`/mypage/church`) + 인증 진입점(하단 CTA·헤더 드롭다운, `hasChurchAccess` 분기). 서버 배선 Phase 1
+- [~] 마이페이지 (`/mypage` · `/mypage/church` · `/mypage/church/info`) — **mock UI 완료**: 사역자 view(최근 본 + **북마크** + 하단 교회 CTA·계정) + 교회 대시보드(상태 탭·노출광고 사이드바·공고 행 수정/⋯마감·삭제/재등록) + 교회 정보 관리 페이지(소개·연락처·채널·사진). 헤더 아바타=마이페이지 직행 + "교회 공고 등록" 상시 링크(`hasChurchAccess` 분기). 서버 배선·mutation Phase 1
 - [ ] **북마크** (`bookmarks` 테이블) + 공고 카드·상세 저장 버튼 — 단일 계정이라 **Phase 1로 이동**(원래 Phase 2). 지금은 localStorage로 동작
 - [~] 교회 인증 (`/mypage/verify`) — **mock UI 완료**(상태별 화면 + 4섹션 폼: 교회 선택·증빙(고유번호증/사업자등록증)·담당자(이메일 인증)·동의). 실 업로드·이메일 발송·운영자 승인 Phase 1 → 인증 교회만 게재
 - [~] 교회 공고 등록·수정 (`/jobs/new`, `/jobs/[id]/edit`) — **mock UI 완료**: 3스텝 위저드(모집 기본·처우·서류·지원·마감), 제출 서류 필수/선택·접수 방법·자격 프리셋 등(SPEC). '교회 직접 등록'. 남은 Phase 1: Server Action·**인증 게이트**·편집 권한=교회 인증 멤버십(owner 아님)·DATA 스키마 반영(모집인원·부임시기·전형절차·접수방법·서류 필수여부)
