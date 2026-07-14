@@ -8,7 +8,7 @@
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 대시보드 재설계 + `/mypage/church/info` 구현 완료(mock).** 남은 것: jobs/new 인증 게이트·admin 3종·`/terms`·`/privacy`. 백엔드(Supabase)·모든 mutation·배포는 Phase 1.
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 대시보드 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 완료(mock).** 남은 것: 법적·신뢰 페이지(`/terms`·`/privacy`·취소/환불·사업자정보)·SEO(sitemap/robots)·admin 3종. 백엔드(Supabase)·모든 mutation·배포는 Phase 1.
 
 ---
 
@@ -27,14 +27,14 @@
 | `/login` | ✅ | ✅ | ✅ | ✅ `c517faf` | **mock 로그인 동작**(test1/test2) |
 | `/mypage` 사역자 view | ✅ | ✅ | ✅ | ✅ `8ded8d3`·`84d6b36` | mock(북마크·최근본 localStorage) + 하단 교회 CTA·계정(로그아웃·회원탈퇴) |
 | `/mypage/verify` 교회 인증 폼 | ✅ | ✅ | ✅ | ✅ `8ded8d3` | mock UI(none/PENDING/APPROVED). REJECTED 화면·이메일발송 Phase 1 |
-| `/jobs/new` 공고 등록 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | **3스텝 위저드** mock. ⚠️ **인증 게이트 없음**·저장 Phase 1 |
+| `/jobs/new` 공고 등록 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | **3스텝 위저드** mock + **인증 게이트**(hasChurchAccess). 저장 Phase 1 |
 | `/jobs/[id]/edit` 수정 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | 위저드 공유(소유권 체크 有)·저장 Phase 1 |
 | `/mypage/church` 교회 관리 | ✅ | ✅ | ✅ | ✅ `e89bebd` | mock — 탭·노출광고 사이드바·공고 행(수정/⋯). mutation Phase 1 |
 | `/mypage/church/info` 교회 정보 | ✅ | ✅ | ✅ | ✅ `e89bebd` | mock — 소개·연락처·채널6·사진. 실 저장 Phase 1 |
 | `/terms`·`/privacy` | 🟡 | ⬜ | ⬜ | (Fable 미변경) | — (법률검토) |
 | `/admin`·`/admin/jobs`·`/admin/ingest` | ⬜ | ⬜ | ⬜ | 스캐폴드(Placeholder) | — |
 
-> **완료(mock) 13개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자)·/mypage/verify·/jobs/new·/jobs/[id]/edit·**/mypage/church·/mypage/church/info**. **단일 계정 + mock 세션 로그인 실동작**(계정 §5). **남은 화면 = jobs/new 인증 게이트·admin 3종(Placeholder 스텁)·/terms·/privacy.** 실 mutation·백엔드 = Phase 1.
+> **완료(mock) 13개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자)·/mypage/verify·/jobs/new·/jobs/[id]/edit·**/mypage/church·/mypage/church/info**. **단일 계정 + mock 세션 로그인 실동작**(계정 §5). **남은 것 = 법적·신뢰 페이지(/terms·/privacy·취소환불·사업자정보)·SEO(sitemap/robots)·admin 3종(Placeholder 스텁).** 실 mutation·백엔드 = Phase 1.
 > **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
 
 ---
@@ -115,13 +115,13 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 
 ## 7. ▶ 다음 작업 (집에서 이어서)
 
-**▶ 바로 다음:**
-1. **`/jobs/new` 인증 게이트** — 미인증 접근 시 `/mypage/verify`로(현재 안 막힘) · `/jobs/[id]/edit` 권한 = 교회 인증 멤버십(owner 아님)
-2. **`/mypage/verify` REJECTED 화면** 보강 · **`/terms`·`/privacy`** 문구(법률검토 후)
+**▶ 바로 다음 (KCP 심사 배포 준비 = ROADMAP 1-8 순):**
+1. **법적·신뢰 페이지** — `/terms`·`/privacy` 문구 확정(법률검토) + **취소/환불 규정** + **전자상거래법 사업자정보 표기(푸터)**. KCP 심사 선행.
+2. **SEO 파일** — `sitemap.ts`·`robots.ts` **없음**(CLAUDE.md 필수). mock 데이터로도 생성 가능
 3. **admin 3종**(`/admin`·`/admin/jobs`·`/admin/ingest` = 현재 Placeholder → 특히 `/admin/ingest` 수집→구조화 파이프라인)
-4. **배포 & NHN KCP 심사 선행**(ROADMAP 1-8) — admin 제외 기본 페이지 완성(+취소/환불 규정·사업자정보 표기) → JSON 더미 그대로 **배포** → KCP 가맹 신청·사이트 심사(느림, 먼저) → **승인 후 온라인 결제 연동**. 결제는 KCP 승인 후 붙임("문의 결제"는 과도기)
-5. **Phase 1**: Supabase·인증(proxy)·모든 mutation `actions.ts`·`'use cache'` 실적용·계정 북마크·sitemap/robots·배포 · DATA 스키마 반영(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처)
-> ✅ **완료(2026-07-14)**: `/mypage/church` 대시보드 재설계 + `/mypage/church/info` 신규(시안 = `docs/mockups/church-dashboard.html`).
+4. **배포 & NHN KCP 심사 선행**(ROADMAP 1-8) — 위 완성 후 JSON 더미 그대로 **배포** → KCP 가맹 신청·사이트 심사(느림, 먼저) → **승인 후 온라인 결제 연동**("문의 결제"는 과도기)
+5. **Phase 1**: Supabase·인증(proxy)·모든 mutation `actions.ts`·`'use cache'` 실적용·계정 북마크·배포 · `/jobs/[id]/edit` 권한=교회 인증 멤버십(owner 아님) · DATA 스키마 반영(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처)
+> ✅ **완료(2026-07-14)**: `/mypage/church` 대시보드 재설계 + `/mypage/church/info` 신규(시안 = `docs/mockups/church-dashboard.html`) · **`/jobs/new` 인증 게이트**(`hasChurchAccess` 아니면 `/mypage/verify`로).
 > **온보딩 결정(2026-07-12)**: 가입 시 프로필 모달 없음 — 이름=SNS 닉네임/이메일 가입폼, 직분은 안 받음(인재 프로필 Phase 3), 담당자 정보=교회 인증 폼에서. 구직자 관심교회·알림 = Phase 2.
 > **시안 위치**: 이번 세션 확정 시안은 `docs/mockups/`에 커밋됨(스크래치패드는 기기 간 동기화 안 됨). 그 외 과거 시안은 로컬 scratchpad에만 존재.
 
