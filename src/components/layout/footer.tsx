@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BUSINESS_INFO } from "@/constants/business";
 
 const FOOTER_LINKS = [
   { href: "/about", label: "소개" },
@@ -39,7 +40,17 @@ export function Footer() {
           </nav>
         </div>
         <hr className="my-6 border-white/10" />
-        <p className="text-xs text-white/45">© 2026 MinJob · 흩어진 사역자 청빙, 한곳에서.</p>
+        {/* 전자상거래법 사업자정보 표기 — 미정 값은 사업자 등록·통신판매업 신고 후 채움 (constants/business) */}
+        <p className="text-[11px] leading-relaxed text-white/40">
+          {[
+            BUSINESS_INFO.name || "[상호]",
+            `대표 ${BUSINESS_INFO.ceo || "[대표자]"}`,
+            `사업자등록번호 ${BUSINESS_INFO.registrationNumber}`,
+            `통신판매업 신고 ${BUSINESS_INFO.ecommerceLicense || "[신고 후]"}`,
+            BUSINESS_INFO.address || "[사업장 주소]",
+          ].join(" · ")}
+        </p>
+        <p className="mt-1 text-xs text-white/45">© 2026 MinJob · 흩어진 사역자 청빙, 한곳에서.</p>
       </div>
     </footer>
   );
