@@ -2,13 +2,13 @@
 
 > **이 문서 하나로 "지금 상황" 파악.** 역할 분리: [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처·가드레일), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(인터뷰).
 >
-> **작성 시점**: 2026-07-14 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `e89bebd` /mypage/church 재설계) · **dev = prod = origin**
+> **작성 시점**: 2026-07-14 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `150aa99` /terms·/privacy·사업자정보) · **dev = prod = origin**
 
 ---
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** 남은 것: SEO(sitemap/robots)·admin 3종 + terms/privacy 법률검토·`[ ]` 실값. 백엔드(Supabase)·모든 mutation·배포는 Phase 1.
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** 남은 것: SEO·admin 3종 + terms/privacy 법률검토·`[ ]` 실값. **다음 = Vercel 배포(mock 그대로) 먼저 → Supabase 연결(연결만) → KCP 심사**(§7). 백엔드(Supabase 실사용)·모든 mutation은 Phase 1.
 
 ---
 
@@ -115,13 +115,14 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 
 ## 7. ▶ 다음 작업 (집에서 이어서)
 
-**▶ 바로 다음 (KCP 심사 배포 준비 = ROADMAP 1-8 순):**
-1. ✅ **법적·신뢰 페이지 초안 보강 완료** — `/terms`(15조+청약철회)·`/privacy`(12항)·푸터 사업자정보(사업자번호 165-41-01202). **남은 것: 법률 검토 + `[상호·대표·주소·통신판매업 신고번호]` 실값 확정**(사업자 등록·신고 후).
-2. **SEO 파일** — `sitemap.ts`·`robots.ts` **없음**(CLAUDE.md 필수). mock 데이터로도 생성 가능 — 배포 전 마무리 권장
-3. **admin 3종**(`/admin`·`/admin/jobs`·`/admin/ingest` = 현재 Placeholder → 특히 `/admin/ingest` 수집→구조화 파이프라인)
-4. **배포 & NHN KCP 심사 선행**(ROADMAP 1-8) — 위 완성 후 JSON 더미 그대로 **배포** → KCP 가맹 신청·사이트 심사(느림, 먼저) → **승인 후 온라인 결제 연동**("문의 결제"는 과도기)
-5. **Phase 1**: Supabase·인증(proxy)·모든 mutation `actions.ts`·`'use cache'` 실적용·계정 북마크·배포 · `/jobs/[id]/edit` 권한=교회 인증 멤버십(owner 아님) · DATA 스키마 반영(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처)
-> ✅ **완료(2026-07-14)**: `/mypage/church` 대시보드 재설계 + `/mypage/church/info` 신규(시안 = `docs/mockups/church-dashboard.html`) · **`/jobs/new` 인증 게이트**(`hasChurchAccess` 아니면 `/mypage/verify`로).
+**▶ 바로 다음 (배포 → KCP 심사 착수 순서 확정, 2026-07-14):**
+1. **Vercel 배포 (지금 바로)** — 앱이 전부 mock이라 **환경변수 0개·Supabase 불필요**. 대시보드에서 repo `tkdgns25300/min_job` 연결 → **Production Branch = `prod`** → Next.js 자동 감지 → Deploy. (repo는 배포 준비 완료: 빌드 통과·`prod`=`dev`=origin)
+2. **Supabase 연결 (아무 때나, 배포와 독립)** — ⚠️ **단순 연결만**, 데이터는 **mock 유지**(=`lib/queries/*`는 계속 JSON). `@supabase/supabase-js`(+`@supabase/ssr`) 설치 + `lib/supabase/{server,service,session}.ts` 3파일 + `.env.example`. 프로젝트 생성(서울 리전)·키 입력·Vercel env는 사용자 대시보드 작업. 연결 후에도 실제 사용(Auth·DB 조회)은 Phase 1.
+3. **NHN KCP 가맹 신청 + 사이트 심사** — 배포 URL 확보 후. 심사 요건(실 결제 flow 필요 여부) 확인 · `[상호·대표·주소·통신판매업 신고번호]` 실값은 사업자 등록·신고 후.
+4. **나중 (실데이터·정식 오픈 즈음)**: **SEO**(`sitemap.ts`·`robots.ts` — 지금은 mock이라 오히려 색인 방지가 맞아 defer, 배포 시 필요하면 noindex 1줄만) · **admin 3종**(`/admin/ingest` 수집→구조화 파이프라인) · terms/privacy 법률 검토·실값.
+5. **Phase 1 (본체)**: Supabase 실사용(인증 proxy·mutation `actions.ts`·`'use cache'` 실적용·`lib/queries` mock→DB) · 계정 북마크 · `/jobs/[id]/edit` 권한=교회 인증 멤버십 · **DATA 정합 패스**(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처) · KCP 승인 후 온라인 결제 연동.
+> ✅ **완료(2026-07-14)**: `/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터).
+> **결정(2026-07-14)**: 배포 먼저(mock) → Supabase는 "연결만"(데이터 mock 유지) → SEO는 나중. Supabase/배포는 서로 독립이라 DB 먼저 할 필요 없음.
 > **온보딩 결정(2026-07-12)**: 가입 시 프로필 모달 없음 — 이름=SNS 닉네임/이메일 가입폼, 직분은 안 받음(인재 프로필 Phase 3), 담당자 정보=교회 인증 폼에서. 구직자 관심교회·알림 = Phase 2.
 > **시안 위치**: 이번 세션 확정 시안은 `docs/mockups/`에 커밋됨(스크래치패드는 기기 간 동기화 안 됨). 그 외 과거 시안은 로컬 scratchpad에만 존재.
 
