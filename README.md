@@ -2,7 +2,9 @@
 
 흩어진 **교회 사역자 청빙 공고**(부목사·전도사 중심, 담임목사 포함)를 한곳에 모아, 구조화된 정보로 교단·지역·직분·부서로 검색·비교하는 채용 플랫폼.
 
-> 문서 — 아키텍처·컨벤션·가드레일 [`CLAUDE.md`](./CLAUDE.md) · 기획 [`docs/SPEC.md`](./docs/SPEC.md) · 데이터 [`docs/DATA.md`](./docs/DATA.md) · 작업 [`docs/ROADMAP.md`](./docs/ROADMAP.md)
+> 문서 — 아키텍처·컨벤션·가드레일 [`CLAUDE.md`](./CLAUDE.md) · 기획 [`docs/SPEC.md`](./docs/SPEC.md) · 데이터 [`docs/DATA.md`](./docs/DATA.md) · 작업 [`docs/ROADMAP.md`](./docs/ROADMAP.md) · 시점 [`docs/SNAPSHOT.md`](./docs/SNAPSHOT.md)
+>
+> 🔗 **배포(mock)**: https://min-job.vercel.app/ — NHN KCP 심사용, **JSON 더미 데이터**로 동작(실 DB·백엔드는 Phase 1). 정식 오픈 전까지 검색 색인 제외 예정.
 
 ## Stack
 
@@ -34,7 +36,7 @@ npm run dev        # http://localhost:3000
 ## 환경 변수
 
 - **`.env` 단일 파일만 사용** (gitignored). `.env.local`·`.env.production` 등은 만들지 않는다.
-- 골격 단계라 현재 필요한 시크릿 없음. **Supabase 연동(Phase 1)** 시 `.env`에 추가:
+- 현재 배포는 **시크릿 없이 동작**(mock 데이터). **Supabase 프로젝트는 생성됨**(연결 배선·키 입력은 다음 단계). 연결 시 `.env`(+Vercel env)에 추가:
   ```
   NEXT_PUBLIC_SUPABASE_URL=
   NEXT_PUBLIC_SUPABASE_ANON_KEY=
