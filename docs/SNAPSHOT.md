@@ -8,7 +8,7 @@
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** 남은 것: SEO·admin 3종 + terms/privacy 법률검토·`[ ]` 실값. **✅ Vercel 배포됨(https://min-job.vercel.app/, mock) · Supabase 클라이언트 배선 완료(키 입력만 남음, 데이터 mock 유지)** → 다음 = 키 입력 → KCP 심사(§7). 백엔드(Supabase 실사용)·모든 mutation은 Phase 1.
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** 남은 것: SEO·admin 3종 + terms/privacy 법률검토·`[ ]` 실값. **✅ Vercel 배포됨(https://min-job.vercel.app/, mock) · Supabase 연결 완료·검증됨(키 입력·ping OK, 데이터는 mock 유지)** → 다음 = KCP 심사 또는 Phase 1(쿼리 mock→DB)(§7). 백엔드(Supabase 실사용)·모든 mutation은 Phase 1.
 
 ---
 
@@ -117,7 +117,7 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 
 **▶ 바로 다음 (배포 → KCP 심사 착수 순서):**
 1. ✅ **Vercel 배포 완료 (2026-07-18)** — **https://min-job.vercel.app/** (mock 데이터·환경변수 0개). 커스텀 도메인 연결은 이후.
-2. **Supabase 연결** — ✅ **프로젝트 생성 + 클라이언트 배선 완료(2026-07-19)**: `@supabase/supabase-js`+`@supabase/ssr` 설치, `lib/supabase/{server,service,session}.ts` 3파일(CLAUDE.md 규격, 공식 문서 검증), `.env.example`. **남은 것: `.env`·Vercel env에 실제 키 입력**(대시보드 — `NEXT_PUBLIC_SUPABASE_URL`·`_PUBLISHABLE_KEY`·`SUPABASE_SECRET_KEY`). ⚠️ **배선만** — `lib/queries/*`는 계속 mock(JSON), 실제 사용(Auth·DB 조회)은 Phase 1.
+2. ✅ **Supabase 연결 완료·검증됨(2026-07-19)** — 클라이언트 배선(`lib/supabase/{server,service,session}.ts`, `@supabase/ssr`+`supabase-js`, 공식 문서 검증) + 키 입력(로컬 `.env` + Vercel env: `NEXT_PUBLIC_SUPABASE_URL`·`_PUBLISHABLE_KEY`·`SUPABASE_SECRET_KEY`) + **임시 ping 라우트로 연결 검증**(PostgREST 도달·인증 OK, `PGRST205`=스키마 비어 있음=정상, 검증 후 라우트 삭제). ⚠️ **연결만** — `lib/queries/*`는 계속 mock(JSON), 실 DB 사용(Auth·조회·마이그레이션)은 Phase 1.
 3. **NHN KCP 가맹 신청 + 사이트 심사** — 배포 URL 확보 후. 심사 요건(실 결제 flow 필요 여부) 확인 · `[상호·대표·주소·통신판매업 신고번호]` 실값은 사업자 등록·신고 후.
 4. **나중 (실데이터·정식 오픈 즈음)**: **SEO**(`sitemap.ts`·`robots.ts` — 지금은 mock이라 오히려 색인 방지가 맞아 defer, 배포 시 필요하면 noindex 1줄만) · **admin 3종**(`/admin/ingest` 수집→구조화 파이프라인) · terms/privacy 법률 검토·실값.
 5. **Phase 1 (본체)**: Supabase 실사용(인증 proxy·mutation `actions.ts`·`'use cache'` 실적용·`lib/queries` mock→DB) · 계정 북마크 · `/jobs/[id]/edit` 권한=교회 인증 멤버십 · **DATA 정합 패스**(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처) · KCP 승인 후 온라인 결제 연동.
