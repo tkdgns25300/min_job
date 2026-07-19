@@ -35,14 +35,14 @@ npm run dev        # http://localhost:3000
 
 ## 환경 변수
 
-- **`.env` 단일 파일만 사용** (gitignored). `.env.local`·`.env.production` 등은 만들지 않는다.
-- 현재 배포는 **시크릿 없이 동작**(mock 데이터). **Supabase 프로젝트는 생성됨**(연결 배선·키 입력은 다음 단계). 연결 시 `.env`(+Vercel env)에 추가:
+- **`.env` 단일 파일만 사용** (gitignored). 템플릿은 [`.env.example`](./.env.example) — `cp .env.example .env` 후 값 채우기.
+- 현재 배포는 **시크릿 없이 동작**(mock 데이터). **Supabase 클라이언트는 배선됨**(`lib/supabase/*`)이나 아직 **미사용**(데이터 mock). 연결하려면 `.env`(+Vercel env)에 아래를 채운다(값 = Supabase 대시보드 > Settings > API):
   ```
   NEXT_PUBLIC_SUPABASE_URL=
-  NEXT_PUBLIC_SUPABASE_ANON_KEY=
-  SUPABASE_SERVICE_ROLE_KEY=
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=   # 공개 키(RLS 적용) — 구 anon
+  SUPABASE_SECRET_KEY=                    # 비밀 키(RLS 우회) — 구 service_role, 서버 전용
   ```
-  (`NEXT_PUBLIC_*`만 클라이언트 노출. `SUPABASE_SERVICE_ROLE_KEY`는 서버 전용 시크릿.)
+  (`NEXT_PUBLIC_*`만 클라이언트 노출. `SUPABASE_SECRET_KEY`는 절대 노출 금지.)
 - 배포(Vercel)는 대시보드 env 사용. 로컬로 당길 땐 `vercel env pull .env`.
 
 ## 구조 / 컨벤션

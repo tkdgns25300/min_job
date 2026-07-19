@@ -153,15 +153,19 @@ supabase/migrations/               DB 마이그레이션 SQL
 
 ## Supabase Client 사용 규칙
 
+**접근 방식**: **Supabase 클라이언트(PostgREST) + RLS** 만 쓴다. ORM(Prisma·Drizzle)·직접 SQL(pg driver) **안 씀** — DB는 저장 전용, 로직은 Server Action/query, 보안은 RLS로 DB에 박는다(우리 규모엔 PostgREST + `'use cache'`로 충분).
+
 DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. 브라우저 클라이언트(`createBrowserClient`) 절대 X.
 
-| 파일 | 키 | 쿠키 | 사용처 |
-|---|---|---|---|
-| `lib/supabase/server.ts` | anon | ✅ (세션) | `actions.ts`(모든 mutation), dynamic 페이지 |
-| `lib/supabase/service.ts` | service-role | ❌ | `lib/queries/*.ts`(cached read만) |
-| `lib/supabase/session.ts` | anon | ✅ | `proxy.ts` 세션 refresh용 (단독 사용 X) |
+| 파일 | 패키지·생성 | 키 | 쿠키 | 사용처 |
+|---|---|---|---|---|
+| `lib/supabase/server.ts` | `@supabase/ssr` `createServerClient` | publishable | ✅ (세션) | `actions.ts`(모든 mutation), dynamic 페이지 |
+| `lib/supabase/service.ts` | `@supabase/supabase-js` `createClient` | **secret** | ❌ | `lib/queries/*.ts`(cached read만) |
+| `lib/supabase/session.ts` | `@supabase/ssr` `createServerClient` | publishable | ✅ | `proxy.ts` 세션 refresh용 (단독 사용 X) |
 
-`service.ts`가 RLS를 우회하므로 cached read(공개 공고 조회) 전용으로만. 인증·권한이 필요한 작업은 반드시 `server.ts`.
+- 키: **publishable**(구 anon, RLS 적용, `NEXT_PUBLIC_*`) / **secret**(구 service_role, RLS 우회, 서버 전용). env 이름은 `.env.example` 참조.
+- `service.ts`가 RLS를 우회하므로 cached read(공개 공고 조회) 전용으로만. 인증·권한이 필요한 작업은 반드시 `server.ts`.
+- ⚠️ 현재는 **배선만** — `lib/queries/*`는 아직 mock(JSON). 실제 DB 사용 전환은 Phase 1(쿼리 본문만 교체, 시그니처 불변).
 
 ## `'use cache'` 제약 (필수 준수)
 
