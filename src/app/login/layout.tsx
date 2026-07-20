@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BUSINESS_INFO } from "@/constants/business";
 
 // 로그인 전용 미니멀 레이아웃 — 풀 Header/Footer 대신 로고 상단바 + 최소 푸터.
 // 로그인은 "집중" 페이지라 이탈 요소(nav)를 걷어냄. 신뢰는 로고 + 약관/개인정보 링크로 확보.
@@ -26,7 +27,10 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
             <Link href="/privacy" className="transition-colors hover:text-foreground">
               개인정보처리방침
             </Link>
-            <a href="mailto:contact@minjob.kr" className="transition-colors hover:text-foreground">
+            <a
+              href={`mailto:${BUSINESS_INFO.email}`}
+              className="transition-colors hover:text-foreground"
+            >
               문의
             </a>
           </nav>

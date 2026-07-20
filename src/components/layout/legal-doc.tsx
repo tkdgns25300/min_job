@@ -1,16 +1,21 @@
 export type LegalSection = { title: string; body: string | string[] };
 
-// 법적 문서(약관·개인정보처리방침) 공용 셸 — 제목 + 초안 고지 + 조항 렌더.
-// ⚠️ 내용은 각 페이지의 SECTIONS(초안). 정식 운영 전 법률 검토 필수 — ROADMAP 1-6.
-export function LegalDoc({ title, sections }: { title: string; sections: LegalSection[] }) {
+// 법적 문서(약관·개인정보처리방침) 공용 셸 — 제목 + 시행일 + 조항 렌더.
+// ⚠️ 사용자에게는 확정본으로 노출하되, 정식 운영 전 법률 재검토 예정 — ROADMAP 1-6.
+export function LegalDoc({
+  title,
+  sections,
+  effectiveDate,
+}: {
+  title: string;
+  sections: LegalSection[];
+  effectiveDate?: string;
+}) {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-12">
-      <header className="space-y-3">
+      <header className="space-y-2">
         <h1 className="text-2xl font-bold">{title}</h1>
-        <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-          본 문서는 초안입니다. 서비스 정식 운영 전 법률 검토를 거쳐 확정되며, 시행일은 추후
-          공지합니다.
-        </p>
+        {effectiveDate && <p className="text-sm text-muted-foreground">시행일 {effectiveDate}</p>}
       </header>
 
       <div className="space-y-6">

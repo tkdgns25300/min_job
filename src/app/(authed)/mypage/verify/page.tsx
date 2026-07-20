@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/queries/users";
+import { BUSINESS_INFO } from "@/constants/business";
 import { VerifyForm } from "./verify-form";
 
 export const metadata: Metadata = { title: "교회 인증 | 민잡", robots: { index: false } };
@@ -60,7 +61,7 @@ async function VerifyContent() {
           <p className="mt-4 text-center text-xs text-muted-foreground">
             서류가 없는 교회인가요?{" "}
             <a
-              href="mailto:contact@minjob.kr"
+              href={`mailto:${BUSINESS_INFO.email}`}
               className="font-semibold text-primary hover:underline"
             >
               운영자에게 공고 등록 요청하기 →

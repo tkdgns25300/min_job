@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { LegalDoc, type LegalSection } from "@/components/layout/legal-doc";
+import { BUSINESS_INFO, LEGAL_EFFECTIVE_DATE } from "@/constants/business";
 
 export const metadata: Metadata = {
   title: "개인정보처리방침 | 민잡",
   description: "민잡 개인정보처리방침.",
 };
 
-// ⚠️ 초안(draft). 서비스 정식 운영 전 반드시 법률 검토 후 확정 — ROADMAP 1-6.
-// [ ] 표시 값(보호책임자·수탁사·시행일 등)은 확정 시 채운다. 주민번호·민감정보·만 14세 미만은 수집하지 않는다.
+// ⚠️ 사용자에게는 확정본으로 노출. 정식 운영 전 법률 재검토 예정 — ROADMAP 1-6.
+// 설계 원칙: 주민번호·민감정보·만 14세 미만은 수집하지 않는다.
 const SECTIONS: LegalSection[] = [
   {
     title: "1. 수집하는 개인정보 항목",
@@ -28,7 +29,7 @@ const SECTIONS: LegalSection[] = [
     body: [
       "원칙적으로 회원 탈퇴 시 또는 수집·이용 목적 달성 시 지체 없이 파기합니다.",
       "다만 관련 법령이 정한 경우 해당 기간 동안 보관합니다. (예: 「전자상거래 등에서의 소비자보호에 관한 법률」에 따른 계약·청약철회 기록 5년, 대금결제 기록 5년, 소비자 불만·분쟁 처리 기록 3년 / 「통신비밀보호법」에 따른 접속 로그 3개월)",
-      "교회 인증 증빙 서류의 보관·파기 기준은 개인정보 검토와 함께 확정합니다. [보관 기간 확정 필요]",
+      "교회 인증 증빙 서류(고유번호증·사업자등록증 등)는 인증 확인 목적으로만 이용하며, 인증 처리 완료 후 지체 없이 파기합니다.",
     ],
   },
   {
@@ -61,9 +62,9 @@ const SECTIONS: LegalSection[] = [
   {
     title: "10. 개인정보 보호책임자",
     body: [
-      "성명: [성명]",
-      "직책: [직책]",
-      "연락처: [contact@minjob.kr]",
+      `성명: ${BUSINESS_INFO.ceo}`,
+      "직책: 대표",
+      `연락처: ${BUSINESS_INFO.email}`,
       "개인정보 관련 문의·불만·피해 구제는 위 연락처로 문의해 주세요.",
     ],
   },
@@ -73,10 +74,12 @@ const SECTIONS: LegalSection[] = [
   },
   {
     title: "12. 개인정보처리방침의 변경",
-    body: "본 방침의 내용이 변경되는 경우 시행일과 변경 사항을 서비스 화면을 통해 공지합니다. 본 방침의 시행일은 [YYYY-MM-DD]입니다.",
+    body: `본 방침의 내용이 변경되는 경우 시행일과 변경 사항을 서비스 화면을 통해 공지합니다. 본 방침은 ${LEGAL_EFFECTIVE_DATE}부터 시행합니다.`,
   },
 ];
 
 export default function PrivacyPage() {
-  return <LegalDoc title="개인정보처리방침" sections={SECTIONS} />;
+  return (
+    <LegalDoc title="개인정보처리방침" sections={SECTIONS} effectiveDate={LEGAL_EFFECTIVE_DATE} />
+  );
 }

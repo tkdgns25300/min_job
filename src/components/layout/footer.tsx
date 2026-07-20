@@ -30,9 +30,8 @@ export function Footer() {
                 {link.label}
               </Link>
             ))}
-            {/* 문의: Phase 1에서 정식 메일 주소로 확정 (현재 placeholder) */}
             <a
-              href="mailto:contact@minjob.kr"
+              href={`mailto:${BUSINESS_INFO.email}`}
               className="text-sm text-white/70 transition-colors hover:text-white"
             >
               문의
@@ -40,14 +39,17 @@ export function Footer() {
           </nav>
         </div>
         <hr className="my-6 border-white/10" />
-        {/* 전자상거래법 사업자정보 표기 — 미정 값은 사업자 등록·통신판매업 신고 후 채움 (constants/business) */}
+        {/* 전자상거래법 사업자정보 표기 — 통신판매업 미신고 시 해당 항목 생략 (constants/business) */}
         <p className="text-[11px] leading-relaxed text-white/40">
           {[
-            BUSINESS_INFO.name || "[상호]",
-            `대표 ${BUSINESS_INFO.ceo || "[대표자]"}`,
+            BUSINESS_INFO.name,
+            `대표 ${BUSINESS_INFO.ceo}`,
             `사업자등록번호 ${BUSINESS_INFO.registrationNumber}`,
-            `통신판매업 신고 ${BUSINESS_INFO.ecommerceLicense || "[신고 후]"}`,
-            BUSINESS_INFO.address || "[사업장 주소]",
+            ...(BUSINESS_INFO.ecommerceLicense
+              ? [`통신판매업 신고 ${BUSINESS_INFO.ecommerceLicense}`]
+              : []),
+            BUSINESS_INFO.address,
+            `전화 ${BUSINESS_INFO.phone}`,
           ].join(" · ")}
         </p>
         <p className="mt-1 text-xs text-white/45">© 2026 MinJob · 흩어진 사역자 청빙, 한곳에서.</p>

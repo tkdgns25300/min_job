@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCoverageStats } from "@/lib/queries/jobs";
+import { BUSINESS_INFO } from "@/constants/business";
 
 export const metadata: Metadata = {
   title: "소개 | 민잡",
@@ -155,10 +156,10 @@ export default async function AboutPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               서비스 관련 문의는{" "}
               <a
-                href="mailto:contact@minjob.kr"
+                href={`mailto:${BUSINESS_INFO.email}`}
                 className="font-medium text-foreground hover:underline"
               >
-                contact@minjob.kr
+                {BUSINESS_INFO.email}
               </a>{" "}
               로 보내 주세요.
             </p>

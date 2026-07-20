@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
 import { LegalDoc, type LegalSection } from "@/components/layout/legal-doc";
-import { businessInfoLines } from "@/constants/business";
+import { businessInfoLines, LEGAL_EFFECTIVE_DATE } from "@/constants/business";
 
 export const metadata: Metadata = {
   title: "이용약관 | 민잡",
   description: "민잡 서비스 이용약관.",
 };
 
-// ⚠️ 초안(draft). 서비스 정식 운영 전 반드시 법률 검토 후 확정 — ROADMAP 1-6.
-// [ ] 표시 값(상호·사업자등록번호·시행일 등)은 사업자 등록·법률 검토 시 확정한다.
+// ⚠️ 사용자에게는 확정본으로 노출. 정식 운영 전 법률 재검토 예정 — ROADMAP 1-6.
 const SECTIONS: LegalSection[] = [
   {
     title: "제1조 (목적)",
-    body: '본 약관은 [상호](이하 "회사")가 운영하는 ‘민잡’(이하 "서비스")이 제공하는 사역자 청빙 공고의 열람·등록·관리 및 부가 서비스의 이용에 관하여, 회사와 이용자 간의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.',
+    body: '본 약관은 훈테크(이하 "회사")가 운영하는 ‘민잡’(이하 "서비스")이 제공하는 사역자 청빙 공고의 열람·등록·관리 및 부가 서비스의 이용에 관하여, 회사와 이용자 간의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.',
   },
   {
     title: "제2조 (정의)",
@@ -69,7 +68,7 @@ const SECTIONS: LegalSection[] = [
     body: [
       "유료 노출 상품에 대하여 이용자는 「전자상거래 등에서의 소비자보호에 관한 법률」이 정하는 바에 따라 청약철회를 할 수 있습니다.",
       "다만 공고의 노출(게재)이 이미 개시되는 등 서비스 제공이 시작된 경우에는 관련 법령이 허용하는 범위에서 청약철회가 제한될 수 있습니다.",
-      "환불 기준·방법(게재 개시 전 전액 환불, 게재 중 잔여 기간에 대한 일할 환불 등)은 결제 화면 및 회사가 정하는 기준에 따르며, 세부 기준은 정식 운영 시 확정·고지합니다. [환불 세부 기준 확정 필요]",
+      "환불 기준·방법(게재 개시 전 전액 환불, 게재 중 잔여 기간에 대한 일할 환불 등)은 결제 화면 및 회사가 정하는 기준에 따르며, 세부 기준은 정식 운영 시 확정·고지합니다.",
     ],
   },
   {
@@ -90,17 +89,14 @@ const SECTIONS: LegalSection[] = [
   },
   {
     title: "제15조 (사업자 정보)",
-    body: [
-      ...businessInfoLines(),
-      "(미기재 항목은 사업자 등록·통신판매업 신고 시 확정하여 게재합니다.)",
-    ],
+    body: businessInfoLines(),
   },
   {
     title: "부칙",
-    body: "본 약관의 시행일은 [YYYY-MM-DD]이며, 서비스 정식 운영 시 공지합니다.",
+    body: `본 약관은 ${LEGAL_EFFECTIVE_DATE}부터 시행합니다.`,
   },
 ];
 
 export default function TermsPage() {
-  return <LegalDoc title="이용약관" sections={SECTIONS} />;
+  return <LegalDoc title="이용약관" sections={SECTIONS} effectiveDate={LEGAL_EFFECTIVE_DATE} />;
 }
