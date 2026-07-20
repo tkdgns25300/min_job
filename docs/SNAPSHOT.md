@@ -2,13 +2,13 @@
 
 > **이 문서 하나로 "지금 상황" 파악.** 역할 분리: [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처·가드레일), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(인터뷰).
 >
-> **작성 시점**: 2026-07-20 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `5764fdc` PortOne 노출 결제 flow) · **dev = prod = origin** · 🔗 배포(mock): https://min-job.vercel.app/
+> **작성 시점**: 2026-07-20 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `0955d14` 사업자정보·약관 확정본·이메일 단일화) · **dev = prod = origin** · 🔗 배포(mock): https://min-job.vercel.app/ · 🔗 도메인: https://www.minjob.co.kr (연결됨)
 
 ---
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** 남은 것: SEO·admin 3종 + terms/privacy 법률검토·`[ ]` 실값. **✅ Vercel 배포됨(https://min-job.vercel.app/, mock) · Supabase 연결 완료·검증됨(키 입력·ping OK, 데이터는 mock 유지) · PortOne 테스트 결제 검증됨** → 다음 = KCP 심사(가맹 심사 진행중) 또는 Phase 1(쿼리 mock→DB)(§7). 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용은 Phase 1.
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** 남은 것: SEO·admin 3종 + terms/privacy 법률검토. **✅ Vercel 배포됨(https://min-job.vercel.app/, mock) · Supabase 연결 완료 · PortOne 테스트 결제 검증됨 · 도메인 `www.minjob.co.kr` 연결 · NHN KCP 전자결제 신청 제출(사전점검 6항목 통과, 가맹 심사 진행중, PG=KCP 일반결제 단일)** → 다음 = KCP 승인 대기 + admin 3종/Phase 1 병행(§7). 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용은 Phase 1.
 
 ---
 
@@ -120,8 +120,8 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 1. ✅ **Vercel 배포 완료 (2026-07-18)** — **https://min-job.vercel.app/** (mock 데이터·환경변수 0개). 커스텀 도메인 연결은 이후.
 2. ✅ **Supabase 연결 완료·검증됨(2026-07-19)** — 클라이언트 배선(`lib/supabase/{server,service,session}.ts`, `@supabase/ssr`+`supabase-js`, 공식 문서 검증) + 키 입력(로컬 `.env` + Vercel env: `NEXT_PUBLIC_SUPABASE_URL`·`_PUBLISHABLE_KEY`·`SUPABASE_SECRET_KEY`) + **임시 ping 라우트로 연결 검증**(PostgREST 도달·인증 OK, `PGRST205`=스키마 비어 있음=정상, 검증 후 라우트 삭제). ⚠️ **연결만** — `lib/queries/*`는 계속 mock(JSON), 실 DB 사용(Auth·조회·마이그레이션)은 Phase 1.
 3. ✅ **PortOne 노출 결제 flow 구현·검증(2026-07-20, `5764fdc`)** — `/mypage/church/promote`(인증 게이트) → `promote-checkout.tsx`(client)에서 **PortOne V2 `requestPayment`**(KCP CARD 채널) 결제창 → 성공 시 `POST /api/payments/complete`가 **PortOne API로 실결제 조회 + 금액 서버 재계산(tier·weeks, 클라 불신) + `status===PAID` 대조**. 가격 단일 소스 = `EXPOSURE_PRODUCTS`/`exposurePrice`(constants). **KCP 테스트 결제 성공 확인.** env: `NEXT_PUBLIC_PORTONE_STORE_ID`·`_CHANNEL_KEY`·`PORTONE_API_SECRET`. ⚠️ paymentId 38자(KCP 40자 제한). ⚠️ **모바일 redirect 복귀 미처리** — 데스크톱 팝업(Promise)만 완료 화면·서버검증. 모바일 `?paymentId=` 복귀 처리 = Phase 1. 실 노출 적용(featured_tier·featured_until 세팅)·주문 저장도 Phase 1.
-4. **NHN KCP 가맹 심사(진행중)** — 기존 상점(같은 사업자) 가맹 심사 진행중. 실결제(온라인 승인)엔 **일반결제 계약** 필요(현재 계약취소 상태 → 재계약). `[상호·대표·주소·통신판매업 신고번호]` 실값은 사업자 등록·신고 후.
-5. **나중 (실데이터·정식 오픈 즈음)**: **SEO**(`sitemap.ts`·`robots.ts` — 지금은 mock이라 오히려 색인 방지가 맞아 defer, 배포 시 필요하면 noindex 1줄만) · **admin 3종**(`/admin/ingest` 수집→구조화 파이프라인) · terms/privacy 법률 검토·실값.
+4. ✅ **도메인 연결 + NHN KCP 전자결제 신청 제출(2026-07-20)** — 도메인 `minjob.co.kr` → Vercel(hosting.kr DNS: A `@`→216.198.79.1 + CNAME `www`→Vercel 전용, 대표=`www.minjob.co.kr`, SSL 자동). PortOne 전자결제 신청 **사전점검 6항목 통과**(URL=`https://www.minjob.co.kr`, 전화번호 반영으로 사업자정보 통과) → **가맹 심사 진행중**. **PG 결정: NHN KCP·신용카드 일반결제 단일 채널**(KPN·정기결제·간편결제·본인인증 미사용 — ROADMAP 1-8 PG결정). ⚠️ 승인 후: 실연동 채널(KCP) 키를 `_CHANNEL_KEY`에 교체 + 일반결제 계약 활성.
+5. **나중 (실데이터·정식 오픈 즈음)**: **SEO**(`sitemap.ts`·`robots.ts` — 지금은 mock이라 오히려 색인 방지가 맞아 defer, 배포 시 필요하면 noindex 1줄만) · **admin 3종**(`/admin/ingest` 수집→구조화 파이프라인) · terms/privacy 법률 검토.
 6. **Phase 1 (본체)**: Supabase 실사용(인증 proxy·mutation `actions.ts`·`'use cache'` 실적용·`lib/queries` mock→DB) · 계정 북마크 · `/jobs/[id]/edit` 권한=교회 인증 멤버십 · **DATA 정합 패스**(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처) · **노출 결제 마무리**(주문 저장·실 노출 적용·모바일 redirect 복귀·KCP 승인 후 실결제 계약).
 > ✅ **완료(2026-07-14)**: `/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터).
 > **결정(2026-07-14)**: 배포 먼저(mock) → Supabase는 "연결만"(데이터 mock 유지) → SEO는 나중. Supabase/배포는 서로 독립이라 DB 먼저 할 필요 없음.
