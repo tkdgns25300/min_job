@@ -93,6 +93,31 @@ export const FEATURED_TIERS = {
 } as const;
 export type FeaturedTier = keyof typeof FEATURED_TIERS;
 
+// 노출 상품(결제) — 가격 단일 소스(promote 결제 페이지 + 서버 금액 검증 공용). VAT 포함가(원).
+// 가격 확정은 SNAPSHOT §9(BM). NONE은 유료 상품 아님.
+export const EXPOSURE_PRODUCTS = {
+  PREMIUM: {
+    label: "프리미엄",
+    weekly: 70000,
+    bundle4: 240000,
+    desc: "목록·검색 결과 상단 고정 + “광고” 표시",
+  },
+  HERO: {
+    label: "대표광고",
+    weekly: 150000,
+    bundle4: 500000,
+    desc: "홈 배너 + 목록 최상단(구좌 한정) · 프리미엄 노출 포함",
+  },
+} as const;
+export type ExposureProduct = keyof typeof EXPOSURE_PRODUCTS;
+export const EXPOSURE_WEEKS = [1, 2, 4] as const;
+
+// 노출 금액 계산 — 4주는 묶음가, 그 외는 주 단가 × 주수. (client·server 동일 계산 → 위변조 검증)
+export function exposurePrice(tier: ExposureProduct, weeks: number): number {
+  const p = EXPOSURE_PRODUCTS[tier];
+  return weeks === 4 ? p.bundle4 : p.weekly * weeks;
+}
+
 // 공고 출처 — 운영자가 수집·등록 / 교회가 직접 등록 (공고 owner nullable 가드레일)
 export const JOB_SOURCES = {
   OPERATOR: "운영자 등록",

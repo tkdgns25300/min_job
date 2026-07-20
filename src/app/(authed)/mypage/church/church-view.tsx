@@ -31,10 +31,10 @@ function ExposurePromo() {
           </div>
         </div>
         <Link
-          href="/pricing"
+          href="/mypage/church/promote"
           className={cn(buttonVariants({ variant: "secondary" }), "mt-4 w-full")}
         >
-          노출 상품 보기 →
+          노출 신청 →
         </Link>
       </div>
     </aside>
