@@ -43,6 +43,12 @@ npm run dev        # http://localhost:3000
   SUPABASE_SECRET_KEY=                    # 비밀 키(RLS 우회) — 구 service_role, 서버 전용
   ```
   (`NEXT_PUBLIC_*`만 클라이언트 노출. `SUPABASE_SECRET_KEY`는 절대 노출 금지.)
+- **노출 결제(PortOne V2 · KCP)** — `/mypage/church/promote` 결제에 필요. 미설정 시 결제 시도하면 안내만 뜬다(그 외 페이지는 정상). 값 = PortOne 콘솔 > 상점·채널·API Keys:
+  ```
+  NEXT_PUBLIC_PORTONE_STORE_ID=          # 공개 — 상점 ID(store-...)
+  NEXT_PUBLIC_PORTONE_CHANNEL_KEY=       # 공개 — KCP 채널 키(channel-key-...)
+  PORTONE_API_SECRET=                    # 서버 전용 — 결제 조회·검증용, 절대 노출 금지
+  ```
 - 배포(Vercel)는 대시보드 env 사용. 로컬로 당길 땐 `vercel env pull .env`.
 
 ## 구조 / 컨벤션

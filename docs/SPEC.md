@@ -252,9 +252,19 @@
   2. **운영자 공고 클레임 배너**(claimableCount>0일 때만, 목록 위) — owner 없는 우리 교회 병존 공고를 이 계정에 연결(우리 고유)
   3. **상태 탭**(`[전체][게재 중][마감]`, 개수 배지) — 이전 스탯바 대체. **검수중 탭 없음**(인증 교회 공고 자동 게재)
   4. **내 교회 공고 목록**(`church_id` 기준, `MyJobRow`) — 상태 배지 + 노출 등급 라벨 + 행 액션: **게재중=수정+⋯(마감·삭제) / 마감=재등록+⋯(삭제) / 검수중=수정+⋯(삭제)+검수 안내**. 삭제·마감은 ⋯ 오버플로우(오클릭 방지, 케밥 Escape·ARIA). 조회·북마크 지표는 Phase 1. 빈 상태 = 탭별 문구 + 첫 등록 CTA
-  5. **노출 광고 전용 사이드바**(sticky, 메인 BM) — 딥그린 카드 + 프리미엄 주7만·대표광고 주15만 + "노출 상품 보기"(→`/pricing`, 문의 결제). 지원자 관리·자체 결제·끌올은 제외
+  5. **노출 광고 전용 사이드바**(sticky, 메인 BM) — 딥그린 카드 + 프리미엄 주7만·대표광고 주15만 + **"노출 신청 →"(→`/mypage/church/promote`, 실 결제)**. 지원자 관리·끌올은 제외
 
 **교회 정보 관리 `/mypage/church/info`** (별도 페이지 · APPROVED 전용 게이트 · 구현(mock) 2026-07-14 — `church-info-form.tsx`): 공고 관리와 분리(사람인·잡코리아 기업정보 별도 관례). ① 기본 정보(교회명·교단 = 인증 확정, 수정 문의 / 지역·시군구·창립연도 편집) ② 한 줄+상세 소개 ③ **대표 공개 연락처**(개인 담당자 번호 배제, 가드레일 #3) ④ 교회 채널 6종(홈페이지·유튜브·인스타·페북·밴드·**기타**) ⑤ 교회 사진(커버·순서, 업로드 Phase 1). 저장 시 `/churches/[id]`·공고에 반영. **Phase 1**: 소개·대표 연락처는 스키마 추가, 실 저장·사진 Storage.
+
+**노출 결제 `/mypage/church/promote`** (별도 페이지 · dynamic · `robots:noindex` · APPROVED 전용 게이트 · 구현 2026-07-20 — `page.tsx` + `promote-checkout.tsx`(client)). **공개 `/pricing`은 "안내+문의" 유지, 실 결제는 이 인증 교회 전용 페이지로 분리.** 진입 = `/mypage/church` 사이드바 "노출 신청 →". 화면 순서(그 이상 필드 없음 확정):
+  1. **대상 공고** — 그 교회 게재 중(OPEN) 공고 select. 없으면 "공고 등록하기" 안내
+  2. **노출 상품** — 프리미엄 / 대표광고(라디오 카드, `EXPOSURE_PRODUCTS`)
+  3. **노출 기간** — 1·2·4주(`EXPOSURE_WEEKS`, 4주=묶음가)
+  4. **결제 요약** — 상품·기간·합계(VAT 포함, `exposurePrice()`)
+  5. **약관 동의**(필수) → **결제하기**
+  - **결제**: PortOne V2 `requestPayment`(KCP CARD) 결제창 → 성공 시 `POST /api/payments/complete`가 **금액을 서버가 tier·weeks로 재계산 + PortOne API 실결제 조회로 `status===PAID`·금액 대조**(클라 불신, 위변조 방지). 가격 단일 소스 = `constants/domain.ts`의 `EXPOSURE_PRODUCTS`/`exposurePrice`. paymentId 38자(KCP 40자 제한).
+  - env: `NEXT_PUBLIC_PORTONE_STORE_ID`·`_CHANNEL_KEY`(공개) · `PORTONE_API_SECRET`(서버). 키 미설정 시 결제 시도하면 안내만.
+  - **Phase 1**: 결제 성공 시 주문 저장 + 실 노출 적용(`featured_tier`·`featured_until`) · **모바일 redirect 복귀 처리**(현재 데스크톱 팝업 Promise만) · KCP 승인 + 일반결제 계약 후 실결제 전환.
 
 **교회 인증 `/mypage/verify`** (별도 라우트, dynamic, `robots:noindex`, `verify-form.tsx`) — 상태별:
 - **미신청(status=null)** — 그룹형 폼(단일 페이지, 4섹션):

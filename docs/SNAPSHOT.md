@@ -2,13 +2,13 @@
 
 > **이 문서 하나로 "지금 상황" 파악.** 역할 분리: [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처·가드레일), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(인터뷰).
 >
-> **작성 시점**: 2026-07-18 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `150aa99` /terms·/privacy·사업자정보) · **dev = prod = origin** · 🔗 배포(mock): https://min-job.vercel.app/
+> **작성 시점**: 2026-07-20 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `5764fdc` PortOne 노출 결제 flow) · **dev = prod = origin** · 🔗 배포(mock): https://min-job.vercel.app/
 
 ---
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** 남은 것: SEO·admin 3종 + terms/privacy 법률검토·`[ ]` 실값. **✅ Vercel 배포됨(https://min-job.vercel.app/, mock) · Supabase 연결 완료·검증됨(키 입력·ping OK, 데이터는 mock 유지)** → 다음 = KCP 심사 또는 Phase 1(쿼리 mock→DB)(§7). 백엔드(Supabase 실사용)·모든 mutation은 Phase 1.
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** 남은 것: SEO·admin 3종 + terms/privacy 법률검토·`[ ]` 실값. **✅ Vercel 배포됨(https://min-job.vercel.app/, mock) · Supabase 연결 완료·검증됨(키 입력·ping OK, 데이터는 mock 유지) · PortOne 테스트 결제 검증됨** → 다음 = KCP 심사(가맹 심사 진행중) 또는 Phase 1(쿼리 mock→DB)(§7). 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용은 Phase 1.
 
 ---
 
@@ -31,10 +31,11 @@
 | `/jobs/[id]/edit` 수정 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | 위저드 공유(소유권 체크 有)·저장 Phase 1 |
 | `/mypage/church` 교회 관리 | ✅ | ✅ | ✅ | ✅ `e89bebd` | mock — 탭·노출광고 사이드바·공고 행(수정/⋯). mutation Phase 1 |
 | `/mypage/church/info` 교회 정보 | ✅ | ✅ | ✅ | ✅ `e89bebd` | mock — 소개·연락처·채널6·사진. 실 저장 Phase 1 |
+| `/mypage/church/promote` 노출 결제 | ✅ | ✅ | ✅ | ✅ `5764fdc` | **PortOne V2 실결제 동작**(KCP 테스트 성공·서버 금액 검증). 실 노출 적용·모바일 redirect 복귀 Phase 1 |
 | `/terms`·`/privacy` | 🟡 초안 보강 | — | ✅ | ✅ `150aa99` | 법률검토·`[ ]`실값 대기 |
 | `/admin`·`/admin/jobs`·`/admin/ingest` | ⬜ | ⬜ | ⬜ | 스캐폴드(Placeholder) | — |
 
-> **완료(mock) 13개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자)·/mypage/verify·/jobs/new·/jobs/[id]/edit·**/mypage/church·/mypage/church/info**. **단일 계정 + mock 세션 로그인 실동작**(계정 §5). **남은 것 = SEO(sitemap/robots)·admin 3종(Placeholder 스텁) + terms/privacy 법률검토·실값.** (약관·개인정보 초안 보강·사업자정보 반영됨.) 실 mutation·백엔드 = Phase 1.
+> **완료(mock) 14개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자)·/mypage/verify·/jobs/new·/jobs/[id]/edit·**/mypage/church·/mypage/church/info·/mypage/church/promote**. **단일 계정 + mock 세션 로그인 실동작**(계정 §5). **`/mypage/church/promote`는 PortOne 실결제까지 동작**(데이터·실 노출 적용만 Phase 1). **남은 것 = SEO(sitemap/robots)·admin 3종(Placeholder 스텁) + terms/privacy 법률검토·실값.** (약관·개인정보 초안 보강·사업자정보 반영됨.) 실 mutation·백엔드 = Phase 1.
 > **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
 
 ---
@@ -84,7 +85,7 @@ npx prettier --check <file>   # 포맷
 - **mock 로그인 계정**(`src/lib/mock-auth.ts`, 비번 `test1234`): `test1@test.com`(이도현·새벽빛교회 **인증** APPROVED) · `test2@test.com`(박서연·**미인증** 순수 사역자). 세션 = 비httpOnly 쿠키 `mj_session`.
 
 ### enum (`src/constants/domain.ts`)
-DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·**PENDING**) · FEATURED_TIERS · JOB_SOURCES · CHURCH_CHANNELS · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · STIPEND_NOTE_PRESETS · REQUIRED_DOC_PRESETS
+DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·**PENDING**) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · HOUSING_OPTIONS · APPLY_METHODS · STIPEND_NOTE_PRESETS · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
 
 ### 타입 (`src/types/domain.ts`) — 이번에 추가된 것
 - `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)** · `ownerId?`(교회 직접 등록 소유). — 전부 additive/optional.
@@ -118,9 +119,10 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 **▶ 바로 다음 (배포 → KCP 심사 착수 순서):**
 1. ✅ **Vercel 배포 완료 (2026-07-18)** — **https://min-job.vercel.app/** (mock 데이터·환경변수 0개). 커스텀 도메인 연결은 이후.
 2. ✅ **Supabase 연결 완료·검증됨(2026-07-19)** — 클라이언트 배선(`lib/supabase/{server,service,session}.ts`, `@supabase/ssr`+`supabase-js`, 공식 문서 검증) + 키 입력(로컬 `.env` + Vercel env: `NEXT_PUBLIC_SUPABASE_URL`·`_PUBLISHABLE_KEY`·`SUPABASE_SECRET_KEY`) + **임시 ping 라우트로 연결 검증**(PostgREST 도달·인증 OK, `PGRST205`=스키마 비어 있음=정상, 검증 후 라우트 삭제). ⚠️ **연결만** — `lib/queries/*`는 계속 mock(JSON), 실 DB 사용(Auth·조회·마이그레이션)은 Phase 1.
-3. **NHN KCP 가맹 신청 + 사이트 심사** — 배포 URL 확보 후. 심사 요건(실 결제 flow 필요 여부) 확인 · `[상호·대표·주소·통신판매업 신고번호]` 실값은 사업자 등록·신고 후.
-4. **나중 (실데이터·정식 오픈 즈음)**: **SEO**(`sitemap.ts`·`robots.ts` — 지금은 mock이라 오히려 색인 방지가 맞아 defer, 배포 시 필요하면 noindex 1줄만) · **admin 3종**(`/admin/ingest` 수집→구조화 파이프라인) · terms/privacy 법률 검토·실값.
-5. **Phase 1 (본체)**: Supabase 실사용(인증 proxy·mutation `actions.ts`·`'use cache'` 실적용·`lib/queries` mock→DB) · 계정 북마크 · `/jobs/[id]/edit` 권한=교회 인증 멤버십 · **DATA 정합 패스**(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처) · KCP 승인 후 온라인 결제 연동.
+3. ✅ **PortOne 노출 결제 flow 구현·검증(2026-07-20, `5764fdc`)** — `/mypage/church/promote`(인증 게이트) → `promote-checkout.tsx`(client)에서 **PortOne V2 `requestPayment`**(KCP CARD 채널) 결제창 → 성공 시 `POST /api/payments/complete`가 **PortOne API로 실결제 조회 + 금액 서버 재계산(tier·weeks, 클라 불신) + `status===PAID` 대조**. 가격 단일 소스 = `EXPOSURE_PRODUCTS`/`exposurePrice`(constants). **KCP 테스트 결제 성공 확인.** env: `NEXT_PUBLIC_PORTONE_STORE_ID`·`_CHANNEL_KEY`·`PORTONE_API_SECRET`. ⚠️ paymentId 38자(KCP 40자 제한). ⚠️ **모바일 redirect 복귀 미처리** — 데스크톱 팝업(Promise)만 완료 화면·서버검증. 모바일 `?paymentId=` 복귀 처리 = Phase 1. 실 노출 적용(featured_tier·featured_until 세팅)·주문 저장도 Phase 1.
+4. **NHN KCP 가맹 심사(진행중)** — 기존 상점(같은 사업자) 가맹 심사 진행중. 실결제(온라인 승인)엔 **일반결제 계약** 필요(현재 계약취소 상태 → 재계약). `[상호·대표·주소·통신판매업 신고번호]` 실값은 사업자 등록·신고 후.
+5. **나중 (실데이터·정식 오픈 즈음)**: **SEO**(`sitemap.ts`·`robots.ts` — 지금은 mock이라 오히려 색인 방지가 맞아 defer, 배포 시 필요하면 noindex 1줄만) · **admin 3종**(`/admin/ingest` 수집→구조화 파이프라인) · terms/privacy 법률 검토·실값.
+6. **Phase 1 (본체)**: Supabase 실사용(인증 proxy·mutation `actions.ts`·`'use cache'` 실적용·`lib/queries` mock→DB) · 계정 북마크 · `/jobs/[id]/edit` 권한=교회 인증 멤버십 · **DATA 정합 패스**(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처) · **노출 결제 마무리**(주문 저장·실 노출 적용·모바일 redirect 복귀·KCP 승인 후 실결제 계약).
 > ✅ **완료(2026-07-14)**: `/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터).
 > **결정(2026-07-14)**: 배포 먼저(mock) → Supabase는 "연결만"(데이터 mock 유지) → SEO는 나중. Supabase/배포는 서로 독립이라 DB 먼저 할 필요 없음.
 > **온보딩 결정(2026-07-12)**: 가입 시 프로필 모달 없음 — 이름=SNS 닉네임/이메일 가입폼, 직분은 안 받음(인재 프로필 Phase 3), 담당자 정보=교회 인증 폼에서. 구직자 관심교회·알림 = Phase 2.
@@ -200,7 +202,13 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 청빙넷·기독정보넷이 유료화 못 한 자리를, **갓피플보다 더 단순·투명한 2단 상품(프리미엄·대표광고)** 으로 선점. 대형사의 복잡한 매트릭스는 1인 운영엔 부적합 — **단순성이 차별점.**
 
 ### G. `/pricing` 페이지 구현 (2026-07-09)
-히어로 → **상품 3카드**(무료·프리미엄 7만/주·대표광고 15만/주, 가격 공개 + "문의하기") → **한눈에 비교** → **믿고 노출하세요**(getCoverageStats 실집계 + 하단 슬림 바 "운영자 검수·VAT 포함") → **문의**(mailto) → **FAQ**. 유료 카드의 **"노출 화면 미리보기" → 풀스크린 모달**(`components/pricing/exposure-preview.tsx`, client): PC/모바일 토글(뷰포트 기본) + 상품별 **전체 페이지 장면 캐러셀**(footer 제외). 결제는 문의 기반(라이브 결제 Phase 2). 상세 SPEC `/pricing`.
+히어로 → **상품 3카드**(무료·프리미엄 7만/주·대표광고 15만/주, 가격 공개 + "문의하기") → **한눈에 비교** → **믿고 노출하세요**(getCoverageStats 실집계 + 하단 슬림 바 "운영자 검수·VAT 포함") → **문의**(mailto) → **FAQ**. 유료 카드의 **"노출 화면 미리보기" → 풀스크린 모달**(`components/pricing/exposure-preview.tsx`, client): PC/모바일 토글(뷰포트 기본) + 상품별 **전체 페이지 장면 캐러셀**(footer 제외). 상세 SPEC `/pricing`.
+
+### H. 노출 결제 flow (`/mypage/church/promote`, 2026-07-20)
+- **공개 `/pricing`은 "안내+문의" 유지**, **실 결제는 인증 교회 전용 `/mypage/church/promote`로 분리**. 진입 = `/mypage/church` 사이드바 "노출 신청 →".
+- 화면 = 대상 공고 → 노출 상품(프리미엄·대표광고) → 기간(1·2·4주, 4주 묶음가) → 결제 요약 → 약관 동의 → 결제(그 이상 필드 없음 확정).
+- **PortOne V2(KCP CARD)** 결제창 → **서버(`/api/payments/complete`)가 금액 재계산·PortOne 실결제 조회로 검증**(위변조 방지). 가격 단일 소스 = `EXPOSURE_PRODUCTS`.
+- 지금은 **결제 검증까지만**(테스트 결제 성공 확인). 실 노출 적용(featured 세팅)·주문 저장·모바일 redirect 복귀·KCP 승인 후 실결제 = Phase 1.
 
 ---
 
