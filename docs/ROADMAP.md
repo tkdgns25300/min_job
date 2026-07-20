@@ -28,8 +28,10 @@
 - [ ] DB 타입 생성 — `types/database.ts`
 
 **병행 트랙 (Phase 0~1 내내)**
-- [ ] 도메인 확보 (minjob.kr / minjob.co.kr 등 — .com은 일본 서비스 선점)
-- [ ] **법률 검토**: 데이터 수집 방식(사람 수집 + 공식 출처) IT·지식재산 변호사 상담
+- [x] 도메인 확보 — **minjob.co.kr**(hosting.kr 등록). (.com은 일본 서비스 선점)
+- [~] 도메인 → Vercel 연결 (2026-07-20) — hosting.kr DNS에 A `@`→216.198.79.1 + CNAME `www`→(Vercel 발급) 추가함. **전파·SSL 발급 대기**(Valid 뜨면 완료). 대표주소 = `www.minjob.co.kr`(apex→www 308)
+- [ ] **브랜드 이메일**(`contact@minjob.co.kr`) — **무료로 개설 예정, 방식 미정**: ① ImprovMX 포워딩(받기만→네이버) / ② Zoho Mail 무료(받기+보내기). hosting.kr DNS에 MX+SPF(②는 DKIM도) 추가. 개설 후 `constants/business.ts`의 `email` 한 줄만 교체하면 사이트 전체 반영(단일 소스). 지금은 `tkdgns25300@naver.com` 사용
+- [ ] **법률 검토**: 데이터 수집 방식(사람 수집 + 공식 출처) IT·지식재산 변호사 상담 + **약관·개인정보처리방침 재검토**(현재 사용자에겐 확정본으로 노출하나 정식 검토 전)
 - [ ] 첫 거점 최종 확정 (전체 vs 한 거점 집중 — 미해결 긴장)
 
 ## Phase 1: MVP
