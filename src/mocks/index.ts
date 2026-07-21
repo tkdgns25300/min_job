@@ -1,6 +1,6 @@
 import churchesData from "./churches.json";
 import jobsData from "./jobs.json";
-import type { Church, Job, JobCard, JobDetail } from "@/types/domain";
+import type { AdminJob, Church, Job, JobCard, JobDetail } from "@/types/domain";
 import {
   getRepostInfo,
   groupByRole,
@@ -159,6 +159,36 @@ export function getChurchDashboard(churchId: string) {
 export function getEditableJob(id: string, userId: string): Job | null {
   const job = jobs.find((j) => j.id === id);
   return job && job.ownerId === userId ? job : null;
+}
+
+// --- 운영자(admin) — 전체 공고 관리. 실구현은 operator RLS(DATA §RLS) + 인증 게이트(Phase 1). ---
+
+// 운영자 관리 행 projection — 전체 상태·출처 + 교회 조인(공개 카드와 달리 CLOSED·PENDING 포함)
+function toAdminRow(job: Job): AdminJob {
+  const church = churchById.get(job.churchId);
+  return {
+    id: job.id,
+    title: job.title,
+    church: {
+      id: church?.id ?? job.churchId,
+      name: church?.name ?? "알 수 없는 교회",
+      denomination: church?.denomination ?? "ETC",
+      region: church?.region ?? "SEOUL",
+    },
+    position: job.position,
+    department: job.department,
+    employmentType: job.employmentType,
+    status: job.status,
+    featuredTier: job.featuredTier,
+    source: job.source,
+    postedAt: job.postedAt,
+    deadline: job.deadline,
+  };
+}
+
+/** 운영자 공고 관리 — 전체 공고(모든 상태·출처), 최신순. 탭·필터는 클라이언트가 처리 */
+export function getAdminJobs(): AdminJob[] {
+  return [...jobs].sort((a, b) => b.postedAt.localeCompare(a.postedAt)).map(toAdminRow);
 }
 
 /**

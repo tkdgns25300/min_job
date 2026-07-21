@@ -101,3 +101,18 @@ export interface JobCard {
   postedAt: string;
   deadline: string | null;
 }
+
+// 운영자 공고 관리 테이블용 projection — 전체 상태·출처 포함(공개 카드와 달리 CLOSED·PENDING·운영자/교회 구분). (admin/jobs)
+export interface AdminJob {
+  id: string;
+  title: string;
+  church: Pick<Church, "id" | "name" | "denomination" | "region">;
+  position: Position;
+  department: Department | null;
+  employmentType: EmploymentType;
+  status: JobStatus;
+  featuredTier: FeaturedTier;
+  source: JobSource;
+  postedAt: string;
+  deadline: string | null;
+}
