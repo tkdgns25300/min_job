@@ -36,6 +36,12 @@ function ExposurePromo() {
         >
           노출 신청 →
         </Link>
+        <Link
+          href="/pricing"
+          className="mt-2.5 block text-center text-xs text-white/60 transition-colors hover:text-white/90"
+        >
+          노출 상품 자세히 보기 →
+        </Link>
       </div>
     </aside>
   );
