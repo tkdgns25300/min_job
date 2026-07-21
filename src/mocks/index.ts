@@ -1,6 +1,15 @@
 import churchesData from "./churches.json";
 import jobsData from "./jobs.json";
-import type { AdminJob, AdminOverview, Church, Job, JobCard, JobDetail } from "@/types/domain";
+import verificationsData from "./church-verifications.json";
+import type {
+  AdminJob,
+  AdminOverview,
+  Church,
+  ChurchVerification,
+  Job,
+  JobCard,
+  JobDetail,
+} from "@/types/domain";
 import {
   getRepostInfo,
   groupByRole,
@@ -13,6 +22,7 @@ import { DENOMINATIONS, DEPARTMENTS, POSITIONS, REGIONS } from "@/constants/doma
 // (실제 DB 연동 시 lib/queries/*.ts + Supabase로 대체)
 const churches = churchesData as unknown as Church[];
 const jobs = jobsData as unknown as Job[];
+const verifications = verificationsData as unknown as ChurchVerification[];
 
 const churchById = new Map(churches.map((c) => [c.id, c]));
 
@@ -206,6 +216,20 @@ export function getAdminOverview(): AdminOverview {
     weekCount = all.filter((j) => j.postedAt >= weekAgo).length;
   }
   return { featuredCount, weekCount, totalCount: all.length };
+}
+
+/**
+ * 교회 인증 신청 — 운영자 검수 목록(유일한 검수 게이트). 작업 큐 정렬:
+ * 검수 대기(PENDING) 먼저(오래된 신청 우선), 처리 완료는 최근 처리 순.
+ */
+export function getVerifications(): ChurchVerification[] {
+  return [...verifications].sort((a, b) => {
+    const aPending = a.status === "PENDING";
+    const bPending = b.status === "PENDING";
+    if (aPending !== bPending) return aPending ? -1 : 1;
+    if (aPending) return a.submittedAt.localeCompare(b.submittedAt); // 대기: 오래된 것 먼저
+    return (b.reviewedAt ?? "").localeCompare(a.reviewedAt ?? ""); // 완료: 최근 처리 먼저
+  });
 }
 
 /**

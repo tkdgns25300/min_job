@@ -10,6 +10,7 @@ import type {
   JobStatus,
   ChurchChannel,
   ChurchVerificationStatus,
+  VerificationDocType,
 } from "@/constants/domain";
 
 // 상태 enum은 constants(라벨 맵)로 이동 — 기존 import 경로 호환을 위해 재노출
@@ -122,4 +123,32 @@ export interface AdminOverview {
   featuredCount: number; // 노출중(유료, OPEN)
   weekCount: number; // 이번 주 등록(최신 게시일 기준 7일)
   totalCount: number; // 전체 공고
+}
+
+// 교회 인증 신청 — 운영자 검수용 projection. 실구현은 users(담당자) + churches(교회) + 증빙 조인.
+// 유일한 검수 게이트(공고 검수 없음). 담당자 개인정보는 인증 확인 목적 수집(공개 X, 가드레일 #3). (admin/verify)
+export interface ChurchVerification {
+  id: string;
+  applicant: {
+    name: string; // 담당자 이름
+    position: Position; // 담당자 직분 (enum)
+    email: string;
+    phone: string;
+  };
+  church: {
+    id: string | null; // 기존 교회 매칭 — null = 신규 교회 생성 신청
+    name: string;
+    denomination: Denomination;
+    region: Region;
+    city: string | null;
+  };
+  document: {
+    type: VerificationDocType; // 고유번호증 / 사업자등록증
+    registrationNumber: string; // 고유번호 / 사업자등록번호
+    fileName: string; // 업로드 파일명 — 실구현은 비공개 Storage 경로(DATA §3)
+  };
+  status: ChurchVerificationStatus; // PENDING / APPROVED / REJECTED
+  submittedAt: string; // "YYYY-MM-DD"
+  reviewedAt: string | null; // 검수 완료일 (승인·반려 시)
+  rejectionReason: string | null; // 반려 사유 (REJECTED만)
 }

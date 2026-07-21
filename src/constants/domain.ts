@@ -134,6 +134,13 @@ export const CHURCH_VERIFICATION_STATUSES = {
 } as const;
 export type ChurchVerificationStatus = keyof typeof CHURCH_VERIFICATION_STATUSES;
 
+// 인증 증빙 서류 — 교회 사칭 방지용으로 이 둘만 허용(SPEC 교회 인증 ②). 개인이 발급받을 수 없는 서류.
+export const VERIFICATION_DOC_TYPES = {
+  UNIQUE_NUMBER: "고유번호증",
+  BUSINESS_REGISTRATION: "사업자등록증",
+} as const;
+export type VerificationDocType = keyof typeof VERIFICATION_DOC_TYPES;
+
 // 공고 등록 폼 프리셋 — 인터뷰 반영: 사례비는 "거의 내규에 따름"(비정형 경로를 숫자와 동급으로)
 export const STIPEND_NOTE_PRESETS = ["교회 내규에 따름", "면접 후 협의"] as const;
 

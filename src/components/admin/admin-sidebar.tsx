@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-// 운영자 셸 네비 — 활성 표시(usePathname). 대기 카운트 배지는 홈(§4)에서 추가.
+// 운영자 셸 네비 — 활성 표시(usePathname). 검수 대기 수는 각 페이지(홈·verify)가 표시 — 사이드바 배지는 두지 않음.
 const NAV: { href: string; label: string; exact?: boolean }[] = [
   { href: "/admin", label: "홈", exact: true },
   { href: "/admin/ingest", label: "수집·등록" },

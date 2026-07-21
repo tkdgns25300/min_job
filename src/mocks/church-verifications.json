@@ -1,0 +1,177 @@
+[
+  {
+    "id": "vf-001",
+    "applicant": {
+      "name": "정한결",
+      "position": "ASSOCIATE_PASTOR",
+      "email": "office.eunhyero@example.com",
+      "phone": "010-0000-0001"
+    },
+    "church": {
+      "id": "ch-eunhyero",
+      "name": "은혜로교회",
+      "denomination": "TONGHAP",
+      "region": "SEOUL",
+      "city": "강북"
+    },
+    "document": {
+      "type": "BUSINESS_REGISTRATION",
+      "registrationNumber": "212-82-06417",
+      "fileName": "사업자등록증_은혜로교회.pdf"
+    },
+    "status": "PENDING",
+    "submittedAt": "2026-07-20",
+    "reviewedAt": null,
+    "rejectionReason": null
+  },
+  {
+    "id": "vf-002",
+    "applicant": {
+      "name": "김성호",
+      "position": "SENIOR_PASTOR",
+      "email": "office.hanbit@example.com",
+      "phone": "010-0000-0002"
+    },
+    "church": {
+      "id": "ch-hanbit",
+      "name": "한빛교회",
+      "denomination": "HAPDONG",
+      "region": "GYEONGGI",
+      "city": "용인"
+    },
+    "document": {
+      "type": "UNIQUE_NUMBER",
+      "registrationNumber": "137-89-00521",
+      "fileName": "고유번호증_한빛교회.jpg"
+    },
+    "status": "PENDING",
+    "submittedAt": "2026-07-19",
+    "reviewedAt": null,
+    "rejectionReason": null
+  },
+  {
+    "id": "vf-003",
+    "applicant": {
+      "name": "이수진",
+      "position": "EVANGELIST",
+      "email": "min.lifewater@example.com",
+      "phone": "010-0000-0003"
+    },
+    "church": {
+      "id": null,
+      "name": "생명수교회",
+      "denomination": "GAMLI",
+      "region": "SEOUL",
+      "city": "은평"
+    },
+    "document": {
+      "type": "UNIQUE_NUMBER",
+      "registrationNumber": "104-82-31775",
+      "fileName": "고유번호증_생명수교회.pdf"
+    },
+    "status": "PENDING",
+    "submittedAt": "2026-07-18",
+    "reviewedAt": null,
+    "rejectionReason": null
+  },
+  {
+    "id": "vf-004",
+    "applicant": {
+      "name": "박도현",
+      "position": "ASSOCIATE_PASTOR",
+      "email": "office.juane@example.com",
+      "phone": "010-0000-0004"
+    },
+    "church": {
+      "id": "ch-juane",
+      "name": "주안에교회",
+      "denomination": "TONGHAP",
+      "region": "INCHEON",
+      "city": "부평"
+    },
+    "document": {
+      "type": "BUSINESS_REGISTRATION",
+      "registrationNumber": "121-82-14903",
+      "fileName": "사업자등록증_주안에교회.png"
+    },
+    "status": "PENDING",
+    "submittedAt": "2026-07-16",
+    "reviewedAt": null,
+    "rejectionReason": null
+  },
+  {
+    "id": "vf-005",
+    "applicant": {
+      "name": "이도현",
+      "position": "SENIOR_PASTOR",
+      "email": "test1@test.com",
+      "phone": "010-0000-0005"
+    },
+    "church": {
+      "id": "ch-saebyeok",
+      "name": "새벽빛교회",
+      "denomination": "BAEKSEOK",
+      "region": "GYEONGGI",
+      "city": "수원"
+    },
+    "document": {
+      "type": "UNIQUE_NUMBER",
+      "registrationNumber": "124-82-77310",
+      "fileName": "고유번호증_새벽빛교회.pdf"
+    },
+    "status": "APPROVED",
+    "submittedAt": "2026-07-10",
+    "reviewedAt": "2026-07-11",
+    "rejectionReason": null
+  },
+  {
+    "id": "vf-006",
+    "applicant": {
+      "name": "최민석",
+      "position": "ASSOCIATE_PASTOR",
+      "email": "office.bitsogeum@example.com",
+      "phone": "010-0000-0006"
+    },
+    "church": {
+      "id": "ch-bitsogeum",
+      "name": "빛과소금교회",
+      "denomination": "GOSIN",
+      "region": "BUSAN",
+      "city": "해운대"
+    },
+    "document": {
+      "type": "BUSINESS_REGISTRATION",
+      "registrationNumber": "617-82-40228",
+      "fileName": "사업자등록증_빛과소금교회.pdf"
+    },
+    "status": "APPROVED",
+    "submittedAt": "2026-07-08",
+    "reviewedAt": "2026-07-09",
+    "rejectionReason": null
+  },
+  {
+    "id": "vf-007",
+    "applicant": {
+      "name": "한지웅",
+      "position": "EVANGELIST",
+      "email": "min.banseok@example.com",
+      "phone": "010-0000-0007"
+    },
+    "church": {
+      "id": "ch-banseok",
+      "name": "반석교회",
+      "denomination": "TONGHAP",
+      "region": "DAEGU",
+      "city": "수성"
+    },
+    "document": {
+      "type": "UNIQUE_NUMBER",
+      "registrationNumber": "503-82-19864",
+      "fileName": "제출서류_반석교회.jpg"
+    },
+    "status": "REJECTED",
+    "submittedAt": "2026-07-06",
+    "reviewedAt": "2026-07-07",
+    "rejectionReason": "제출한 서류가 흐려 고유번호를 확인할 수 없어요. 선명한 고유번호증 사본으로 다시 신청해 주세요."
+  }
+]
