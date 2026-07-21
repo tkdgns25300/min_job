@@ -35,7 +35,7 @@ export async function getAdminJobs(): Promise<AdminJob[]> {
   return mock.getAdminJobs();
 }
 
-/** 운영자 홈 요약 — "할 일" 인박스(검수 대기·노출중·이번주·전체 + 검수 대기 목록). admin 홈 전용 */
+/** 운영자 홈 요약 — 노출중(유료 OPEN)·이번주 등록·전체 공고. admin 홈 전용 */
 export async function getAdminOverview(): Promise<AdminOverview> {
   "use cache";
   cacheTag("jobs");

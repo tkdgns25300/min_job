@@ -18,7 +18,7 @@ export default async function AdminHomePage() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <header className="mb-6">
         <h1 className="text-2xl font-bold">운영자 홈</h1>
         <p className="mt-1 text-sm text-muted-foreground">공고 현황 요약과 빠른 작업.</p>

@@ -34,10 +34,11 @@ export interface IngestDraft {
   stipendNote: string;
   deadline: string; // "YYYY-MM-DD" | ""
   sourceUrl: string;
-  body: string; // 요약·본문 — 사람이 직접 작성(원문 통째 복제 X, 가드레일 #4). 원문은 좌측 패널에만.
+  body: string; // 요약·본문 — 사람이 직접 작성(원문 통째 복제 X, 가드레일 #1: DB권·재호스팅). 원문은 좌측 패널에만.
 }
 
-export function emptyIngestDraft(): IngestDraft {
+// 빈 초안 — 입력이 비었을 때 반환(structureJobText 내부용).
+function emptyIngestDraft(): IngestDraft {
   return {
     title: "",
     churchName: "",

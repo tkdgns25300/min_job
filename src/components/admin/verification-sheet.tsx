@@ -25,7 +25,7 @@ import type { ChurchVerification } from "@/types/domain";
 export type SheetState = ChurchVerification | null;
 
 const TEXTAREA_CLASS =
-  "min-h-20 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+  "min-h-20 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 // 교회 인증 검수 시트 — 증빙 확인 후 승인/반려. mock. 실 처리(상태 변경 + updateTag + 알림)는 Phase 1.
 export function VerificationSheet({ state, onClose }: { state: SheetState; onClose: () => void }) {

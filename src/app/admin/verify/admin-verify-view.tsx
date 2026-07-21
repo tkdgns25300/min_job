@@ -122,6 +122,7 @@ export function AdminVerifyView({ verifications }: { verifications: ChurchVerifi
         <Input
           className="h-9 min-w-40 flex-1"
           placeholder="교회·담당자 검색"
+          aria-label="인증 신청 검색"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />

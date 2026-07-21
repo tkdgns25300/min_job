@@ -132,6 +132,7 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
         <Input
           className="h-9 min-w-40 flex-1"
           placeholder="제목·교회 검색"
+          aria-label="공고 검색"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />

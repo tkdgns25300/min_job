@@ -23,7 +23,7 @@ import type { AdminJob } from "@/types/domain";
 export type SheetState = { job: AdminJob; mode: "edit" | "feature" } | null;
 
 const SELECT_CLASS =
-  "h-10 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+  "h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 // 운영자 공고 편집·노출 설정 시트 — mock. 실 저장(Server Action + updateTag)은 Phase 1.
 export function AdminJobSheet({ state, onClose }: { state: SheetState; onClose: () => void }) {
@@ -49,7 +49,7 @@ function EditForm({ job, onClose }: { job: AdminJob; onClose: () => void }) {
       <div className="flex flex-col gap-4 px-4">
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium text-muted-foreground">제목</span>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input className="h-9" value={title} onChange={(e) => setTitle(e.target.value)} />
         </label>
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium text-muted-foreground">상태</span>
