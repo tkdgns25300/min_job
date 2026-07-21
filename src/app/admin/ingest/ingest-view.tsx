@@ -4,7 +4,8 @@ import { useState, type ReactNode } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 import { structureJobText, type IngestDraft } from "@/lib/ingest/structure";
 import {
   DENOMINATIONS,
@@ -14,11 +15,6 @@ import {
   REGIONS,
 } from "@/constants/domain";
 import type { ChurchOption } from "@/types/domain";
-
-const TEXTAREA_CLASS =
-  "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
-const SELECT_CLASS =
-  "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 const SOURCE_PLACEHOLDER = `예)
 ○○교회 부목사 청빙
@@ -88,8 +84,8 @@ function SourcePanel({
         교단·신학교 게시판이나 공문에서 <b>사람이 직접 확보한</b> 공고 원문을 붙여넣으세요. 자동
         수집이 아니에요.
       </p>
-      <textarea
-        className={cn(TEXTAREA_CLASS, "mt-3 min-h-72 flex-1")}
+      <Textarea
+        className="mt-3 min-h-72 flex-1"
         placeholder={SOURCE_PLACEHOLDER}
         value={raw}
         onChange={(e) => onChange(e.target.value)}
@@ -269,8 +265,8 @@ function DraftPanel({
         </div>
 
         <Field label="본문·메모">
-          <textarea
-            className={cn(TEXTAREA_CLASS, "min-h-28")}
+          <Textarea
+            className="min-h-28"
             value={draft.body}
             onChange={(e) => patch({ body: e.target.value })}
             aria-label="본문·메모"
@@ -322,8 +318,7 @@ function EnumSelect<K extends string>({
   placeholder: string;
 }) {
   return (
-    <select
-      className={SELECT_CLASS}
+    <NativeSelect
       value={value ?? ""}
       onChange={(e) => onChange((e.target.value || null) as K | null)}
       aria-label={placeholder}
@@ -334,6 +329,6 @@ function EnumSelect<K extends string>({
           {label}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   );
 }

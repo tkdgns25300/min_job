@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { DENOMINATIONS, REGIONS, POSITIONS } from "@/constants/domain";
 
 // 교회 인증 신청 폼(단일·그룹형). mock — 실 제출·업로드·이메일 발송은 Phase 1 Server Actions.
@@ -55,13 +56,13 @@ function Field({
 
 function Select({ options }: { options: Record<string, string> }) {
   return (
-    <select className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm">
+    <NativeSelect className="h-11">
       {Object.entries(options).map(([key, label]) => (
         <option key={key} value={key}>
           {label}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   );
 }
 

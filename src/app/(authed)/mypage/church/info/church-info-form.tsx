@@ -3,17 +3,14 @@
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 import { CHURCH_CHANNELS, DENOMINATIONS, REGIONS } from "@/constants/domain";
 import { BUSINESS_INFO } from "@/constants/business";
 import type { Church } from "@/types/domain";
 
 // 교회 정보 관리 폼 — mock. 실 저장·사진 업로드(Storage)는 Phase 1 Server Action.
 // 교회명·교단은 인증 확정값이라 여기서 못 바꿈(문의). 소개·대표 연락처는 Phase 1 스키마 추가 예정.
-
-const SELECT_CLASS =
-  "h-10 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
-const TEXTAREA_CLASS =
-  "min-h-24 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
 
 function Section({ title, desc, children }: { title: string; desc?: string; children: ReactNode }) {
   return (
@@ -80,13 +77,13 @@ export function ChurchInfoForm({ church }: { church: Church }) {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Field label="지역">
-            <select className={SELECT_CLASS} defaultValue={church.region} aria-label="지역">
+            <NativeSelect className="h-10" defaultValue={church.region} aria-label="지역">
               {Object.entries(REGIONS).map(([key, label]) => (
                 <option key={key} value={key}>
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </Field>
           <Field label="시·군·구" optional>
             <Input defaultValue={church.city ?? ""} placeholder="예) 수원" className="h-10" />
@@ -107,8 +104,8 @@ export function ChurchInfoForm({ church }: { church: Church }) {
           <Input placeholder="예) 다음세대를 함께 세워갈 동역자를 찾습니다." className="h-10" />
         </Field>
         <Field label="상세 소개" optional>
-          <textarea
-            className={TEXTAREA_CLASS}
+          <Textarea
+            className="min-h-24"
             placeholder="교회 분위기, 사역 방향, 함께하고 싶은 동역자상 등을 자유롭게 적어 주세요."
             aria-label="상세 소개"
           />

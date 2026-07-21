@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "rea
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Field } from "./form-section";
 import { ChipSelect } from "./chip-select";
 import { ListField } from "./list-field";
@@ -26,10 +27,6 @@ import {
   type Position,
 } from "@/constants/domain";
 import type { Church, Job } from "@/types/domain";
-
-// textarea — shadcn Input과 같은 시각 문법 (별도 textarea 컴포넌트 미도입 상태)
-const TEXTAREA_CLASS =
-  "min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
 
 const METHOD_PLACEHOLDER: Record<ApplyMethod, string> = {
   EMAIL: "접수 이메일 (예: recruit@church.org)",
@@ -361,12 +358,12 @@ function stepSections(
         optional: true,
         description: "우리 교회와 사역을 자유롭게 소개해 주세요.",
         content: (
-          <textarea
+          <Textarea
             value={draft.intro}
             onChange={(e) => patch({ intro: e.target.value })}
             placeholder="예) 저희 교회는 다음세대를 세우는 일에 힘쓰고 있어요. 함께 유초등부를 섬길 전도사님을 기다립니다."
             aria-label="함께할 사역자에게"
-            className={TEXTAREA_CLASS}
+            className="min-h-24"
           />
         ),
       },
@@ -389,12 +386,12 @@ function stepSections(
               />
             </Field>
             <Field label="처우 비고" optional>
-              <textarea
+              <Textarea
                 value={draft.benefitNote}
                 onChange={(e) => patch({ benefitNote: e.target.value })}
                 placeholder="예) 4대보험·총회연금 50% 지원, 도서비·휴가비 별도"
                 aria-label="처우 비고"
-                className={TEXTAREA_CLASS}
+                className="min-h-24"
               />
             </Field>
           </>

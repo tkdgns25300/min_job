@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { AdminJobRow } from "@/components/admin/admin-job-row";
 import { AdminJobSheet, type SheetState } from "@/components/admin/admin-job-sheet";
@@ -24,9 +25,6 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "OPEN", label: JOB_STATUSES.OPEN },
   { key: "CLOSED", label: JOB_STATUSES.CLOSED },
 ];
-
-const SELECT_CLASS =
-  "h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
   const [tab, setTab] = useState<Tab>("all");
@@ -90,9 +88,9 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
 
       {/* 필터 */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <select
+        <NativeSelect
           aria-label="출처 필터"
-          className={SELECT_CLASS}
+          className="w-auto"
           value={source}
           onChange={(e) => setSource(e.target.value as "all" | JobSource)}
         >
@@ -102,10 +100,10 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
               {label}
             </option>
           ))}
-        </select>
-        <select
+        </NativeSelect>
+        <NativeSelect
           aria-label="교단 필터"
-          className={SELECT_CLASS}
+          className="w-auto"
           value={denom}
           onChange={(e) => setDenom(e.target.value as "all" | Denomination)}
         >
@@ -115,10 +113,10 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
               {label}
             </option>
           ))}
-        </select>
-        <select
+        </NativeSelect>
+        <NativeSelect
           aria-label="지역 필터"
-          className={SELECT_CLASS}
+          className="w-auto"
           value={region}
           onChange={(e) => setRegion(e.target.value as "all" | Region)}
         >
@@ -128,7 +126,7 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
               {label}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         <Input
           className="h-9 min-w-40 flex-1"
           placeholder="제목·교회 검색"

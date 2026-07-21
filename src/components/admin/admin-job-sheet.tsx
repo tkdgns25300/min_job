@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import {
   EXPOSURE_WEEKS,
@@ -21,9 +22,6 @@ import {
 import type { AdminJob } from "@/types/domain";
 
 export type SheetState = { job: AdminJob; mode: "edit" | "feature" } | null;
-
-const SELECT_CLASS =
-  "h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 // 운영자 공고 편집·노출 설정 시트 — mock. 실 저장(Server Action + updateTag)은 Phase 1.
 export function AdminJobSheet({ state, onClose }: { state: SheetState; onClose: () => void }) {
@@ -53,7 +51,7 @@ function EditForm({ job, onClose }: { job: AdminJob; onClose: () => void }) {
         </label>
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium text-muted-foreground">상태</span>
-          <select className={SELECT_CLASS} defaultValue={job.status}>
+          <NativeSelect className="w-auto" defaultValue={job.status}>
             {/* 공고 검수 제거 — 검수중(PENDING)은 선택 불가, 모집중/마감만 */}
             {Object.entries(JOB_STATUSES)
               .filter(([key]) => key !== "PENDING")
@@ -62,7 +60,7 @@ function EditForm({ job, onClose }: { job: AdminJob; onClose: () => void }) {
                   {label}
                 </option>
               ))}
-          </select>
+          </NativeSelect>
         </label>
         <p className="text-xs break-keep text-muted-foreground">
           전체 필드 편집·저장은 Phase 1(실 DB). 지금은 미리보기예요.

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { VerificationRow } from "@/components/admin/verification-row";
 import {
@@ -27,9 +28,6 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "REJECTED", label: CHURCH_VERIFICATION_STATUSES.REJECTED },
   { key: "all", label: "전체" },
 ];
-
-const SELECT_CLASS =
-  "h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 export function AdminVerifyView({ verifications }: { verifications: ChurchVerification[] }) {
   const [tab, setTab] = useState<Tab>("PENDING");
@@ -93,9 +91,9 @@ export function AdminVerifyView({ verifications }: { verifications: ChurchVerifi
 
       {/* 필터 */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <select
+        <NativeSelect
           aria-label="교단 필터"
-          className={SELECT_CLASS}
+          className="w-auto"
           value={denom}
           onChange={(e) => setDenom(e.target.value as "all" | Denomination)}
         >
@@ -105,10 +103,10 @@ export function AdminVerifyView({ verifications }: { verifications: ChurchVerifi
               {label}
             </option>
           ))}
-        </select>
-        <select
+        </NativeSelect>
+        <NativeSelect
           aria-label="지역 필터"
-          className={SELECT_CLASS}
+          className="w-auto"
           value={region}
           onChange={(e) => setRegion(e.target.value as "all" | Region)}
         >
@@ -118,7 +116,7 @@ export function AdminVerifyView({ verifications }: { verifications: ChurchVerifi
               {label}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         <Input
           className="h-9 min-w-40 flex-1"
           placeholder="교회·담당자 검색"

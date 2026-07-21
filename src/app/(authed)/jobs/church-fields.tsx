@@ -2,15 +2,12 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Field } from "./form-section";
 import { churchMetaLine } from "@/lib/format";
 import { CHURCH_CHANNELS, DENOMINATIONS, REGIONS } from "@/constants/domain";
 import { BUSINESS_INFO } from "@/constants/business";
 import type { Church } from "@/types/domain";
-
-// 네이티브 select — shadcn Input과 같은 시각 문법 (별도 select 컴포넌트 미도입 상태)
-const SELECT_CLASS =
-  "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 interface ChurchDraft {
   name: string;
@@ -69,9 +66,8 @@ export function ChurchFields() {
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="교단">
-          <select
+          <NativeSelect
             aria-label="교단"
-            className={SELECT_CLASS}
             value={draft.denomination}
             onChange={(e) => patch({ denomination: e.target.value })}
           >
@@ -81,12 +77,11 @@ export function ChurchFields() {
                 {label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="지역">
-          <select
+          <NativeSelect
             aria-label="지역"
-            className={SELECT_CLASS}
             value={draft.region}
             onChange={(e) => patch({ region: e.target.value })}
           >
@@ -96,7 +91,7 @@ export function ChurchFields() {
                 {label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
       </div>
 

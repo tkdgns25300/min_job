@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import * as PortOne from "@portone/browser-sdk/v2";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import {
   EXPOSURE_PRODUCTS,
@@ -109,18 +110,18 @@ export function PromoteCheckout({ jobs }: { jobs: JobOption[] }) {
       {/* 대상 공고 */}
       <section>
         <h2 className="mb-2.5 text-sm font-bold">대상 공고</h2>
-        <select
+        <NativeSelect
           value={jobId}
           onChange={(e) => setJobId(e.target.value)}
           aria-label="대상 공고"
-          className="h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="h-11"
         >
           {jobs.map((job) => (
             <option key={job.id} value={job.id}>
               {job.title}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </section>
 
       {/* 노출 상품 */}

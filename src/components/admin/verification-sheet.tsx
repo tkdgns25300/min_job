@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { VERIFICATION_STATUS_VARIANT } from "@/components/admin/verification-row";
 import {
   CHURCH_VERIFICATION_STATUSES,
@@ -23,9 +24,6 @@ import {
 import type { ChurchVerification } from "@/types/domain";
 
 export type SheetState = ChurchVerification | null;
-
-const TEXTAREA_CLASS =
-  "min-h-20 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 // 교회 인증 검수 시트 — 증빙 확인 후 승인/반려. mock. 실 처리(상태 변경 + updateTag + 알림)는 Phase 1.
 export function VerificationSheet({ state, onClose }: { state: SheetState; onClose: () => void }) {
@@ -107,8 +105,8 @@ function ReviewBody({
         {isPending && rejecting && (
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium text-muted-foreground">반려 사유</span>
-            <textarea
-              className={TEXTAREA_CLASS}
+            <Textarea
+              className="min-h-20"
               placeholder="신청자에게 전달할 반려 사유를 적어주세요."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
