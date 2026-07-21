@@ -5,6 +5,7 @@ import type {
   AdminJob,
   AdminOverview,
   Church,
+  ChurchOption,
   ChurchVerification,
   Job,
   JobCard,
@@ -94,6 +95,13 @@ export function getRepost(id: string): RepostInfo | null {
 /** 교회 단건 (없으면 null → notFound) */
 export function getChurch(id: string): Church | null {
   return churchById.get(id) ?? null;
+}
+
+/** 교회 선택 옵션 — 이름·교단·지역만, 가나다순. 공고 등록 시 인라인 매칭·자동완성(admin/ingest) */
+export function getChurchOptions(): ChurchOption[] {
+  return churches
+    .map((c) => ({ id: c.id, name: c.name, denomination: c.denomination, region: c.region }))
+    .sort((a, b) => a.name.localeCompare(b.name, "ko"));
 }
 
 /** 교회의 현재 모집 중 공고 (excludeId 지정 시 해당 공고 제외 — 공고 상세의 "이 교회 다른 모집") */

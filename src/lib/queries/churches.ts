@@ -1,6 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
 import * as mock from "@/mocks";
-import type { Church } from "@/types/domain";
+import type { Church, ChurchOption } from "@/types/domain";
 import type { RoleHistory } from "@/lib/repost-tracking";
 
 // 데이터 소스 seam (교회) — 페이지는 여기서만 가져온다.
@@ -11,6 +11,14 @@ export async function getChurch(id: string): Promise<Church | null> {
   cacheTag("churches");
   cacheLife("days");
   return mock.getChurch(id);
+}
+
+/** 교회 선택 옵션 — 공개 정보(이름·교단·지역)라 캐시. 공고 등록 시 인라인 매칭(admin/ingest) */
+export async function getChurchOptions(): Promise<ChurchOption[]> {
+  "use cache";
+  cacheTag("churches");
+  cacheLife("days");
+  return mock.getChurchOptions();
 }
 
 export async function getChurchTimeline(churchId: string): Promise<RoleHistory[]> {
