@@ -1,6 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
 import * as mock from "@/mocks";
-import type { AdminJob, JobCard, JobDetail } from "@/types/domain";
+import type { AdminJob, AdminOverview, JobCard, JobDetail } from "@/types/domain";
 import type { RepostInfo } from "@/lib/repost-tracking";
 
 // 데이터 소스 seam (공고) — 페이지는 여기서만 가져온다.
@@ -33,6 +33,14 @@ export async function getAdminJobs(): Promise<AdminJob[]> {
   cacheTag("jobs");
   cacheLife("days");
   return mock.getAdminJobs();
+}
+
+/** 운영자 홈 요약 — "할 일" 인박스(검수 대기·노출중·이번주·전체 + 검수 대기 목록). admin 홈 전용 */
+export async function getAdminOverview(): Promise<AdminOverview> {
+  "use cache";
+  cacheTag("jobs");
+  cacheLife("days");
+  return mock.getAdminOverview();
 }
 
 export async function getJobStats(): Promise<{

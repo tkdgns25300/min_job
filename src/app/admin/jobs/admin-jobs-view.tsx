@@ -14,13 +14,13 @@ import {
   type JobSource,
   type Region,
 } from "@/constants/domain";
-import type { AdminJob, JobStatus } from "@/types/domain";
+import type { AdminJob } from "@/types/domain";
 
-type Tab = "all" | JobStatus;
+// 공고 검수 제거 — 교회 인증이 유일 게이트라 검수중 탭 없음(모집중/마감만)
+type Tab = "all" | "OPEN" | "CLOSED";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "all", label: "전체" },
-  { key: "PENDING", label: JOB_STATUSES.PENDING },
   { key: "OPEN", label: JOB_STATUSES.OPEN },
   { key: "CLOSED", label: JOB_STATUSES.CLOSED },
 ];
@@ -39,7 +39,6 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
   const counts = useMemo(
     () => ({
       all: jobs.length,
-      PENDING: jobs.filter((j) => j.status === "PENDING").length,
       OPEN: jobs.filter((j) => j.status === "OPEN").length,
       CLOSED: jobs.filter((j) => j.status === "CLOSED").length,
     }),

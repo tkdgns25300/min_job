@@ -1,18 +1,66 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { Placeholder } from "@/components/layout/placeholder";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { getAdminOverview } from "@/lib/queries/jobs";
 
-export default function AdminHomePage() {
+export const metadata: Metadata = { title: "운영자 홈 | 민잡 운영자" };
+
+// 운영자 홈 — 요약 + 빠른 작업 랜딩. 요약 수치는 getAdminOverview('use cache').
+// (공고 검수 제거 — 교회 인증이 유일 게이트. 인증 검수는 /admin/verify에서.)
+export default async function AdminHomePage() {
+  const { featuredCount, weekCount, totalCount } = await getAdminOverview();
+
+  const stats = [
+    { label: "노출중(유료)", value: featuredCount },
+    { label: "이번 주 등록", value: weekCount },
+    { label: "전체 공고", value: totalCount },
+  ];
+
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8">
-      <h1 className="text-2xl font-bold">운영자 도구</h1>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Link href="/admin/ingest">
-          <Placeholder label="수집 등록 도구 (/admin/ingest)" className="min-h-32" />
-        </Link>
-        <Link href="/admin/jobs">
-          <Placeholder label="공고 관리 (/admin/jobs)" className="min-h-32" />
-        </Link>
+    <div className="mx-auto w-full max-w-5xl px-4 py-8">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold">운영자 홈</h1>
+        <p className="mt-1 text-sm text-muted-foreground">공고 현황 요약과 빠른 작업.</p>
+      </header>
+
+      {/* 요약 카드 — 클릭 시 공고 관리로 */}
+      <div className="grid grid-cols-3 gap-3">
+        {stats.map((s) => (
+          <Link
+            key={s.label}
+            href="/admin/jobs"
+            className="rounded-2xl border bg-card p-4 transition-colors hover:border-primary/40"
+          >
+            <div className="text-xs text-muted-foreground">{s.label}</div>
+            <div className="mt-1 text-2xl font-bold tabular-nums">{s.value}</div>
+          </Link>
+        ))}
       </div>
+
+      {/* 빠른 작업 */}
+      <section className="mt-6">
+        <h2 className="mb-2 text-sm font-bold">빠른 작업</h2>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/ingest" className={cn(buttonVariants())}>
+            ＋ 공고 수집
+          </Link>
+          <Link href="/admin/jobs" className={cn(buttonVariants({ variant: "outline" }))}>
+            공고 관리
+          </Link>
+        </div>
+      </section>
+
+      {/* 교회 인증 검수 — 유일한 검수 게이트(다음 단계 /admin/verify) */}
+      <Link
+        href="/admin/verify"
+        className="mt-4 flex items-center justify-between rounded-2xl border border-dashed px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+      >
+        <span>
+          교회 인증 검수 <span className="text-xs">(다음 단계)</span>
+        </span>
+        <span aria-hidden>→</span>
+      </Link>
     </div>
   );
 }

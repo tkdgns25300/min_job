@@ -1,6 +1,6 @@
 import churchesData from "./churches.json";
 import jobsData from "./jobs.json";
-import type { AdminJob, Church, Job, JobCard, JobDetail } from "@/types/domain";
+import type { AdminJob, AdminOverview, Church, Job, JobCard, JobDetail } from "@/types/domain";
 import {
   getRepostInfo,
   groupByRole,
@@ -189,6 +189,23 @@ function toAdminRow(job: Job): AdminJob {
 /** 운영자 공고 관리 — 전체 공고(모든 상태·출처), 최신순. 탭·필터는 클라이언트가 처리 */
 export function getAdminJobs(): AdminJob[] {
   return [...jobs].sort((a, b) => b.postedAt.localeCompare(a.postedAt)).map(toAdminRow);
+}
+
+/** 운영자 홈 요약 — 노출중·이번주·전체. (공고 검수 제거: 교회 인증이 유일 게이트) */
+export function getAdminOverview(): AdminOverview {
+  const all = getAdminJobs(); // 최신순 AdminJob[]
+  // "노출중" = 실제 게재 중(OPEN)인 유료 공고만 — 마감 featured는 노출 아님
+  const featuredCount = all.filter((j) => j.status === "OPEN" && j.featuredTier !== "NONE").length;
+  // 이번 주 = 최신 게시일 기준 7일 내 (결정성 유지 — getJobStats와 동일 방식, 현재 시각 미사용)
+  let weekCount = 0;
+  if (all.length > 0) {
+    const latest = all.reduce((m, j) => (j.postedAt > m ? j.postedAt : m), all[0].postedAt);
+    const ref = new Date(latest);
+    ref.setDate(ref.getDate() - 7);
+    const weekAgo = ref.toISOString().slice(0, 10);
+    weekCount = all.filter((j) => j.postedAt >= weekAgo).length;
+  }
+  return { featuredCount, weekCount, totalCount: all.length };
 }
 
 /**

@@ -77,7 +77,7 @@ export const QUALIFICATIONS = {
 } as const;
 export type Qualification = keyof typeof QUALIFICATIONS;
 
-// 공고 상태 — 모집중/마감 + 검수중(신규 교회 첫 공고는 검수 후 게재, ROADMAP 1-4)
+// 공고 상태 — 모집중/마감. PENDING(검수중)은 공고 검수 제거(2026-07-21)로 미사용(방어적 잔존) — 교회 인증이 유일 게이트
 export const JOB_STATUSES = {
   OPEN: "모집중",
   CLOSED: "마감",

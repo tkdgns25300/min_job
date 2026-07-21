@@ -116,3 +116,10 @@ export interface AdminJob {
   postedAt: string;
   deadline: string | null;
 }
+
+// 운영자 홈 요약 — 요약 수치. (admin 홈) ※ 공고 검수 제거 — 교회 인증이 유일 게이트
+export interface AdminOverview {
+  featuredCount: number; // 노출중(유료, OPEN)
+  weekCount: number; // 이번 주 등록(최신 게시일 기준 7일)
+  totalCount: number; // 전체 공고
+}

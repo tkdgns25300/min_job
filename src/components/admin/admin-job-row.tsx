@@ -124,7 +124,7 @@ export function AdminJobRow({
     .join(" · ");
 
   return (
-    <tr className={cn(job.status === "PENDING" && "bg-primary/[0.04]")}>
+    <tr>
       <td className="px-4 py-3 align-middle">
         <Link href={`/jobs/${job.id}`} className="font-semibold hover:underline">
           {job.title}
@@ -152,18 +152,14 @@ export function AdminJobRow({
       </td>
       <td className="px-4 py-3 align-middle">
         <div className="flex items-center justify-end gap-1.5">
-          {job.status === "PENDING" && (
+          {job.status === "CLOSED" ? (
             <>
               <Button variant="outline" size="sm">
-                승인
-              </Button>
-              <Button variant="outline" size="sm" className="text-destructive">
-                반려
+                재등록
               </Button>
               <OverflowMenu label={job.title} items={[{ label: "삭제", destructive: true }]} />
             </>
-          )}
-          {job.status === "OPEN" && (
+          ) : (
             <>
               <Button variant="outline" size="sm" onClick={onFeature}>
                 노출 설정
@@ -175,14 +171,6 @@ export function AdminJobRow({
                 label={job.title}
                 items={[{ label: "마감" }, { label: "삭제", destructive: true }]}
               />
-            </>
-          )}
-          {job.status === "CLOSED" && (
-            <>
-              <Button variant="outline" size="sm">
-                재등록
-              </Button>
-              <OverflowMenu label={job.title} items={[{ label: "삭제", destructive: true }]} />
             </>
           )}
         </div>
