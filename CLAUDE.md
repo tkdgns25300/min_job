@@ -35,7 +35,8 @@
 |---|---|---|
 | `/`, `/jobs`, `/jobs/[id]`, `/churches/[id]` | `'use cache'` (CDN 캐시, on-demand) | 공고 변경 빈도 낮음, 모든 방문자 동일 뷰 |
 | `/jobs?(검색·필터 쿼리)` | dynamic (`<Suspense>`) | searchParams 의존 — 매번 fresh |
-| `/admin/**` | dynamic | 운영자 전용 등록·관리 도구 |
+| `/admin`, `/admin/jobs`, `/admin/ingest` | `'use cache'` (non-PII read) | 운영자 도구지만 공개·비개인 데이터(공고·교회옵션) — 모든 운영자 동일 뷰 |
+| `/admin/verify` | dynamic (`<Suspense>` + `connection()`) | 인증 신청 PII(담당자 연락처) — 캐시 금지 |
 | `/login`, `/mypage` | dynamic | 인증 의존 |
 
 ### 데이터 수집·구조화 파이프라인 (MinJob 고유 — 반드시 준수)
@@ -164,7 +165,7 @@ DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. �
 | `lib/supabase/session.ts` | `@supabase/ssr` `createServerClient` | publishable | ✅ | `proxy.ts` 세션 refresh용 (단독 사용 X) |
 
 - 키: **publishable**(구 anon, RLS 적용, `NEXT_PUBLIC_*`) / **secret**(구 service_role, RLS 우회, 서버 전용). env 이름은 `.env.example` 참조.
-- `service.ts`가 RLS를 우회하므로 cached read(공개 공고 조회) 전용으로만. 인증·권한이 필요한 작업은 반드시 `server.ts`.
+- `service.ts`가 RLS를 우회하므로 cached read(공개·비개인 조회 — 공고·교회·운영자 목록 등) 전용으로만. **인증 의존·PII read(예: 교회 인증 신청)와 모든 인증·권한 작업은 반드시 `server.ts`**(cached 금지).
 - ⚠️ 현재는 **배선만** — `lib/queries/*`는 아직 mock(JSON). 실제 DB 사용 전환은 Phase 1(쿼리 본문만 교체, 시그니처 불변).
 
 ## `'use cache'` 제약 (필수 준수)
