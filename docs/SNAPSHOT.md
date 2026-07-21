@@ -8,7 +8,7 @@
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** 남은 것: SEO·admin 3종 + terms/privacy 법률검토. **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 카드사 등록신청 제출(심사 3~15일 대기, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **KCP 심사 승인 대기** + admin 3종/Phase 1 병행(§7). 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용·실카드결제(승인 후)는 Phase 1.
+흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** 남은 것: SEO·admin ingest(마지막 1종) + terms/privacy 법률검토. **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 카드사 등록신청 제출(심사 3~15일 대기, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **KCP 심사 승인 대기** + admin ingest(마지막 1종)/Phase 1 병행(§7). 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용·실카드결제(승인 후)는 Phase 1.
 
 ---
 
@@ -34,9 +34,10 @@
 | `/mypage/church/promote` 노출 결제 | ✅ | ✅ | ✅ | ✅ `5764fdc` | **PortOne V2 실결제 동작**(KCP 테스트 성공·서버 금액 검증). 실 노출 적용·모바일 redirect 복귀 Phase 1 |
 | `/terms`·`/privacy` | 🟡 초안 보강 | — | ✅ | ✅ `150aa99` | 법률검토·`[ ]`실값 대기 |
 | `/admin` 셸·홈·`/admin/jobs` | ✅ | ✅ | ✅ | ✅ `bcb9e77`+ | mock — 셸(딥그린 사이드바·noindex·게이트 Phase1)·홈(요약 카드+빠른 작업)·공고 관리(탭[전체·모집중·마감]·필터·테이블·노출/수정 Sheet). **공고 검수 제거**(교회 인증이 유일 게이트). mutation Phase 1 |
-| `/admin/ingest`·`/admin/verify` | ⬜ | ⬜ | ⬜ | 스캐폴드/다음 단계 | — |
+| `/admin/verify` 교회 인증 검수 | ✅ | ✅ | ✅ | ✅ `a4599c9` | mock — **유일 검수 게이트**. 탭[검수중·완료·반려·전체]·필터·테이블·승인/반려 Sheet(서류확인+반려사유). **dynamic**(운영자+PII라 `'use cache'` 금지, `connection()`+Suspense). 정렬=대기 우선. 승인/반려 mutation·알림 Phase 1 |
+| `/admin/ingest` 수집·구조화 | ⬜ | ⬜ | ⬜ | 스캐폴드/다음 단계 | — |
 
-> **완료(mock) 14개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자)·/mypage/verify·/jobs/new·/jobs/[id]/edit·**/mypage/church·/mypage/church/info·/mypage/church/promote**. **단일 계정 + mock 세션 로그인 실동작**(계정 §5). **`/mypage/church/promote`는 PortOne 실결제까지 동작**(데이터·실 노출 적용만 Phase 1). **남은 것 = SEO(sitemap/robots)·admin 나머지(ingest·verify; 셸·홈·공고관리는 구현됨) + terms/privacy 법률검토·실값.** (약관·개인정보 초안 보강·사업자정보 반영됨.) 실 mutation·백엔드 = Phase 1.
+> **완료(mock) 14개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자)·/mypage/verify·/jobs/new·/jobs/[id]/edit·**/mypage/church·/mypage/church/info·/mypage/church/promote**. **단일 계정 + mock 세션 로그인 실동작**(계정 §5). **`/mypage/church/promote`는 PortOne 실결제까지 동작**(데이터·실 노출 적용만 Phase 1). **남은 것 = SEO(sitemap/robots)·admin 나머지(ingest; 셸·홈·공고관리·인증검수는 구현됨) + terms/privacy 법률검토·실값.** (약관·개인정보 초안 보강·사업자정보 반영됨.) 실 mutation·백엔드 = Phase 1.
 > **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
 
 ---
@@ -83,10 +84,11 @@ npx prettier --check <file>   # 포맷
 
 ### mock 현황 (`src/mocks/`)
 - **churches.json 35개** · **jobs.json 101개**. 분포: OPEN 79 / CLOSED 22 / PENDING 0(공고 검수 제거로 전부 자동 게재) · OPERATOR(owner 없음)·CHURCH 혼합. 재공고 데모 4교회 · **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**.
+- **church-verifications.json 7건**(admin/verify 검수용): 검수중 4·인증완료 2·반려 1. 기존 교회 매칭 6 + 신규 교회 신청 1(id null). PII는 명백한 합성값(@example.com·010-0000-000X), vf-005만 test1@test.com(mock-auth 매칭).
 - **mock 로그인 계정**(`src/lib/mock-auth.ts`, 비번 `test1234`): `test1@test.com`(이도현·새벽빛교회 **인증** APPROVED) · `test2@test.com`(박서연·**미인증** 순수 사역자). 세션 = 비httpOnly 쿠키 `mj_session`.
 
 ### enum (`src/constants/domain.ts`)
-DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·PENDING[미사용 — 공고 검수 제거]) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · HOUSING_OPTIONS · APPLY_METHODS · STIPEND_NOTE_PRESETS · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
+DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·PENDING[미사용 — 공고 검수 제거]) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · **VERIFICATION_DOC_TYPES**(고유번호증·사업자등록증) · HOUSING_OPTIONS · APPLY_METHODS · STIPEND_NOTE_PRESETS · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
 
 ### 타입 (`src/types/domain.ts`) — 이번에 추가된 것
 - `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)** · `ownerId?`(교회 직접 등록 소유). — 전부 additive/optional.
@@ -123,7 +125,7 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 3. ✅ **PortOne 노출 결제 flow 구현·검증(2026-07-20, `5764fdc`)** — `/mypage/church/promote`(인증 게이트) → `promote-checkout.tsx`(client)에서 **PortOne V2 `requestPayment`**(KCP CARD 채널) 결제창 → 성공 시 `POST /api/payments/complete`가 **PortOne API로 실결제 조회 + 금액 서버 재계산(tier·weeks, 클라 불신) + `status===PAID` 대조**. 가격 단일 소스 = `EXPOSURE_PRODUCTS`/`exposurePrice`(constants). **KCP 테스트 결제 성공 확인.** env: `NEXT_PUBLIC_PORTONE_STORE_ID`·`_CHANNEL_KEY`·`PORTONE_API_SECRET`. ⚠️ paymentId 38자(KCP 40자 제한). ⚠️ **모바일 redirect 복귀 미처리** — 데스크톱 팝업(Promise)만 완료 화면·서버검증. 모바일 `?paymentId=` 복귀 처리 = Phase 1. 실 노출 적용(featured_tier·featured_until 세팅)·주문 저장도 Phase 1.
 4. ✅ **도메인 연결 + NHN KCP 전자결제 신청 제출(2026-07-20)** — 도메인 `minjob.co.kr` → Vercel(hosting.kr DNS: A `@`→216.198.79.1 + CNAME `www`→Vercel 전용, 대표=`www.minjob.co.kr`, SSL 자동). PortOne 전자결제 신청 **사전점검 6항목 통과**(URL=`https://www.minjob.co.kr`, 전화번호 반영으로 사업자정보 통과) → **가맹 심사 진행중**. **PG 결정: NHN KCP·신용카드 일반결제 단일 채널**(KPN·정기결제·간편결제·본인인증 미사용 — ROADMAP 1-8 PG결정). ⚠️ 승인 후: 실연동 채널(KCP) 키를 `_CHANNEL_KEY`에 교체 + 일반결제 계약 활성.
 5. ✅ **PG-API·실연동 채널 전환 + 카드사 등록신청 제출(2026-07-21)** — KCP PG-API(개인키+서비스 인증서) 발급 → PortOne **실연동** 채널 "MinJob NHN KCP"(`kcp_v2`·사이트코드 IP94F·PG-API 인증서/개인키) → 채널 키 `channel-key-bc781263-…`를 `_CHANNEL_KEY`(로컬 `.env` + Vercel)에 교체·재배포(STORE_ID·`PORTONE_API_SECRET` 불변). 라이브 결제창 = 실연동. **`partner.kcp.co.kr` 카드사 등록신청 제출 → 심사 3~15일 대기**(승인 시 실카드결제). 문의내용: test1 계정 + 결제창 경로(`/mypage/church/promote`) + 통신판매 면제 사유. ⚠️ **심사 중 URL·하단 사업자정보·상품/가격 변경 금지.**
-6. **나중 (실데이터·정식 오픈 즈음)**: **SEO**(`sitemap.ts`·`robots.ts` — 지금은 mock이라 오히려 색인 방지가 맞아 defer, 배포 시 필요하면 noindex 1줄만) · **admin 나머지**(`/admin/ingest` 수집→구조화 · `/admin/verify` 인증검수 — 셸·`/admin` 홈·`/admin/jobs`는 구현됨 2026-07-21) · terms/privacy 법률 검토.
+6. **나중 (실데이터·정식 오픈 즈음)**: **SEO**(`sitemap.ts`·`robots.ts` — 지금은 mock이라 오히려 색인 방지가 맞아 defer, 배포 시 필요하면 noindex 1줄만) · **admin 나머지**(`/admin/ingest` 수집→구조화 — 셸·`/admin` 홈·`/admin/jobs`·`/admin/verify` 인증검수는 구현됨 2026-07-21) · terms/privacy 법률 검토.
 7. **Phase 1 (본체)**: Supabase 실사용(인증 proxy·mutation `actions.ts`·`'use cache'` 실적용·`lib/queries` mock→DB) · 계정 북마크 · `/jobs/[id]/edit` 권한=교회 인증 멤버십 · **DATA 정합 패스**(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처) · **노출 결제 마무리**(주문 저장·실 노출 적용·모바일 redirect 복귀·KCP 승인 후 실결제 계약).
 > ✅ **완료(2026-07-14)**: `/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터).
 > **결정(2026-07-14)**: 배포 먼저(mock) → Supabase는 "연결만"(데이터 mock 유지) → SEO는 나중. Supabase/배포는 서로 독립이라 DB 먼저 할 필요 없음.
