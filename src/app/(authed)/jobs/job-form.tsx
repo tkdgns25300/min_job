@@ -9,7 +9,7 @@ import { Field } from "./form-section";
 import { ChipSelect } from "./chip-select";
 import { ListField } from "./list-field";
 import { CheckList, type CheckItem } from "./check-list";
-import { StepBar, FlowSection, STEP_TITLES, TOTAL_STEPS } from "./job-wizard";
+import { StepBar, FlowSection, TOTAL_STEPS } from "./job-wizard";
 import { ChurchFields, ChurchSummaryCard } from "./church-fields";
 import {
   APPLY_METHODS,

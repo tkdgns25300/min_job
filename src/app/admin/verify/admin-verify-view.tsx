@@ -5,10 +5,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { VerificationRow } from "@/components/admin/verification-row";
-import {
-  VerificationSheet,
-  type SheetState,
-} from "@/components/admin/verification-sheet";
+import { VerificationSheet, type SheetState } from "@/components/admin/verification-sheet";
 import {
   CHURCH_VERIFICATION_STATUSES,
   DENOMINATIONS,

@@ -132,7 +132,9 @@ function SavedRow({ job, onUnsave }: { job: JobCard; onUnsave: (id: string) => v
         <p className="mt-0.5 truncate text-xs text-muted-foreground">{jobRoleLine(job)}</p>
       </div>
       <div className="shrink-0 text-right">
-        <div className={cn(hasStipend ? "font-bold text-primary" : "text-sm text-muted-foreground")}>
+        <div
+          className={cn(hasStipend ? "font-bold text-primary" : "text-sm text-muted-foreground")}
+        >
           {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
         </div>
       </div>

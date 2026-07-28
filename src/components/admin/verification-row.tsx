@@ -50,7 +50,9 @@ export function VerificationRow({
       </td>
       <td className="px-4 py-3 align-middle whitespace-nowrap">
         {applicant.name}
-        <span className="ml-1.5 text-xs text-muted-foreground">{POSITIONS[applicant.position]}</span>
+        <span className="ml-1.5 text-xs text-muted-foreground">
+          {POSITIONS[applicant.position]}
+        </span>
       </td>
       <td className="px-4 py-3 align-middle text-xs whitespace-nowrap text-muted-foreground">
         {VERIFICATION_DOC_TYPES[doc.type]}

@@ -1,4 +1,10 @@
-import { DENOMINATIONS, DEPARTMENTS, EMPLOYMENT_TYPES, POSITIONS, REGIONS } from "@/constants/domain";
+import {
+  DENOMINATIONS,
+  DEPARTMENTS,
+  EMPLOYMENT_TYPES,
+  POSITIONS,
+  REGIONS,
+} from "@/constants/domain";
 import type { Church, JobCard } from "@/types/domain";
 
 // 도메인 값 표시 포매터

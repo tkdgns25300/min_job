@@ -90,7 +90,9 @@ function matchEmployment(text: string): EmploymentType | null {
 }
 
 // 사례비 — 명시 금액 우선(범위 → 단일). 금액이 없을 때만 비정형 표현(내규·협의)으로 추정.
-function parseStipend(text: string): Pick<IngestDraft, "stipendMin" | "stipendMax" | "stipendNote"> {
+function parseStipend(
+  text: string,
+): Pick<IngestDraft, "stipendMin" | "stipendMax" | "stipendNote"> {
   const range = text.match(/(\d{2,4})\s*(?:만\s*원?)?\s*~\s*(\d{2,4})\s*만/);
   if (range) return { stipendMin: range[1], stipendMax: range[2], stipendNote: "" };
 
@@ -125,7 +127,11 @@ export function structureJobText(text: string): IngestDraft {
   const src = text.trim();
   if (!src) return emptyIngestDraft();
 
-  const firstLine = src.split("\n").find((line) => line.trim().length > 0)?.trim() ?? "";
+  const firstLine =
+    src
+      .split("\n")
+      .find((line) => line.trim().length > 0)
+      ?.trim() ?? "";
 
   return {
     title: firstLine,

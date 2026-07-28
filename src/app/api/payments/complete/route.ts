@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/queries/users";
 import { hasChurchAccess } from "@/lib/auth";
-import { EXPOSURE_PRODUCTS, EXPOSURE_WEEKS, exposurePrice, type ExposureProduct } from "@/constants/domain";
+import {
+  EXPOSURE_PRODUCTS,
+  EXPOSURE_WEEKS,
+  exposurePrice,
+  type ExposureProduct,
+} from "@/constants/domain";
 
 // 결제 검증 — 브라우저 결제 후 서버가 PortOne에 실제 결제를 조회해 상태·금액을 대조(위변조 방지).
 // 금액은 클라이언트를 믿지 않고 tier·weeks로 서버가 재계산한다.
