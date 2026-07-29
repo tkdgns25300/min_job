@@ -5,7 +5,7 @@ import { IngestView } from "./ingest-view";
 export const metadata: Metadata = { title: "공고 수집 | 민잡 운영자" };
 
 // 공고 수집 — 사람이 확보한 원문 붙여넣기 → AI 구조화(mock) → 검토 후 '운영자 등록'.
-// 교회 옵션은 인라인 매칭용('use cache', 공개 정보). ★ 자동 크롤러 아님(가드레일 #1).
+// 교회 옵션은 인라인 매칭용('use cache', 공개 정보). ★ 이 화면은 사람이 붙여넣는 경로(크롤러 수집분은 검수 브릿지·min_job_agent).
 export default async function AdminIngestPage() {
   const churchOptions = await getChurchOptions();
 

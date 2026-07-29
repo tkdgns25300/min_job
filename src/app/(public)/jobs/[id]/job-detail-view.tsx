@@ -231,7 +231,7 @@ function MainContent({
       <Section title="지원 방법">
         <p className="mt-3 text-sm leading-relaxed text-foreground/90">
           {job.source === "OPERATOR"
-            ? "이 공고는 외부 공식 게시판에서 수집했어요. 원문 공고와 교회 안내를 따라 교회로 직접 지원해 주세요."
+            ? "이 공고는 공개된 청빙 공고를 정리한 거예요. 원문 공고와 교회 안내를 따라 교회로 직접 지원해 주세요."
             : "지원은 교회가 안내하는 채널로 직접 해주세요. 민잡은 지원서를 대신 받지 않아요."}
         </p>
         {apply && (
