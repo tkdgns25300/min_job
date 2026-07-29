@@ -6,6 +6,7 @@ import type {
   EmploymentType,
   Qualification,
   FeaturedTier,
+  JobKind,
   JobSource,
   JobStatus,
   ChurchChannel,
@@ -44,7 +45,8 @@ export interface Job {
   id: string;
   churchId: string;
   title: string;
-  position: Position;
+  jobKind: JobKind; // 사역직/일반직 — 최상위 채용 구분
+  position: Position; // 사역 직분. 일반직 nullable화는 크롤러 실데이터 시(ROADMAP 1-10)
   department: Department | null;
   employmentType: EmploymentType;
   qualification?: Qualification; // 자격/경력 요건 (필터). 미지정 = 무관 취급. 실데이터에선 필수화 예정
@@ -64,6 +66,8 @@ export interface Job {
   description: string | null; // 공고 본문 (운영자 요약 or 교회 작성 — 원문 통째 복제 X)
   source: JobSource; // 출처 — 운영자 등록 / 교회 직접 등록 (owner nullable 가드레일)
   sourceUrl: string | null; // 원문 링크 (운영자 수집 공고). 재호스팅 대신 링크로 안내
+  role: string | null; // 일반직(GENERAL) 분류 자유텍스트(방송·행정 등). 사역직은 null
+  contact: string | null; // 지원용 공개 연락처(전화·이메일·링크). 가드레일 #3
   ownerId?: string | null; // 소유 계정(교회 직접 등록만) — 운영자 공고는 없음. 가드레일 #2: 공고를 user에 강결합하지 않는다
 }
 

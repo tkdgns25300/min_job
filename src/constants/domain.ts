@@ -7,7 +7,6 @@ export const DENOMINATIONS = {
   BAEKSEOK: "예장백석",
   GOSIN: "예장고신",
   HAPSIN: "예장합신",
-  KIJANG: "기장",
   GAMLI: "감리교",
   SEONGGYUL: "성결교",
   BAPTIST: "침례교",
@@ -38,7 +37,14 @@ export const REGIONS = {
 } as const;
 export type Region = keyof typeof REGIONS;
 
-// 직분 (순수 직분만 — 전임/파트는 employmentType, 부서는 department로 분리)
+// 채용 구분(최상위 축) — 사역직(목사·전도사 등) / 일반직(방송·행정·시설 등). 목록 기본뷰=사역직.
+export const JOB_KINDS = {
+  MINISTRY: "사역직",
+  GENERAL: "일반직",
+} as const;
+export type JobKind = keyof typeof JOB_KINDS;
+
+// 직분 (순수 직분만 — 전임/파트는 employmentType, 부서는 department로 분리). 사역직 전용.
 export const POSITIONS = {
   SENIOR_PASTOR: "담임목사",
   ASSOCIATE_PASTOR: "부목사",
