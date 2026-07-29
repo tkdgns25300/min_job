@@ -11,10 +11,12 @@ export const metadata: Metadata = { title: "운영자 홈 | 민잡 운영자" };
 export default async function AdminHomePage() {
   const { featuredCount, weekCount, totalCount } = await getAdminOverview();
 
+  // href = 각 수치에 대응하는 필터된 공고 관리 뷰로 딥링크.
+  // 노출중(유료) = OPEN + 유료노출(featuredTier≠NONE). "이번 주 등록"은 대응 필터가 없어 전체 목록으로.
   const stats = [
-    { label: "노출중(유료)", value: featuredCount },
-    { label: "이번 주 등록", value: weekCount },
-    { label: "전체 공고", value: totalCount },
+    { label: "노출중(유료)", value: featuredCount, href: "/admin/jobs?tab=OPEN&featured=paid" },
+    { label: "이번 주 등록", value: weekCount, href: "/admin/jobs" },
+    { label: "전체 공고", value: totalCount, href: "/admin/jobs" },
   ];
 
   return (
@@ -24,12 +26,12 @@ export default async function AdminHomePage() {
         <p className="mt-1 text-sm text-muted-foreground">공고 현황 요약과 빠른 작업.</p>
       </header>
 
-      {/* 요약 카드 — 클릭 시 공고 관리로 */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* 요약 카드 — 클릭 시 대응 필터 뷰로 딥링크 */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {stats.map((s) => (
           <Link
             key={s.label}
-            href="/admin/jobs"
+            href={s.href}
             className="rounded-2xl border bg-card p-4 transition-colors hover:border-primary/40"
           >
             <div className="text-xs text-muted-foreground">{s.label}</div>

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { EmailLoginForm } from "./login-form";
 
 export const metadata: Metadata = {
@@ -97,16 +96,10 @@ export default function LoginPage() {
       {/* 이메일 로그인 (mock 동작 — lib/mock-auth) */}
       <EmailLoginForm />
 
-      {/* TODO(Phase 1): /signup·비밀번호 재설정 라우트로 교체 (현재 placeholder) */}
-      <div className="mt-5 flex items-center justify-center gap-3 text-sm text-muted-foreground">
-        <Link href="/login" className="font-semibold text-foreground hover:underline">
-          회원가입
-        </Link>
-        <span className="h-3 w-px bg-border" />
-        <Link href="/login" className="font-semibold text-foreground hover:underline">
-          비밀번호 찾기
-        </Link>
-      </div>
+      {/* 회원가입·비밀번호 재설정은 Phase 1(Supabase Auth). 지금은 라우트가 없어 안내만 (가짜 링크 X) */}
+      <p className="mt-5 text-sm break-keep text-muted-foreground">
+        회원가입·비밀번호 찾기는 <span className="font-semibold text-foreground">준비 중</span>이에요.
+      </p>
 
       {/* mock 테스트 계정 안내 — 실 인증(Phase 1)에서 제거 */}
       <p className="mt-6 rounded-lg bg-muted/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">

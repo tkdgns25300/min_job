@@ -30,7 +30,10 @@ export function IngestView({ churchOptions }: { churchOptions: ChurchOption[] })
   const [draft, setDraft] = useState<IngestDraft | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const patch = (partial: Partial<IngestDraft>) => setDraft((d) => (d ? { ...d, ...partial } : d));
+  const patch = (partial: Partial<IngestDraft>) => {
+    setDraft((d) => (d ? { ...d, ...partial } : d));
+    setSubmitted(false); // 등록 후 필드를 고치면 'Phase 1' 안내가 남지 않게 초기화
+  };
 
   const structure = () => {
     // mock: client에서 sync 호출. Phase 1엔 Server Action(async, Claude API)으로 전환.
