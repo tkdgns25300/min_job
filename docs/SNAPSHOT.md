@@ -25,7 +25,7 @@
 | UI/디자인 스캐폴드 | ~90% | (거의 끝 — 전 페이지 mock 확정) |
 | 인프라/배포 | ~90% | Vercel·도메인·SSL·Supabase 연결 완료 |
 | 수익화/결제 | ~40% | **KCP 카드사 심사 대기** + 실 노출 적용(featured)·주문 저장 |
-| 프론트 로직 디테일(1-9) | ~35% | login·hover·상태분기·빈상태·모바일 (**미착수**, 지금 가능) |
+| 프론트 로직 디테일(1-9) | ~85% | URL동기화·404/error·위저드검증·모바일네비·?next·admin deep-link 완료(2026-07-29). pagination·실Auth 잔여 |
 | 백엔드(Supabase 실사용) | ~10% | 스키마·Auth·mutation·`lib/queries` mock→DB (Phase 1, **최대 덩어리**) |
 | 데이터(실 공고·구조화) | ~5% | 실 공고 0·Claude 구조화 미연동 (다른 세션) |
 | 크롤러 연동(min_job_agent) | ~0% | **방향 전환 확정·문서 싱크 중** — 코드·enum·검수 브릿지 미착수 (정본=CRAWLER_HANDOFF.md) |
