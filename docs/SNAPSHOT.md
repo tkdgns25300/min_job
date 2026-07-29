@@ -108,12 +108,12 @@ npx prettier --check <file>   # 포맷
 ## 5. 데이터 (mock 스키마 = 확정 진행 중)
 
 ### mock 현황 (`src/mocks/`)
-- **churches.json 35개** · **jobs.json 101개**. 분포: OPEN 79 / CLOSED 22 / PENDING 0(공고 검수 제거로 전부 자동 게재) · OPERATOR(owner 없음)·CHURCH 혼합. 재공고 데모 4교회 · **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. ⚠️ **KIJANG(갈릴리교회 1건) → ETC 교정 예정**(denomination 10키 전환, 2026-07-28).
+- **churches.json 35개** · **jobs.json 101개**. 분포: OPEN 79 / CLOSED 22 / PENDING 0(공고 검수 제거로 전부 자동 게재) · OPERATOR(owner 없음)·CHURCH 혼합. 재공고 데모 4교회 · **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. ✅ **KIJANG(갈릴리교회) → ETC 교정 완료 · denomination 10키 전환**(Phase 2, 2026-07-29). 전 공고 `jobKind=MINISTRY`.
 - **church-verifications.json 7건**(admin/verify 검수용): 검수중 4·인증완료 2·반려 1. 기존 교회 매칭 6 + 신규 교회 신청 1(id null). PII는 명백한 합성값(@example.com·010-0000-000X), vf-005만 test1@test.com(mock-auth 매칭).
 - **mock 로그인 계정**(`src/lib/mock-auth.ts`, 비번 `test1234`): `test1@test.com`(이도현·새벽빛교회 **인증** APPROVED) · `test2@test.com`(박서연·**미인증** 순수 사역자). 세션 = 비httpOnly 쿠키 `mj_session`.
 
 ### enum (`src/constants/domain.ts`)
-DENOMINATIONS(⚠️ **KIJANG 제거 → 10키 예정; 기장=ETC 흡수, HAPSIN 유지 — 2026-07-28**) · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·PENDING[미사용 — 공고 검수 제거]) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · **VERIFICATION_DOC_TYPES**(고유번호증·사업자등록증) · HOUSING_OPTIONS · APPLY_METHODS · STIPEND_NOTE_PRESETS · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
+DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**) · **JOB_KINDS**(사역직 MINISTRY·일반직 GENERAL) · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·PENDING[미사용 — 공고 검수 제거]) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · **VERIFICATION_DOC_TYPES**(고유번호증·사업자등록증) · HOUSING_OPTIONS · APPLY_METHODS · STIPEND_NOTE_PRESETS · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
 
 ### 타입 (`src/types/domain.ts`) — 이번에 추가된 것
 - `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)** · `ownerId?`(교회 직접 등록 소유). — 전부 additive/optional.
@@ -130,7 +130,7 @@ DENOMINATIONS(⚠️ **KIJANG 제거 → 10키 예정; 기장=ETC 흡수, HAPSIN
 
 ## 6. 이번 세션 확정 설계 (되돌리지 말 것)
 
-- **▶ 방향 전환(2026-07-28) — 크롤러 도입 + 개교회 채용으로 범위 확장 (되돌리지 말 것)**: 2026-07-28 크롤러 도입 확정 + 개교회 채용으로 범위 확장(사역직 MINISTRY + 일반직 GENERAL). 가드레일 #1·#3 재정의(법률 검토 완료). 정본 = **CRAWLER_HANDOFF.md + min_job_agent/docs**. min_job 싱크 = **문서/코드/검수 브릿지 Phase로 진행**(ROADMAP 1-10). staging 4테이블은 min_job_agent 소유(min_job은 인지만), init.sql/마이그레이션 보류. denomination KIJANG 제거(10키)·jobs 신규 필드(`job_kind`·`role`·`contact`·`position`) 반영 예정.
+- **▶ 방향 전환(2026-07-28) — 크롤러 도입 + 개교회 채용으로 범위 확장 (되돌리지 말 것)**: 2026-07-28 크롤러 도입 확정 + 개교회 채용으로 범위 확장(사역직 MINISTRY + 일반직 GENERAL). 가드레일 #1·#3 재정의(법률 검토 완료). 정본 = **CRAWLER_HANDOFF.md + min_job_agent/docs**. min_job 싱크 = **문서/코드/검수 브릿지 Phase로 진행**(ROADMAP 1-10). staging 4테이블은 min_job_agent 소유(min_job은 인지만), init.sql/마이그레이션 보류. denomination 10키·jobs `jobKind`(MINISTRY/GENERAL)·`role`·`contact` = types+mock 반영 완료(Phase 2, 2026-07-29). `position` NULL 허용·일반직 UI·필터는 크롤러 실데이터 시(deferred).
 - **/jobs**: 대표광고를 **리스트 안에 통합**(별도 밴드 폐기, 배경 틴트 없이 작은 "광고" 태그, 티어 차이=노출 위치) · **검색 존**(옅은 초록 밴드: H1+설명+"모집 중 N건") · **결과 툴바**(정렬 + **페이지당 20/50/100**) · **자격/경력·사택 필터 추가**(성별·결혼 필터 금지) · 최근 본 공고 정보형 · 교회 CTA 위젯 · 좌필터 스크롤(우레일만 sticky). "총 N건" = 모집 중(HERO 포함).
 - **/jobs/[id]**: **단일 흐름 본문(여백형)** + **우측 요약 카드 B**(지원하기 상단 + 사례비·마감·고용) + **재공고 이력 접이식** + 비슷한 6개+더보기 + **아이콘 없음** + 지도 placeholder.
 - **/churches/[id]**(재설계): 얇은 허브 — 순서 **커버(사진 갤러리·라이트박스) → 채널(brand 색·아이콘) → 청빙 공고(현재+지난 통합, 재공고 배지) → 위치(지도)**. 공고가 방문 의도라 위로. **아바타 폐기** · **교회 소개 텍스트 미채택**(채널·유튜브로 파악 대체) · 카드 hover=`bg-muted/40`. 사진 = `Church.photos[]`(mock placeholder SVG, 업로드 Phase 1).

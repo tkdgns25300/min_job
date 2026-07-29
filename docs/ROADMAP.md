@@ -145,8 +145,8 @@
 - [ ] **범위 확장 문서화** — "사역자 청빙" → **개교회 채용**(사역직 MINISTRY + 일반직 GENERAL). SPEC/DATA/CLAUDE 스코프 카피 갱신
 
 **(b) 코드·타입·enum·mock 싱크**
-- [ ] denomination enum에서 **KIJANG 제거 → 10키**(기장=ETC로 흡수, HAPSIN 유지). mock churches의 KIJANG 건은 ETC로 교정
-- [ ] jobs 신규 필드(설계) 반영 — `job_kind`(MINISTRY/GENERAL)·`role`·`contact`·`position`(NULL 허용). `types/domain.ts`·mock·폼 seam 반영 (**마이그레이션 SQL은 보류**)
+- [x] denomination enum에서 **KIJANG 제거 → 10키**(기장=ETC로 흡수, HAPSIN 유지). mock churches의 KIJANG 건은 ETC로 교정 (완료 2026-07-29)
+- [~] jobs 신규 필드 반영 — `jobKind`(MINISTRY/GENERAL)·`role`·`contact` = `types/domain.ts`+mock 반영 **완료(2026-07-29)**. `position` NULL 허용·폼 seam·일반직 UI는 크롤러 실데이터 시(deferred), 마이그레이션 SQL 보류
 
 **(c) admin 검수 브릿지**
 - [ ] `review_data` → 승격 UI — 크롤 적재분을 운영자가 검토 후 churches/jobs로 승격(기존 `/admin/ingest`와 정합)
