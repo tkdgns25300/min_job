@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ChurchInfoForm } from "./church-info-form";
 import { getCurrentUser } from "@/lib/queries/users";
 import { getChurch } from "@/lib/queries/churches";
-import { hasChurchAccess } from "@/lib/auth";
+import { hasChurchAccess, loginPathWithNext } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "교회 정보 관리 | 민잡", robots: { index: false } };
 
@@ -24,7 +24,7 @@ export default function ChurchInfoPage() {
 async function ChurchInfoContent() {
   await connection(); // 인증 의존 — 요청 시점 렌더
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(loginPathWithNext("/mypage/church/info")); // 로그인 후 복귀
   // 미인증은 관리 화면(게이트)으로 — 인증 완료만 정보 편집 가능
   if (!hasChurchAccess(user) || !user.churchId) redirect("/mypage/church");
   const church = await getChurch(user.churchId);

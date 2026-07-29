@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { JobForm } from "../job-form";
 import { getCurrentUser } from "@/lib/queries/users";
 import { getChurch } from "@/lib/queries/churches";
-import { hasChurchAccess } from "@/lib/auth";
+import { hasChurchAccess, loginPathWithNext } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "공고 등록 | 민잡" };
 
@@ -29,7 +29,7 @@ export default function JobNewPage() {
 async function NewJobFormLoader() {
   await connection(); // 인증 의존 페이지 — 요청 시점 렌더 보장
   const user = await getCurrentUser();
-  if (!user) redirect("/login"); // 실구현: /login?next=/jobs/new (게이트에서 복귀)
+  if (!user) redirect(loginPathWithNext("/jobs/new")); // 로그인 후 복귀
   if (!hasChurchAccess(user)) redirect("/mypage/verify"); // 교회 인증 관리자만 등록 (SPEC B)
   const church = user.churchId ? await getChurch(user.churchId) : null;
 

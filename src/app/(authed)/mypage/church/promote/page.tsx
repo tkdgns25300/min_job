@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { PromoteCheckout } from "./promote-checkout";
 import { getChurchDashboard, getCurrentUser } from "@/lib/queries/users";
-import { hasChurchAccess } from "@/lib/auth";
+import { hasChurchAccess, loginPathWithNext } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "노출 신청 | 민잡", robots: { index: false } };
 
@@ -24,7 +24,7 @@ export default function PromotePage() {
 async function PromoteContent() {
   await connection(); // 인증 의존 — 요청 시점 렌더
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(loginPathWithNext("/mypage/church/promote")); // 로그인 후 복귀
   if (!hasChurchAccess(user) || !user.churchId) redirect("/mypage/church");
 
   const dashboard = await getChurchDashboard(user.churchId);

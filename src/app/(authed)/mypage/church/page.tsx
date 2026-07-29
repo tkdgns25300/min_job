@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { ChurchView } from "./church-view";
 import { getChurchDashboard, getCurrentUser } from "@/lib/queries/users";
 import type { ChurchDashboard } from "@/lib/queries/users";
-import { hasChurchAccess } from "@/lib/auth";
+import { hasChurchAccess, loginPathWithNext } from "@/lib/auth";
 import type { CurrentUser } from "@/types/domain";
 
 export const metadata: Metadata = { title: "교회 공고 관리 | 민잡" };
@@ -28,7 +28,7 @@ export default function ChurchManagePage({
 async function ChurchContent({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
   await connection(); // 인증 의존 — 요청 시점 렌더 (실구현: 쿠키 세션)
   const base = await getCurrentUser();
-  if (!base) redirect("/login"); // 실구현: proxy 게이트 + /login?next=/mypage/church
+  if (!base) redirect(loginPathWithNext("/mypage/church")); // 로그인 후 복귀. 실구현: proxy 게이트
   const { preview } = await searchParams;
   const user = applyMockPreview(base, preview);
 

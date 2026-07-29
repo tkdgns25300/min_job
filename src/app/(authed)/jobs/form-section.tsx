@@ -25,12 +25,14 @@ export function Field({
   optional,
   required,
   hint,
+  error,
   children,
 }: {
   label: string;
   optional?: boolean;
   required?: boolean;
   hint?: string;
+  error?: string;
   children: ReactNode;
 }) {
   return (
@@ -42,6 +44,11 @@ export function Field({
       </p>
       {children}
       {hint && <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{hint}</p>}
+      {error && (
+        <p className="mt-1.5 text-xs text-destructive" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

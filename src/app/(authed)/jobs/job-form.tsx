@@ -89,6 +89,34 @@ function toDraft(job?: Job): JobDraft {
   };
 }
 
+// 필수 필드(SPEC: 제목·직분·고용형태 + 접수 방법). 나머지는 선택 — 위저드 검증의 단일 소스.
+type RequiredField = "title" | "position" | "employmentType" | "applyMethods";
+
+// 각 필수 필드가 속한 스텝 — 제출 검증 실패 시 첫 미충족 스텝으로 점프하는 데 사용.
+const REQUIRED_FIELD_STEP: Record<RequiredField, number> = {
+  title: 1,
+  position: 1,
+  employmentType: 1,
+  applyMethods: 3,
+};
+
+const REQUIRED_MESSAGES: Record<RequiredField, string> = {
+  title: "공고 제목을 입력해 주세요.",
+  position: "직분을 선택해 주세요.",
+  employmentType: "고용형태를 선택해 주세요.",
+  applyMethods: "접수 방법을 하나 이상 선택해 주세요.",
+};
+
+// draft에서 아직 채워지지 않은 필수 필드 목록 — 다음(스텝별)·제출(전체) 검증 공용.
+function missingRequired(draft: JobDraft): RequiredField[] {
+  const missing: RequiredField[] = [];
+  if (!draft.title.trim()) missing.push("title");
+  if (!draft.position) missing.push("position");
+  if (!draft.employmentType) missing.push("employmentType");
+  if (Object.keys(draft.applyMethods).length === 0) missing.push("applyMethods");
+  return missing;
+}
+
 interface SectionProps {
   draft: JobDraft;
   patch: (partial: Partial<JobDraft>) => void;
@@ -151,7 +179,7 @@ function StipendFields({ draft, patch }: SectionProps) {
 }
 
 // 접수 방법 — 다중 선택. 고른 방법마다 접수처 입력. 사이트 내 지원 없음(가드레일) — 교회 채널 안내만.
-function ApplyFields({ draft, patch }: SectionProps) {
+function ApplyFields({ draft, patch, error }: SectionProps & { error?: string }) {
   const methods = draft.applyMethods;
   const toggle = (key: ApplyMethod) => {
     const next = { ...methods };
@@ -160,7 +188,7 @@ function ApplyFields({ draft, patch }: SectionProps) {
     patch({ applyMethods: next });
   };
   return (
-    <Field label="접수 방법" required>
+    <Field label="접수 방법" required error={error}>
       <div className="flex flex-wrap gap-1.5">
         {(Object.entries(APPLY_METHODS) as [ApplyMethod, string][]).map(([key, label]) => (
           <button
@@ -253,7 +281,10 @@ function stepSections(
   draft: JobDraft,
   patch: SectionProps["patch"],
   church: Church | null,
+  errors: RequiredField[],
 ): SectionDef[] {
+  const errorOf = (field: RequiredField) =>
+    errors.includes(field) ? REQUIRED_MESSAGES[field] : undefined;
   if (step === 1) {
     return [
       {
@@ -267,7 +298,7 @@ function stepSections(
         title: "모집 내용",
         content: (
           <>
-            <Field label="공고 제목" required>
+            <Field label="공고 제목" required error={errorOf("title")}>
               <Input
                 required
                 value={draft.title}
@@ -276,7 +307,7 @@ function stepSections(
                 className="h-9"
               />
             </Field>
-            <Field label="직분" required>
+            <Field label="직분" required error={errorOf("position")}>
               <ChipSelect
                 options={POSITIONS}
                 value={draft.position}
@@ -302,7 +333,7 @@ function stepSections(
                 label="부서"
               />
             </Field>
-            <Field label="고용형태" required>
+            <Field label="고용형태" required error={errorOf("employmentType")}>
               <ChipSelect
                 options={EMPLOYMENT_TYPES}
                 value={draft.employmentType}
@@ -433,7 +464,7 @@ function stepSections(
       title: "지원 방법 · 문의",
       content: (
         <>
-          <ApplyFields draft={draft} patch={patch} />
+          <ApplyFields draft={draft} patch={patch} error={errorOf("applyMethods")} />
           <Field
             label="문의처"
             optional
@@ -472,10 +503,15 @@ export function JobForm({
   const [step, setStep] = useState(1);
   const [activeSec, setActiveSec] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<RequiredField[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
-  const patch = (partial: Partial<JobDraft>) => setDraft((d) => ({ ...d, ...partial }));
+  const patch = (partial: Partial<JobDraft>) => {
+    setDraft((d) => ({ ...d, ...partial }));
+    // 사용자가 필수 항목을 고치기 시작하면 해당 에러를 즉시 해제 (재검증은 다음·제출 때).
+    setErrors((prev) => prev.filter((f) => !(f in partial)));
+  };
 
-  const sections = stepSections(step, draft, patch, church);
+  const sections = stepSections(step, draft, patch, church, errors);
 
   // 스크롤 스파이 — 현재 뷰포트 상단에 걸친 섹션을 활성 표시(왼쪽 점). step 바뀌면 재관찰.
   useEffect(() => {
@@ -495,14 +531,39 @@ export function JobForm({
     return () => io.disconnect();
   }, [step]);
 
-  const go = (n: number) => {
+  const goTo = (n: number) => {
     setStep(Math.min(TOTAL_STEPS, Math.max(1, n)));
     setActiveSec(0);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // 다음 — 현재 스텝의 필수 필드를 검증하고, 통과할 때만 진행한다.
+  const goNext = () => {
+    const missing = missingRequired(draft).filter((f) => REQUIRED_FIELD_STEP[f] === step);
+    if (missing.length > 0) {
+      setErrors(missing);
+      return;
+    }
+    setErrors([]);
+    goTo(step + 1);
+  };
+
+  // 이전 — 검증하지 않는다(뒤로 갈 때 막지 않음). 표시 중이던 에러는 정리.
+  const goPrev = () => {
+    setErrors([]);
+    goTo(step - 1);
+  };
+
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // 제출 시 전 스텝의 필수 필드를 검증 — 미충족이면 첫 미충족 스텝으로 이동해 표시.
+    const missing = missingRequired(draft);
+    if (missing.length > 0) {
+      setErrors(missing);
+      goTo(Math.min(...missing.map((f) => REQUIRED_FIELD_STEP[f])));
+      return;
+    }
+    setErrors([]);
     setSubmitted(true);
   };
 
@@ -542,20 +603,23 @@ export function JobForm({
         </p>
       )}
 
+      {errors.length > 0 && (
+        <p
+          className="mb-3 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm break-keep text-destructive"
+          role="alert"
+        >
+          필수 항목을 확인해 주세요. 표시된 곳을 채우면 등록할 수 있어요.
+        </p>
+      )}
+
       <div className="flex gap-2.5">
         {step > 1 && (
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className="h-12"
-            onClick={() => go(step - 1)}
-          >
+          <Button type="button" variant="outline" size="lg" className="h-12" onClick={goPrev}>
             ← 이전
           </Button>
         )}
         {step < TOTAL_STEPS ? (
-          <Button type="button" size="lg" className="h-12 flex-1" onClick={() => go(step + 1)}>
+          <Button type="button" size="lg" className="h-12 flex-1" onClick={goNext}>
             다음 →
           </Button>
         ) : (

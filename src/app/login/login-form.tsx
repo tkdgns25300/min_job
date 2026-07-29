@@ -5,8 +5,21 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { authenticate, SESSION_COOKIE } from "@/lib/mock-auth";
 
-// 이메일/비밀번호 로그인 (mock) — 테스트 계정 검증 → 세션 쿠키 설정 → /mypage.
-// ⚠️ 실 인증(Phase 1)은 Supabase Auth(httpOnly 세션) + `?next=` 리다이렉트로 교체.
+// 로그인 후 돌아갈 기본 경로 — ?next=가 없거나 안전하지 않을 때.
+const DEFAULT_REDIRECT = "/mypage";
+
+// 오픈 리다이렉트 방지 — 우리 사이트 내부 절대경로(/…)만 허용한다.
+// //evil.com(protocol-relative) · /\evil.com · http(s):// · 상대경로는 모두 기본값으로 막는다.
+// raw는 URLSearchParams가 이미 디코딩한 값이라 %2F%2F 우회도 //로 풀려 걸러진다.
+function safeInternalPath(raw: string | null): string {
+  if (!raw || !raw.startsWith("/")) return DEFAULT_REDIRECT;
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return DEFAULT_REDIRECT;
+  return raw;
+}
+
+// 이메일/비밀번호 로그인 (mock) — 테스트 계정 검증 → 세션 쿠키 설정 → next(검증) 또는 /mypage.
+// next는 게이트가 붙인 ?next= 쿼리로만 오므로 제출 시점에 브라우저 URL에서 읽는다(로그인 페이지는 정적 유지).
+// ⚠️ 실 인증(Phase 1)은 Supabase Auth(httpOnly 세션)로 교체 — next 검증(safeInternalPath)은 그대로 재사용.
 export function EmailLoginForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +33,8 @@ export function EmailLoginForm() {
       return;
     }
     document.cookie = `${SESSION_COOKIE}=${uid}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
-    router.push("/mypage");
+    const next = safeInternalPath(new URLSearchParams(window.location.search).get("next"));
+    router.push(next);
     router.refresh();
   }
 

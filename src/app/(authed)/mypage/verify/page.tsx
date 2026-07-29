@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/queries/users";
+import { loginPathWithNext } from "@/lib/auth";
 import { BUSINESS_INFO } from "@/constants/business";
 import { VerifyForm } from "./verify-form";
 
@@ -24,7 +25,7 @@ export default function ChurchVerifyPage() {
 async function VerifyContent() {
   await connection();
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(loginPathWithNext("/mypage/verify")); // 로그인 후 복귀
   if (user.churchVerificationStatus === "APPROVED") redirect("/mypage/church");
 
   return (
