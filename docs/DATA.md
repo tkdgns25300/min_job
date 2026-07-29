@@ -14,7 +14,7 @@
 - **정규화 유지 (JOIN).** 교단·지역 필터는 `churches`를 JOIN해서 건다. 비정규화(공고에 교회 속성 복사) 안 함 — 우리 규모(초기 수백~수천)에선 JOIN + `'use cache'` 캐시로 충분. (대규모 인덱스 최적화 필요 시 나중에 재검토)
 - **enum = 영어 대문자 key + 한글 라벨.** key는 DB에 저장(값)·URL params에 사용, 표시는 `constants/domain.ts`의 한글 라벨 맵. DB에서는 `CHECK` 제약으로 허용값 강제(별도 enum 타입 대신 `text + CHECK`로 확장 용이하게).
 - **컬럼명 = `snake_case`** (DB), 앱(TS)은 `camelCase`. Supabase 생성 타입이 매핑.
-- **가드레일 준수**: 공고 owner nullable · 개인 담당자 연락처 컬럼 없음 · source로 출처 구분 · 자동 크롤러 없음(사람 수집 + AI 구조화).
+- **가드레일 준수**: 공고 owner nullable · **지원용 공개 연락처(`contact`)만 저장·공개**(지원과 무관한 제3자 개인정보 X — 가드레일 #3 갱신 2026-07-28) · source로 출처 구분 · **수집 = 크롤러(공개 공식 게시판) + 사람 붙여넣기 → AI 구조화 → 운영자 검수·승격**("자동 크롤러 없음" 재정의, 가드레일 #1 갱신 · 법률 검토 완료).
 
 ---
 
@@ -22,10 +22,11 @@
 
 | enum | 컬럼 | 허용값(key) |
 |---|---|---|
-| **denomination** (교단) | `churches.denomination` | HAPDONG · TONGHAP · BAEKSEOK · GOSIN · HAPSIN · KIJANG · GAMLI · SEONGGYUL · BAPTIST · SUNBOK · ETC |
+| **denomination** (교단) | `churches.denomination` | HAPDONG · TONGHAP · BAEKSEOK · GOSIN · HAPSIN · GAMLI · SEONGGYUL · BAPTIST · SUNBOK · ETC (10키 = 9대형 + 기타. **기장=ETC**) |
 | **region** (광역) | `churches.region` | SEOUL · GYEONGGI · INCHEON · GANGWON · CHUNGBUK · CHUNGNAM · DAEJEON · SEJONG · GYEONGBUK · GYEONGNAM · DAEGU · ULSAN · BUSAN · JEONBUK · JEONNAM · GWANGJU · JEJU · OVERSEAS |
 | **church_channel** (채널) | `church_links.type` | HOMEPAGE · YOUTUBE · INSTAGRAM · FACEBOOK · BAND · ETC(기타) |
-| **position** (직분) | `jobs.position` | SENIOR_PASTOR · ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC |
+| **job_kind** (직군) | `jobs.job_kind` | MINISTRY(사역직) · GENERAL(일반직) — 개교회 채용 구분 |
+| **position** (직분) | `jobs.position` | SENIOR_PASTOR · ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC (사역직 MINISTRY만; 일반직은 NULL) |
 | **department** (부서) | `jobs.department` | INFANT · CHILDREN · YOUTH · YOUNG_ADULT · DISTRICT · WORSHIP · ADMIN · ETC · `NULL` |
 | **employment_type** (고용형태) | `jobs.employment_type` | FULL_TIME · SEMI_FULL_TIME · PART_TIME |
 | **qualification** (자격/경력) | `jobs.qualification` | ANY · ENTRY · EXPERIENCED · ORDAINED · SEMINARIAN · `NULL`(=무관) |
@@ -37,7 +38,8 @@
 
 > **역할 enum 없음**: 모든 계정은 기본 **사역자(MINISTER)**. 교회(CHURCH)는 저장된 role이 아니라 **인증으로 열리는 view/능력**(§3 users). MINISTER/CHURCH는 화면 라벨.
 
-> **직교화 원칙**: 직분(position)·부서(department)·고용형태(employment_type)는 분리된 축. "전임전도사·교육전도사"처럼 섞지 않는다 → 모순 데이터(파트+전임) 불가능.
+> **job_kind = 최상위 축**: 개교회 채용을 사역직(MINISTRY)/일반직(GENERAL)로 가른다. 사역직은 `position`·`department`로, 일반직은 자유 텍스트 `role`로 세분(§3). 기본뷰=사역직, 일반직은 필터.
+> **직교화 원칙**: 직분(position)·부서(department)·고용형태(employment_type)는 분리된 축(주로 MINISTRY에 적용). "전임전도사·교육전도사"처럼 섞지 않는다 → 모순 데이터(파트+전임) 불가능.
 > **확장**: 값 추가는 `constants/domain.ts` enum + DB `CHECK`만 수정(마이그레이션 1줄). 교단은 개신교 전 교단으로 확장 가능, 초기 거점 = 예장합동·통합.
 
 ---
@@ -83,7 +85,9 @@
 | `church_id` | uuid FK→churches | 소속 교회 |
 | `owner_id` | uuid FK→users **NULL** | **작성자(감사용)** — 운영자 등록=NULL (가드레일 #2). ⚠️ 편집 권한 게이트 아님 → 권한 = 그 공고 `church_id`의 인증 관리자 |
 | `title` | text NOT NULL | |
-| `position` | text NOT NULL (CHECK) | 직분 |
+| `job_kind` | text NOT NULL (CHECK) | MINISTRY(사역직)/GENERAL(일반직) — 개교회 채용 구분 |
+| `position` | text **NULL** (CHECK) | 직분 (사역직 MINISTRY만; 일반직 GENERAL은 NULL) |
+| `role` | text NULL | 일반직 직무(**자유 텍스트 · 통제 목록 아님**): 방송·미디어·행정·시설 등. 사역직은 보통 NULL |
 | `department` | text NULL (CHECK) | 부서 |
 | `employment_type` | text NOT NULL (CHECK) | 고용형태 |
 | `qualification` | text NULL (CHECK) | 자격/경력 요건 (필터). NULL=무관 |
@@ -95,6 +99,7 @@
 | `status` | text NOT NULL DEFAULT 'OPEN' (CHECK) | OPEN/CLOSED |
 | `source` | text NOT NULL (CHECK) | OPERATOR/CHURCH |
 | `source_url` | text NULL | 원문 링크(운영자 수집). 재호스팅 대신 링크 |
+| `contact` | text NULL | **지원용 공개 연락처**(전화·이메일·지원 링크). 교회가 지원받으려 공개한 것만 — 지원과 무관한 제3자 개인정보 X (가드레일 #3 갱신) |
 | `work_days` | text NULL | 출근 요일·시간(자유 텍스트) |
 | `requirements` | text[] DEFAULT '{}' | 자격요건 항목 |
 | `preferred` | text[] DEFAULT '{}' | 우대사항 항목 |
@@ -107,7 +112,9 @@
 | `created_at` | timestamptz DEFAULT now() | |
 | `updated_at` | timestamptz DEFAULT now() | Server Action에서 갱신 |
 
-> ⚠️ **`/jobs/new` mock 폼이 스키마보다 앞선 필드**(Phase 1에서 반영 여부 확정): **모집 인원 · 부임 시기**(현재 `description`에 녹이거나 신규 컬럼) · **전형 절차**(text[]) · **접수 방법**(이메일·링크·전화·우편 + 접수처 — 현재 `source_url`만 존재) · **제출 서류 항목별 필수/선택**(현재 `required_docs`는 text[]로 필수여부 없음) · **사택**(폼은 제공/미제공/**협의** 3상태인데 `housing_provided`는 boolean이라 "협의" 미표현 → enum화 검토). `preferred`(우대사항)는 폼에서 제외됨(자격 요건 자유추가로 흡수). 성별·연령·결혼 컬럼은 두지 않는다(가드레일).
+> ✅ **확정 설계(크롤러 피벗 2026-07-28)**: 위 `job_kind` · `role` · `contact` 3필드와 `position` NULL 허용은 개교회 채용 확장(사역직 MINISTRY + 일반직 GENERAL) + 크롤러 `review_data` 정합을 위한 **확정 설계**다(아래 ⚠️의 "폼이 앞선 미확정 필드"와 구분). 마이그레이션 SQL은 별도 작업(deferred). `stipend_period`는 이미 존재(변경 없음).
+
+> ⚠️ **`/jobs/new` mock 폼이 스키마보다 앞선 필드**(Phase 1에서 반영 여부 확정): **모집 인원 · 부임 시기**(현재 `description`에 녹이거나 신규 컬럼) · **전형 절차**(text[]) · **접수 방법**(이메일·링크·전화·우편 + 접수처 — 현재 `contact`(지원 연락처)·`source_url` 존재, 우편 접수처 등 세부는 미반영) · **제출 서류 항목별 필수/선택**(현재 `required_docs`는 text[]로 필수여부 없음) · **사택**(폼은 제공/미제공/**협의** 3상태인데 `housing_provided`는 boolean이라 "협의" 미표현 → enum화 검토). `preferred`(우대사항)는 폼에서 제외됨(자격 요건 자유추가로 흡수). 성별·연령·결혼 컬럼은 두지 않는다(가드레일).
 
 ### `users` — 계정 프로필 (Supabase `auth.users`와 1:1)
 
@@ -216,17 +223,36 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 
 ## 10. 구조화(ingest) 정책
 
-- 입력은 항상 **"사람이 붙여넣은 텍스트"** → AI가 필드로 구조화 → 운영자 검토 후 등록. 외부 사이트 자동 수집 코드 없음(가드레일 #1).
-- 운영자 등록 = `source=OPERATOR`, `owner_id NULL`. 교회 매칭은 기존 교회 선택/생성.
-- 개인 담당자 연락처는 저장하지 않음 — 교회 공개 채널(`church_links`)·원문 링크(`source_url`)로 안내(가드레일 #3).
+- **수집 경로 2가지(2026-07-28 재정의)**: ① **크롤러(`min_job_agent`)가 공개 공식 게시판(신학교·교단, 31곳)에서 자동 수집** ② **사람이 붙여넣은 텍스트**. 두 경로 모두 → AI 구조화 → **리뷰 큐(`review_data`) → 운영자 검수·승격**. "자동 크롤러 없음" 원칙은 **"공개 공식 게시판 대상 크롤러 + 사람 게이트(운영자 검수 없이는 절대 공개 X)"**로 재정의(가드레일 #1 갱신, 법률 검토 완료 2026-07-28). 상업·비공식 출처는 여전히 배제(가드레일 #4).
+- 운영자 등록 = `source=OPERATOR`, `owner_id NULL`. 교회 매칭은 기존 교회 선택/생성(크롤러는 `review_data.matched_church_id` 후보 제시).
+- **지원용 공개 연락처(`contact`)는 저장·공개** — 교회가 지원받으려 공개한 전화·이메일·지원 링크만. 지원과 무관한 제3자 개인정보는 저장·노출하지 않음(가드레일 #3 갱신). 그 외 교회 공개 채널(`church_links`)·원문 링크(`source_url`)로도 안내.
+- 크롤러 staging 4테이블(§12)은 `min_job_agent`가 소유. min_job은 `review_data`를 admin 검수 브릿지로 **읽어** 승격만 한다(직접 생성·변경 X).
 
 ---
 
 ## 11. 미확정 (추후 확정)
 
 - **노출 상품 상세** — 가격·기간·묶음할인·부가세·결제 수단 (Phase 2, ROADMAP 2-3)
-- **이용약관·개인정보처리방침** — 현재 초안, **정식 운영 전 법률 검토 필수** (ROADMAP 1-6). privacy의 수집항목·위탁·보유기간은 검토 시 스키마와 정합 확인
+- **크롤러 수집 적법성** — ✅ **법률 검토 확인 완료 2026-07-28**(공개 공식 게시판 대상 크롤러 전제). 이 전제로 가드레일 #1 재정의(§1·§10)·크롤러(`min_job_agent`) 가동. (로그인 티어 소스는 별도 게이트 — min_job_agent CONTRACT §6)
+- **이용약관·개인정보처리방침** — 현재 초안, **정식 운영 전 법률 검토 필수** (ROADMAP 1-6). privacy의 수집항목·위탁·보유기간은 검토 시 스키마와 정합 확인(크롤러 수집 적법성과는 별개 항목)- **enum/type 공유 방식** — min_job `constants/domain.ts`·`types/domain.ts`의 도메인 enum·타입을 크롤러(`min_job_agent`)가 어떻게 공유할지(copy / npm package / path 참조) 미정
 - **자동 결제 연동** (Phase 3)
 - **인재 DB**(`minister_profiles`, 계정에 1:1) — 사역자 프로필 (Phase 3, 개인정보 동의). "구직 중" opt-in 노출 + "제외 교회"(자기 교회엔 숨김)
 - **관심 교회 팔로우**(`church_follows`) + 재공고 알림 (Phase 2, 사역자 view)
 - **교회 인증 증빙 문서 보관·파기 정책** (`users.verification_doc_path` — 개인정보 검토와 함께 확정)
+
+---
+
+## 12. 크롤러 staging (min_job_agent 소유)
+
+> 자매 리포 **`min_job_agent`**(크롤러)가 공개 공식 게시판에서 수집·구조화한 초안을 쌓는 **스테이징 4테이블**. 물리적으로는 min_job Supabase 프로젝트에 함께 살지만 **소유·정의·마이그레이션은 전부 `min_job_agent`**. min_job은 이 테이블을 **인지하고 충돌만 회피**한다 — 생성·변경·마이그레이션·RLS를 만들지 않는다(테이블명·마이그레이션 파일 충돌 회피만). **상세 정본 = `../min_job_agent/docs/SPEC.md` §6.**
+
+| 테이블 | 역할 |
+|---|---|
+| `source_data` | 원자료 + 원장 (불변·write-once·누적). `raw_text`·`raw_meta` + `UNIQUE(source_key, external_id)`로 증분·중복 방지 |
+| `review_data` | 구조화 초안 + 검수 (가변). **min_job admin 검수 브릿지가 소비** — PENDING을 읽어 운영자가 검수·승격 |
+| `source_health` | 게시판별 상태 (약 31행, 매 실행 UPSERT) — 마지막 실행·성공·신규건수·연속실패 |
+| `crawl_run` | 실행별 요약 (1실행 1행, 누적) — started/finished·mode·성공/실패 소스·신규 집계 |
+
+- **RLS = 운영자 전용**(min_job admin이 대시보드·검수에 read), 크롤러는 service-role로 write. **public 노출 없음.**
+- **승격 흐름**: admin 검수 UI가 `review_data`(PENDING)를 읽어 → 운영자 승인 시 **요약 + `source_url`·`contact` + `source=OPERATOR`·`owner_id=NULL`**로 `churches`/`jobs`에 INSERT(§10). 검수 메타·미상 교단은 넘기지 않음(교단은 승격 전 9대형+ETC 10키로 해소).
+- **`review_data` 주요 컬럼**(검수 브릿지가 읽는 것): `job_kind`·`role`·`title`·`position`·`department`·`employment_type`·`stipend_*` · `denomination`(+`denomination_source`·`denomination_evidence`·`raw_denomination` · **미상 가능**) · `contact` · `confidence` · `dedup_key` · `review_status`(PENDING/APPROVED/REJECTED) · `matched_church_id` FK→churches · `published_job_id` FK→jobs · `heresy_flag` 등. **전체 스키마·판정 정본은 min_job_agent SPEC §6.**

@@ -3,12 +3,16 @@
 > **이 문서 하나로 "지금 상황" 파악.** 역할 분리: [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처·가드레일), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(인터뷰).
 >
 > **작성 시점**: 2026-07-21 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `9dc1f16` /ship 커맨드 · `4a0fcab` church 사이드바 pricing 링크) · **dev = prod = origin** · 🔗 도메인: https://www.minjob.co.kr (연결·SSL, mock 데이터) · min-job.vercel.app
+>
+> ▶ **2026-07-28 방향 전환**: 크롤러 도입(min_job_agent) + **개교회 채용**으로 범위 확장 (§0 한 문장 요약·§0 완료도·§6 방향 전환 기록).
 
 ---
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** 남은 것: SEO + terms/privacy 법률검토 (admin 4페이지 mock 완료). **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 카드사 등록신청 제출(심사 3~15일 대기, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **KCP 심사 승인 대기** + Phase 1(admin 4페이지 mock 완료)(§7). 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용·실카드결제(승인 후)는 Phase 1.
+흩어진 교회 **사역자 청빙 공고**(→ **개교회 채용**으로 범위 확장: 사역직+일반직, 2026-07-28)를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + mock 세션 로그인 실동작**(test1/test2), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃·회원탈퇴는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** 남은 것: SEO + terms/privacy 법률검토 (admin 4페이지 mock 완료). **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 카드사 등록신청 제출(심사 3~15일 대기, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **KCP 심사 승인 대기** + Phase 1(admin 4페이지 mock 완료)(§7). 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용·실카드결제(승인 후)는 Phase 1.
+
+> **▶ 방향 전환(2026-07-28, 법률 검토 완료)**: 자매 프로젝트 **min_job_agent 크롤러 도입 확정** — 데이터 수집을 사람 수집에서 **공개 공식 게시판 자동 수집 → AI 구조화 → 검수 큐(`review_data`) → 운영자 승격**으로 전환. 제품 범위도 **개교회 채용(사역직 MINISTRY + 일반직 GENERAL)**으로 확장. 가드레일 #1·#3 재정의. min_job 쪽 싱크(문서·코드·검수 브릿지)는 Phase로 진행(ROADMAP 1-10). 정본 = **CRAWLER_HANDOFF.md + min_job_agent/docs**.
 
 ---
 
@@ -24,10 +28,12 @@
 | 프론트 로직 디테일(1-9) | ~35% | login·hover·상태분기·빈상태·모바일 (**미착수**, 지금 가능) |
 | 백엔드(Supabase 실사용) | ~10% | 스키마·Auth·mutation·`lib/queries` mock→DB (Phase 1, **최대 덩어리**) |
 | 데이터(실 공고·구조화) | ~5% | 실 공고 0·Claude 구조화 미연동 (다른 세션) |
+| 크롤러 연동(min_job_agent) | ~0% | **방향 전환 확정·문서 싱크 중** — 코드·enum·검수 브릿지 미착수 (정본=CRAWLER_HANDOFF.md) |
 | SEO | ~30% | sitemap·robots 없음 |
 | 법률/행정 | ~50% | 약관 법률검토 전 (사업자등록·통신판매 면제 O) |
 
 > 격차의 정체: **"보이는 절반"(디자인·인프라·결제 UI)은 무겁게 됐고, "안 보이는 심장"(백엔드·데이터·실동작)이 남았다.** "완료(mock)"에 안심하지 말 것(§1 범례 참조).
+> **▶ 방향 전환(2026-07-28)**: 크롤러 도입(min_job_agent) + 개교회 채용으로 범위 확장 = **새 대축**. 데이터 수집 방식이 사람→크롤러로 바뀌며 "데이터" 축의 채우기 방식이 달라진다(§6 방향 전환 기록·ROADMAP 1-10).
 
 ## 1. 페이지 현황 (핵심)
 
@@ -54,7 +60,7 @@
 | `/terms`·`/privacy` | 🟡 초안 보강 | — | ✅ | ✅ `150aa99` | 법률검토·`[ ]`실값 대기 |
 | `/admin` 셸·홈·`/admin/jobs` | ✅ | ✅ | ✅ | ✅ `bcb9e77`+ | mock — 셸(딥그린 사이드바·noindex·게이트 Phase1)·홈(요약 카드+빠른 작업)·공고 관리(탭[전체·모집중·마감]·필터·테이블·노출/수정 Sheet). **공고 검수 제거**(교회 인증이 유일 게이트). mutation Phase 1 |
 | `/admin/verify` 교회 인증 검수 | ✅ | ✅ | ✅ | ✅ `a4599c9` | mock — **유일 검수 게이트**. 탭[검수중·완료·반려·전체]·필터·테이블·승인/반려 Sheet(서류확인+반려사유). **dynamic**(운영자+PII라 `'use cache'` 금지, `connection()`+Suspense). 정렬=대기 우선. 승인/반려 mutation·알림 Phase 1 |
-| `/admin/ingest` 공고 수집 | ✅ | ✅ | ✅ | ✅ `fdc7c21` | mock — 원문 붙여넣기 → **AI 구조화**(휴리스틱 seam `lib/ingest/structure.ts`) → 프리필 폼 검토 → ‘운영자 등록’(no-op). 교회 datalist 매칭. **자동 크롤러 아님**(가드레일 #1). 구조화 API(Claude)·실 등록 Phase 1 |
+| `/admin/ingest` 공고 수집 | ✅ | ✅ | ✅ | ✅ `fdc7c21` | mock — 원문 붙여넣기 → **AI 구조화**(휴리스틱 seam `lib/ingest/structure.ts`) → 프리필 폼 검토 → ‘운영자 등록’(no-op). 교회 datalist 매칭. 이 화면은 **붙여넣기 경로**(크롤러 수집분은 검수 브릿지 §C). 구조화 API(Claude)·실 등록 Phase 1 |
 
 > **완료(mock) 14개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자)·/mypage/verify·/jobs/new·/jobs/[id]/edit·**/mypage/church·/mypage/church/info·/mypage/church/promote**. **단일 계정 + mock 세션 로그인 실동작**(계정 §5). **`/mypage/church/promote`는 PortOne 실결제까지 동작**(데이터·실 노출 적용만 Phase 1). **남은 것 = SEO(sitemap/robots) + terms/privacy 법률검토·실값. admin 4페이지(셸·홈·공고관리·인증검수·수집) mock 구현 완료.** (약관·개인정보 초안 보강·사업자정보 반영됨.) 실 mutation·백엔드 = Phase 1.
 > **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
@@ -102,12 +108,12 @@ npx prettier --check <file>   # 포맷
 ## 5. 데이터 (mock 스키마 = 확정 진행 중)
 
 ### mock 현황 (`src/mocks/`)
-- **churches.json 35개** · **jobs.json 101개**. 분포: OPEN 79 / CLOSED 22 / PENDING 0(공고 검수 제거로 전부 자동 게재) · OPERATOR(owner 없음)·CHURCH 혼합. 재공고 데모 4교회 · **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**.
+- **churches.json 35개** · **jobs.json 101개**. 분포: OPEN 79 / CLOSED 22 / PENDING 0(공고 검수 제거로 전부 자동 게재) · OPERATOR(owner 없음)·CHURCH 혼합. 재공고 데모 4교회 · **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. ⚠️ **KIJANG(갈릴리교회 1건) → ETC 교정 예정**(denomination 10키 전환, 2026-07-28).
 - **church-verifications.json 7건**(admin/verify 검수용): 검수중 4·인증완료 2·반려 1. 기존 교회 매칭 6 + 신규 교회 신청 1(id null). PII는 명백한 합성값(@example.com·010-0000-000X), vf-005만 test1@test.com(mock-auth 매칭).
 - **mock 로그인 계정**(`src/lib/mock-auth.ts`, 비번 `test1234`): `test1@test.com`(이도현·새벽빛교회 **인증** APPROVED) · `test2@test.com`(박서연·**미인증** 순수 사역자). 세션 = 비httpOnly 쿠키 `mj_session`.
 
 ### enum (`src/constants/domain.ts`)
-DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·PENDING[미사용 — 공고 검수 제거]) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · **VERIFICATION_DOC_TYPES**(고유번호증·사업자등록증) · HOUSING_OPTIONS · APPLY_METHODS · STIPEND_NOTE_PRESETS · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
+DENOMINATIONS(⚠️ **KIJANG 제거 → 10키 예정; 기장=ETC 흡수, HAPSIN 유지 — 2026-07-28**) · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·PENDING[미사용 — 공고 검수 제거]) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · **VERIFICATION_DOC_TYPES**(고유번호증·사업자등록증) · HOUSING_OPTIONS · APPLY_METHODS · STIPEND_NOTE_PRESETS · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
 
 ### 타입 (`src/types/domain.ts`) — 이번에 추가된 것
 - `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)** · `ownerId?`(교회 직접 등록 소유). — 전부 additive/optional.
@@ -124,6 +130,7 @@ DENOMINATIONS · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·�
 
 ## 6. 이번 세션 확정 설계 (되돌리지 말 것)
 
+- **▶ 방향 전환(2026-07-28) — 크롤러 도입 + 개교회 채용으로 범위 확장 (되돌리지 말 것)**: 2026-07-28 크롤러 도입 확정 + 개교회 채용으로 범위 확장(사역직 MINISTRY + 일반직 GENERAL). 가드레일 #1·#3 재정의(법률 검토 완료). 정본 = **CRAWLER_HANDOFF.md + min_job_agent/docs**. min_job 싱크 = **문서/코드/검수 브릿지 Phase로 진행**(ROADMAP 1-10). staging 4테이블은 min_job_agent 소유(min_job은 인지만), init.sql/마이그레이션 보류. denomination KIJANG 제거(10키)·jobs 신규 필드(`job_kind`·`role`·`contact`·`position`) 반영 예정.
 - **/jobs**: 대표광고를 **리스트 안에 통합**(별도 밴드 폐기, 배경 틴트 없이 작은 "광고" 태그, 티어 차이=노출 위치) · **검색 존**(옅은 초록 밴드: H1+설명+"모집 중 N건") · **결과 툴바**(정렬 + **페이지당 20/50/100**) · **자격/경력·사택 필터 추가**(성별·결혼 필터 금지) · 최근 본 공고 정보형 · 교회 CTA 위젯 · 좌필터 스크롤(우레일만 sticky). "총 N건" = 모집 중(HERO 포함).
 - **/jobs/[id]**: **단일 흐름 본문(여백형)** + **우측 요약 카드 B**(지원하기 상단 + 사례비·마감·고용) + **재공고 이력 접이식** + 비슷한 6개+더보기 + **아이콘 없음** + 지도 placeholder.
 - **/churches/[id]**(재설계): 얇은 허브 — 순서 **커버(사진 갤러리·라이트박스) → 채널(brand 색·아이콘) → 청빙 공고(현재+지난 통합, 재공고 배지) → 위치(지도)**. 공고가 방문 의도라 위로. **아바타 폐기** · **교회 소개 텍스트 미채택**(채널·유튜브로 파악 대체) · 카드 hover=`bg-muted/40`. 사진 = `Church.photos[]`(mock placeholder SVG, 업로드 Phase 1).
