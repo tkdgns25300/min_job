@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
@@ -13,10 +13,16 @@ import { Pagination } from "@/components/job/pagination";
 import { RecentlyViewed } from "@/components/job/recently-viewed";
 import { ChurchCtaCard } from "@/components/job/church-cta-card";
 import { cn } from "@/lib/utils";
-import type { FilterDim, JobCard as JobCardData, SortKey } from "@/types/domain";
+import type { JobCard as JobCardData, SortKey } from "@/types/domain";
 import { filterAndSortJobs } from "./filter-jobs";
+import {
+  buildJobsQuery,
+  emptySelected,
+  MULTI_DIMS,
+  PAGE_SIZE_OPTIONS,
+  parseJobsUrlState,
+} from "./jobs-url-state";
 
-const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 // TODO(design): ❓ 정렬 축 재검토 — 사례비순은 "세상적"(인터뷰), 마감임박은 교회 마감 개념이 모호.
 // 최신순 단일 + 마감 "표기만"으로 축소하는 안 vs 현행 3축 유지 — 사람 결정 필요 (fable.md #1)
 const SORTS: { key: SortKey; label: string }[] = [
@@ -24,39 +30,23 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "stipend", label: "사례비순" },
   { key: "deadline", label: "마감임박순" },
 ];
-const MULTI_DIMS: FilterDim[] = [
-  "denomination",
-  "region",
-  "position",
-  "department",
-  "employmentType",
-  "qualification",
-];
-
-function emptySelected(): Record<FilterDim, Set<string>> {
-  return Object.fromEntries(MULTI_DIMS.map((d) => [d, new Set<string>()])) as Record<
-    FilterDim,
-    Set<string>
-  >;
-}
 
 export function JobsView({ jobs }: { jobs: JobCardData[] }) {
-  // TODO(design): ❓ 필터 상태 ↔ URL 동기화(공유·뒤로가기·SEO)를 mock 단계에 선반영할지,
-  // DB 전환(URL을 단일 소스로 승격)과 함께 할지 — 사람 결정 필요 (fable.md #2)
   const sp = useSearchParams();
-  const [q, setQ] = useState(sp.get("q") ?? "");
-  const [selected, setSelected] = useState<Record<FilterDim, Set<string>>>(() => {
-    const init = emptySelected();
-    for (const dim of MULTI_DIMS) init[dim] = new Set(sp.getAll(dim));
-    return init;
-  });
-  const [stipendMin, setStipendMin] = useState(sp.get("stipendMin") ?? "");
-  const [stipendMax, setStipendMax] = useState(sp.get("stipendMax") ?? "");
-  const [includeNego, setIncludeNego] = useState(true);
-  const [housingOnly, setHousingOnly] = useState(false);
-  const [sort, setSort] = useState<SortKey>((sp.get("sort") as SortKey) || "recent");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(20);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // URL → 초기 상태 (마운트 1회 시드). 이후 동기화는 상태 → URL 단방향(아래 effect).
+  const [seed] = useState(() => parseJobsUrlState(sp));
+  const [q, setQ] = useState(seed.q);
+  const [selected, setSelected] = useState(seed.selected);
+  const [stipendMin, setStipendMin] = useState(seed.stipendMin);
+  const [stipendMax, setStipendMax] = useState(seed.stipendMax);
+  const [includeNego, setIncludeNego] = useState(seed.includeNego);
+  const [housingOnly, setHousingOnly] = useState(seed.housingOnly);
+  const [sort, setSort] = useState<SortKey>(seed.sort);
+  const [page, setPage] = useState(seed.page);
+  const [pageSize, setPageSize] = useState<number>(seed.pageSize);
 
   const filterProps: JobFilterProps = {
     selected,
@@ -122,6 +112,25 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
     (stipendMin || stipendMax ? 1 : 0) +
     (includeNego ? 0 : 1) +
     (housingOnly ? 1 : 0);
+
+  // 상태 → URL 반영 (공유·뒤로가기·딥링크·SEO). 페이지 내 미세 조정이라 히스토리를 더럽히지
+  // 않도록 push 대신 replace + scroll 유지. 클램핑된 currentPage를 실어 URL과 화면을 일치시킨다.
+  const query = buildJobsQuery({
+    q,
+    selected,
+    stipendMin,
+    stipendMax,
+    includeNego,
+    housingOnly,
+    sort,
+    page: currentPage,
+    pageSize,
+  });
+  useEffect(() => {
+    // 현재 URL과 동일하면 replace 생략(루프 방지). 비정규 순서 딥링크는 mount 시 1회 정규화 후 안정.
+    if (query === new URLSearchParams(window.location.search).toString()) return;
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [query, pathname, router]);
 
   return (
     <div className="space-y-4">
