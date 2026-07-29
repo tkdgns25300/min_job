@@ -38,6 +38,10 @@
 
 > 선행: Phase 0의 DB 스키마(=DATA.md) 완료. 동작 명세는 SPEC.md. 여기는 작업 단위.
 
+> **▶ mock→실 DB 전환 = 서로 독립인 2트랙 (2026-07-29 정리, 되돌리지 말 것):**
+> **① 인증(로그인)** — `mock-auth` → Supabase Auth(**카카오·구글** OAuth). 데이터와 무관·**지금 가능**. `users` 테이블 + OAuth + auth callback + 세션 3곳(로그인·로그아웃·헤더) + `proxy.ts` 게이트 + **이메일/test 계정 제거**. `getCurrentUser`는 seam이라 본문만 교체하면 게이트 7곳 그대로. 네이버는 Supabase 기본 미지원 → 커스텀(보류).
+> **② 데이터(공고·교회)** — JSON → Supabase 테이블. ⚠️ **핵심은 seam 전환(쉬움 — `lib/queries` 본문만)이 아니라 "데이터 유입"**: (a)크롤러 승격=검수브릿지(크롤러 스키마 확정 후) (b)교회 등록 mutation (c)seed(임시). **DB가 비면 read 전환해도 빈 화면** → 유입이 먼저. read+write는 도메인별로 함께. **실데이터는 크롤러 검수브릿지 준비 후**라, ①(로그인)을 먼저 한다.
+
 ### 1-1. 공통 골격
 - [ ] 도메인 타입 (`types/domain.ts`) — Job·Church·User
 - [ ] 도메인 상수·enum (`constants/`) — 교단·지역·직분·부서·고용형태 (영어 key + 한글 라벨)
@@ -57,7 +61,7 @@
 - [ ] "주인 없는 공고" 등록 ('운영자 등록', 소유자 없음)
 
 ### 1-4. 인증 + 마이페이지 + 교회 등록 (단일 계정 모델 — DATA §3, SPEC 사용자 모델)
-- [~] 로그인 (`/login`) — **mock UI 완료**(간편 로그인 버튼 + 이메일 mock 로그인 `lib/mock-auth`, 세션=`mj_session` 쿠키). 실 Supabase Auth 배선 Phase 1. **단일 계정 = 기본 사역자**(가입 시 역할 선택 없음)
+- [~] 로그인 (`/login`) — **mock UI 완료**(간편 로그인 버튼 + 이메일 mock 로그인 `lib/mock-auth`, 세션=`mj_session` 쿠키). **▶ 실 전환 = ①트랙(지금)**: Supabase Auth **카카오·구글 OAuth** + auth callback route + `getCurrentUser` seam 본문 교체 + 세션 3곳(로그인·로그아웃·헤더) + `proxy.ts` 게이트 + **이메일 로그인·test 계정 제거**. **선행(사람) = 카카오·구글 콘솔 앱 등록 → client id/secret을 Supabase Providers에 입력**. 네이버는 Supabase 기본 미지원 → 커스텀 OIDC(보류). **단일 계정 = 기본 사용자**(로그인=일반 성도, 교회 담당자는 인증 문서로 승격 — 가입 시 역할 선택 없음)
 - [~] 마이페이지 (`/mypage` · `/mypage/church` · `/mypage/church/info` · `/mypage/church/promote`) — **mock UI 완료**: 사역자 view(최근 본 + **북마크** + 하단 교회 CTA·계정) + 교회 대시보드(상태 탭·노출광고 사이드바·공고 행 수정/⋯마감·삭제/재등록) + 교회 정보 관리 페이지(소개·연락처·채널·사진) + **노출 결제 페이지**(PortOne V2 실결제 동작·서버 금액 검증, 1-8·4). 헤더 아바타=마이페이지 직행 + "교회 공고 등록" 상시 링크(`hasChurchAccess` 분기). 서버 배선·mutation·실 노출 적용 Phase 1
 - [ ] **북마크** (`bookmarks` 테이블) + 공고 카드·상세 저장 버튼 — 단일 계정이라 **Phase 1로 이동**(원래 Phase 2). 지금은 localStorage로 동작
 - [~] 교회 인증 (`/mypage/verify`) — **mock UI 완료**(상태별 화면 + 4섹션 폼: 교회 선택·증빙(고유번호증/사업자등록증)·담당자(이메일 인증)·동의). 실 업로드·이메일 발송·운영자 승인 Phase 1 → 인증 교회만 게재
