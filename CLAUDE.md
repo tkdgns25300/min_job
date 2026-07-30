@@ -33,11 +33,12 @@
 
 | 페이지 | 모드 | 이유 |
 |---|---|---|
-| `/`, `/jobs`, `/jobs/[id]`, `/churches/[id]` | `'use cache'` (CDN 캐시, on-demand) | 공고 변경 빈도 낮음, 모든 방문자 동일 뷰 |
+| `/`, `/jobs`, `/jobs/[id]`, `/churches/[id]` | `'use cache'` 데이터 + **◐ PPR** | 공고 데이터는 캐시·모든 방문자 동일 뷰. 단 **헤더 계정 영역이 세션 의존 dynamic hole**이라 문서 응답은 `no-store`(셸은 계속 prerender·엣지 스트리밍) |
 | `/jobs?(검색·필터 쿼리)` | dynamic (`<Suspense>`) | searchParams 의존 — 매번 fresh |
-| `/admin`, `/admin/jobs`, `/admin/ingest` | `'use cache'` (non-PII read) | 운영자 도구지만 공개·비개인 데이터(공고·교회옵션) — 모든 운영자 동일 뷰 |
-| `/admin/verify` | dynamic (`<Suspense>` + `connection()`) | 인증 신청 PII(담당자 연락처) — 캐시 금지 |
-| `/login`, `/mypage` | dynamic | 인증 의존 |
+| `/admin`, `/admin/jobs`, `/admin/ingest` | `'use cache'` (non-PII read) | 운영자 도구지만 공개·비개인 데이터(공고·교회옵션) — 모든 운영자 동일 뷰. 공개 헤더를 안 써서 ○ Static 유지. **접근 판정은 proxy가 담당** |
+| `/admin/verify` | dynamic (`<Suspense>` + `requireOperator`) | 인증 신청 PII(담당자 연락처) — 캐시 금지 + 페이지에서도 운영자 재확인 |
+| `/login` | dynamic (`<Suspense>`) | `?next=`·`?error=` 의존. 폼은 **서버 렌더**(JS 없이도 제출 동작) |
+| `/mypage` 등 `(authed)` | dynamic (`<Suspense>` + `requireUser`) | 인증 의존 |
 
 > 검수 브릿지(review_data 검수 → churches/jobs 승격)용 admin 페이지는 Phase에서 추가한다 — 미검수·크롤링 데이터를 다루므로 dynamic.
 
@@ -81,51 +82,55 @@
 src/
 ├── app/
 │   ├── (public)/                  비로그인 접근 가능 영역
-│   │   ├── layout.tsx             공개 shell
-│   │   ├── page.tsx               홈 — 최신·추천 공고 ('use cache')
-│   │   ├── jobs/
-│   │   │   ├── page.tsx           공고 목록 + 검색·필터 (목록 cache, 검색은 Suspense)
-│   │   │   ├── [id]/page.tsx      공고 상세 (generateMetadata + JobPosting JSON-LD)
-│   │   │   └── *-view.tsx         목록·필터 client component
-│   │   ├── churches/
-│   │   │   └── [id]/page.tsx      교회 상세 (그 교회 공고 + 재공고 이력) — 목록 페이지 없음(공고 상세에서 진입)
-│   │   ├── pricing/page.tsx       광고·노출 안내 (요금)
-│   │   ├── about/page.tsx         서비스 소개
-│   │   ├── terms/page.tsx         이용약관
-│   │   └── privacy/page.tsx       개인정보처리방침
-│   ├── (authed)/                  로그인 필요 영역 (proxy 인증 게이트)
-│   │   ├── mypage/                교회=내 공고 관리 / 구직자=북마크
-│   │   ├── jobs/new/              교회 공고 등록 폼 + actions.ts
-│   │   └── jobs/[id]/edit/        공고 수정 폼 + actions.ts
-│   ├── admin/                     운영자 전용 — 수집 공고 등록·구조화 도구
-│   │   ├── jobs/                  공고 admin CRUD + actions.ts
-│   │   └── ingest/                텍스트 붙여넣기 → AI 구조화 → 폼 자동 채움
-│   ├── login/                     Supabase Auth (카카오 간편 + 이메일)
-│   ├── sitemap.ts · robots.ts     SEO
-│   └── layout.tsx                 root layout (폰트·메타·GA)
-├── components/
-│   ├── layout/                    헤더·푸터·네비
-│   ├── job/                       공고 카드·필터바·재공고 배지
-│   ├── church/                    교회 카드
-│   └── ui/                        shadcn 원본
-├── constants/                     도메인 enum (교단·지역·부서·고용형태) — 영어 key + 한글 라벨
+│   │   ├── layout.tsx             공개 shell            page.tsx  홈(최신·추천 공고)
+│   │   ├── jobs/                  page(목록+필터) · [id]/(상세: generateMetadata + JobPosting JSON-LD)
+│   │   │                          jobs-view(client) · filter-jobs · jobs-url-state(순수 헬퍼)
+│   │   ├── churches/[id]/         교회 상세 (목록 페이지 없음 — 공고 상세에서 진입)
+│   │   └── pricing/ about/ terms/ privacy/
+│   ├── (authed)/                  로그인 필요 (proxy 1차 차단 + 페이지 requireUser 최종 방어)
+│   │   ├── layout.tsx             인증 shell — robots noindex를 하위에 상속
+│   │   ├── mypage/                사역자 view · account-actions · actions.ts(signOut)
+│   │   │   ├── church/            교회 대시보드 + info/(정보 관리) + promote/(PortOne 노출 결제)
+│   │   │   └── verify/            교회 인증 신청 (온라인 접수 미구현 — 안내 + 운영자 메일)
+│   │   └── jobs/                  job-form·job-wizard 등 등록/수정 공용 + new/ · [id]/edit/
+│   ├── admin/                     운영자 전용 — 접근 판정은 proxy(.env ADMIN_EMAILS)
+│   │   ├── layout.tsx             admin shell (noindex) — 하위 3개는 ○ Static
+│   │   └── page.tsx · jobs/ · ingest/ · verify/(PII — 페이지에서도 requireOperator)
+│   ├── login/                     Google OAuth — page · login-form(서버) · submit-button(client) · actions.ts
+│   ├── auth/callback/route.ts     OAuth 콜백(code→세션) — "REST 라우트 금지" 예외 ①
+│   ├── api/payments/complete/     결제 검증(PortOne) — 예외 ②
+│   ├── layout.tsx                 root layout (폰트·메타)
+│   ├── error.tsx · global-error.tsx · not-found.tsx    에러·404 바운더리
+│   ├── globals.css
+│   └── ⬜ sitemap.ts · robots.ts  SEO — 아직 없음(ROADMAP)
+├── components/                    ⚠️ 재사용 UI만 — 도메인 로직 X
+│   ├── ui/                        shadcn 원본 (button·card·input·textarea·native-select·sheet·badge)
+│   ├── layout/                    헤더(계정 영역 포함)·푸터·모바일 네비·법률문서 셸
+│   ├── job/ church/ admin/ home/ pricing/ search/   각 도메인 표시 컴포넌트
+│   └── relative-time.tsx          시간 표시(클라이언트 계산)
+├── constants/                     domain.ts(도메인 enum) · business.ts(사업자정보) · storage.ts(localStorage 키)
 ├── lib/
-│   ├── supabase/
-│   │   ├── server.ts              쿠키 기반 — 인증·mutation 전용
-│   │   ├── service.ts             service-role — cached read 전용
-│   │   └── session.ts             proxy 세션 refresh용
-│   ├── queries/                   'use cache' 페이지가 호출하는 read 함수 (도메인 1개당 1파일)
-│   ├── ingest/                    AI 구조화 파이프라인 (텍스트 → 필드)
-│   ├── repost-tracking.ts         재공고 식별·집계 (단일 정의)
-│   ├── seo.ts                     JSON-LD·메타 헬퍼
-│   └── utils.ts                   cn 등
-├── types/                         database.ts (Supabase 생성), domain.ts
-└── proxy.ts                       Next.js 16 Proxy — (authed)/admin 인증 게이트
+│   ├── supabase/                  server(쿠키·인증) · service(secret·cached read, 미사용) ·
+│   │                              session(proxy refresh) · cookie-options(httpOnly·secure)
+│   ├── auth.ts                    순수 인증 헬퍼(hasChurchAccess·safeInternalPath·로그인 URL·PATHNAME_HEADER)
+│   ├── auth-guard.ts              requireUser·requireOperator — 서버 전용 게이트(redirect 수행)
+│   ├── operator.ts                운영자 판정(.env ADMIN_EMAILS) — 서버 전용
+│   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications (도메인 1파일)
+│   ├── ingest/structure.ts        AI 구조화 파이프라인 (현재 키워드 휴리스틱)
+│   ├── bookmarks.ts · recent-jobs.ts · recent-searches.ts   localStorage 클라이언트 헬퍼
+│   └── repost-tracking.ts · seo.ts · format.ts · utils.ts
+├── mocks/                         **현재 데이터 소스**(jobs·churches·church-verifications JSON + index.ts)
+│                                  — lib/queries만 접근. DB 전환 시 이 폴더가 사라진다
+├── types/domain.ts                공유 도메인 타입 (⬜ database.ts = Supabase 생성, 아직 없음)
+└── proxy.ts                       Next 16 Proxy — 세션 refresh + 접근 1차 판정(진짜 307)
 
-supabase/migrations/               DB 마이그레이션 SQL
+⬜ supabase/migrations/            DB 마이그레이션 SQL — 아직 없음(Phase 1)
 ```
 
-> ⚠️ 위 트리는 **목표 구조 예측**이다 (코드 작성 전). 개발하며 드리프트할 수 있으니 "계약"으로 신뢰하지 말 것.
+> **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
+>
+> **배치 규칙**: 한 페이지 전용 뷰·폼·헬퍼는 **그 페이지 폴더에** 둔다(`jobs-view.tsx`·`job-form.tsx`). 두 곳 이상에서 쓰면 `components/`로 올린다. mutation은 그 라우트의 `actions.ts`.
+> **mutation `actions.ts`는 아직 login·mypage(로그아웃)뿐** — 공고 등록·수정·admin 승격은 Phase 1에서 각 라우트에 추가한다.
 
 ## Layer Responsibilities
 
@@ -139,13 +144,26 @@ supabase/migrations/               DB 마이그레이션 SQL
 - `"use server"` 디렉티브. 모든 mutation(공고 등록·수정·삭제)은 여기서.
 - `createClient()` (server.ts, 쿠키 기반)으로 인증 보장된 호출
 - 끝에서 `updateTag(resource)` — read-your-own-writes
-- REST API 라우트 만들지 않는다.
+- **데이터 CRUD용 REST API 라우트 만들지 않는다.** 외부 규약이 HTTP 엔드포인트를 강제할 때만 route handler 허용 — 현재 예외 2개뿐: `app/auth/callback`(OAuth 리다이렉트 수신), `app/api/payments/complete`(결제 검증).
 
 ### Query (`lib/queries/*.ts`) — 데이터 소스 seam (mock ↔ DB)
 - **페이지·view는 데이터를 여기서만 가져온다.** `@/mocks` 직접 import 금지 — 데이터 출처를 이 레이어에 은닉해, mock→DB 전환 시 **페이지 코드 0 변경**.
 - **함수는 `async` + `'use cache'` + `cacheTag`** (read 전용). fetch + transform + return, 집계·재공고 계산 등 비즈니스 로직은 여기.
 - **mock 단계**: 내부에서 `mocks/*` 위임(현재). **DB 전환**: 본문만 `createServiceClient()`(service.ts) Supabase 호출로 교체 — 시그니처·반환 타입 동일.
 - **쿠키·헤더 절대 만지지 마라** — cached scope 안에서 호출됨
+- **예외(인증 의존·PII read)** — `'use cache'`/`cacheTag`를 쓰지 않는 함수들:
+  - `users.ts` **전체**(`getCurrentUser`·`getChurchDashboard`·`getEditableJob`) — 모두 로그인 사용자에 종속돼 방문자마다 결과가 다르다. `getCurrentUser`는 `server.ts`(쿠키 세션)를 쓰고 `React.cache`로 요청당 1회만 왕복한다.
+  - `verifications.ts` — 인증 신청 PII(가드레일 #3). 현재 mock, 실배선 시 `server.ts`.
+  - 이 함수들은 **dynamic 페이지의 `<Suspense>` 안·Server Action·route handler에서만** 호출한다(cached scope에서 부르면 빌드가 깨진다).
+
+### Auth (`lib/auth.ts` · `lib/auth-guard.ts`)
+- `auth.ts` = **순수 함수만**(서버 전용 import 없음): `hasChurchAccess`·`safeInternalPath`·로그인 URL 조립. `safeInternalPath`는 오픈 리다이렉트 신뢰 경계라 **서버에서만** 호출한다.
+- `auth-guard.ts` = **서버 전용 게이트**(인자 없음). `requireUser()` = 미로그인이면 `redirect`. `requireOperator()` = 로그인 + `.env` `ADMIN_EMAILS` 일치까지, 아니면 `notFound`(운영자 도구 존재 은닉). 쿠키를 읽으므로 **dynamic 페이지의 `<Suspense>` 안**에서만 부른다(cacheComponents 제약).
+  - **복귀 경로(`?next=`)는 `proxy.ts`가 `x-pathname` 요청 헤더로 넘겨준다** — 페이지는 자기 경로를 적지 않는다. 덕분에 **경로 지식이 `proxy.ts` 한 곳**에만 있고 쿼리스트링도 보존된다. 헤더 값은 `safeInternalPath`로 검증해 쓰고, 없으면 기본값으로 폴백한다.
+- `operator.ts` = `isOperatorEmail(email)` — `.env` `ADMIN_EMAILS`(쉼표 구분) 대조. **목록이 비면 아무도 운영자가 아니다(fail-closed).**
+- **2단 방어**: `proxy.ts`가 렌더 전에 진짜 307/리다이렉트로 1차 차단(비로그인 → `/login`, 운영자 아닌데 `/admin` → `/`), 페이지 게이트가 최종 판단. `(authed)` 페이지는 proxy 목록에서 빠져도 데이터가 새지 않는다.
+  - ⚠️ **예외 = `/admin`·`/admin/jobs`·`/admin/ingest`** — `○ Static` 유지 목적상 페이지 게이트가 없어 **proxy가 유일한 관문**이다. 그래서 proxy는 Auth 장애로 판정이 안 될 때도 admin만은 **fail-closed**(홈으로)로 막는다.
+  - `/admin/*` 중 **PII를 다루는 `/admin/verify`만** 페이지에서도 `requireOperator`를 다시 부른다(나머지 3개는 정적 유지 목적상 proxy 판정에 의존 — 실 데이터 연결 시 재검토).
 
 ### Ingest (`lib/ingest/*.ts`)
 - 사람이 확보한 공고 텍스트를 받아 AI로 구조화하는 함수. admin 등록 도구가 호출.
@@ -157,7 +175,8 @@ supabase/migrations/               DB 마이그레이션 SQL
 - prop으로 데이터 받음, 직접 fetch X.
 
 ### Component (`components/**`)
-- 도메인 로직 없음. 재사용 UI만. `ui/` = shadcn 원본.
+- 도메인 로직 없음. 재사용 UI만. `ui/` = shadcn 원본. 데이터는 prop으로 받는다(직접 fetch X).
+- **예외 1개 — `layout/header-account.tsx`**: 모든 레이아웃이 공유하는 셸이라 세션을 직접 읽는다(`lib/queries` seam 경유). 레이아웃마다 fetch+Suspense를 중복하는 대신 여기 한 곳에 둔 것 — **이 예외를 늘리지 말 것**.
 
 ## Supabase Client 사용 규칙
 
@@ -171,9 +190,10 @@ DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. �
 | `lib/supabase/service.ts` | `@supabase/supabase-js` `createClient` | **secret** | ❌ | `lib/queries/*.ts`(cached read만) |
 | `lib/supabase/session.ts` | `@supabase/ssr` `createServerClient` | publishable | ✅ | `proxy.ts` 세션 refresh용 (단독 사용 X) |
 
-- 키: **publishable**(구 anon, RLS 적용, `NEXT_PUBLIC_*`) / **secret**(구 service_role, RLS 우회, 서버 전용). env 이름은 `.env.example` 참조.
+- 키: **publishable**(구 anon, RLS 적용, `NEXT_PUBLIC_*`) / **secret**(구 service_role, RLS 우회, 서버 전용). env 이름은 README의 환경 변수 절 참조(`.env.example`은 삭제됨).
+- 세션 쿠키 정책은 `lib/supabase/cookie-options.ts` 한 곳 — `httpOnly`(브라우저 클라이언트를 안 쓰므로 JS 접근 불필요) + 배포 시 `secure`. ⚠️ 로컬에서 `next start`(NODE_ENV=production)를 http로 띄우면 `secure` 때문에 로그인이 안 된다 — 로컬 로그인 테스트는 `npm run dev`로.
 - `service.ts`가 RLS를 우회하므로 cached read(공개·비개인 조회 — 공고·교회·운영자 목록 등) 전용으로만. **인증 의존·PII read(예: 교회 인증 신청)와 모든 인증·권한 작업은 반드시 `server.ts`**(cached 금지).
-- ⚠️ 현재는 **배선만** — `lib/queries/*`는 아직 mock(JSON). 실제 DB 사용 전환은 Phase 1(쿼리 본문만 교체, 시그니처 불변).
+- ⚠️ **인증만 실배선** — `getCurrentUser`(users.ts)는 Supabase Auth 실동작. 나머지 `lib/queries/*`(공고·교회·인증신청)는 아직 mock(JSON)이며 DB 전환은 쿼리 본문만 교체(시그니처 불변).
 
 ## `'use cache'` 제약 (필수 준수)
 
@@ -227,7 +247,7 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 - shadcn/ui 우선. **모바일 퍼스트** (`base` → `sm` → `md` → `lg`) — 구직 교역자가 폰으로 공고를 본다. (디자인 방향은 SPEC.)
 
 **Imports**
-- 항상 `@/` alias. 상대 경로는 같은 폴더 내에서만.
+- 항상 `@/` alias. 상대 경로는 **같은 폴더**, 그리고 **같은 라우트 기능 폴더 안의 공용 파일**까지만 허용(예: `jobs/new/page.tsx` → `../job-form`). 그 밖으로 나가면 `@/`.
 
 ## Git Workflow
 

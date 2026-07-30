@@ -15,10 +15,10 @@
 - [x] shadcn/ui (Base UI) + 시드 컴포넌트(button·card·badge·input)
 - [x] 앱 셸: 레이아웃·헤더·푸터·홈 + (public)/(authed)/admin 라우트 뼈대
 - [x] README
-- [ ] Supabase 프로젝트 생성 + 클라이언트(`lib/supabase/{server,service,session}.ts`) — Phase 1
-- [ ] 인증 Proxy — `src/proxy.ts` ((authed)/admin 게이트) — Phase 1
-- [ ] 운영자(admin) 계정 — Phase 1
-- [ ] `.env` 로컬 셋업 (Supabase 키) — Phase 1
+- [x] Supabase 프로젝트 생성 + 클라이언트(`lib/supabase/{server,service,session}.ts`) — `server`·`session`은 인증에서 실사용, `service`는 아직 미사용(DB 전환 시)
+- [x] Proxy — `src/proxy.ts` (2026-07-29): **세션 refresh + 비로그인 1차 차단(진짜 307)**. ⚠️ 원래 계획한 "(authed)/admin 인증 게이트"와 다름 — cacheComponents 제약상 페이지 안 redirect는 200+스켈레톤이 되므로 proxy가 1차, 페이지 `requireUser`가 최종 방어선인 **2단 구조**로 결정. **admin도 게이트 적용**(`/admin/**` 비로그인 307 + 비운영자 → `/`, Auth 장애 시에도 fail-closed)
+- [x] **운영자(admin) 게이트** (2026-07-29) — `.env` `ADMIN_EMAILS`(쉼표 구분) allowlist. `proxy.ts`가 `/admin/*`에서 비로그인은 307, 로그인했어도 운영자 아니면 `/`로. PII 화면 `/admin/verify`는 페이지에서도 `requireOperator()` 재확인(fail-closed: 목록이 비면 아무도 접근 못 함). 판정은 JWT claims의 email로 하므로 추가 왕복 없음. ⚠️ **Vercel env에도 `ADMIN_EMAILS`를 넣어야** 배포본에서 열린다. 남은 것: 실 DB 전환 시 operator RLS.
+- [x] `.env` 로컬 셋업 (Supabase 키) — URL·publishable·secret 3개 설정 완료
 - [x] Vercel 연결 + 첫 배포 (2026-07-18) — https://min-job.vercel.app/ (mock 데이터, 시크릿 없음)
 
 ### DB 스키마 (DATA.md 확정 완료 — Phase 1에서 구축)
@@ -39,7 +39,8 @@
 > 선행: Phase 0의 DB 스키마(=DATA.md) 완료. 동작 명세는 SPEC.md. 여기는 작업 단위.
 
 > **▶ mock→실 DB 전환 = 서로 독립인 2트랙 (2026-07-29 정리, 되돌리지 말 것):**
-> **① 인증(로그인)** — `mock-auth` → Supabase Auth(**카카오·구글** OAuth). 데이터와 무관·**지금 가능**. `users` 테이블 + OAuth + auth callback + 세션 3곳(로그인·로그아웃·헤더) + `proxy.ts` 게이트 + **이메일/test 계정 제거**. `getCurrentUser`는 seam이라 본문만 교체하면 게이트 7곳 그대로. 네이버는 Supabase 기본 미지원 → 커스텀(보류).
+> **① 인증(로그인) — ✅ 완료(2026-07-29)**: `mock-auth` 삭제 → Supabase Auth **Google OAuth 단독**. Server Action(`login/actions.ts`) → `auth/callback/route.ts`(PKCE code 교환) → `getCurrentUser`(Supabase `getUser`, `React.cache`) → 세션 refresh·1차 차단은 `proxy.ts`. 이메일 로그인·test 계정 제거, 로그아웃은 Server Action(`signOut`, scope local). **`users` 테이블은 불필요했다** — `auth.users`가 id·email·이름을 제공. 카카오는 **오픈 전 추가**(provider 켜고 버튼 하나 — 타겟층엔 카카오가 더 친숙), 네이버는 Supabase 기본 미지원 → 보류.
+> **남은 인증 작업 1개**(admin 운영자 게이트는 2026-07-29 완료): **교회 멤버십** — `getCurrentUser`가 `churchId`/인증상태를 항상 `null`로 주므로 교회 기능 전체가 닫혀 있다(②트랙에서 교회 테이블과 함께).
 > **② 데이터(공고·교회)** — JSON → Supabase 테이블. ⚠️ **핵심은 seam 전환(쉬움 — `lib/queries` 본문만)이 아니라 "데이터 유입"**: (a)크롤러 승격=검수브릿지(크롤러 스키마 확정 후) (b)교회 등록 mutation (c)seed(임시). **DB가 비면 read 전환해도 빈 화면** → 유입이 먼저. read+write는 도메인별로 함께. **실데이터는 크롤러 검수브릿지 준비 후**라, ①(로그인)을 먼저 한다.
 
 ### 1-1. 공통 골격
@@ -61,7 +62,8 @@
 - [ ] "주인 없는 공고" 등록 ('운영자 등록', 소유자 없음)
 
 ### 1-4. 인증 + 마이페이지 + 교회 등록 (단일 계정 모델 — DATA §3, SPEC 사용자 모델)
-- [~] 로그인 (`/login`) — **mock UI 완료**(간편 로그인 버튼 + 이메일 mock 로그인 `lib/mock-auth`, 세션=`mj_session` 쿠키). **▶ 실 전환 = ①트랙(지금)**: Supabase Auth **카카오·구글 OAuth** + auth callback route + `getCurrentUser` seam 본문 교체 + 세션 3곳(로그인·로그아웃·헤더) + `proxy.ts` 게이트 + **이메일 로그인·test 계정 제거**. **선행(사람) = 카카오·구글 콘솔 앱 등록 → client id/secret을 Supabase Providers에 입력**. 네이버는 Supabase 기본 미지원 → 커스텀 OIDC(보류). **단일 계정 = 기본 사용자**(로그인=일반 성도, 교회 담당자는 인증 문서로 승격 — 가입 시 역할 선택 없음)
+- [x] 로그인 (`/login`) — **Google OAuth 실동작(2026-07-29)**. 폼은 서버 렌더(JS 없이도 제출), `?next=` 복귀 + open-redirect 방어(`safeInternalPath`), 실패 시 `?error=oauth`로 안내하고 `next` 유지. 세션 쿠키 `httpOnly`+`secure`(`lib/supabase/cookie-options.ts`). 첫 로그인=가입이라 약관·개인정보 동의 고지 링크 표시. 카카오는 오픈 전 추가, 네이버 보류. **단일 계정 = 기본 사용자**(로그인=일반 성도, 교회 담당자는 인증 문서로 승격 — 가입 시 역할 선택 없음)
+- [x] 로그아웃 — Server Action(`mypage/actions.ts` `signOut`, scope local). 회원탈퇴 자동 처리는 미구현이라 운영자 문의 경로로 안내(약관·개인정보처리방침이 보장한 권리를 실제로 행사 가능하게)
 - [~] 마이페이지 (`/mypage` · `/mypage/church` · `/mypage/church/info` · `/mypage/church/promote`) — **mock UI 완료**: 사역자 view(최근 본 + **북마크** + 하단 교회 CTA·계정) + 교회 대시보드(상태 탭·노출광고 사이드바·공고 행 수정/⋯마감·삭제/재등록) + 교회 정보 관리 페이지(소개·연락처·채널·사진) + **노출 결제 페이지**(PortOne V2 실결제 동작·서버 금액 검증, 1-8·4). 헤더 아바타=마이페이지 직행 + "교회 공고 등록" 상시 링크(`hasChurchAccess` 분기). 서버 배선·mutation·실 노출 적용 Phase 1
 - [ ] **북마크** (`bookmarks` 테이블) + 공고 카드·상세 저장 버튼 — 단일 계정이라 **Phase 1로 이동**(원래 Phase 2). 지금은 localStorage로 동작
 - [~] 교회 인증 (`/mypage/verify`) — **mock UI 완료**(상태별 화면 + 4섹션 폼: 교회 선택·증빙(고유번호증/사업자등록증)·담당자(이메일 인증)·동의). 실 업로드·이메일 발송·운영자 승인 Phase 1 → 인증 교회만 게재
@@ -127,6 +129,7 @@
 6. [~] **NHN KCP 전자결제 신청 제출·심사중(2026-07-20)** — PortOne 전자결제 신청 **사전점검 6항목 전부 통과**(URL=`https://www.minjob.co.kr`, 사업자정보=전화번호 반영으로 통과) → **신청 제출 완료, 가맹 심사 진행중**. 심사가 보는 것: 상품·가격(`/pricing`) · 이용약관 · 취소/환불 규정 · 사업자정보 표기 · 개인정보처리방침. **실결제엔 일반결제 계약 필요**(과거 계약취소분과 별개로 이번 신청 진행중)
 7. [x] **PG-API 발급 + 실연동 채널 전환(2026-07-21)** — KCP PG-API(개인키+서비스 인증서) 발급 → PortOne **실연동** 채널 **"MinJob NHN KCP"**(PG Provider `kcp_v2`, 사이트코드 IP94F, PG-API 인증서/개인키 등록) 생성 → 채널 키 `channel-key-bc781263-…`를 `NEXT_PUBLIC_PORTONE_CHANNEL_KEY`(로컬 `.env` + Vercel)에 교체·재배포. STORE_ID·`PORTONE_API_SECRET`은 동일 상점이라 불변. 라이브 결제창 = 실연동(테스트 아님)
 8. [~] **카드사 등록신청 제출·심사중(2026-07-21)** — `partner.kcp.co.kr` 카드사 등록신청(신용카드 일반결제) 제출. **심사 3~15일**. 문의내용: 심사용 계정 `test1@test.com` + 결제창 경로(`/mypage/church/promote`) + 통신판매 면제 사유 기재. 체크 7항 통과(비회원 구매불가라 #7=아니오+계정 제공, 통신판매는 #3 면제 예외). ⚠️ **심사 중 URL·하단 사업자정보·상품/가격 변경 금지**. **승인되면 실카드결제 가능**
+   > 🚨 **심사와 충돌: 로그인 실전환(2026-07-29)을 prod에 올리면 안 된다.** 실 로그인 전환으로 (a) 심사용 계정 `test1@test.com`이 삭제되고(mock 계정 폐기) (b) `getCurrentUser`가 교회 인증상태를 항상 `null`로 주어 **`/mypage/church/promote`(심사에 기재한 결제창 경로)에 아무도 도달할 수 없다**. → **작업은 `dev`에만 두고 prod는 심사 통과까지 현행 유지.** prod에 올리기 전 선행 조건: 교회 멤버십 실배선(②트랙) **또는** 심사자용 임시 접근 경로 확보. 승인 후 배포할 때는 KCP에 계정·경로 변경을 먼저 안내할 것.
 9. [ ] **(승인 후/병행) 실 데이터 + Supabase 백엔드 + 기능 상세 다듬기** → Phase 1 본체(1-1~1-7)와 합류
 > 더미 데이터 = JSON 유지(심사용) · 심사 위해 배포 필수 · 사업자등록·통신판매업 신고 등 행정 절차는 별도(사용자 진행).
 
@@ -137,7 +140,7 @@
 - [x] **인증**: `/login` `?next=` 복귀(+open-redirect 방지) · `/jobs/new`·`/edit` 위저드 스텝 검증(빈 폼 제출 방지). (mypage·church 상태분기·탭·케밥은 동작, mutation은 A=Phase 1)
 - [x] **admin**: 홈 카드 deep-link + featured 필터 · ingest 노트 리셋. (탭·필터·시트·케밥 동작, 승격/승인·반려는 A)
 - [x] **공통**: 모바일 햄버거 네비 · admin 홈 grid 모바일. (헤더 분기·hover는 동작)
-> ✅ **완료(2026-07-29)**: 위 B 구멍 마감. 겸해결=pageSize seed. 보류=pagination ellipsis(mock 소량). 이관=회원가입/비번(실 Auth=Phase 1, login에 "준비 중" 안내).
+> ✅ **완료(2026-07-29)**: 위 B 구멍 마감. 겸해결=pageSize seed. 보류=pagination ellipsis(mock 소량). 회원가입/비밀번호 찾기는 **Google OAuth 전환으로 해소**(별도 가입·비밀번호 개념 자체가 없어져 "준비 중" 안내도 제거).
 
 ### 1-10. 크롤러 연동 (min_job_agent — 데이터 수집 방식 전환)
 > **방향 전환(2026-07-28 확정, 법률 검토 완료).** 자매 프로젝트 `min_job_agent`가 **공개된 공식 게시판(교단·신학교)**을 자동 수집 → AI 구조화 → 검수 큐(`review_data`)에 적재한다. 운영자가 검수·승격하면 `churches`/`jobs`로 반영된다. 기존 "자동 크롤러 배제"(가드레일 #1)를 **재정의**한다 — 공개 공식 출처 한정, 영리 사이트 출처 배제는 유지, **크롤러 실운영은 법률 검토 완료가 전제(2026-07-28 확인 완료)**. staging 4테이블은 **min_job_agent 소유**(min_job은 인지만 — init.sql/마이그레이션 작성은 보류, SPEC 진화 중).

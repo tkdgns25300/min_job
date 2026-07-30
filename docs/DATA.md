@@ -132,7 +132,7 @@
 - **교회 view 개방 조건** = `church_id IS NOT NULL AND church_verification_status='APPROVED'` → 파생 `hasChurchAccess`.
 - **다중 담당자**: 여러 user가 같은 `church_id`(다대일) → 한 교회에 담당자 여럿. 권한은 "그 교회 인증 관리자인가"로 판정(공고 owner 일치 X). Phase 1은 각자 독립 인증, 초대형은 Phase 2(→ `church_members` 조인 테이블로 승격).
 - **이동**: 담당자가 다른 교회로 옮기면 기존 링크 해제(그 교회 공고는 `owner_id NULL`로 교회에 잔류·운영자 관리 가능·재공고 이력 보존) → 새 교회 재인증. 인증은 **교회별**.
-- 운영자(admin)는 공개 필드로 두지 않는다 — allowlist/flag(Phase 1). 개인정보 최소 수집.
+- 운영자(admin)는 **DB 컬럼으로 두지 않는다** — `.env` `ADMIN_EMAILS` allowlist로 판정(2026-07-29, `lib/operator.ts`, 목록 비면 fail-closed). 남은 것 = 실 DB 전환 시 operator RLS. 개인정보 최소 수집.
 
 ### `bookmarks` — 사역자 북마크 (Phase 1 — 단일 계정이라 이동. 지금은 localStorage)
 | 컬럼 | 타입 | 비고 |
