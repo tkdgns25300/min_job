@@ -17,32 +17,30 @@ const GOLD = "#d3ad63";
 
 export default function Image() {
   return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 28,
-          background: BRAND_900,
-          color: "#ffffff",
-        }}
-      >
-        {/* ⚠️ fontWeight는 지정해도 안 먹는다 — 폰트를 안 넘기면 satori 기본 폰트의 단일 두께만 쓴다.
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 28,
+        background: BRAND_900,
+        color: "#ffffff",
+      }}
+    >
+      {/* ⚠️ fontWeight는 지정해도 안 먹는다 — 폰트를 안 넘기면 satori 기본 폰트의 단일 두께만 쓴다.
             굵기가 필요하면 정적 ttf/otf를 fonts 옵션으로 넘겨야 한다(위 주석의 한글 폰트와 같은 조건). */}
-        <div style={{ display: "flex", fontSize: 132, letterSpacing: -4 }}>
-          <span style={{ color: GOLD }}>Min</span>
-          <span>Job</span>
-        </div>
-        <div style={{ display: "flex", fontSize: 34, color: "rgba(255,255,255,0.72)" }}>
-          minjob.co.kr
-        </div>
-        <div style={{ display: "flex", width: 132, height: 5, background: GOLD, marginTop: 8 }} />
+      <div style={{ display: "flex", fontSize: 132, letterSpacing: -4 }}>
+        <span style={{ color: GOLD }}>Min</span>
+        <span>Job</span>
       </div>
-    ),
+      <div style={{ display: "flex", fontSize: 34, color: "rgba(255,255,255,0.72)" }}>
+        minjob.co.kr
+      </div>
+      <div style={{ display: "flex", width: 132, height: 5, background: GOLD, marginTop: 8 }} />
+    </div>,
     size,
   );
 }
