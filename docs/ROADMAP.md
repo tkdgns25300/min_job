@@ -82,7 +82,9 @@
 - [x] `metadataBase`(`constants/site.ts` `SITE_URL`) — OG·canonical 절대 URL 기준. 프리뷰가 자기 도메인을 대표로 알리지 않도록 **env 아닌 상수**
 - [x] **title 중복 해소** — `/jobs`가 root 기본 title을 상속해 홈과 같았다. 검색용 title·description 부여(홈은 root 값 = 대표 페이지라 정상)
 - [x] **OG 공통값**(`SITE_OPEN_GRAPH`) — ⚠️ Next는 `openGraph`를 **통째로 교체**해서, openGraph를 재정의하는 상세 페이지는 root의 `siteName`·`locale`을 잃는다. 상수를 양쪽에서 펼쳐 써 해결(전 페이지 타입에서 5개 태그 확인)
-- [ ] **OG 이미지 없음** — 링크 미리보기에 그림이 안 뜬다. **카카오톡 공유가 주 유통 경로**라 실제 유입에 영향. 두 가지 길: 정적 PNG 1장(디자인 필요) 또는 `opengraph-image.tsx` 동적 생성. ⚠️ 동적 생성은 satori가 **가변 woff2를 못 읽어** 한글이 깨질 수 있음 — Pretendard **정적** TTF/WOFF가 별도로 필요
+- [x] **OG 이미지**(2026-07-30) — `app/opengraph-image.tsx`로 1200×630 브랜드 카드 생성(딥그린 + 골드 로고 + 도메인). 전 페이지 타입에서 `og:image` 1개씩 확인. `SITE_OPEN_GRAPH.images`로 지정 — ⚠️ openGraph를 재정의하는 상세 페이지는 **파일 기반 이미지도 상속받지 못하기** 때문
+  - **제약(실측)**: ImageResponse는 `ttf`·`otf`·`woff`만 지원(우리 폰트는 `PretendardVariable.**woff2**` → 못 씀) + **번들 500KB 제한**. 그래서 ① **한글 미사용**(로고가 영문이라 가능) ② `fontWeight` 무효(기본 폰트 단일 두께)
+  - [ ] **공고별 이미지**(제목·교회명 박힌) — 실데이터 후 검토. **한글 정적 폰트(ttf/otf) 확보가 선행**이며 500KB 안에 들어가야 한다(전체 한글 폰트는 초과 → subset 필요). 그때 굵기 문제도 함께 해결됨
 > ⚠️ **Search Console 사이트맵 등록은 실 공고 데이터가 들어온 뒤에.** 코드는 준비됐지만, 등록이 곧 "가짜 공고를 색인해달라"는 요청이 된다. sitemap은 `getAllJobCards()`(모집중만)를 쓰므로 DB 전환 시 자동으로 실 공고가 반영된다 — 파일 수정 불필요.
 > 남은 것: 공고가 수만 건이 되면 sitemap 분할(index) · `updated_at` 생기면 `lastModified` 정교화(현재는 `postedAt`).
 
