@@ -79,6 +79,6 @@ export const config = {
   // 정적 파일·이미지·메타데이터 라우트는 세션 갱신이 불필요 — 제외해 함수 호출을 줄인다.
   // auth/callback도 제외: 거기서 새 세션 쿠키를 심는데, 갱신 실패 시 나가는 쿠키 삭제와 충돌할 수 있다.
   matcher: [
-    "/((?!auth/callback|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!auth/callback|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

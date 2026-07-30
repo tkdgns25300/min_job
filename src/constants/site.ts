@@ -4,6 +4,12 @@
 export const SITE_URL = "https://www.minjob.co.kr";
 
 // OG 공통값 — ⚠️ Next는 `openGraph` 객체를 **통째로 교체**한다(필드 병합 아님).
-// 그래서 openGraph를 재정의하는 페이지(공고·교회 상세)는 root layout의 siteName·locale을 잃는다.
+// 그래서 openGraph를 재정의하는 페이지(공고·교회 상세)는 root layout의 siteName·locale은 물론
+// 파일 기반 OG 이미지(app/opengraph-image.tsx)까지 잃는다 → images도 여기서 함께 지정한다.
 // 양쪽이 이 상수를 펼쳐 쓰면 한 곳에서 관리된다.
-export const SITE_OPEN_GRAPH = { siteName: "민잡", locale: "ko_KR" } as const;
+// (as const를 쓰지 않는다 — readonly 배열은 Next의 OpenGraph 타입에 대입되지 않는다)
+export const SITE_OPEN_GRAPH = {
+  siteName: "민잡",
+  locale: "ko_KR",
+  images: ["/opengraph-image"],
+};
