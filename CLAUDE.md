@@ -109,7 +109,7 @@ src/
 │   ├── job/ church/ admin/ home/ pricing/ search/   각 도메인 표시 컴포넌트
 │   └── relative-time.tsx          시간 표시(클라이언트 계산)
 ├── constants/                     domain.ts(도메인 enum) · business.ts(사업자정보) ·
-│                                  storage.ts(localStorage 키) · site.ts(SITE_URL — 절대 URL 기준)
+│                                  storage.ts(localStorage 키) · site.ts(SITE_URL·SITE_OPEN_GRAPH)
 ├── lib/
 │   ├── supabase/                  server(쿠키·인증) · service(secret·cached read, 미사용) ·
 │   │                              session(proxy refresh) · cookie-options(httpOnly·secure)

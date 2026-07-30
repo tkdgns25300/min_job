@@ -78,8 +78,11 @@
 ### 1-5. SEO
 - [x] `generateMetadata`/정적 metadata 전 페이지 · `<html lang="ko">` · **`sitemap.ts`·`robots.ts`(2026-07-30)**
 - [x] 공고 상세 JobPosting JSON-LD — **모집중일 때만 출력**(마감 공고는 구글 권장대로 구조화 데이터 제거)
-- [x] **중복 색인 방지 canonical**(2026-07-30) — `/jobs`의 필터·정렬·페이지 쿼리 조합이 각각 색인되면 중복이 폭발하므로 대표 URL을 `/jobs`로 고정. 공고·교회 상세도 추적 쿼리(`?utm_*`) 대비 canonical 지정
+- [x] **중복 색인 방지 canonical**(2026-07-30) — `/jobs`의 필터·정렬·페이지 쿼리 조합이 각각 색인되면 중복이 폭발하므로 대표 URL을 `/jobs`로 고정. 홈·공고·교회 상세도 추적 쿼리(`?utm_*`) 대비 canonical 지정
 - [x] `metadataBase`(`constants/site.ts` `SITE_URL`) — OG·canonical 절대 URL 기준. 프리뷰가 자기 도메인을 대표로 알리지 않도록 **env 아닌 상수**
+- [x] **title 중복 해소** — `/jobs`가 root 기본 title을 상속해 홈과 같았다. 검색용 title·description 부여(홈은 root 값 = 대표 페이지라 정상)
+- [x] **OG 공통값**(`SITE_OPEN_GRAPH`) — ⚠️ Next는 `openGraph`를 **통째로 교체**해서, openGraph를 재정의하는 상세 페이지는 root의 `siteName`·`locale`을 잃는다. 상수를 양쪽에서 펼쳐 써 해결(전 페이지 타입에서 5개 태그 확인)
+- [ ] **OG 이미지 없음** — 링크 미리보기에 그림이 안 뜬다. **카카오톡 공유가 주 유통 경로**라 실제 유입에 영향. 두 가지 길: 정적 PNG 1장(디자인 필요) 또는 `opengraph-image.tsx` 동적 생성. ⚠️ 동적 생성은 satori가 **가변 woff2를 못 읽어** 한글이 깨질 수 있음 — Pretendard **정적** TTF/WOFF가 별도로 필요
 > ⚠️ **Search Console 사이트맵 등록은 실 공고 데이터가 들어온 뒤에.** 코드는 준비됐지만, 등록이 곧 "가짜 공고를 색인해달라"는 요청이 된다. sitemap은 `getAllJobCards()`(모집중만)를 쓰므로 DB 전환 시 자동으로 실 공고가 반영된다 — 파일 수정 불필요.
 > 남은 것: 공고가 수만 건이 되면 sitemap 분할(index) · `updated_at` 생기면 `lastModified` 정교화(현재는 `postedAt`).
 

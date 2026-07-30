@@ -31,7 +31,7 @@
 | 백엔드(Supabase 실사용) | ~15% | **Auth(Google OAuth)·운영자 게이트 완료(2026-07-29)**. 스키마·mutation·`lib/queries` mock→DB + **교회 멤버십** 잔여 (Phase 1, **최대 덩어리**) |
 | 데이터(실 공고·구조화) | ~5% | 실 공고 0·Claude 구조화 미연동 (다른 세션) |
 | 크롤러 연동(min_job_agent) | ~0% | **방향 전환 확정·문서 싱크 중** — 코드·enum·검수 브릿지 미착수 (정본=CRAWLER_HANDOFF.md) |
-| SEO | ~80% | **sitemap·robots·canonical·metadataBase 완료(2026-07-30)**. 남은 것 = 실데이터 후 Search Console 등록 · 유입 측정 |
+| SEO | ~80% | **sitemap·robots·canonical·metadataBase·OG 공통값 완료(2026-07-30)**. 남은 것 = **OG 이미지**(카톡 미리보기) · 실데이터 후 Search Console 등록 · 유입 측정 |
 | 법률/행정 | ~50% | 약관 법률검토 전 (사업자등록·통신판매 면제 O) |
 
 > 격차의 정체: **"보이는 절반"(디자인·인프라·결제 UI)은 무겁게 됐고, "안 보이는 심장"(백엔드·데이터·실동작)이 남았다.** "완료(mock)"에 안심하지 말 것(§1 범례 참조).
