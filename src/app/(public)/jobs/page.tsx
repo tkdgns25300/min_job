@@ -1,6 +1,16 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { getAllJobCards, getJobStats } from "@/lib/queries/jobs";
 import { JobsView } from "./jobs-view";
+
+export const metadata: Metadata = {
+  title: "사역자 청빙 공고 — 교단·지역·사례비로 검색 | 민잡",
+  description:
+    "부목사·전도사·담임 청빙 공고를 한곳에서. 교단·지역·부서·사례비로 검색하고 비교하세요.",
+  // ⚠️ 필터·정렬·페이지 쿼리가 붙은 URL(?region=…&page=2…)이 각각 별도 페이지로 색인되면
+  //    중복 페이지가 폭발하고 크롤링 예산을 낭비한다 → 대표 URL을 /jobs 하나로 고정한다.
+  alternates: { canonical: "/jobs" },
+};
 
 export default async function JobsPage() {
   const jobs = await getAllJobCards();
