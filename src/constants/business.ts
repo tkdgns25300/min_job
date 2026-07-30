@@ -14,6 +14,12 @@ export const BUSINESS_INFO = {
   email: "tkdgns25300@naver.com", // 문의
 } as const;
 
+// 문의·요청 메일 링크 — 제목은 반드시 인코딩한다(사이트마다 직접 조립하면 공백·`·`가 빠진다).
+export const contactMailto = (subject?: string): string =>
+  subject
+    ? `mailto:${BUSINESS_INFO.email}?subject=${encodeURIComponent(subject)}`
+    : `mailto:${BUSINESS_INFO.email}`;
+
 // 표시용 라인 — 통신판매업 미신고 시 해당 줄 생략.
 export const businessInfoLines = (): string[] => [
   `상호: ${BUSINESS_INFO.name}`,

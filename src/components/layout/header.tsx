@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import Link from "next/link";
-import { HeaderAccount } from "./header-account";
+import { HeaderAccount, HeaderAccountFallback } from "./header-account";
 import { MobileNav } from "./mobile-nav";
 
 // 상단 nav = 구직자 탐색 기능만(=공고 하나). 소개는 footer, 노출/광고는 footer+교회 여정.
@@ -26,8 +27,10 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        {/* 계정 영역(로그인/아바타 드롭다운) — 세션 쿠키를 클라에서 읽는 island. 교회↔사역자 전환도 여기 */}
-        <HeaderAccount />
+        {/* 계정 영역 — 세션을 서버에서 읽는 dynamic 영역이라 Suspense로 격리(셸은 prerender 유지) */}
+        <Suspense fallback={<HeaderAccountFallback />}>
+          <HeaderAccount />
+        </Suspense>
       </div>
     </header>
   );

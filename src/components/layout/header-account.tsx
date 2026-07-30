@@ -1,36 +1,16 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getAccount, SESSION_COOKIE } from "@/lib/mock-auth";
-import { hasChurchAccess } from "@/lib/auth";
+import { hasChurchAccess, loginPathWithNext } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/queries/users";
 import type { CurrentUser } from "@/types/domain";
 
-// 헤더 우측 계정 영역 — client island. 세션 쿠키(mj_session)를 클라이언트에서 읽어
-// 공개 페이지 'use cache'를 안 깨뜨린다. 아바타는 마이페이지 직행 링크(로그아웃·회원탈퇴는 /mypage 안).
-// ⚠️ 실 인증(Phase 1)에선 Supabase 세션 + httpOnly 쿠키로 교체.
-function readSession(): CurrentUser | null {
-  const m = document.cookie.match(new RegExp(`(?:^|; )${SESSION_COOKIE}=([^;]*)`));
-  return getAccount(m ? decodeURIComponent(m[1]) : null);
-}
-
-// "교회 공고 등록"(파는쪽 상시 진입) 목적지 — 로그인 상태로 분기.
-function postJobHref(user: CurrentUser | null): string {
-  if (!user) return "/login";
-  return hasChurchAccess(user) ? "/mypage/church" : "/mypage/verify";
-}
-
-export function HeaderAccount() {
-  const [ready, setReady] = useState(false);
-  const [user, setUser] = useState<CurrentUser | null>(null);
-
-  useEffect(() => {
-    // SSR/하이드레이션 초기엔 로그아웃으로 렌더(공개 캐시와 일치) → 마운트 후 실제 세션 반영
-    /* eslint-disable react-hooks/set-state-in-effect */
-    setUser(readSession());
-    setReady(true);
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
+// 헤더 우측 계정 영역 — 세션 쿠키는 httpOnly(cookie-options.ts)라 클라이언트가 못 읽어 서버에서 읽는다.
+// 쿠키 의존이라 dynamic → header.tsx가 <Suspense>로 격리한다.
+// ⚠️ 트레이드오프: 이 영역 때문에 공개 페이지가 ○ Static → ◐ PPR이 된다. 셸은 계속 prerender돼
+//    엣지에서 스트리밍되지만 문서 응답은 no-store라 요청마다 함수가 돈다(비로그인은 Auth 왕복 없음).
+//    "헤더에 로그인 상태를 보여준다"를 지키는 대가로 받아들인 비용.
+// 아바타는 마이페이지 직행 링크(로그아웃·회원탈퇴는 /mypage 안).
+export async function HeaderAccount() {
+  const user = await getCurrentUser();
 
   return (
     <div className="ml-auto flex items-center gap-3 sm:gap-4">
@@ -40,7 +20,7 @@ export function HeaderAccount() {
       >
         교회 공고 등록
       </Link>
-      {ready && user ? (
+      {user ? (
         <Link
           href="/mypage"
           aria-label="마이페이지"
@@ -55,4 +35,25 @@ export function HeaderAccount() {
       )}
     </div>
   );
+}
+
+// 스트리밍 대기 자리 — 실제와 같은 글자를 투명하게 깔아 폭·높이를 맞춘다(레이아웃 흔들림 방지).
+// 대다수 방문자는 비로그인이므로 그 모양(등록 pill + "로그인" 링크)을 기준으로 잡았다.
+// 딥그린 헤더에선 animate-pulse 스켈레톤이 도리어 튀어서 투명 텍스트 방식을 썼다.
+export function HeaderAccountFallback() {
+  return (
+    <div className="ml-auto flex items-center gap-3 sm:gap-4" aria-hidden>
+      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-semibold text-transparent">
+        교회 공고 등록
+      </span>
+      <span className="text-sm text-transparent">로그인</span>
+    </div>
+  );
+}
+
+// "교회 공고 등록"(파는쪽 상시 진입) 목적지 — 로그인·인증 상태로 분기.
+// 비로그인은 로그인 후 교회 인증으로 이어지게 ?next=를 실어 보낸다(그냥 /login이면 /mypage로 튄다).
+function postJobHref(user: CurrentUser | null): string {
+  if (!user) return loginPathWithNext("/mypage/verify");
+  return hasChurchAccess(user) ? "/mypage/church" : "/mypage/verify";
 }

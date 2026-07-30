@@ -131,7 +131,7 @@ export function getSimilarJobs(id: string, limit = 4): JobCard[] {
   return [...byDept, ...byRegion].slice(0, limit).map(toCard);
 }
 
-// --- 인증(mock) — 세션·계정은 lib/mock-auth.ts. 아래는 마이페이지 데이터 조회. ---
+// --- 마이페이지 데이터 조회(mock) — 세션·계정은 Supabase Auth(lib/queries/users.ts). ---
 
 // 마이페이지 관리 행 projection — 관리·표시에 필요한 필드만
 function toMyJob(j: Job) {

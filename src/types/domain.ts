@@ -73,7 +73,7 @@ export interface Job {
 
 // 로그인 사용자 — 단일 계정 모델(DATA §3). 모든 계정은 기본 사역자(MINISTER).
 // 교회 인증(증빙+운영자 승인) 통과 시 churchId 연결 + status=APPROVED → 교회 view 개방.
-// Phase 1에서 Supabase Auth 세션 기반으로 대체.
+// 세션은 Supabase Auth 기반(lib/queries/users.ts). churchId·인증 상태는 교회 테이블 도입 후 채워진다.
 export interface CurrentUser {
   id: string;
   email: string;
