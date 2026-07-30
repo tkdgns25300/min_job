@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { notFound, redirect } from "next/navigation";
-import { connection } from "next/server";
+import { notFound } from "next/navigation";
 import { JobForm } from "../../job-form";
 import { JobStatusPanel } from "./status-panel";
-import { getCurrentUser, getEditableJob } from "@/lib/queries/users";
+import { getEditableJob } from "@/lib/queries/users";
 import { getChurch } from "@/lib/queries/churches";
-import { loginPathWithNext } from "@/lib/auth";
+import { requireUser } from "@/lib/auth-guard";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -25,10 +24,7 @@ export default function JobEditPage({ params }: Params) {
 
 async function EditContent({ params }: Params) {
   const { id } = await params;
-  await connection(); // 인증 의존 페이지 — 요청 시점 렌더 보장
-  const user = await getCurrentUser();
-  // [id] 라우트라 params로 현재 경로를 만들어 next에 실어 복귀시킨다.
-  if (!user) redirect(loginPathWithNext(`/jobs/${id}/edit`)); // 로그인 후 복귀
+  const user = await requireUser();
 
   // 소유권 검사 — 남의 공고·운영자 공고(owner 없음)는 notFound(존재 노출 최소화, 가드레일 #2).
   // 운영자 공고 수정은 여기가 아니라 admin에서.

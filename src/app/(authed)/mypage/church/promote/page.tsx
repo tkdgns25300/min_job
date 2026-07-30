@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { connection } from "next/server";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { PromoteCheckout } from "./promote-checkout";
-import { getChurchDashboard, getCurrentUser } from "@/lib/queries/users";
-import { hasChurchAccess, loginPathWithNext } from "@/lib/auth";
+import { getChurchDashboard } from "@/lib/queries/users";
+import { requireUser } from "@/lib/auth-guard";
+import { hasChurchAccess } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "노출 신청 | 민잡", robots: { index: false } };
+export const metadata: Metadata = { title: "노출 신청 | 민잡" }; // noindex는 (authed) layout 상속
 
 // 노출 상품 결제 — dynamic + 인증. 인증 교회 관리자만(게이트). PortOne 결제창은 promote-checkout에서.
 export default function PromotePage() {
@@ -22,9 +22,7 @@ export default function PromotePage() {
 }
 
 async function PromoteContent() {
-  await connection(); // 인증 의존 — 요청 시점 렌더
-  const user = await getCurrentUser();
-  if (!user) redirect(loginPathWithNext("/mypage/church/promote")); // 로그인 후 복귀
+  const user = await requireUser();
   if (!hasChurchAccess(user) || !user.churchId) redirect("/mypage/church");
 
   const dashboard = await getChurchDashboard(user.churchId);

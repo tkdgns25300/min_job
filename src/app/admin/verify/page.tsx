@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { connection } from "next/server";
+import { requireOperator } from "@/lib/auth-guard";
 import { getVerifications } from "@/lib/queries/verifications";
 import { AdminVerifyView } from "./admin-verify-view";
 
@@ -25,7 +25,9 @@ export default function AdminVerifyPage() {
 }
 
 async function VerifyContent() {
-  await connection(); // 운영자 전용 · PII — 요청 시점 렌더(실구현: proxy 게이트 + operator RLS server.ts)
+  // 운영자 전용 · PII — proxy가 1차로 막지만 여기서도 다시 확인한다(fail-closed).
+  // operator RLS는 실 DB 전환 시 추가.
+  await requireOperator();
   const verifications = await getVerifications();
   return <AdminVerifyView verifications={verifications} />;
 }

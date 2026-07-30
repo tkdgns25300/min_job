@@ -5,7 +5,10 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 export const metadata: Metadata = { robots: { index: false } };
 
 // 운영자 전용 셸 — 좌측 사이드바 + 콘텐츠(공개 헤더/푸터 없음).
-// ⚠️ 운영자 인증 게이트(allowlist)는 Phase 1 (proxy.ts). 지금은 mock 데이터.
+// 접근 판정은 proxy.ts가 한다 — /admin/** 은 비로그인 307, 로그인했어도 비운영자면 홈으로.
+// 판정 기준 = `.env` ADMIN_EMAILS(`lib/operator.ts`, 목록 비면 fail-closed).
+// ⚠️ 이 셸 아래 3개 페이지(홈·공고·수집)는 ○ Static이라 **페이지 게이트가 없다** — proxy가 유일한 관문이다.
+//    그래서 proxy는 판정 불가(Auth 장애)일 때도 admin만은 막는다. PII를 다루는 verify는 페이지에서도 재확인.
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
