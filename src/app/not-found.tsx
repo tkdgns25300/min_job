@@ -16,7 +16,9 @@ export default function NotFound() {
       </Link>
 
       <p className="mt-12 text-sm font-semibold tracking-wide text-gold">페이지를 찾을 수 없어요</p>
-      <p className="mt-4 text-7xl font-extrabold tracking-[-0.03em] tabular-nums sm:text-8xl">404</p>
+      <p className="mt-4 text-7xl font-extrabold tracking-[-0.03em] tabular-nums sm:text-8xl">
+        404
+      </p>
       <h1 className="mt-6 text-xl font-bold break-keep sm:text-2xl">
         찾으시는 공고나 페이지가 없어요
       </h1>

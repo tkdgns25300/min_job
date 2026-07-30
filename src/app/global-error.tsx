@@ -39,7 +39,9 @@ export default function GlobalError({
           <span style={{ color: "#d3ad63" }}>Min</span>Job
         </p>
         <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800 }}>문제가 생겼어요</h1>
-        <p style={{ margin: 0, maxWidth: "28rem", lineHeight: 1.6, color: "rgba(255,255,255,0.7)" }}>
+        <p
+          style={{ margin: 0, maxWidth: "28rem", lineHeight: 1.6, color: "rgba(255,255,255,0.7)" }}
+        >
           잠시 후 다시 시도해 주세요. 문제가 계속되면 조금 뒤에 다시 방문해 주세요.
         </p>
         <button
