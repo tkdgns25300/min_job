@@ -21,7 +21,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: `${church.name} 청빙 | 민잡`,
     description,
     openGraph: { title: `${church.name} 청빙`, description, type: "profile" },
-    alternates: { canonical: `/churches/${id}` },
   };
 }
 
