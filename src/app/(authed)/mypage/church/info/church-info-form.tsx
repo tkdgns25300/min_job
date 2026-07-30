@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { CHURCH_CHANNELS, DENOMINATIONS, REGIONS } from "@/constants/domain";
-import { BUSINESS_INFO } from "@/constants/business";
+import { contactMailto } from "@/constants/business";
 import type { Church } from "@/types/domain";
 
 // 교회 정보 관리 폼 — mock. 실 저장·사진 업로드(Storage)는 Phase 1 Server Action.
@@ -69,7 +69,7 @@ export function ChurchInfoForm({ church }: { church: Church }) {
             </p>
           </div>
           <a
-            href={`mailto:${BUSINESS_INFO.email}?subject=교회명·교단 수정 요청`}
+            href={contactMailto("교회명·교단 수정 요청")}
             className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             수정 문의

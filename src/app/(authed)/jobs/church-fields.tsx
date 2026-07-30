@@ -6,7 +6,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Field } from "./form-section";
 import { churchMetaLine } from "@/lib/format";
 import { CHURCH_CHANNELS, DENOMINATIONS, REGIONS } from "@/constants/domain";
-import { BUSINESS_INFO } from "@/constants/business";
+import { contactMailto } from "@/constants/business";
 import type { Church } from "@/types/domain";
 
 interface ChurchDraft {
@@ -38,7 +38,7 @@ export function ChurchSummaryCard({ church }: { church: Church }) {
       </div>
       {/* 교회 정보 수정 화면은 스코프 밖(별도 /admin/churches 안 만듦) — 당분간 문의로 */}
       <a
-        href={`mailto:${BUSINESS_INFO.email}?subject=교회 정보 수정 요청`}
+        href={contactMailto("교회 정보 수정 요청")}
         className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         정보 수정 문의
