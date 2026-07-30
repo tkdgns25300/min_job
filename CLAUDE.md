@@ -102,13 +102,14 @@ src/
 │   ├── layout.tsx                 root layout (폰트·메타)
 │   ├── error.tsx · global-error.tsx · not-found.tsx    에러·404 바운더리
 │   ├── globals.css
-│   └── ⬜ sitemap.ts · robots.ts  SEO — 아직 없음(ROADMAP)
+│   └── sitemap.ts · robots.ts     SEO — URL 목록은 lib/queries seam에서(DB 전환 무관)
 ├── components/                    ⚠️ 재사용 UI만 — 도메인 로직 X
 │   ├── ui/                        shadcn 원본 (button·card·input·textarea·native-select·sheet·badge)
 │   ├── layout/                    헤더(계정 영역 포함)·푸터·모바일 네비·법률문서 셸
 │   ├── job/ church/ admin/ home/ pricing/ search/   각 도메인 표시 컴포넌트
 │   └── relative-time.tsx          시간 표시(클라이언트 계산)
-├── constants/                     domain.ts(도메인 enum) · business.ts(사업자정보) · storage.ts(localStorage 키)
+├── constants/                     domain.ts(도메인 enum) · business.ts(사업자정보) ·
+│                                  storage.ts(localStorage 키) · site.ts(SITE_URL — 절대 URL 기준)
 ├── lib/
 │   ├── supabase/                  server(쿠키·인증) · service(secret·cached read, 미사용) ·
 │   │                              session(proxy refresh) · cookie-options(httpOnly·secure)

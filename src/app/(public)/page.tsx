@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { JobRow } from "@/components/job/job-row";
 import { FeaturedJobCard } from "@/components/job/featured-job-card";
 import { HomeSidebar } from "@/components/home/home-sidebar";
 import { SearchBox } from "@/components/search/search-box";
 import { getAdJobs, getListJobs, getJobStats, getSearchSuggestions } from "@/lib/queries/jobs";
+
+// title·description은 root layout 값을 그대로 쓴다(홈 = 사이트 대표 페이지).
+// canonical만 지정 — 공유 링크에 붙는 추적 쿼리(?utm_*)가 별도 페이지로 색인되지 않게.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 function HeroStat({ value, unit, label }: { value: number; unit: string; label: string }) {
   return (

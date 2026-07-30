@@ -7,6 +7,7 @@ import { getChurchOpenJobs, getJobDetail, getRepost, getSimilarJobs } from "@/li
 import { jobPostingJsonLd, jobRoleSummary } from "@/lib/seo";
 import { churchLocation, formatStipend } from "@/lib/format";
 import { REGIONS } from "@/constants/domain";
+import { SITE_OPEN_GRAPH } from "@/constants/site";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -19,7 +20,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: `${detail.job.title} | 민잡`,
     description,
-    openGraph: { title: detail.job.title, description, type: "article" },
+    openGraph: { ...SITE_OPEN_GRAPH, title: detail.job.title, description, type: "article" },
+    // 공유 링크에 붙는 추적 쿼리(?utm_source=…)가 별도 페이지로 색인되지 않게 대표 URL 고정
+    alternates: { canonical: `/jobs/${id}` },
   };
 }
 
@@ -44,13 +47,16 @@ async function JobDetailContent({ params }: Params) {
 
   return (
     <>
-      {/* schema.org JobPosting JSON-LD (SEO) */}
-      {/* TODO(design): ❓ CLOSED 공고의 JobPosting JSON-LD 제거 여부 — 구글은 마감 시
-          구조화 데이터 제거를 권장. SEO 가이드 확인 후 사람 결정 (fable.md #4) */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingJsonLd(detail)) }}
-      />
+      {/* schema.org JobPosting JSON-LD (SEO) — 모집중일 때만.
+          구글은 마감 공고의 구조화 데이터 제거를 권장한다. validThrough(마감일)만 믿으면
+          "마감일 없이 조기 마감" 또는 "마감일이 미래인데 마감" 공고가 모집중으로 노출된다
+          → 상태를 직접 본다. 페이지 자체는 계속 열린다(재공고 이력·교회 진입 경로). */}
+      {detail.job.status === "OPEN" && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingJsonLd(detail)) }}
+        />
+      )}
       <RecordRecentlyViewed
         id={detail.job.id}
         title={detail.job.title}

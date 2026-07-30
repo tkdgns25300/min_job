@@ -5,6 +5,7 @@ import { ChurchDetailView } from "./church-detail-view";
 import { churchMetaLine } from "@/lib/format";
 import { getChurch, getChurchTimeline } from "@/lib/queries/churches";
 import { getChurchOpenJobs } from "@/lib/queries/jobs";
+import { SITE_OPEN_GRAPH } from "@/constants/site";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -20,7 +21,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: `${church.name} 청빙 | 민잡`,
     description,
-    openGraph: { title: `${church.name} 청빙`, description, type: "profile" },
+    openGraph: { ...SITE_OPEN_GRAPH, title: `${church.name} 청빙`, description, type: "profile" },
+    alternates: { canonical: `/churches/${id}` },
   };
 }
 
