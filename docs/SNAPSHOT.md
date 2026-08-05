@@ -6,7 +6,9 @@
 >
 > ▶ **2026-07-28 방향 전환**: 크롤러 도입(min_job_agent) + **개교회 채용**으로 범위 확장 (§0 한 문장 요약·§0 완료도·§6 방향 전환 기록).
 >
-> ▶ **2026-07-29 로그인 실전환**: mock 세션(`mj_session`) → **Supabase Auth Google OAuth** + 운영자 게이트(§5 인증·§7 ①·§8). **dev에 커밋 완료**(6커밋) · 🚨 **prod 배포 보류** — KCP 심사에 기재한 계정 `test1@test.com`이 사라지고 결제창 경로에 도달할 수 없다(ROADMAP 1-8·8).
+> ▶ **2026-07-29 로그인 실전환**: mock 세션(`mj_session`) → **Supabase Auth Google OAuth** + 운영자 게이트(§5 인증·§7 ①·§8). **dev·prod 반영 완료.**
+>
+> ▶ **2026-08-05 KCP 심사 종료 → prod 동결 해제**: 카드사 등록신청 심사가 끝나 "심사 중 변경 금지" 제약이 풀렸다. **prod를 dev로 fast-forward**(7/29 로그인 전환 이후 23커밋 일괄 반영) + 테스트 계정 잔재 제거(ROADMAP 1-8·8). ⚠️ 결제 경로(`/mypage/church/promote`)는 `churchVerificationStatus` 하드코딩 `null` 때문에 **여전히 도달 불가** — 교회 멤버십 배선 전까지 비활성.
 >
 > ▶ **2026-08-05 SEO 마감**: `sitemap.xml`·`robots.txt`·canonical·OG(이미지 포함) 완료(§7 6·§8 SEO). **dev에 커밋 완료.** 남은 것 = **Search Console 사이트맵 등록**(실데이터 후 — 등록이 곧 "가짜 공고 색인 요청") · **공고별 OG 이미지**(한글 정적 폰트 선행).
 
@@ -127,8 +129,8 @@ curl -sI localhost:3000/opengraph-image                 # image/png 1200x630
 
 ### mock 현황 (`src/mocks/`)
 - **churches.json 35개** · **jobs.json 101개**. 분포: OPEN 79 / CLOSED 22 / PENDING 0(**전수 검수 결정(2026-08-05) 이후에도 mutation이 없어 아직 0** — 검수 큐 구현 시 발생) · OPERATOR(owner 없음)·CHURCH 혼합. 재공고 데모 4교회 · **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. ✅ **KIJANG(갈릴리교회) → ETC 교정 완료 · denomination 10키 전환**(Phase 2, 2026-07-29). 전 공고 `jobKind=MINISTRY`.
-- **church-verifications.json 7건**(admin/verify 검수용): 검수중 4·인증완료 2·반려 1. 기존 교회 매칭 6 + 신규 교회 신청 1(id null). PII는 명백한 합성값(@example.com·010-0000-000X), vf-005만 `test1@test.com`(과거 mock 계정 잔재 — mock 삭제로 매칭되는 계정이 이제 없다).
-- **인증(2026-07-29 실 전환)**: mock 로그인 계정(`src/lib/mock-auth.ts`)·테스트 계정(`test1@test.com`·`test2@test.com`)·세션 쿠키 `mj_session`은 **전부 삭제**됐다. 이제 로그인 수단은 **Supabase Auth Google OAuth 단독** — 이메일/비밀번호 로그인도 없다. 세션 = Supabase 쿠키(`httpOnly` + 배포 시 `secure` + `sameSite=lax`, `lib/supabase/cookie-options.ts`). 카카오는 **오픈 전 추가**, 네이버는 Supabase 기본 미지원이라 보류. ⚠️ 로컬에서 `next start`를 http로 띄우면 `secure` 때문에 로그인이 끝까지 진행되지 않는다 — 로그인 테스트는 `npm run dev`로.
+- **church-verifications.json 7건**(admin/verify 검수용): 검수중 4·인증완료 2·반려 1. 기존 교회 매칭 6 + 신규 교회 신청 1(id null). PII는 **전건 명백한 합성값**(@example.com·010-0000-000X) — vf-005에 남아 있던 `test1@test.com`(과거 mock 계정 잔재)은 KCP 심사 종료 후 합성값으로 교체(2026-08-05).
+- **인증(2026-07-29 실 전환)**: mock 로그인 계정(`src/lib/mock-auth.ts`)·테스트 계정(`test1@test.com`·`test2@test.com`)·세션 쿠키 `mj_session`은 **전부 삭제**됐다(코드·mock 데이터에 테스트 계정 잔재 0건 — 2026-08-05 확인). 이제 로그인 수단은 **Supabase Auth Google OAuth 단독** — 이메일/비밀번호 로그인도 없다. 세션 = Supabase 쿠키(`httpOnly` + 배포 시 `secure` + `sameSite=lax`, `lib/supabase/cookie-options.ts`). 카카오는 **오픈 전 추가**, 네이버는 Supabase 기본 미지원이라 보류. ⚠️ 로컬에서 `next start`를 http로 띄우면 `secure` 때문에 로그인이 끝까지 진행되지 않는다 — 로그인 테스트는 `npm run dev`로.
 
 ### enum (`src/constants/domain.ts`)
 DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**) · **JOB_KINDS**(사역직 MINISTRY·일반직 GENERAL) · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·PENDING[**살아있는 상태** — 전수 검수 2026-08-05, 아직 mutation 없어 미발생]) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · **VERIFICATION_DOC_TYPES**(고유번호증·사업자등록증) · HOUSING_OPTIONS · APPLY_METHODS · STIPEND_NOTE_PRESETS · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
@@ -170,7 +172,7 @@ DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**
 2. ✅ **Supabase 연결 완료·검증됨(2026-07-19)** — 클라이언트 배선(`lib/supabase/{server,service,session}.ts`, `@supabase/ssr`+`supabase-js`, 공식 문서 검증) + 키 입력(로컬 `.env` + Vercel env: `NEXT_PUBLIC_SUPABASE_URL`·`_PUBLISHABLE_KEY`·`SUPABASE_SECRET_KEY`) + **임시 ping 라우트로 연결 검증**(PostgREST 도달·인증 OK, `PGRST205`=스키마 비어 있음=정상, 검증 후 라우트 삭제). ⚠️ **연결만** — `lib/queries/*`는 계속 mock(JSON), 실 DB 사용(Auth·조회·마이그레이션)은 Phase 1.
 3. ✅ **PortOne 노출 결제 flow 구현·검증(2026-07-20, `5764fdc`)** — `/mypage/church/promote`(인증 게이트) → `promote-checkout.tsx`(client)에서 **PortOne V2 `requestPayment`**(KCP CARD 채널) 결제창 → 성공 시 `POST /api/payments/complete`가 **PortOne API로 실결제 조회 + 금액 서버 재계산(tier·weeks, 클라 불신) + `status===PAID` 대조**. 가격 단일 소스 = `EXPOSURE_PRODUCTS`/`exposurePrice`(constants). **KCP 테스트 결제 성공 확인.** env: `NEXT_PUBLIC_PORTONE_STORE_ID`·`_CHANNEL_KEY`·`PORTONE_API_SECRET`. ⚠️ paymentId 38자(KCP 40자 제한). ⚠️ **모바일 redirect 복귀 미처리** — 데스크톱 팝업(Promise)만 완료 화면·서버검증. 모바일 `?paymentId=` 복귀 처리 = Phase 1. 실 노출 적용(featured_tier·featured_until 세팅)·주문 저장도 Phase 1.
 4. ✅ **도메인 연결 + NHN KCP 전자결제 신청 제출(2026-07-20)** — 도메인 `minjob.co.kr` → Vercel(hosting.kr DNS: A `@`→216.198.79.1 + CNAME `www`→Vercel 전용, 대표=`www.minjob.co.kr`, SSL 자동). PortOne 전자결제 신청 **사전점검 6항목 통과**(URL=`https://www.minjob.co.kr`, 전화번호 반영으로 사업자정보 통과) → **가맹 심사 진행중**. **PG 결정: NHN KCP·신용카드 일반결제 단일 채널**(KPN·정기결제·간편결제·본인인증 미사용 — ROADMAP 1-8 PG결정). ⚠️ 승인 후: 실연동 채널(KCP) 키를 `_CHANNEL_KEY`에 교체 + 일반결제 계약 활성.
-5. ✅ **PG-API·실연동 채널 전환 + 카드사 등록신청 제출(2026-07-21)** — KCP PG-API(개인키+서비스 인증서) 발급 → PortOne **실연동** 채널 "MinJob NHN KCP"(`kcp_v2`·사이트코드 IP94F·PG-API 인증서/개인키) → 채널 키 `channel-key-bc781263-…`를 `_CHANNEL_KEY`(로컬 `.env` + Vercel)에 교체·재배포(STORE_ID·`PORTONE_API_SECRET` 불변). 라이브 결제창 = 실연동. **`partner.kcp.co.kr` 카드사 등록신청 제출 → 심사 3~15일 대기**(승인 시 실카드결제). 문의내용: test1 계정 + 결제창 경로(`/mypage/church/promote`) + 통신판매 면제 사유. ⚠️ **심사 중 URL·하단 사업자정보·상품/가격 변경 금지.** 🚨 **2026-07-29 충돌**: 실 로그인 전환으로 심사에 기재한 `test1@test.com`이 없어지고 교회 인증상태가 항상 null이라 결제창 경로에 도달할 수 없다 → **로그인 전환은 `dev`에만 두고 prod는 심사 통과까지 현행 유지**(선행: 교회 멤버십 배선 또는 심사자용 임시 접근 경로. 배포 시 KCP에 계정·경로 변경 선안내). ROADMAP 1-8·8.
+5. ✅ **PG-API·실연동 채널 전환 + 카드사 등록신청 제출(2026-07-21)** — KCP PG-API(개인키+서비스 인증서) 발급 → PortOne **실연동** 채널 "MinJob NHN KCP"(`kcp_v2`·사이트코드 IP94F·PG-API 인증서/개인키) → 채널 키 `channel-key-bc781263-…`를 `_CHANNEL_KEY`(로컬 `.env` + Vercel)에 교체·재배포(STORE_ID·`PORTONE_API_SECRET` 불변). 라이브 결제창 = 실연동. **`partner.kcp.co.kr` 카드사 등록신청 제출 → 심사 3~15일 대기**(승인 시 실카드결제). 문의내용: test1 계정 + 결제창 경로(`/mypage/church/promote`) + 통신판매 면제 사유. ⚠️ 심사 중에는 URL·하단 사업자정보·상품/가격 변경이 금지였다. ✅ **2026-08-05 심사 종료 → 제약·prod 동결 모두 해제**: 7/29 로그인 전환으로 심사용 계정(`test1@test.com`)이 없어지고 교회 인증상태가 항상 null이라 결제창 경로에 도달할 수 없어 prod를 7/29 이전 상태로 동결해 뒀었다. 심사가 끝나 **prod를 dev로 fast-forward**하고 테스트 계정 잔재를 제거했다. 남은 확인 = 실카드결제 활성 여부(PortOne·KCP 콘솔). ROADMAP 1-8·8.
 6. ✅ **SEO 마감(2026-08-05)** — 이전 "실데이터 즈음으로 defer" 결정을 **뒤집었다**: sitemap이 `lib/queries` seam에서 URL을 읽으므로 **DB 전환 시 재작업 0**이라, 미리 해두는 게 손해가 없다고 판단.
    - `sitemap.ts`(정적 6 + 모집중 공고 + 교회 = 현재 120 URL) · `robots.ts`(공개 허용 / `/mypage`·`/admin`·`/login`·`/auth`·`/api`·`/jobs/new`·`/jobs/*/edit` 차단) · `metadataBase`(`constants/site.ts`) · **canonical 전 공개 페이지** · OG 공통값 + **OG 이미지**(`app/opengraph-image.tsx` 브랜드 카드).
    - **고친 색인 결함 4개**: ① `/jobs` 필터·정렬·페이지 쿼리 조합이 각각 색인될 수 있던 것 → canonical 고정 ② 마감 공고에도 `JobPosting` 출력 → **모집중일 때만** ③ `/jobs`가 홈과 title 중복 → 검색용 title 부여 ④ openGraph를 재정의한 상세 페이지가 `og:image`·`site_name`을 잃던 것 → `SITE_OPEN_GRAPH` 공유.
@@ -279,7 +281,7 @@ DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**
 - **PortOne V2(KCP CARD)** 결제창 → **서버(`/api/payments/complete`)가 금액 재계산·PortOne 실결제 조회로 검증**(위변조 방지). 가격 단일 소스 = `EXPOSURE_PRODUCTS`.
 - **채널(2026-07-21)**: PortOne 실연동 "MinJob NHN KCP"(`kcp_v2`·사이트코드 IP94F·PG-API 인증서/개인키). 채널 키 = `NEXT_PUBLIC_PORTONE_CHANNEL_KEY`(로컬·Vercel). STORE_ID·`PORTONE_API_SECRET`은 상점 단위라 채널 바꿔도 불변.
 - **KCP 한도(심사 안내)**: 건당 100만원 · 월 정산 150만원(상향요청 시 보증보험료) · 정산 월 4회 · 할부 3개월. 상품 최대 50만원이라 건당 여유, 월 150만은 매출 증가 시 상향.
-- 지금은 **결제 검증까지 + 카드사 등록신청 제출(심사중)**. 실 노출 적용(featured 세팅)·주문 저장·모바일 redirect 복귀·**KCP 승인 후 실카드결제** = Phase 1.
+- 지금은 **결제 검증까지 + 카드사 등록신청 심사 종료(2026-08-05)**. 실 노출 적용(featured 세팅)·주문 저장·모바일 redirect 복귀·**실카드결제 활성 확인** = Phase 1.
 
 ---
 
