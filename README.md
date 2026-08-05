@@ -4,7 +4,7 @@
 
 > 문서 — 아키텍처·컨벤션·가드레일 [`CLAUDE.md`](./CLAUDE.md) · 기획 [`docs/SPEC.md`](./docs/SPEC.md) · 데이터 [`docs/DATA.md`](./docs/DATA.md) · 작업 [`docs/ROADMAP.md`](./docs/ROADMAP.md) · 시점 [`docs/SNAPSHOT.md`](./docs/SNAPSHOT.md)
 >
-> 🔗 **배포(mock)**: https://min-job.vercel.app/ — NHN KCP 심사용, **JSON 더미 데이터**로 동작(실 DB·백엔드는 Phase 1). 정식 오픈 전까지 검색 색인 제외 예정.
+> 🔗 **배포(mock)**: https://www.minjob.co.kr — **JSON 더미 데이터**로 동작(실 DB·백엔드는 Phase 1). NHN KCP 심사(가맹·카드사)는 2026-08-05 통과해 실카드결제가 열렸으나, 교회 멤버십 미배선으로 결제 경로에는 아직 도달할 수 없다. 정식 오픈 전까지 검색 색인 제외 예정.
 
 ## Stack
 
