@@ -24,8 +24,16 @@
 ### DB 스키마 (DATA.md 확정 완료 — Phase 1에서 구축)
 > DATA.md에 스키마·enum·인덱스·RLS·재공고·노출 모델 확정됨. 아래는 Phase 1에서 진행.
 - [x] **DATA.md 작성** — 봉인 결정 확정(정규화/JOIN·직교화·enum·재공고키·노출 2종·사례비 period·RLS 의도)
-- [x] **`jobs` 미확정 7필드 확정 + nullable 원칙**(2026-08-04) — DATA.md §3의 ⚠️ 블록 해소. 신규 컬럼 `headcount`·`start_timing`·`process_steps`·`apply_methods`·`optional_docs`·`housing_note`·`benefit_note`, `employment_type` NOT NULL→NULL, `housing_provided` nullable boolean(**enum 신설 X** — DEFAULT false가 "언급 없음"을 "미제공"으로 왜곡). 근거 = 크롤링 원문 3,051건 언급률 실측(고용형태 51%·사택 40%). 필터 축(`title`·`church_id`·`job_kind`·`posted_at`·`denomination`·`region`)은 NOT NULL 유지 = 승격 전 해소 강제
-- [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·users(+bookmarks Phase 2) + enum CHECK + 인덱스 + RLS (DATA.md §3·5·9). **위 확정 반영해 처음부터 nullable로 생성** — 신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접
+- [x] **`jobs` 미확정 7필드 확정 + nullable 원칙**(2026-08-04) — DATA.md §3의 ⚠️ 블록 해소. 신규 컬럼 `headcount`·`start_timing`·`process_steps`·`optional_docs`·`housing_note`·`benefit_note`, `employment_type` NOT NULL→NULL, `housing_provided` nullable boolean(**enum 신설 X** — DEFAULT false가 "언급 없음"을 "미제공"으로 왜곡). 근거 = 크롤링 원문 3,051건 언급률 실측(고용형태 51%·사택 40%)
+- [x] **스키마 6개 결정 확정**(2026-08-05) — 위 nullable 원칙을 조이고 구조를 정리했다. DATA.md §2·§3·§5·§7·§9·§12 반영:
+  1. `position`/`role` **분리 유지** + **XOR CHECK** — 합치면 한 칼럼이 "통제 enum + 자유텍스트" 두 값 공간을 가져 TS 타입이 `string`으로 무너진다. CHECK로 "일반직인데 직분이 박힌" 행을 존재 불가로
+  2. `stipend_*` → **`pay_*` 개명**(코드 완료, 21파일) — 일반직(GENERAL)은 사례비가 아니라 근로계약 급여라 `stipend`가 절반만 맞았다. 한글 라벨은 `job_kind`로 분기
+  3. 연락처 = **`jobs`에 컬럼 4개**(`contact_email`·`tel`·`link`·`post`) — `APPLY_METHODS`가 `ETC` 없는 닫힌 4키라 컬럼이 1:1. 별도 테이블(`church_links` 방식)은 열린 집합용이라 부적합
+  4. **`apply_methods` jsonb + `contact` 단일 폐기** — 3번에 흡수(같은 것을 두 형태로 저장하던 설계)
+  5. **`job_promotions` 테이블 신설**(결제 원장, `UNIQUE(payment_id)`로 멱등) + `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — HERO 구좌 판정·환불·이력은 원장이, 정렬 1차 키는 캐시가. `'use cache'`가 `now()`를 금지하므로 만료는 **`today` 인자 패턴**(하루 1캐시, Cron 불필요)
+  6. **최소 조건 8개**로 조임 — `description` NOT NULL 승격(요약 없으면 링크만 있는 빈 껍데기 = 가드레일 #1 위반). **`churches.denomination`은 NOT NULL 철회 → NULL 허용**(미상·무소속 독립교회가 실재. `ETC`에 섞으면 기장과 뒤섞여 필터·거점 판정 오염). `region`은 NOT NULL 유지
+- [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 2개** + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**
+- [ ] **크롤러 리포 동기화**(min_job_agent) — `review_data`가 우리 확정과 4곳 어긋난다(DATA.md §12 말미): `stipend_*`→`pay_*` · `contact` 단일→4컬럼 · 교단 미상=NULL(ETC 아님, "승격 전 해소" 철회) · 승격 게이트=최소 조건 8개. `review_data`는 min_job_agent 소유라 **승격 시 매핑하거나 크롤러 쪽에 반영 요청**
 - [ ] DB 타입 생성 — `types/database.ts`
 
 **병행 트랙 (Phase 0~1 내내)**

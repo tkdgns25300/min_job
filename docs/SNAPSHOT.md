@@ -10,6 +10,8 @@
 >
 > ▶ **2026-08-05 KCP 심사 종료 → prod 동결 해제**: 카드사 등록신청 심사가 끝나 "심사 중 변경 금지" 제약이 풀렸다. **prod를 dev로 fast-forward**(7/29 로그인 전환 이후 23커밋 일괄 반영) + 테스트 계정 잔재 제거(ROADMAP 1-8·8). ⚠️ 결제 경로(`/mypage/church/promote`)는 `churchVerificationStatus` 하드코딩 `null` 때문에 **여전히 도달 불가** — 교회 멤버십 배선 전까지 비활성.
 >
+> ▶ **2026-08-05 스키마 확정**: `jobs` 미확정 7필드 + **스키마 6개 결정**(직분/직무 XOR CHECK · `stipend_*`→`pay_*` 개명 · 연락처 4컬럼 · `apply_methods` 폐기 · **`job_promotions` 신설**(테이블 7개) · **최소 조건 8개**). 교단은 NOT NULL 철회(미상·무소속 실재), `description`은 NOT NULL 승격. 근거·근거수치는 DATA.md §3, 결정 목록은 ROADMAP Phase 0. **마이그레이션 SQL은 아직 없다** — 이제 그게 다음 관문.
+>
 > ▶ **2026-08-05 SEO 마감**: `sitemap.xml`·`robots.txt`·canonical·OG(이미지 포함) 완료(§7 6·§8 SEO). **dev에 커밋 완료.** 남은 것 = **Search Console 사이트맵 등록**(실데이터 후 — 등록이 곧 "가짜 공고 색인 요청") · **공고별 OG 이미지**(한글 정적 폰트 선행).
 
 ---
@@ -183,7 +185,7 @@ DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**
    - **① 인증(로그인) — ✅ 완료(2026-07-29)**: Supabase Auth **Google OAuth 단독** + `auth/callback` route(PKCE code→세션) + `getCurrentUser` 실배선 + `proxy.ts`(세션 refresh + 1차 차단) + 페이지 `requireUser` + mock-auth·이메일·test 계정 제거. 카카오는 **오픈 전 추가**(provider 켜고 버튼 하나), 네이버 보류. ⚠️ **`users` 테이블은 "로그인용으로만" 불필요했다** — 로그인·세션·이름/이메일은 `auth.users`가 준다(그래서 테이블 0개로 로그인이 돈다). **프로필 테이블 자체는 여전히 필요**하다(`church_id`·`church_verification_status` 둘 곳이 없어 교회 기능이 닫혀 있음, DATA §3 유효).
      - **admin 운영자 게이트 ✅ 완료(2026-07-29)**: `.env` `ADMIN_EMAILS` allowlist — proxy가 익명 307 + 운영자 아니면 `/`로, `/admin/verify`는 페이지에서도 `requireOperator()` 재확인. 목록 비면 아무도 접근 못 함(fail-closed). ⚠️ Vercel env 등록 필요.
      - **남은 인증 작업 1개**: **교회 멤버십** — `getCurrentUser`가 churchId·인증상태를 항상 null로 주어 교회 기능 전체가 닫혀 있다(②트랙에서 교회 테이블과 함께).
-   - **② 데이터(공고·교회) — 크롤러 검수브릿지 준비 후**: ⚠️ 핵심은 seam 전환(쉬움)이 아니라 **데이터 유입**(크롤러 승격/교회 등록 mutation/seed). DB 비면 read 전환해도 빈 화면. read+write 도메인별 함께. `lib/queries` mock→DB · mutation `actions.ts` · 계정 북마크 · `/jobs/[id]/edit` 권한=교회 인증 멤버십 · **DATA 정합 패스**(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처) · **노출 결제 마무리**(주문 저장·실 노출 적용·모바일 redirect 복귀 — KCP 심사·실카드결제는 2026-08-05 완료).
+   - **② 데이터(공고·교회) — 크롤러 검수브릿지 준비 후**: ⚠️ 핵심은 seam 전환(쉬움)이 아니라 **데이터 유입**(크롤러 승격/교회 등록 mutation/seed). DB 비면 read 전환해도 빈 화면. read+write 도메인별 함께. `lib/queries` mock→DB · mutation `actions.ts` · 계정 북마크 · `/jobs/[id]/edit` 권한=교회 인증 멤버십 · **노출 결제 마무리**(주문 저장=`job_promotions` INSERT · 실 노출 적용 · 모바일 redirect 복귀 — KCP 심사·실카드결제는 2026-08-05 완료). ✅ **DATA 스키마 정합은 확정 완료**(2026-08-04~05 — 폼 7필드 전부 컬럼 확보 + 스키마 6개 결정. ROADMAP Phase 0 참조).
 > ✅ **완료(2026-07-14)**: `/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터).
 > **결정(2026-07-14)**: 배포 먼저(mock) → Supabase는 "연결만"(데이터 mock 유지) → ~~SEO는 나중~~. Supabase/배포는 서로 독립이라 DB 먼저 할 필요 없음.
 > └ **2026-08-05 정정**: "SEO는 나중"은 **뒤집혔다** — sitemap이 seam에서 URL을 읽어 DB 전환 시 재작업이 0이므로 미리 해도 손해가 없다. 단 **Search Console 등록만** 실데이터 후로 미룬다(§7 6).
