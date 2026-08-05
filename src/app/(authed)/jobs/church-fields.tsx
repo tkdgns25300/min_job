@@ -27,7 +27,7 @@ const EMPTY_DRAFT: ChurchDraft = {
   channels: {},
 };
 
-// 재등록 교회 — 저장된 교회 정보 요약 카드 (fable.md /jobs/new §2)
+// 재등록 교회 — 저장된 교회 정보 요약 카드 (SPEC.md /jobs/new §2)
 export function ChurchSummaryCard({ church }: { church: Church }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-muted/30 p-4">

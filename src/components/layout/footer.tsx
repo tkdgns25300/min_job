@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BUSINESS_INFO } from "@/constants/business";
+import { BUSINESS_INFO, contactMailto } from "@/constants/business";
 
 const FOOTER_LINKS = [
   { href: "/about", label: "소개" },
@@ -31,7 +31,7 @@ export function Footer() {
               </Link>
             ))}
             <a
-              href={`mailto:${BUSINESS_INFO.email}`}
+              href={contactMailto()}
               className="text-sm text-white/70 transition-colors hover:text-white"
             >
               문의

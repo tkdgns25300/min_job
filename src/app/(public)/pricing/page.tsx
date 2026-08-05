@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCoverageStats } from "@/lib/queries/jobs";
 import { PreviewButton } from "@/components/pricing/exposure-preview";
-import { BUSINESS_INFO } from "@/constants/business";
+import { BUSINESS_INFO, contactMailto } from "@/constants/business";
 
 export const metadata: Metadata = {
   title: "공고 노출 안내 | 민잡",
@@ -288,7 +288,7 @@ export default async function PricingPage() {
             원하는 상품·기간을 남겨주시면 게재를 도와드려요. 보내기를 누르면 메일 앱이 열립니다.
           </p>
           <form
-            action={`mailto:${BUSINESS_INFO.email}`}
+            action={contactMailto()}
             method="post"
             encType="text/plain"
             className="rounded-2xl border bg-card p-5"
@@ -349,10 +349,7 @@ export default async function PricingPage() {
             </button>
             <p className="mt-3 text-xs text-muted-foreground">
               영업일 기준 1일 내 연락드려요 · 급하시면{" "}
-              <a
-                href={`mailto:${BUSINESS_INFO.email}`}
-                className="font-medium text-foreground hover:underline"
-              >
+              <a href={contactMailto()} className="font-medium text-foreground hover:underline">
                 {BUSINESS_INFO.email}
               </a>
             </p>

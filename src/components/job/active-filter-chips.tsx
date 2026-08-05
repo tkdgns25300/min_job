@@ -44,7 +44,7 @@ function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
   );
 }
 
-// 활성 필터 요약 칩 — 모바일에서 Sheet를 닫아도 무엇이 걸려 있는지 보이게 (fable.md /jobs).
+// 활성 필터 요약 칩 — 모바일에서 Sheet를 닫아도 무엇이 걸려 있는지 보이게 (SPEC.md /jobs).
 // 추천 검색어 칩과 같은 옅은 초록 면 문법. 필터가 없으면 렌더하지 않는다.
 export function ActiveFilterChips({
   selected,

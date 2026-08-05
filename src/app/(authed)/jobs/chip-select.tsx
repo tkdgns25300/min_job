@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 // 단일 선택 칩 그룹 — JobFilter의 칩 토글 문법 재사용(선택=bg-primary text-primary-foreground).
-// 보는 화면(필터)과 쓰는 화면(폼)의 어휘 통일 (fable.md /jobs/new). 같은 칩 재클릭 = 해제.
+// 보는 화면(필터)과 쓰는 화면(폼)의 어휘 통일 (SPEC.md /jobs/new). 같은 칩 재클릭 = 해제.
 export function ChipSelect<K extends string>({
   options,
   value,

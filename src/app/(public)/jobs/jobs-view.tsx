@@ -24,7 +24,7 @@ import {
 } from "./jobs-url-state";
 
 // TODO(design): ❓ 정렬 축 재검토 — 사례비순은 "세상적"(인터뷰), 마감임박은 교회 마감 개념이 모호.
-// 최신순 단일 + 마감 "표기만"으로 축소하는 안 vs 현행 3축 유지 — 사람 결정 필요 (fable.md #1)
+// 최신순 단일 + 마감 "표기만"으로 축소하는 안 vs 현행 3축 유지 — 사람 결정 필요 (SPEC.md #1)
 const SORTS: { key: SortKey; label: string }[] = [
   { key: "recent", label: "최신순" },
   { key: "stipend", label: "사례비순" },
