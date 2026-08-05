@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SITE_DOMAIN } from "@/constants/site";
 
 // /pricing 노출 미리보기의 "장면" — 실제 페이지 주요 섹션을 담은 근사(마케팅 일러스트).
 // 인터랙션 없는 순수 프레젠테이션. 셸(캐러셀·모달)은 exposure-preview.tsx.
@@ -187,7 +188,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
     {
       cap: "공고 목록 페이지 — 상단 고정",
       node: (
-        <Chrome device={device} url="minjob.kr/jobs">
+        <Chrome device={device} url={`/jobs`}>
           <Band>
             <div className="text-[15px] font-extrabold">사역자 청빙 공고</div>
             <div className="mt-0.5 mb-2 text-[11px] font-bold text-primary">모집 중 74건</div>
@@ -206,7 +207,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
     {
       cap: "검색 결과 페이지 — 상단",
       node: (
-        <Chrome device={device} url="minjob.kr/jobs">
+        <Chrome device={device} url={`/jobs`}>
           <Band>
             <SearchPill text="수원 전도사" />
             <div className="mt-2 text-[11px] font-bold text-primary">검색결과 3건</div>
@@ -234,7 +235,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
     {
       cap: "공고 상세 페이지 — 하단 ‘비슷한 공고’",
       node: (
-        <Chrome device={device} url="minjob.kr/jobs/job-021">
+        <Chrome device={device} url={`/jobs/job-021`}>
           <div className={`p-3.5 ${isPc ? "grid grid-cols-[1.6fr_1fr] gap-3" : ""}`}>
             <div>
               <div className="text-[10.5px] text-muted-foreground">
@@ -288,7 +289,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
     {
       cap: "홈 화면 — 대표 배너",
       node: (
-        <Chrome device={device} url="minjob.kr">
+        <Chrome device={device} url={SITE_DOMAIN}>
           <div
             className="bg-hero px-4 py-6 text-center text-white"
             style={isPc ? { paddingTop: 44, paddingBottom: 44 } : undefined}
@@ -348,7 +349,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
     {
       cap: "공고 목록 페이지 — 맨 위 대표 슬롯",
       node: (
-        <Chrome device={device} url="minjob.kr/jobs">
+        <Chrome device={device} url={`/jobs`}>
           <Band>
             <div className="text-[15px] font-extrabold">사역자 청빙 공고</div>
             <div className="mt-0.5 mb-2 text-[11px] font-bold text-primary">모집 중 74건</div>

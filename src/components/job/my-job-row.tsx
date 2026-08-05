@@ -88,7 +88,7 @@ function OverflowMenu({ items, label }: { items: MenuItem[]; label: string }) {
 }
 
 // 마이페이지 관리 행 — 액션은 상태별로: 게재중=수정+⋯(마감·삭제), 마감=재등록+⋯(삭제).
-// 삭제·마감은 파괴적/상태변경이라 ⋯ 뒤로(오클릭 방지). 조회·북마크 지표는 Phase 1 집계.
+// 삭제·마감은 파괴적/상태변경이라 ⋯ 뒤로(오클릭 방지). 조회·북마크 지표는 집계 준비 중.
 export function MyJobRow({ job }: { job: MyJob }) {
   const isClosed = job.status === "CLOSED";
   const roleLine = [
@@ -131,7 +131,7 @@ export function MyJobRow({ job }: { job: MyJob }) {
           <p className="mt-1.5 text-xs text-muted-foreground">
             조회 · 북마크
             <span className="ml-1.5 rounded border px-1 text-[10px] text-muted-foreground/70">
-              Phase 1 집계
+              집계 준비 중
             </span>
           </p>
         )}

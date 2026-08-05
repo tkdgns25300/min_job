@@ -63,7 +63,7 @@ function EditForm({ job, onClose }: { job: AdminJob; onClose: () => void }) {
           </NativeSelect>
         </label>
         <p className="text-xs break-keep text-muted-foreground">
-          전체 필드 편집·저장은 Phase 1(실 DB). 지금은 미리보기예요.
+          전체 필드 편집·저장은 준비 중이에요(실 DB 연결 후). 지금은 미리보기예요.
         </p>
       </div>
       <SheetFooter className="flex-row justify-end">
@@ -136,7 +136,7 @@ function FeatureForm({ job, onClose }: { job: AdminJob; onClose: () => void }) {
           </div>
         )}
         <p className="text-xs break-keep text-muted-foreground">
-          노출 적용(featured_until 설정)·결제 연동은 Phase 1. 지금은 미리보기예요.
+          노출 적용·결제 연동은 준비 중이에요. 지금은 미리보기예요.
         </p>
       </div>
       <SheetFooter className="flex-row justify-end">

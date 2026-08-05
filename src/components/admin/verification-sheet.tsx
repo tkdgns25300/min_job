@@ -116,7 +116,7 @@ function ReviewBody({
         )}
 
         <p className="text-xs break-keep text-muted-foreground">
-          승인·반려 처리(상태 변경 + 신청자 알림)는 Phase 1. 지금은 미리보기예요.
+          승인·반려 처리(상태 변경 + 신청자 알림)는 준비 중이에요. 지금은 미리보기예요.
         </p>
       </div>
 

@@ -278,7 +278,7 @@ function DraftPanel({
 
       {submitted && (
         <p className="mt-4 rounded-lg bg-muted px-3 py-2.5 text-sm text-muted-foreground">
-          등록 처리(저장 + 태그 무효화)는 Phase 1. 지금은 미리보기예요.
+          등록 처리(저장 + 태그 무효화)는 준비 중이에요. 지금은 미리보기예요.
         </p>
       )}
 

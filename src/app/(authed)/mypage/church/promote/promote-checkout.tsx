@@ -69,7 +69,7 @@ export function PromoteCheckout({ jobs }: { jobs: JobOption[] }) {
       const result = (await verify.json()) as { ok: boolean; reason?: string };
       if (result.ok) {
         setStatus("success");
-        setMessage("결제가 완료됐어요. 실제 노출 적용은 준비 중이에요(Phase 1).");
+        setMessage("결제가 완료됐어요. 실제 노출 적용은 준비 중이에요.");
       } else {
         setStatus("error");
         setMessage(result.reason ?? "결제 검증에 실패했어요.");
@@ -249,7 +249,7 @@ export function PromoteCheckout({ jobs }: { jobs: JobOption[] }) {
           {status === "processing" ? "결제 진행 중…" : `${won(amount)} 결제하기`}
         </Button>
         <p className="mt-2.5 text-center text-[11px] leading-relaxed text-muted-foreground">
-          테스트 모드 — 실제 청구는 없어요. 결제 성공 시 실제 노출 적용은 준비 중(Phase 1).
+          테스트 모드 — 실제 청구는 없어요. 결제 성공 시 실제 노출 적용은 준비 중이에요.
         </p>
       </div>
     </div>
