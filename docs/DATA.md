@@ -89,21 +89,28 @@
 | `position` | text **NULL** (CHECK) | 직분 (사역직 MINISTRY만; 일반직 GENERAL은 NULL) |
 | `role` | text NULL | 일반직 직무(**자유 텍스트 · 통제 목록 아님**): 방송·미디어·행정·시설 등. 사역직은 보통 NULL |
 | `department` | text NULL (CHECK) | 부서 |
-| `employment_type` | text NOT NULL (CHECK) | 고용형태 |
+| `employment_type` | text **NULL** (CHECK) | 고용형태. **NULL=미상** — 원문 언급률 51%뿐이라 NOT NULL이면 승격 시 임의값 강요 |
 | `qualification` | text NULL (CHECK) | 자격/경력 요건 (필터). NULL=무관 |
-| `housing_provided` | boolean NOT NULL DEFAULT false | 사택 제공 여부 (필터) |
+| `headcount` | text NULL | 모집 인원. **int 아님** — "약간명"·"1~2명" 같은 비정형이 흔함 |
+| `start_timing` | text NULL | 부임 시기 — "즉시"·"협의"·"2월 중" 비정형 |
+| `housing_provided` | boolean **NULL** | 사택 (필터). **NULL=정보 없음/협의 · true=제공 · false=명시적 미제공** |
+| `housing_note` | text NULL | 사택 비정형 표현("사택 협의"·"보증금 지원") — `stipend_note`와 동일 역할 |
 | `stipend_min` | int NULL | 월/연 금액, **만원 단위** |
 | `stipend_max` | int NULL | |
 | `stipend_note` | text NULL | 비정형 표현("내규에 따름"·"면담 후 결정") 보존 |
 | `stipend_period` | text NOT NULL DEFAULT 'MONTH' (CHECK) | MONTH/YEAR |
+| `benefit_note` | text NULL | 그 외 처우 비고(4대보험·교육비·안식월 등 자유 텍스트) |
 | `status` | text NOT NULL DEFAULT 'OPEN' (CHECK) | OPEN/CLOSED |
 | `source` | text NOT NULL (CHECK) | OPERATOR/CHURCH |
 | `source_url` | text NULL | 원문 링크(운영자 수집). 재호스팅 대신 링크 |
-| `contact` | text NULL | **지원용 공개 연락처**(전화·이메일·지원 링크). 교회가 지원받으려 공개한 것만 — 지원과 무관한 제3자 개인정보 X (가드레일 #3 갱신) |
+| `contact` | text NULL | **지원용 공개 연락처 대표 1개**(전화·이메일·지원 링크). 크롤링이 채우는 값·목록 표시용. 교회가 지원받으려 공개한 것만 — 지원과 무관한 제3자 개인정보 X (가드레일 #3 갱신) |
+| `apply_methods` | jsonb NULL | 접수 방법 **상세**(교회 직접 등록 시). `{"EMAIL":"…","LINK":"…","TEL":"…","POST":"…"}` — 키는 `APPLY_METHODS` enum, 검증은 앱에서 |
 | `work_days` | text NULL | 출근 요일·시간(자유 텍스트) |
 | `requirements` | text[] DEFAULT '{}' | 자격요건 항목 |
 | `preferred` | text[] DEFAULT '{}' | 우대사항 항목 |
-| `required_docs` | text[] DEFAULT '{}' | 제출 서류 |
+| `required_docs` | text[] DEFAULT '{}' | 제출 서류 — **필수** |
+| `optional_docs` | text[] DEFAULT '{}' | 제출 서류 — **선택**. 배열 2개로 분리(jsonb `{name,required}`보다 쿼리·표시 단순) |
+| `process_steps` | text[] DEFAULT '{}' | 전형 절차(서류→면접→설교…). `requirements`와 동일 패턴 |
 | `description` | text NULL | 본문(운영자 요약 or 교회 작성 — 원문 통째 복제 X) |
 | `featured_tier` | text NOT NULL DEFAULT 'NONE' (CHECK) | 노출 등급 |
 | `featured_until` | timestamptz NULL | 노출 만료(지나면 강등) |
@@ -114,7 +121,12 @@
 
 > ✅ **확정 설계(크롤러 피벗 2026-07-28)**: 위 `job_kind` · `role` · `contact` 3필드와 `position` NULL 허용은 개교회 채용 확장(사역직 MINISTRY + 일반직 GENERAL) + 크롤러 `review_data` 정합을 위한 **확정 설계**다(아래 ⚠️의 "폼이 앞선 미확정 필드"와 구분). 마이그레이션 SQL은 별도 작업(deferred). `stipend_period`는 이미 존재(변경 없음).
 
-> ⚠️ **`/jobs/new` mock 폼이 스키마보다 앞선 필드**(Phase 1에서 반영 여부 확정): **모집 인원 · 부임 시기**(현재 `description`에 녹이거나 신규 컬럼) · **전형 절차**(text[]) · **접수 방법**(이메일·링크·전화·우편 + 접수처 — 현재 `contact`(지원 연락처)·`source_url` 존재, 우편 접수처 등 세부는 미반영) · **제출 서류 항목별 필수/선택**(현재 `required_docs`는 text[]로 필수여부 없음) · **사택**(폼은 제공/미제공/**협의** 3상태인데 `housing_provided`는 boolean이라 "협의" 미표현 → enum화 검토). `preferred`(우대사항)는 폼에서 제외됨(자격 요건 자유추가로 흡수). 성별·연령·결혼 컬럼은 두지 않는다(가드레일).
+> ✅ **확정(2026-08-04) — 폼이 앞섰던 필드는 모두 컬럼으로 반영.** `/jobs/new` 폼에만 있던 7항목의 처리: 모집 인원 → `headcount text` · 부임 시기 → `start_timing text` · 전형 절차 → `process_steps text[]` · 접수 방법 → `apply_methods jsonb`(대표값은 기존 `contact` 유지) · 제출 서류 필수/선택 → `required_docs` + `optional_docs` 2배열 · 사택 3상태 → **`housing_provided` nullable boolean**(enum 신설 X) + `housing_note` · 처우 비고 → `benefit_note text`. `preferred`(우대사항)는 폼에서 제외됨(자격 요건 자유추가로 흡수). 성별·연령·결혼 컬럼은 두지 않는다(가드레일).
+>
+> **nullable 원칙 — "없으면 공고가 성립하나?"** 크롤링 원문 3,051건 실측 언급률(2026-08-04): 사택 40% · 전형절차 42% · 부임시기 45% · **고용형태 51%** · 모집인원 65% · 사례비·마감일 75% · 제출서류 88% · 연락처 89% · 자격/경력 90%. 원문 중간값 506자, **11%가 200자 미만**. 따라서:
+> - **nullable로 푼다** — 원문에 없을 수 있고 없어도 공고가 성립하는 것: `employment_type`(NOT NULL→NULL, 51%) · `housing_provided`(DEFAULT false 제거, 40%) · 위 신규 컬럼 전부. **DEFAULT로 값을 지어내지 않는다** — "언급 없음"을 "미제공"으로 바꾸면 우리가 틀린 정보를 생산한다.
+> - **NOT NULL을 유지한다** — 비면 공고가 무의미하거나 검색에 안 걸리는 축: `title` · `church_id` · `job_kind` · `posted_at` · `status` · `source` · `churches.denomination` · `churches.region`. 여기선 NOT NULL이 **품질 게이트**로 작동해 "미상 교단·지역은 승격 전 해소" 규칙(§12)을 DB가 강제한다.
+> - 화면에서 NULL은 **"정보 없음"** 으로 표시하고 필터에서는 제외한다(`qualification` NULL=무관과 같은 취급).
 
 ### `users` — 계정 프로필 (Supabase `auth.users`와 1:1)
 

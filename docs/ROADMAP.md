@@ -24,7 +24,8 @@
 ### DB 스키마 (DATA.md 확정 완료 — Phase 1에서 구축)
 > DATA.md에 스키마·enum·인덱스·RLS·재공고·노출 모델 확정됨. 아래는 Phase 1에서 진행.
 - [x] **DATA.md 작성** — 봉인 결정 확정(정규화/JOIN·직교화·enum·재공고키·노출 2종·사례비 period·RLS 의도)
-- [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·users(+bookmarks Phase 2) + enum CHECK + 인덱스 + RLS (DATA.md §3·5·9)
+- [x] **`jobs` 미확정 7필드 확정 + nullable 원칙**(2026-08-04) — DATA.md §3의 ⚠️ 블록 해소. 신규 컬럼 `headcount`·`start_timing`·`process_steps`·`apply_methods`·`optional_docs`·`housing_note`·`benefit_note`, `employment_type` NOT NULL→NULL, `housing_provided` nullable boolean(**enum 신설 X** — DEFAULT false가 "언급 없음"을 "미제공"으로 왜곡). 근거 = 크롤링 원문 3,051건 언급률 실측(고용형태 51%·사택 40%). 필터 축(`title`·`church_id`·`job_kind`·`posted_at`·`denomination`·`region`)은 NOT NULL 유지 = 승격 전 해소 강제
+- [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·users(+bookmarks Phase 2) + enum CHECK + 인덱스 + RLS (DATA.md §3·5·9). **위 확정 반영해 처음부터 nullable로 생성** — 신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접
 - [ ] DB 타입 생성 — `types/database.ts`
 
 **병행 트랙 (Phase 0~1 내내)**
@@ -67,7 +68,7 @@
 - [~] 마이페이지 (`/mypage` · `/mypage/church` · `/mypage/church/info` · `/mypage/church/promote`) — **mock UI 완료**: 사역자 view(최근 본 + **북마크** + 하단 교회 CTA·계정) + 교회 대시보드(상태 탭·노출광고 사이드바·공고 행 수정/⋯마감·삭제/재등록) + 교회 정보 관리 페이지(소개·연락처·채널·사진) + **노출 결제 페이지**(PortOne V2 실결제 동작·서버 금액 검증, 1-8·4). 헤더 아바타=마이페이지 직행 + "교회 공고 등록" 상시 링크(`hasChurchAccess` 분기). 서버 배선·mutation·실 노출 적용 Phase 1
 - [ ] **북마크** (`bookmarks` 테이블) + 공고 카드·상세 저장 버튼 — 단일 계정이라 **Phase 1로 이동**(원래 Phase 2). 지금은 localStorage로 동작
 - [~] 교회 인증 (`/mypage/verify`) — **mock UI 완료**(상태별 화면 + 4섹션 폼: 교회 선택·증빙(고유번호증/사업자등록증)·담당자(이메일 인증)·동의). 실 업로드·이메일 발송·운영자 승인 Phase 1 → 인증 교회만 게재
-- [~] 교회 공고 등록·수정 (`/jobs/new`, `/jobs/[id]/edit`) — **mock UI 완료**: 3스텝 위저드(모집 기본·처우·서류·지원·마감), 제출 서류 필수/선택·접수 방법·자격 프리셋 등(SPEC). '교회 직접 등록'. **인증 게이트 적용**(`hasChurchAccess` 아니면 `/mypage/verify`). 남은 Phase 1: Server Action·편집 권한=교회 인증 멤버십(owner 아님)·DATA 스키마 반영(모집인원·부임시기·전형절차·접수방법·서류 필수여부)
+- [~] 교회 공고 등록·수정 (`/jobs/new`, `/jobs/[id]/edit`) — **mock UI 완료**: 3스텝 위저드(모집 기본·처우·서류·지원·마감), 제출 서류 필수/선택·접수 방법·자격 프리셋 등(SPEC). '교회 직접 등록'. **인증 게이트 적용**(`hasChurchAccess` 아니면 `/mypage/verify`). 남은 Phase 1: Server Action·편집 권한=교회 인증 멤버십(owner 아님). **DATA 스키마 반영은 확정 완료**(2026-08-04, Phase 0 참조 — 폼 7필드 전부 컬럼 확보. 폼의 사택 "협의"는 `housing_provided=NULL` + `housing_note`로 매핑)
 - [ ] **등록 검수 — ★ 전수 검수로 되돌림(2026-08-05 결정, 사용자 확정)**
   > **뒤집힌 결정**: 2026-07-21엔 "사전 전수 검수는 절대 안 함(1인이 다 못 봄)"으로 정하고 공고 `pending`을 뺐다. **2026-08-05에 되돌린다 — 운영자가 모든 공고를 검수한다.**
   > **왜 이제 가능한가**: 크롤러 도입(1-10)으로 **수집 공고는 이미 검수·승격이 필수**다(가드레일 #1 — 검수 없이 자동 공개 금지). 즉 물량의 대부분은 어차피 운영자 손을 거친다. 남는 건 **교회 직접 등록 공고뿐**이고 그건 소수(mock 기준 101건 중 12건)라 1인이 감당된다. `/pricing`의 "모든 공고 운영자 검수" 문구도 이 정책과 일치한다.
