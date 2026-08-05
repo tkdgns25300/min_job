@@ -43,6 +43,12 @@
 - [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 2개** + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**
 - [ ] **크롤러 리포 동기화**(min_job_agent) — `review_data`가 우리 확정과 4곳 어긋난다(DATA.md §12 말미): `stipend_*`→`pay_*` · `contact` 단일→**4컬럼** · 교단 미상=NULL(ETC 아님, "승격 전 해소" 철회) · 승격 게이트=**필수 4 + CHECK 2**. `review_data`는 min_job_agent 소유라 **승격 시 매핑하거나 크롤러 쪽에 반영 요청**. 크롤러 쪽 담당 = 6개 중 못 채운 게 있으면 `confidence=low`로 표시(구조화 단계)
 - [ ] DB 타입 생성 — `types/database.ts`
+- [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합** — 스키마 확정(2026-08-05)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.** 어긋난 15곳:
+  - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` · `postedAt` · `Church.denomination` · `Church.region` — 전부 nullable로 풀어야 함
+  - **TS가 DB보다 느슨**(폼이 NULL을 보내면 DB가 거부): `description: string | null` → **`string`**. ⚠️ 실제 모순이라 이 상태로 등록 Server Action을 붙이면 런타임 에러
+  - **타입에 아예 없는 필드**: `contactEmail`·`contactTel`·`contactLink`·`contactPost`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod`
+  - 함께 필요한 것: `posted_at` nullable 처리 3가지(JSON-LD 생략·정렬 폴백·null 처리 10곳+) · mock JSON 101건에 신규 필드 채우기
+  > **타이밍 = 마이그레이션과 한 묶음.** 지금 손으로 맞추면 `types/database.ts` 생성 때 같은 일을 두 번 한다. 순서: `001_init.sql` → `database.ts` 생성 → `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체. **이 항목이 마이그레이션 작업의 전제조건이다.**
 
 **병행 트랙 (Phase 0~1 내내)**
 - [x] 도메인 확보 — **minjob.co.kr**(hosting.kr 등록). (.com은 일본 서비스 선점)

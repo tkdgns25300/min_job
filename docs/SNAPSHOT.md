@@ -10,7 +10,7 @@
 >
 > ▶ **2026-08-05 KCP 심사 종료 → prod 동결 해제**: 카드사 등록신청 심사가 끝나 "심사 중 변경 금지" 제약이 풀렸다. **prod를 dev로 fast-forward**(7/29 로그인 전환 이후 23커밋 일괄 반영) + 테스트 계정 잔재 제거(ROADMAP 1-8·8). ⚠️ 결제 경로(`/mypage/church/promote`)는 `churchVerificationStatus` 하드코딩 `null` 때문에 **여전히 도달 불가** — 교회 멤버십 배선 전까지 비활성.
 >
-> ▶ **2026-08-05 스키마 확정**: `jobs` 미확정 7필드 + **스키마 6개 결정**(직분/직무 XOR CHECK · `stipend_*`→`pay_*` 개명 · 연락처 4컬럼 · `apply_methods` 폐기 · **`job_promotions` 신설**(테이블 7개) · 필수값 조임). **크롤러 실데이터 3,181건으로 검증해 최소 조건을 8개 → 필수 4 + CHECK 2로 줄였다**: 필수 `church_id`·`title`·`job_kind`·`description` / CHECK 직분XOR직무·연락처≥1. **뺀 3개 = 교단(명시 2.8%)·지역(81%)·게시일(PCKWORLD 60건)** — 게시판이 안 주거나 원문에 없는 값. 대가로 **NULL 표시 UI 3개 + `posted_at` 처리 3가지**(JSON-LD 생략·정렬 폴백·타입)가 숙제로 남았다. 근거·수치는 DATA.md §3, 결정 목록은 ROADMAP Phase 0. **마이그레이션 SQL은 아직 없다** — 이제 그게 다음 관문.
+> ▶ **2026-08-05 스키마 확정**: `jobs` 미확정 7필드 + **스키마 6개 결정**(직분/직무 XOR CHECK · `stipend_*`→`pay_*` 개명 · 연락처 4컬럼 · `apply_methods` 폐기 · **`job_promotions` 신설**(테이블 7개) · 필수값 조임). **크롤러 실데이터 3,181건으로 검증해 최소 조건을 8개 → 필수 4 + CHECK 2로 줄였다**: 필수 `church_id`·`title`·`job_kind`·`description` / CHECK 직분XOR직무·연락처≥1. **뺀 3개 = 교단(명시 2.8%)·지역(81%)·게시일(PCKWORLD 60건)** — 게시판이 안 주거나 원문에 없는 값. 대가로 **NULL 표시 UI 3개 + `posted_at` 처리 3가지**(JSON-LD 생략·정렬 폴백·타입)가 숙제로 남았다. 근거·수치는 DATA.md §3, 결정 목록은 ROADMAP Phase 0. ⚠️ **확정은 문서에만 반영됐다** — `types/domain.ts`·mock은 아직 옛 스키마고 **15곳이 어긋난다**(ROADMAP Phase 0에 목록). 코드 변경은 `pay_*` 개명뿐. **마이그레이션 SQL도 아직 없다**(`supabase/` 폴더 없음) — 다음 관문은 `001_init.sql` + 타입·mock 정합을 **한 묶음으로** 도는 것.
 >
 > ▶ **2026-08-05 SEO 마감**: `sitemap.xml`·`robots.txt`·canonical·OG(이미지 포함) 완료(§7 6·§8 SEO). **dev에 커밋 완료.** 남은 것 = **Search Console 사이트맵 등록**(실데이터 후 — 등록이 곧 "가짜 공고 색인 요청") · **공고별 OG 이미지**(한글 정적 폰트 선행).
 
