@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChurchChannels } from "@/components/church/church-channels";
 import { ChurchGallery } from "@/components/church/church-gallery";
-import { churchLocation, churchMetaLine, formatStipend, jobRoleLine } from "@/lib/format";
+import { churchLocation, churchMetaLine, formatPay, jobRoleLine } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { DEPARTMENTS, POSITIONS } from "@/constants/domain";
 import type { Church, JobCard as JobCardData } from "@/types/domain";
@@ -18,7 +18,7 @@ function roleLabel(role: Pick<RoleHistory, "position" | "department">): string {
 
 // 현재 모집 카드 — 교회 상세 컨텍스트(교회명 반복 없음). 재공고면 배지.
 function OpenJobCard({ job, repostCount }: { job: JobCardData; repostCount: number }) {
-  const hasStipend = job.stipendMin !== null || job.stipendMax !== null;
+  const hasPay = job.payMin !== null || job.payMax !== null;
   return (
     <Link
       href={`/jobs/${job.id}`}
@@ -34,12 +34,9 @@ function OpenJobCard({ job, repostCount }: { job: JobCardData; repostCount: numb
       </div>
       <p className="text-sm text-muted-foreground">{jobRoleLine(job)}</p>
       <p
-        className={cn(
-          "mt-auto pt-1 font-bold",
-          hasStipend ? "text-primary" : "text-muted-foreground",
-        )}
+        className={cn("mt-auto pt-1 font-bold", hasPay ? "text-primary" : "text-muted-foreground")}
       >
-        {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
+        {formatPay(job.payMin, job.payMax, job.payNote)}
       </p>
     </Link>
   );

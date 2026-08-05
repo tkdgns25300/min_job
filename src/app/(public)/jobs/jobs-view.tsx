@@ -27,7 +27,7 @@ import {
 // 최신순 단일 + 마감 "표기만"으로 축소하는 안 vs 현행 3축 유지 — 사람 결정 필요 (SPEC.md #1)
 const SORTS: { key: SortKey; label: string }[] = [
   { key: "recent", label: "최신순" },
-  { key: "stipend", label: "사례비순" },
+  { key: "pay", label: "사례비순" },
   { key: "deadline", label: "마감임박순" },
 ];
 
@@ -40,8 +40,8 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
   const [seed] = useState(() => parseJobsUrlState(sp));
   const [q, setQ] = useState(seed.q);
   const [selected, setSelected] = useState(seed.selected);
-  const [stipendMin, setStipendMin] = useState(seed.stipendMin);
-  const [stipendMax, setStipendMax] = useState(seed.stipendMax);
+  const [payMin, setPayMin] = useState(seed.payMin);
+  const [payMax, setPayMax] = useState(seed.payMax);
   const [includeNego, setIncludeNego] = useState(seed.includeNego);
   const [housingOnly, setHousingOnly] = useState(seed.housingOnly);
   const [sort, setSort] = useState<SortKey>(seed.sort);
@@ -59,11 +59,11 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
       });
       setPage(1);
     },
-    stipendMin,
-    stipendMax,
-    onStipend: (which, value) => {
-      if (which === "min") setStipendMin(value);
-      else setStipendMax(value);
+    payMin,
+    payMax,
+    onPay: (which, value) => {
+      if (which === "min") setPayMin(value);
+      else setPayMax(value);
       setPage(1);
     },
     includeNego,
@@ -79,8 +79,8 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
     onReset: () => {
       setQ("");
       setSelected(emptySelected());
-      setStipendMin("");
-      setStipendMax("");
+      setPayMin("");
+      setPayMax("");
       setIncludeNego(true);
       setHousingOnly(false);
       setPage(1);
@@ -92,13 +92,13 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
       filterAndSortJobs(jobs, {
         q,
         selected,
-        stipendMin: stipendMin ? Number(stipendMin) : null,
-        stipendMax: stipendMax ? Number(stipendMax) : null,
+        payMin: payMin ? Number(payMin) : null,
+        payMax: payMax ? Number(payMax) : null,
         includeNego,
         housingOnly,
         sort,
       }),
-    [jobs, q, selected, stipendMin, stipendMax, includeNego, housingOnly, sort],
+    [jobs, q, selected, payMin, payMax, includeNego, housingOnly, sort],
   );
 
   const total = filtered.length;
@@ -109,7 +109,7 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
   // 활성 필터 수 — 모바일 트리거 배지 + 빈 상태 초기화 버튼 노출 판단
   const activeFilterCount =
     MULTI_DIMS.reduce((n, dim) => n + selected[dim].size, 0) +
-    (stipendMin || stipendMax ? 1 : 0) +
+    (payMin || payMax ? 1 : 0) +
     (includeNego ? 0 : 1) +
     (housingOnly ? 1 : 0);
 
@@ -118,8 +118,8 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
   const query = buildJobsQuery({
     q,
     selected,
-    stipendMin,
-    stipendMax,
+    payMin,
+    payMax,
     includeNego,
     housingOnly,
     sort,
@@ -221,11 +221,11 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
             <ActiveFilterChips
               selected={selected}
               onToggle={filterProps.onToggle}
-              stipendMin={stipendMin}
-              stipendMax={stipendMax}
-              onClearStipend={() => {
-                setStipendMin("");
-                setStipendMax("");
+              payMin={payMin}
+              payMax={payMax}
+              onClearPay={() => {
+                setPayMin("");
+                setPayMax("");
                 setPage(1);
               }}
               includeNego={includeNego}

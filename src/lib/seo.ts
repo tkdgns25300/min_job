@@ -36,14 +36,14 @@ export function jobPostingJsonLd(detail: JobDetail) {
   const { job, church } = detail;
 
   const baseSalary =
-    job.stipendMin !== null
+    job.payMin !== null
       ? {
           "@type": "MonetaryAmount",
           currency: "KRW",
           value: {
             "@type": "QuantitativeValue",
-            minValue: job.stipendMin * KRW_PER_MAN,
-            maxValue: (job.stipendMax ?? job.stipendMin) * KRW_PER_MAN,
+            minValue: job.payMin * KRW_PER_MAN,
+            maxValue: (job.payMax ?? job.payMin) * KRW_PER_MAN,
             unitText: "MONTH",
           },
         }

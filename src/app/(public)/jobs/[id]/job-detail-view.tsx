@@ -5,7 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { JobActions } from "@/components/job/job-actions";
 import { JobCard } from "@/components/job/job-card";
 import { ChurchChannels } from "@/components/church/church-channels";
-import { churchLocation, churchMetaLine, formatStipend, jobRoleLine } from "@/lib/format";
+import { churchLocation, churchMetaLine, formatPay, jobRoleLine } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   EMPLOYMENT_TYPES,
@@ -268,7 +268,7 @@ function MainContent({
             <p className="text-xs font-bold text-muted-foreground">이 교회의 다른 모집</p>
             <ul className="mt-2 divide-y divide-border">
               {churchJobs.map((cj) => {
-                const hasPay = cj.stipendMin !== null || cj.stipendMax !== null;
+                const hasPay = cj.payMin !== null || cj.payMax !== null;
                 return (
                   <li key={cj.id}>
                     <Link
@@ -285,7 +285,7 @@ function MainContent({
                           hasPay ? "text-primary" : "text-muted-foreground",
                         )}
                       >
-                        {formatStipend(cj.stipendMin, cj.stipendMax, cj.stipendNote)}
+                        {formatPay(cj.payMin, cj.payMax, cj.payNote)}
                       </span>
                     </Link>
                   </li>
@@ -301,7 +301,7 @@ function MainContent({
 
 // 우측 카드 (B) — 사례비·마감·고용형태 + 지원. 데스크톱 sticky, 모바일 제목 아래.
 function SummaryAside({ job, apply }: { job: Job; apply: ApplyTarget | null }) {
-  const hasStipend = job.stipendMin !== null || job.stipendMax !== null;
+  const hasPay = job.payMin !== null || job.payMax !== null;
 
   return (
     <Card className="order-first gap-0 overflow-hidden p-0 lg:sticky lg:top-20 lg:order-none">
@@ -323,12 +323,10 @@ function SummaryAside({ job, apply }: { job: Job; apply: ApplyTarget | null }) {
         <InfoRow
           label="월 사례비"
           value={
-            hasStipend ? (
-              <span className="text-primary">
-                {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
-              </span>
+            hasPay ? (
+              <span className="text-primary">{formatPay(job.payMin, job.payMax, job.payNote)}</span>
             ) : (
-              (job.stipendNote ?? "협의")
+              (job.payNote ?? "협의")
             )
           }
         />

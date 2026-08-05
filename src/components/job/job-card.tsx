@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DENOMINATIONS } from "@/constants/domain";
 import type { JobCard as JobCardData } from "@/types/domain";
-import { churchLocation, formatStipend, jobRoleLine } from "@/lib/format";
+import { churchLocation, formatPay, jobRoleLine } from "@/lib/format";
 import { RelativeTime } from "@/components/relative-time";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ export function JobCard({ job }: { job: JobCardData }) {
   const location = churchLocation(job.church);
   const isAd = job.featuredTier === "HERO";
   const isPremium = job.featuredTier === "PREMIUM";
-  const hasStipend = job.stipendMin !== null || job.stipendMax !== null;
+  const hasPay = job.payMin !== null || job.payMax !== null;
 
   return (
     <Link href={`/jobs/${job.id}`} className="group block h-full">
@@ -37,8 +37,8 @@ export function JobCard({ job }: { job: JobCardData }) {
         <h3 className="line-clamp-2 leading-snug font-semibold">{job.title}</h3>
         <p className="text-sm text-muted-foreground">{role}</p>
         <div className="mt-auto flex items-center justify-between pt-1">
-          <span className={cn("font-bold", hasStipend ? "text-primary" : "text-muted-foreground")}>
-            {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
+          <span className={cn("font-bold", hasPay ? "text-primary" : "text-muted-foreground")}>
+            {formatPay(job.payMin, job.payMax, job.payNote)}
           </span>
           <span className="text-xs text-muted-foreground">
             <RelativeTime date={job.postedAt} />

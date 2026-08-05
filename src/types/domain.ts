@@ -20,7 +20,7 @@ export type { JobStatus };
 // 목록 필터/정렬 (다중선택 필터 축 · 정렬 키)
 export type FilterDim =
   "denomination" | "region" | "position" | "department" | "employmentType" | "qualification";
-export type SortKey = "recent" | "stipend" | "deadline";
+export type SortKey = "recent" | "pay" | "deadline";
 
 // 교회 채널 링크 (홈페이지·SNS)
 export interface ChurchLink {
@@ -51,9 +51,9 @@ export interface Job {
   employmentType: EmploymentType;
   qualification?: Qualification; // 자격/경력 요건 (필터). 미지정 = 무관 취급. 실데이터에선 필수화 예정
   housingProvided?: boolean; // 사택 제공 여부 (필터). 실데이터에선 필수화 예정
-  stipendMin: number | null; // 월 사례비, 만원 단위
-  stipendMax: number | null;
-  stipendNote: string | null; // "내규에 따름" 등 비정형 표현 보존
+  payMin: number | null; // 월 사례비, 만원 단위
+  payMax: number | null;
+  payNote: string | null; // "내규에 따름" 등 비정형 표현 보존
   status: JobStatus;
   featuredTier: FeaturedTier;
   postedAt: string; // "YYYY-MM-DD"
@@ -99,9 +99,9 @@ export interface JobCard {
   employmentType: EmploymentType;
   qualification?: Qualification;
   housingProvided?: boolean;
-  stipendMin: number | null;
-  stipendMax: number | null;
-  stipendNote: string | null;
+  payMin: number | null;
+  payMax: number | null;
+  payNote: string | null;
   featuredTier: FeaturedTier;
   postedAt: string;
   deadline: string | null;

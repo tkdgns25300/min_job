@@ -6,7 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { readBookmarks, toggleBookmark } from "@/lib/bookmarks";
 import { clearRecentJobs, readRecentJobs, type RecentJob } from "@/lib/recent-jobs";
-import { churchLocation, formatStipend, jobRoleLine } from "@/lib/format";
+import { churchLocation, formatPay, jobRoleLine } from "@/lib/format";
 import type { JobCard } from "@/types/domain";
 
 // 사역자 view의 "내 활동" — 저장한 공고(북마크) + 최근 본 공고. 둘 다 localStorage 기반(로그인 불필요).
@@ -120,7 +120,7 @@ export function MinisterActivity({ allCards }: { allCards: JobCard[] }) {
 }
 
 function SavedRow({ job, onUnsave }: { job: JobCard; onUnsave: (id: string) => void }) {
-  const hasStipend = job.stipendMin !== null || job.stipendMax !== null;
+  const hasPay = job.payMin !== null || job.payMax !== null;
   return (
     <article className="relative flex items-center gap-3 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-5">
       <Link href={`/jobs/${job.id}`} className="absolute inset-0" aria-label={job.title} />
@@ -132,10 +132,8 @@ function SavedRow({ job, onUnsave }: { job: JobCard; onUnsave: (id: string) => v
         <p className="mt-0.5 truncate text-xs text-muted-foreground">{jobRoleLine(job)}</p>
       </div>
       <div className="shrink-0 text-right">
-        <div
-          className={cn(hasStipend ? "font-bold text-primary" : "text-sm text-muted-foreground")}
-        >
-          {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
+        <div className={cn(hasPay ? "font-bold text-primary" : "text-sm text-muted-foreground")}>
+          {formatPay(job.payMin, job.payMax, job.payNote)}
         </div>
       </div>
       <button

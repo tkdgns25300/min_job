@@ -221,8 +221,8 @@ function DraftPanel({
               className="h-9"
               inputMode="numeric"
               placeholder="최소"
-              value={draft.stipendMin}
-              onChange={(e) => patch({ stipendMin: e.target.value, stipendNote: "" })}
+              value={draft.payMin}
+              onChange={(e) => patch({ payMin: e.target.value, payNote: "" })}
               aria-label="사례비 최소"
             />
             <span className="text-muted-foreground">~</span>
@@ -230,16 +230,16 @@ function DraftPanel({
               className="h-9"
               inputMode="numeric"
               placeholder="최대"
-              value={draft.stipendMax}
-              onChange={(e) => patch({ stipendMax: e.target.value, stipendNote: "" })}
+              value={draft.payMax}
+              onChange={(e) => patch({ payMax: e.target.value, payNote: "" })}
               aria-label="사례비 최대"
             />
           </div>
           <Input
             className="mt-2 h-9"
             placeholder="또는 비정형 (예: 교회 내규에 따름)"
-            value={draft.stipendNote}
-            onChange={(e) => patch({ stipendNote: e.target.value, stipendMin: "", stipendMax: "" })}
+            value={draft.payNote}
+            onChange={(e) => patch({ payNote: e.target.value, payMin: "", payMax: "" })}
             aria-label="사례비 비정형 표현"
           />
         </Field>

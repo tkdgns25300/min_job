@@ -4,7 +4,7 @@ import {
   EMPLOYMENT_TYPES,
   POSITIONS,
   REGIONS,
-  STIPEND_NOTE_PRESETS,
+  PAY_NOTE_PRESETS,
   type Denomination,
   type Department,
   type EmploymentType,
@@ -29,9 +29,9 @@ export interface IngestDraft {
   position: Position | null;
   department: Department | null;
   employmentType: EmploymentType | null;
-  stipendMin: string;
-  stipendMax: string;
-  stipendNote: string;
+  payMin: string;
+  payMax: string;
+  payNote: string;
   deadline: string; // "YYYY-MM-DD" | ""
   sourceUrl: string;
   body: string; // 요약·본문 — 사람이 직접 작성(원문 통째 복제 X, 가드레일 #1: DB권·재호스팅). 원문은 좌측 패널에만.
@@ -47,9 +47,9 @@ function emptyIngestDraft(): IngestDraft {
     position: null,
     department: null,
     employmentType: null,
-    stipendMin: "",
-    stipendMax: "",
-    stipendNote: "",
+    payMin: "",
+    payMax: "",
+    payNote: "",
     deadline: "",
     sourceUrl: "",
     body: "",
@@ -90,21 +90,19 @@ function matchEmployment(text: string): EmploymentType | null {
 }
 
 // 사례비 — 명시 금액 우선(범위 → 단일). 금액이 없을 때만 비정형 표현(내규·협의)으로 추정.
-function parseStipend(
-  text: string,
-): Pick<IngestDraft, "stipendMin" | "stipendMax" | "stipendNote"> {
+function parsePay(text: string): Pick<IngestDraft, "payMin" | "payMax" | "payNote"> {
   const range = text.match(/(\d{2,4})\s*(?:만\s*원?)?\s*~\s*(\d{2,4})\s*만/);
-  if (range) return { stipendMin: range[1], stipendMax: range[2], stipendNote: "" };
+  if (range) return { payMin: range[1], payMax: range[2], payNote: "" };
 
   const single = text.match(/(\d{2,4})\s*만\s*원?/);
-  if (single) return { stipendMin: single[1], stipendMax: "", stipendNote: "" };
+  if (single) return { payMin: single[1], payMax: "", payNote: "" };
 
   const note = text.includes("내규")
-    ? STIPEND_NOTE_PRESETS.find((p) => p.includes("내규"))
+    ? PAY_NOTE_PRESETS.find((p) => p.includes("내규"))
     : text.includes("협의")
-      ? STIPEND_NOTE_PRESETS.find((p) => p.includes("협의"))
+      ? PAY_NOTE_PRESETS.find((p) => p.includes("협의"))
       : undefined;
-  return { stipendMin: "", stipendMax: "", stipendNote: note ?? "" };
+  return { payMin: "", payMax: "", payNote: note ?? "" };
 }
 
 // 마감일 — "2026-09-30 / 2026.9.30 / 2026년 9월 30일" → YYYY-MM-DD.
@@ -141,7 +139,7 @@ export function structureJobText(text: string): IngestDraft {
     position: matchPosition(src),
     department: matchLabel(src, DEPARTMENTS),
     employmentType: matchEmployment(src),
-    ...parseStipend(src),
+    ...parsePay(src),
     deadline: parseDeadline(src),
     sourceUrl: src.match(/https?:\/\/[^\s)]+/)?.[0] ?? "",
     body: "", // 요약은 사람이 작성(원문 통째 복제 X). 원문은 좌측 패널 참조.

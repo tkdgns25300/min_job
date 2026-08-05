@@ -17,8 +17,8 @@ const FAR_FUTURE = "9999-12-31"; // 마감 없는 공고를 마감임박 정렬 
 export interface JobFilterCriteria {
   q: string;
   selected: Record<FilterDim, Set<string>>;
-  stipendMin: number | null;
-  stipendMax: number | null;
+  payMin: number | null;
+  payMax: number | null;
   includeNego: boolean;
   housingOnly: boolean;
   sort: SortKey;
@@ -38,14 +38,14 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
       return false;
     if (c.housingOnly && !j.housingProvided) return false;
 
-    const hasNumber = j.stipendMin !== null || j.stipendMax !== null;
+    const hasNumber = j.payMin !== null || j.payMax !== null;
     if (!hasNumber) {
       if (!c.includeNego) return false;
     } else {
-      const jMax = j.stipendMax ?? j.stipendMin ?? 0;
-      const jMin = j.stipendMin ?? j.stipendMax ?? 0;
-      if (c.stipendMin !== null && jMax < c.stipendMin) return false;
-      if (c.stipendMax !== null && jMin > c.stipendMax) return false;
+      const jMax = j.payMax ?? j.payMin ?? 0;
+      const jMin = j.payMin ?? j.payMax ?? 0;
+      if (c.payMin !== null && jMax < c.payMin) return false;
+      if (c.payMax !== null && jMin > c.payMax) return false;
     }
 
     if (query) {
@@ -71,8 +71,8 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
   result.sort((a, b) => {
     const tier = TIER_RANK[a.featuredTier] - TIER_RANK[b.featuredTier];
     if (tier !== 0) return tier;
-    if (c.sort === "stipend") {
-      return (b.stipendMax ?? b.stipendMin ?? -1) - (a.stipendMax ?? a.stipendMin ?? -1);
+    if (c.sort === "pay") {
+      return (b.payMax ?? b.payMin ?? -1) - (a.payMax ?? a.payMin ?? -1);
     }
     if (c.sort === "deadline") {
       return (a.deadline ?? FAR_FUTURE).localeCompare(b.deadline ?? FAR_FUTURE);

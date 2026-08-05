@@ -5,7 +5,7 @@ import { JobDetailView } from "./job-detail-view";
 import { RecordRecentlyViewed } from "@/components/job/record-recently-viewed";
 import { getChurchOpenJobs, getJobDetail, getRepost, getSimilarJobs } from "@/lib/queries/jobs";
 import { jobPostingJsonLd, jobRoleSummary } from "@/lib/seo";
-import { churchLocation, formatStipend } from "@/lib/format";
+import { churchLocation, formatPay } from "@/lib/format";
 import { REGIONS } from "@/constants/domain";
 import { SITE_OPEN_GRAPH } from "@/constants/site";
 
@@ -63,8 +63,8 @@ async function JobDetailContent({ params }: Params) {
         subtitle={`${detail.church.name} · ${REGIONS[detail.church.region]}`}
         location={churchLocation(detail.church)}
         pay={
-          detail.job.stipendMin !== null || detail.job.stipendMax !== null
-            ? formatStipend(detail.job.stipendMin, detail.job.stipendMax, detail.job.stipendNote)
+          detail.job.payMin !== null || detail.job.payMax !== null
+            ? formatPay(detail.job.payMin, detail.job.payMax, detail.job.payNote)
             : undefined
         }
       />

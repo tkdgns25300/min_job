@@ -19,7 +19,7 @@ import {
   POSITIONS,
   QUALIFICATION_PRESETS,
   REQUIRED_DOC_PRESETS,
-  STIPEND_NOTE_PRESETS,
+  PAY_NOTE_PRESETS,
   type ApplyMethod,
   type Department,
   type EmploymentType,
@@ -48,9 +48,9 @@ interface JobDraft {
   workDays: string;
   intro: string;
   qualifications: CheckItem[];
-  stipendMin: string;
-  stipendMax: string;
-  stipendNote: string;
+  payMin: string;
+  payMax: string;
+  payNote: string;
   housing: HousingOption | null;
   benefitNote: string;
   docs: CheckItem[];
@@ -74,9 +74,9 @@ function toDraft(job?: Job): JobDraft {
     workDays: job?.workDays ?? "",
     intro: job?.description ?? "",
     qualifications: (job?.requirements ?? []).map((name) => ({ name, required: true })),
-    stipendMin: job?.stipendMin?.toString() ?? "",
-    stipendMax: job?.stipendMax?.toString() ?? "",
-    stipendNote: job?.stipendNote ?? "",
+    payMin: job?.payMin?.toString() ?? "",
+    payMax: job?.payMax?.toString() ?? "",
+    payNote: job?.payNote ?? "",
     housing:
       job?.housingProvided === true ? "PROVIDED" : job?.housingProvided === false ? "NONE" : null,
     benefitNote: "",
@@ -131,29 +131,29 @@ interface SectionDef {
 }
 
 // 사례비 — 숫자(min·max)와 비정형(내규·협의)을 동급 경로로 (인터뷰: 대부분 비공개).
-function StipendFields({ draft, patch }: SectionProps) {
-  const presetOptions = Object.fromEntries(STIPEND_NOTE_PRESETS.map((p) => [p, p])) as Record<
+function PayFields({ draft, patch }: SectionProps) {
+  const presetOptions = Object.fromEntries(PAY_NOTE_PRESETS.map((p) => [p, p])) as Record<
     string,
     string
   >;
-  const presetValue = (STIPEND_NOTE_PRESETS as readonly string[]).includes(draft.stipendNote)
-    ? draft.stipendNote
+  const presetValue = (PAY_NOTE_PRESETS as readonly string[]).includes(draft.payNote)
+    ? draft.payNote
     : null;
   return (
     <Field label="월 사례비 (만원)">
       <div className="flex items-center gap-2">
         <Input
           inputMode="numeric"
-          value={draft.stipendMin}
-          onChange={(e) => patch({ stipendMin: e.target.value, stipendNote: "" })}
+          value={draft.payMin}
+          onChange={(e) => patch({ payMin: e.target.value, payNote: "" })}
           placeholder="최소"
           className="h-9"
         />
         <span className="text-muted-foreground">~</span>
         <Input
           inputMode="numeric"
-          value={draft.stipendMax}
-          onChange={(e) => patch({ stipendMax: e.target.value, stipendNote: "" })}
+          value={draft.payMax}
+          onChange={(e) => patch({ payMax: e.target.value, payNote: "" })}
           placeholder="최대"
           className="h-9"
         />
@@ -162,11 +162,11 @@ function StipendFields({ draft, patch }: SectionProps) {
         <ChipSelect
           options={presetOptions}
           value={presetValue}
-          onChange={(v) => patch({ stipendNote: v ?? "", stipendMin: "", stipendMax: "" })}
+          onChange={(v) => patch({ payNote: v ?? "", payMin: "", payMax: "" })}
         />
         <Input
-          value={presetValue ? "" : draft.stipendNote}
-          onChange={(e) => patch({ stipendNote: e.target.value, stipendMin: "", stipendMax: "" })}
+          value={presetValue ? "" : draft.payNote}
+          onChange={(e) => patch({ payNote: e.target.value, payMin: "", payMax: "" })}
           placeholder="직접 입력 (예: 사역 경력에 따라 협의)"
           className="h-9"
         />
@@ -404,11 +404,11 @@ function stepSections(
   if (step === 2) {
     return [
       {
-        key: "stipend",
+        key: "pay",
         title: "사례비 · 예우",
         content: (
           <>
-            <StipendFields draft={draft} patch={patch} />
+            <PayFields draft={draft} patch={patch} />
             <Field label="사택 제공">
               <ChipSelect
                 options={HOUSING_OPTIONS}

@@ -148,7 +148,7 @@ export const VERIFICATION_DOC_TYPES = {
 export type VerificationDocType = keyof typeof VERIFICATION_DOC_TYPES;
 
 // 공고 등록 폼 프리셋 — 인터뷰 반영: 사례비는 "거의 내규에 따름"(비정형 경로를 숫자와 동급으로)
-export const STIPEND_NOTE_PRESETS = ["교회 내규에 따름", "면접 후 협의"] as const;
+export const PAY_NOTE_PRESETS = ["교회 내규에 따름", "면접 후 협의"] as const;
 
 // 자격 요건 프리셋 — 청빙 공고 조사(교단 게시판 실공고) 반영. 성별·연령·결혼은 가드레일상 제외.
 export const QUALIFICATION_PRESETS = [

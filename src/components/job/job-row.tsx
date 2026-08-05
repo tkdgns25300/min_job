@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { DENOMINATIONS } from "@/constants/domain";
 import type { JobCard } from "@/types/domain";
-import { churchLocation, formatStipend, jobRoleLine } from "@/lib/format";
+import { churchLocation, formatPay, jobRoleLine } from "@/lib/format";
 import { RelativeTime } from "@/components/relative-time";
 import { BookmarkButton } from "./bookmark-button";
 
@@ -14,7 +14,7 @@ export function JobRow({ job }: { job: JobCard }) {
   const role = jobRoleLine(job);
   const location = churchLocation(job.church);
   const isAd = job.featuredTier === "HERO" || job.featuredTier === "PREMIUM";
-  const hasStipend = job.stipendMin !== null || job.stipendMax !== null;
+  const hasPay = job.payMin !== null || job.payMax !== null;
 
   return (
     <article className="relative flex items-center gap-4 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-5">
@@ -41,13 +41,13 @@ export function JobRow({ job }: { job: JobCard }) {
       </div>
 
       <div className="shrink-0 text-right">
-        {hasStipend ? (
+        {hasPay ? (
           <div className="font-bold text-primary">
-            {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
+            {formatPay(job.payMin, job.payMax, job.payNote)}
           </div>
         ) : (
           <div className="text-sm font-semibold text-muted-foreground">
-            {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
+            {formatPay(job.payMin, job.payMax, job.payNote)}
           </div>
         )}
         <div className="mt-1.5 text-xs text-muted-foreground/80">

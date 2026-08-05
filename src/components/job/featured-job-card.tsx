@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { DENOMINATIONS } from "@/constants/domain";
 import type { JobCard } from "@/types/domain";
-import { churchLocation, formatStipend, jobRoleLine } from "@/lib/format";
+import { churchLocation, formatPay, jobRoleLine } from "@/lib/format";
 import { RelativeTime } from "@/components/relative-time";
 import { BookmarkButton } from "./bookmark-button";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export function FeaturedJobCard({ job }: { job: JobCard }) {
   const role = jobRoleLine(job);
   const location = churchLocation(job.church);
-  const hasStipend = job.stipendMin !== null || job.stipendMax !== null;
+  const hasPay = job.payMin !== null || job.payMax !== null;
 
   return (
     <article className="relative flex flex-col gap-2.5 rounded-2xl border-[1.5px] border-primary/30 bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
@@ -39,10 +39,10 @@ export function FeaturedJobCard({ job }: { job: JobCard }) {
       <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
         <span
           className={cn(
-            hasStipend ? "font-bold text-primary" : "text-sm font-semibold text-muted-foreground",
+            hasPay ? "font-bold text-primary" : "text-sm font-semibold text-muted-foreground",
           )}
         >
-          {formatStipend(job.stipendMin, job.stipendMax, job.stipendNote)}
+          {formatPay(job.payMin, job.payMax, job.payNote)}
         </span>
         <span className="text-xs text-muted-foreground/80">
           <RelativeTime date={job.postedAt} />

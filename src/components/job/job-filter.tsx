@@ -76,9 +76,9 @@ function ChipGroup({
 export interface JobFilterProps {
   selected: Record<FilterDim, Set<string>>;
   onToggle: (dim: FilterDim, value: string) => void;
-  stipendMin: string;
-  stipendMax: string;
-  onStipend: (which: "min" | "max", value: string) => void;
+  payMin: string;
+  payMax: string;
+  onPay: (which: "min" | "max", value: string) => void;
   includeNego: boolean;
   onIncludeNego: (value: boolean) => void;
   housingOnly: boolean;
@@ -89,9 +89,9 @@ export interface JobFilterProps {
 export function JobFilter({
   selected,
   onToggle,
-  stipendMin,
-  stipendMax,
-  onStipend,
+  payMin,
+  payMax,
+  onPay,
   includeNego,
   onIncludeNego,
   housingOnly,
@@ -126,16 +126,16 @@ export function JobFilter({
         <div className="flex items-center gap-2">
           <Input
             inputMode="numeric"
-            value={stipendMin}
-            onChange={(e) => onStipend("min", e.target.value)}
+            value={payMin}
+            onChange={(e) => onPay("min", e.target.value)}
             placeholder="최소"
             className="h-9"
           />
           <span className="text-muted-foreground">~</span>
           <Input
             inputMode="numeric"
-            value={stipendMax}
-            onChange={(e) => onStipend("max", e.target.value)}
+            value={payMax}
+            onChange={(e) => onPay("max", e.target.value)}
             placeholder="최대"
             className="h-9"
           />

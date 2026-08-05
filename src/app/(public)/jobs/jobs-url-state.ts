@@ -18,13 +18,13 @@ export const MULTI_DIMS: FilterDim[] = [
 export const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 export const DEFAULT_PAGE_SIZE = 20;
 export const DEFAULT_SORT: SortKey = "recent";
-const SORT_KEYS: readonly SortKey[] = ["recent", "stipend", "deadline"];
+const SORT_KEYS: readonly SortKey[] = ["recent", "pay", "deadline"];
 
 export interface JobsUrlState {
   q: string;
   selected: Record<FilterDim, Set<string>>;
-  stipendMin: string;
-  stipendMax: string;
+  payMin: string;
+  payMax: string;
   includeNego: boolean;
   housingOnly: boolean;
   sort: SortKey;
@@ -63,8 +63,8 @@ export function parseJobsUrlState(sp: ReadonlyURLSearchParams | URLSearchParams)
   return {
     q: sp.get("q") ?? "",
     selected,
-    stipendMin: parseNumericField(sp.get("stipendMin")),
-    stipendMax: parseNumericField(sp.get("stipendMax")),
+    payMin: parseNumericField(sp.get("payMin")),
+    payMax: parseNumericField(sp.get("payMax")),
     includeNego: sp.get("includeNego") !== "0", // 기본 포함(true) — includeNego=0 일 때만 제외
     housingOnly: sp.get("housingOnly") === "1",
     sort,
@@ -84,8 +84,8 @@ export function buildJobsQuery(state: JobsUrlState): string {
     for (const value of state.selected[dim]) params.append(dim, value);
   }
 
-  if (state.stipendMin) params.set("stipendMin", state.stipendMin);
-  if (state.stipendMax) params.set("stipendMax", state.stipendMax);
+  if (state.payMin) params.set("payMin", state.payMin);
+  if (state.payMax) params.set("payMax", state.payMax);
   if (!state.includeNego) params.set("includeNego", "0");
   if (state.housingOnly) params.set("housingOnly", "1");
   if (state.sort !== DEFAULT_SORT) params.set("sort", state.sort);

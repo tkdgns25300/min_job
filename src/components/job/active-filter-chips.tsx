@@ -21,7 +21,7 @@ const DIM_OPTIONS: Record<FilterDim, Record<string, string>> = {
 };
 
 // 사례비 입력값 → 요약 라벨 ("200~300만원" / "200만원 이상" / "300만원 이하")
-function stipendLabel(min: string, max: string): string | null {
+function payLabel(min: string, max: string): string | null {
   if (min && max) return `사례비 ${min}~${max}만원`;
   if (min) return `사례비 ${min}만원 이상`;
   if (max) return `사례비 ${max}만원 이하`;
@@ -49,9 +49,9 @@ function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
 export function ActiveFilterChips({
   selected,
   onToggle,
-  stipendMin,
-  stipendMax,
-  onClearStipend,
+  payMin,
+  payMax,
+  onClearPay,
   includeNego,
   onIncludeNego,
   housingOnly,
@@ -60,9 +60,9 @@ export function ActiveFilterChips({
 }: {
   selected: Record<FilterDim, Set<string>>;
   onToggle: (dim: FilterDim, value: string) => void;
-  stipendMin: string;
-  stipendMax: string;
-  onClearStipend: () => void;
+  payMin: string;
+  payMax: string;
+  onClearPay: () => void;
   includeNego: boolean;
   onIncludeNego: (value: boolean) => void;
   housingOnly: boolean;
@@ -70,9 +70,9 @@ export function ActiveFilterChips({
   onReset: () => void;
 }) {
   const dims = Object.keys(DIM_OPTIONS) as FilterDim[];
-  const stipend = stipendLabel(stipendMin, stipendMax);
+  const pay = payLabel(payMin, payMax);
   const hasAny =
-    dims.some((d) => selected[d].size > 0) || stipend !== null || !includeNego || housingOnly;
+    dims.some((d) => selected[d].size > 0) || pay !== null || !includeNego || housingOnly;
   if (!hasAny) return null;
 
   return (
@@ -86,7 +86,7 @@ export function ActiveFilterChips({
           />
         )),
       )}
-      {stipend && <Chip label={stipend} onRemove={onClearStipend} />}
+      {pay && <Chip label={pay} onRemove={onClearPay} />}
       {!includeNego && <Chip label="협의 공고 제외" onRemove={() => onIncludeNego(true)} />}
       {housingOnly && <Chip label="사택 제공만" onRemove={onClearHousing} />}
       <button
