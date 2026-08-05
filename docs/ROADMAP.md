@@ -176,6 +176,19 @@
 - [ ] **크롤 대시보드** — 수집 현황·큐 상태 admin 노출
 > 크롤러 **실운영은 법률 검토 완료가 전제**(2026-07-28 확인 완료). 결제(1-8)·페이지 로직 마감(1-9)은 이 트랙과 병행.
 
+### 1-11. 코드 정리 백로그 (전체 감사 2026-08-05 — 즉시 처리분은 이미 반영)
+
+> 전 코드베이스 감사(CLAUDE.md 룰 + 클린코드 + 스타일) 결과. **아키텍처·가드레일·Supabase 규칙·`'use cache'` 제약·PII는 전부 통과**했고, 아래는 남긴 것들이다. 감사가 "즉시"로 꼽은 것(잘못된 도메인 `minjob.kr`, 화면에 노출된 `Phase 1`, 죽은 코드, `mailto` 헬퍼 우회, 문서 캐시 계약)은 **2026-08-05에 처리 완료.**
+
+- [ ] **가격 단일 소스화 — 우선순위 높음.** `constants/domain.ts`가 "가격 단일 소스"라고 선언했는데 `pricing/page.tsx`·`church-view.tsx`에 **가격이 한글 문자열로 8곳 하드코딩**돼 있다. 가격을 바꾸면 요금 페이지·교회 대시보드·**서버 금액 재계산(`api/payments/complete`)** 이 서로 어긋난다. `EXPOSURE_PRODUCTS`에서 파생시킬 것(`promote-checkout.tsx:157`에 이미 선례 있음)
+- [ ] **폼 원시 요소 → `components/ui` 사용.** `pricing/page.tsx` 문의 폼 5개(`<input>`/`<select>`/`<textarea>`)가 `Input`/`NativeSelect`/`Textarea`를 재구현. `verify-form.tsx` 버튼 3개도 `Button` 대신 손으로 조립. `pricing/` 폴더만 `cn()` 대신 템플릿 리터럴 사용(다른 파일은 전부 `cn()`)
+- [ ] **반복 UI 3종 추출** — 탭바(카운트 배지) 3곳 · enum→`<option>` 9곳(+`EnumSelect`/`Select` 경쟁 구현 2개) · `Field`/`Section` 래퍼가 **4벌씩** 따로 존재. `form-section.tsx`의 `Field`가 가장 풍부하니 그걸 `components/ui`로 승격
+- [ ] **`mocks/index.ts`의 `as unknown as`** — 이중 캐스트가 필드 누락을 숨긴다(`qualification`이 101건 중 19건 없음). `as Job[]`만 남기면 검사가 살아난다. **mock→DB 전환 때 함께**
+- [ ] **타입 경계 정리** — env `!` 6개(`requireEnv()` 헬퍼) · 결제 경로의 `as ExposureProduct`(타입 가드로) · admin view의 `as` 11개(`parseEnumParam` 하나로) · `types/domain.ts`의 `?`와 `| null` 혼용 통일
+- [ ] **UI 문체 규칙 확정 후 일괄** — 제품 화면=해요체 / 약관·개인정보=합니다체로 정하고 혼용 정리(`pricing/page.tsx`는 한 답변 안에서 두 문체가 섞여 있다)
+- [ ] **스켈레톤 관용구 통일** — 이름 붙인 `XxxSkeleton`(10곳) vs 인라인 한 줄(3곳). 앞의 것으로 통일(레이아웃 시프트 방지가 원래 목적). 단 `HeaderAccountFallback`의 투명 텍스트 방식은 딥그린 헤더용 **의도된 예외**
+- [ ] **`JobStatus.PENDING` 결론 내기** — 코드가 이 상태를 만드는 곳이 없는데(mock 101건 전부 OPEN/CLOSED) 6곳이 분기하고 화면 문구도 있다. **공고 검수를 실제로 한다면 예비 배선으로 유지**, 안 한다면 union에서 제거 + 문구 정리. ⚠️ SPEC·SNAPSHOT은 "공고 검수 제거(2026-07-21 결정)"로 기록돼 있는데 `pricing`은 "모든 공고 운영자 검수"라고 광고한다 — **둘 중 무엇이 현재 정책인지 확정 필요**
+
 ## Phase 2: 차별화 + 자생 전환
 
 > 일부 기능은 DATA.md의 B 결정(재공고 키·거리·프리미엄 만료)에 의존.
