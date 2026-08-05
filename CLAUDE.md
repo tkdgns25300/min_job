@@ -34,7 +34,7 @@
 | 페이지 | 모드 | 이유 |
 |---|---|---|
 | `/`, `/jobs`, `/jobs/[id]`, `/churches/[id]` | `'use cache'` 데이터 + **◐ PPR** | 공고 데이터는 캐시·모든 방문자 동일 뷰. 단 **헤더 계정 영역이 세션 의존 dynamic hole**이라 문서 응답은 `no-store`(셸은 계속 prerender·엣지 스트리밍) |
-| `/jobs?(검색·필터 쿼리)` | dynamic (`<Suspense>`) | searchParams 의존 — 매번 fresh |
+| `/jobs`의 검색·필터·정렬·페이지 | **서버는 관여 안 함** | 필터는 **100% 클라이언트 상태**(URL은 시드·반영만). 쿼리가 달라도 서버 HTML이 같아서 `/jobs`는 캐시된 전체 카드만 내려준다 → canonical도 `/jobs` 하나. ⚠️ 서버 필터링(지역·직분 랜딩 라우트)을 만들면 이 전제와 canonical을 함께 재검토 |
 | `/admin`, `/admin/jobs`, `/admin/ingest` | `'use cache'` (non-PII read) | 운영자 도구지만 공개·비개인 데이터(공고·교회옵션) — 모든 운영자 동일 뷰. 공개 헤더를 안 써서 ○ Static 유지. **접근 판정은 proxy가 담당** |
 | `/admin/verify` | dynamic (`<Suspense>` + `requireOperator`) | 인증 신청 PII(담당자 연락처) — 캐시 금지 + 페이지에서도 운영자 재확인 |
 | `/login` | dynamic (`<Suspense>`) | `?next=`·`?error=` 의존. 폼은 **서버 렌더**(JS 없이도 제출 동작) |
@@ -89,20 +89,21 @@ src/
 │   │   └── pricing/ about/ terms/ privacy/
 │   ├── (authed)/                  로그인 필요 (proxy 1차 차단 + 페이지 requireUser 최종 방어)
 │   │   ├── layout.tsx             인증 shell — robots noindex를 하위에 상속
-│   │   ├── mypage/                사역자 view · account-actions · actions.ts(signOut)
+│   │   ├── mypage/                사역자 view · minister-activity · account-actions · actions.ts(signOut)
 │   │   │   ├── church/            교회 대시보드 + info/(정보 관리) + promote/(PortOne 노출 결제)
 │   │   │   └── verify/            교회 인증 신청 (온라인 접수 미구현 — 안내 + 운영자 메일)
 │   │   └── jobs/                  job-form·job-wizard 등 등록/수정 공용 + new/ · [id]/edit/
 │   ├── admin/                     운영자 전용 — 접근 판정은 proxy(.env ADMIN_EMAILS)
 │   │   ├── layout.tsx             admin shell (noindex) — 하위 3개는 ○ Static
 │   │   └── page.tsx · jobs/ · ingest/ · verify/(PII — 페이지에서도 requireOperator)
-│   ├── login/                     Google OAuth — page · login-form(서버) · submit-button(client) · actions.ts
+│   ├── login/                     Google OAuth — layout(전용 미니멀 셸) · page ·
+│   │                              login-form(서버) · submit-button(client) · actions.ts
 │   ├── auth/callback/route.ts     OAuth 콜백(code→세션) — "REST 라우트 금지" 예외 ①
 │   ├── api/payments/complete/     결제 검증(PortOne) — 예외 ②
-│   ├── layout.tsx                 root layout (폰트·메타)
+│   ├── layout.tsx · fonts/        root layout (Pretendard self-host · 메타 · metadataBase)
 │   ├── error.tsx · global-error.tsx · not-found.tsx    에러·404 바운더리
-│   ├── globals.css
-│   └── sitemap.ts · robots.ts     SEO — URL 목록은 lib/queries seam에서(DB 전환 무관)
+│   ├── globals.css                디자인 토큰(브랜드 색 단일 소스)
+│   └── sitemap.ts · robots.ts · opengraph-image.tsx    SEO — URL은 lib/queries seam에서(DB 전환 무관)
 ├── components/                    ⚠️ 재사용 UI만 — 도메인 로직 X
 │   ├── ui/                        shadcn 원본 (button·card·input·textarea·native-select·sheet·badge)
 │   ├── layout/                    헤더(계정 영역 포함)·푸터·모바일 네비·법률문서 셸
@@ -137,7 +138,7 @@ src/
 
 ### Page (`app/**/page.tsx`)
 - **조합만** 한다. 로직·데이터 fetching·집계 안 한다.
-- `'use cache'` 페이지: `cacheTag(...)` + `cacheLife(...)` 후 query 함수 호출 → view에 prop 전달
+- **캐시는 페이지가 아니라 query 함수에 있다** — 페이지는 `lib/queries/*`를 `await` 하기만 하고, `'use cache'`+`cacheTag`+`cacheLife`는 그 query 함수 안에 붙인다. 페이지에 직접 붙이지 말 것(데이터 출처를 페이지가 몰라야 mock→DB 전환 때 페이지가 안 바뀐다)
 - dynamic 페이지(검색·admin·authed): `<Suspense>`로 data 컴포넌트 감싸기
 - 동적 segment(`[id]`)는 `generateMetadata` + JSON-LD. 빌드타임 prerender 안 함 — on-demand `'use cache'`로 캐시
 
@@ -203,7 +204,7 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 1. **cached scope 안에서 `cookies()`/`headers()`/`searchParams` 절대 호출 X** — 검색·필터는 dynamic 페이지로
 2. **`new Date()` 등 비결정적 값은 인자로 전달** (캐시 시점에 frozen)
 3. **dynamic 데이터는 `<Suspense>`로 감싸기**
-4. **공고 상세는 on-demand `'use cache'`로 캐시** (빌드타임 prerender X). datePosted 등 시간 표시는 클라이언트에서 계산
+4. **공고 상세는 빌드타임 prerender 안 함** — `generateStaticParams` 없이 `<Suspense>`로 감싼다. **데이터**는 `getJobDetail`의 `'use cache'`+`cacheTag("jobs", "job-<id>")`가 캐시하고, **페이지 셸은 요청마다 렌더**된다(셸까지 캐시하려면 별도 결정 필요). datePosted 등 시간 표시는 클라이언트에서 계산
 
 ## DB Policy
 
@@ -268,7 +269,7 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 1. `npm run build` 통과 (TypeScript + Cache Components 검증)
 2. 미사용 import/변수 없음 · `any` 없음 · 단일 책임
 3. 네이밍만으로 역할 이해 가능
-4. **새 페이지**: cache 페이지는 `'use cache'` + `cacheTag` + `cacheLife`, 검색·인증 페이지는 `<Suspense>`/dynamic. 상세는 `generateMetadata` + JobPosting JSON-LD + sitemap 반영
+4. **새 페이지**: 데이터는 query 함수에서 `'use cache'`+`cacheTag`+`cacheLife`(페이지엔 붙이지 않음), 인증·검색 의존은 `<Suspense>`. 상세는 `generateMetadata` + canonical + JobPosting JSON-LD(모집중만) + sitemap 반영
 5. **새 mutation**: actions.ts 끝에서 `updateTag(resource)`, 영향 태그 모두 invalidate
 6. **DB 접근**: `lib/supabase/{server,service}.ts` 중 적절한 것. 새 클라이언트 X
 7. **가드레일 준수**: 크롤링은 공개 공식 게시판 한정 · 운영자 검수·승격 전 자동 공개 없음 · 요약+출처 링크·opt-out 준수 · 공고 owner nullable · 지원용 공개 연락처만 추출(그 외 개인정보 저장 없음) · 영리 사이트 출처 아님

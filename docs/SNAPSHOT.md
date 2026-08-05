@@ -63,7 +63,7 @@
 | `/mypage/church/promote` 노출 결제 | ✅ | ✅ | ✅ | ✅ `5764fdc` | **PortOne V2 실결제 동작**(KCP 테스트 성공·서버 금액 검증). 실 노출 적용·모바일 redirect 복귀 Phase 1 |
 | `/terms`·`/privacy` | 🟡 초안 보강 | — | ✅ | ✅ `150aa99` | 법률검토·`[ ]`실값 대기 |
 | `/admin` 셸·홈·`/admin/jobs` | ✅ | ✅ | ✅ | ✅ `bcb9e77`+ | mock — 셸(딥그린 사이드바·noindex·**운영자 게이트 적용**: proxy `/admin/**` + `.env ADMIN_EMAILS`, 2026-07-29)·홈(요약 카드+빠른 작업)·공고 관리(탭[전체·모집중·마감]·필터·테이블·노출/수정 Sheet). **공고 검수 제거**(교회 인증이 유일 게이트). mutation Phase 1 |
-| `/admin/verify` 교회 인증 검수 | ✅ | ✅ | ✅ | ✅ `a4599c9` | mock — **유일 검수 게이트**. 탭[검수중·완료·반려·전체]·필터·테이블·승인/반려 Sheet(서류확인+반려사유). **dynamic**(운영자+PII라 `'use cache'` 금지, `connection()`+Suspense). 정렬=대기 우선. 승인/반려 mutation·알림 Phase 1 |
+| `/admin/verify` 교회 인증 검수 | ✅ | ✅ | ✅ | ✅ `a4599c9` | mock — **유일 검수 게이트**. 탭[검수중·완료·반려·전체]·필터·테이블·승인/반려 Sheet(서류확인+반려사유). **dynamic**(운영자+PII라 `'use cache'` 금지 — `<Suspense>` 안 `requireOperator()`가 쿠키를 읽어 dynamic). 정렬=대기 우선. 승인/반려 mutation·알림 Phase 1 |
 | `/admin/ingest` 공고 수집 | ✅ | ✅ | ✅ | ✅ `fdc7c21` | mock — 원문 붙여넣기 → **AI 구조화**(휴리스틱 seam `lib/ingest/structure.ts`) → 프리필 폼 검토 → ‘운영자 등록’(no-op). 교회 datalist 매칭. 이 화면은 **붙여넣기 경로**(크롤러 수집분은 검수 브릿지 §C). 구조화 API(Claude)·실 등록 Phase 1 |
 
 > **완료(mock) 14개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자)·/mypage/verify·/jobs/new·/jobs/[id]/edit·**/mypage/church·/mypage/church/info·/mypage/church/promote**. **단일 계정 + Google OAuth 실 로그인**(§5 인증). **`/mypage/church/promote`는 PortOne 실결제까지 동작**(데이터·실 노출 적용만 Phase 1). **남은 것 = SEO(sitemap/robots) + terms/privacy 법률검토·실값. admin 4페이지(셸·홈·공고관리·인증검수·수집) mock 구현 완료.** (약관·개인정보 초안 보강·사업자정보 반영됨.) 실 mutation·백엔드 = Phase 1.
@@ -140,8 +140,9 @@ DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**
 - `Church`에 **`photos?: string[]`**(첫 장=커버; DATA `church_photos` 1:N 테이블). 기존 `photoUrl` 폐기.
 
 ### seam (`src/lib/queries/*.ts`, `'use cache'`+`cacheTag`+`cacheLife("days")`)
-- `jobs.ts`: getAdJobs·getListJobs·getAllJobCards·**getAdminJobs**(운영자 전체 공고)·**getAdminOverview**(운영자 홈 요약)·getJobStats·getJobDetail·getRepost·getSimilarJobs·getChurchOpenJobs·getSearchSuggestions
-- `churches.ts`: getChurch·getChurchTimeline
+- `jobs.ts`: getAdJobs·getListJobs·getAllJobCards(**모집중만** — sitemap도 이걸 쓴다)·**getAdminJobs**(운영자 전체 공고)·**getAdminOverview**(운영자 홈 요약)·getJobStats·**getCoverageStats**(/about·/pricing 집계)·getJobDetail·getRepost·getSimilarJobs·getChurchOpenJobs·getSearchSuggestions
+- `churches.ts`: getChurch·getChurchTimeline·**getChurchOptions**(교회 id·이름 전체 — admin ingest 매칭 + sitemap URL 소스)
+- `verifications.ts`: getVerifications(교회 인증 신청 목록 — **PII라 `'use cache'` 없음**, `/admin/verify` 전용)
 - `users.ts`(**인증은 실배선**): getCurrentUser(**Supabase Auth `getUser`** + `React.cache`로 요청당 1회 · 실패는 미로그인으로 강등)·getChurchDashboard(church_id 기준, mock)·getEditableJob(mock). (`getOwnedJobs` 폐기, `'use cache'` 없음 — 인증 의존) ⚠️ getCurrentUser는 `churchId`·`churchName`·`churchVerificationStatus`를 **항상 null**로 준다(교회 테이블 도입 후 join) → 교회 기능 전부 닫힘.
 
 ---
@@ -177,7 +178,7 @@ DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**
    - 남은 것: **공고별 OG 이미지**(한글 정적 폰트 ttf/otf 선행 — satori는 woff2 불가 + 번들 500KB 제한) · **지역·직분 랜딩 라우트**(아래 미결 TODO).
    - terms/privacy 법률 검토는 계속 대기. **admin 4페이지** mock 구현 완료(2026-07-21) — 실 등록·검수 처리·구조화 API는 Phase 1.
 7. **Phase 1 (본체) — mock→실 DB = 독립 2트랙**(2026-07-29 정리, ROADMAP Phase 1 노트):
-   - **① 인증(로그인) — ✅ 완료(2026-07-29)**: Supabase Auth **Google OAuth 단독** + `auth/callback` route(PKCE code→세션) + `getCurrentUser` 실배선 + `proxy.ts`(세션 refresh + 1차 차단) + 페이지 `requireUser` + mock-auth·이메일·test 계정 제거. 카카오는 **오픈 전 추가**(provider 켜고 버튼 하나), 네이버 보류. **`users` 테이블 불필요**(`auth.users`가 id·email·이름 제공).
+   - **① 인증(로그인) — ✅ 완료(2026-07-29)**: Supabase Auth **Google OAuth 단독** + `auth/callback` route(PKCE code→세션) + `getCurrentUser` 실배선 + `proxy.ts`(세션 refresh + 1차 차단) + 페이지 `requireUser` + mock-auth·이메일·test 계정 제거. 카카오는 **오픈 전 추가**(provider 켜고 버튼 하나), 네이버 보류. ⚠️ **`users` 테이블은 "로그인용으로만" 불필요했다** — 로그인·세션·이름/이메일은 `auth.users`가 준다(그래서 테이블 0개로 로그인이 돈다). **프로필 테이블 자체는 여전히 필요**하다(`church_id`·`church_verification_status` 둘 곳이 없어 교회 기능이 닫혀 있음, DATA §3 유효).
      - **admin 운영자 게이트 ✅ 완료(2026-07-29)**: `.env` `ADMIN_EMAILS` allowlist — proxy가 익명 307 + 운영자 아니면 `/`로, `/admin/verify`는 페이지에서도 `requireOperator()` 재확인. 목록 비면 아무도 접근 못 함(fail-closed). ⚠️ Vercel env 등록 필요.
      - **남은 인증 작업 1개**: **교회 멤버십** — `getCurrentUser`가 churchId·인증상태를 항상 null로 주어 교회 기능 전체가 닫혀 있다(②트랙에서 교회 테이블과 함께).
    - **② 데이터(공고·교회) — 크롤러 검수브릿지 준비 후**: ⚠️ 핵심은 seam 전환(쉬움)이 아니라 **데이터 유입**(크롤러 승격/교회 등록 mutation/seed). DB 비면 read 전환해도 빈 화면. read+write 도메인별 함께. `lib/queries` mock→DB · mutation `actions.ts` · 계정 북마크 · `/jobs/[id]/edit` 권한=교회 인증 멤버십 · **DATA 정합 패스**(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처) · **노출 결제 마무리**(주문 저장·실 노출 적용·모바일 redirect 복귀·KCP 승인 후 실결제 계약).

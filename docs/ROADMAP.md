@@ -39,7 +39,7 @@
 > 선행: Phase 0의 DB 스키마(=DATA.md) 완료. 동작 명세는 SPEC.md. 여기는 작업 단위.
 
 > **▶ mock→실 DB 전환 = 서로 독립인 2트랙 (2026-07-29 정리, 되돌리지 말 것):**
-> **① 인증(로그인) — ✅ 완료(2026-07-29)**: `mock-auth` 삭제 → Supabase Auth **Google OAuth 단독**. Server Action(`login/actions.ts`) → `auth/callback/route.ts`(PKCE code 교환) → `getCurrentUser`(Supabase `getUser`, `React.cache`) → 세션 refresh·1차 차단은 `proxy.ts`. 이메일 로그인·test 계정 제거, 로그아웃은 Server Action(`signOut`, scope local). **`users` 테이블은 불필요했다** — `auth.users`가 id·email·이름을 제공. 카카오는 **오픈 전 추가**(provider 켜고 버튼 하나 — 타겟층엔 카카오가 더 친숙), 네이버는 Supabase 기본 미지원 → 보류.
+> **① 인증(로그인) — ✅ 완료(2026-07-29)**: `mock-auth` 삭제 → Supabase Auth **Google OAuth 단독**. Server Action(`login/actions.ts`) → `auth/callback/route.ts`(PKCE code 교환) → `getCurrentUser`(Supabase `getUser`, `React.cache`) → 세션 refresh·1차 차단은 `proxy.ts`. 이메일 로그인·test 계정 제거, 로그아웃은 Server Action(`signOut`, scope local). ⚠️ **`users` 테이블은 "로그인용으로는" 불필요했다** — 로그인·세션·이름/이메일은 `auth.users`가 다 준다(그래서 지금 테이블 0개로 로그인이 동작한다). **하지만 프로필 테이블 자체는 여전히 필요하다**: `church_id`·`church_verification_status` 등 교회 멤버십을 담을 곳이 없어서 지금 교회 기능이 전부 닫혀 있다(DATA §3 `users` 명세 유효). 즉 **"불필요"가 아니라 "로그인 단계에선 미뤄도 됐다"**. 카카오는 **오픈 전 추가**(provider 켜고 버튼 하나 — 타겟층엔 카카오가 더 친숙), 네이버는 Supabase 기본 미지원 → 보류.
 > **남은 인증 작업 1개**(admin 운영자 게이트는 2026-07-29 완료): **교회 멤버십** — `getCurrentUser`가 `churchId`/인증상태를 항상 `null`로 주므로 교회 기능 전체가 닫혀 있다(②트랙에서 교회 테이블과 함께).
 > **② 데이터(공고·교회)** — JSON → Supabase 테이블. ⚠️ **핵심은 seam 전환(쉬움 — `lib/queries` 본문만)이 아니라 "데이터 유입"**: (a)크롤러 승격=검수브릿지(크롤러 스키마 확정 후) (b)교회 등록 mutation (c)seed(임시). **DB가 비면 read 전환해도 빈 화면** → 유입이 먼저. read+write는 도메인별로 함께. **실데이터는 크롤러 검수브릿지 준비 후**라, ①(로그인)을 먼저 한다.
 
