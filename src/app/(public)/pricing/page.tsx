@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "공고 노출 안내 | 민잡",
   description:
     "무료로 공고를 올리고, 더 많은 교역자에게 빠르게 닿고 싶을 때만 노출을 더하세요. 프리미엄·대표광고 노출 상품 안내.",
+  alternates: { canonical: "/pricing" },
 };
 
 // 상품 카드 데이터 — 화면 문구(도메인 값 아님)

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description:
     "흩어진 교회 사역자(담임·부목사·전도사) 청빙 공고를 한곳에 모아 교단·지역·사례비로 검색·비교하세요.",
   // 카카오톡 공유가 주 유통 경로라 링크 미리보기가 실제 유입에 영향을 준다.
-  // ⚠️ OG 이미지는 아직 없다 — 미리보기에 그림이 안 뜬다(ROADMAP 1-5).
+  // 이미지·siteName·locale은 SITE_OPEN_GRAPH 한 곳에서 관리한다(그 파일 주석 참조).
   openGraph: { ...SITE_OPEN_GRAPH, type: "website" },
 };
 

@@ -5,6 +5,7 @@ import { businessInfoLines, LEGAL_EFFECTIVE_DATE } from "@/constants/business";
 export const metadata: Metadata = {
   title: "이용약관 | 민잡",
   description: "민잡 서비스 이용약관.",
+  alternates: { canonical: "/terms" },
 };
 
 // ⚠️ 사용자에게는 확정본으로 노출. 정식 운영 전 법률 재검토 예정 — ROADMAP 1-6.

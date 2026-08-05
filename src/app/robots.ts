@@ -15,8 +15,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      // 접두사 일치라 하위 경로까지 함께 막힌다(/mypage, /mypage/church …)
-      disallow: ["/mypage", "/admin", "/login", "/auth", "/api"],
+      // 접두사 일치라 하위 경로까지 함께 막힌다(/mypage, /mypage/church …).
+      // /jobs 자체는 공개이므로 등록·수정만 개별 지정한다(둘 다 (authed) — layout에서 noindex).
+      disallow: ["/mypage", "/admin", "/login", "/auth", "/api", "/jobs/new", "/jobs/*/edit"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

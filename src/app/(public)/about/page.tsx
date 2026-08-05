@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "소개 | 민잡",
   description:
     "민잡은 여러 신학교·교단 게시판에 흩어진 교회 사역자 청빙 공고를 한 곳에 모아, 지역·교단·직분·부서로 찾아볼 수 있게 정리하는 서비스입니다.",
+  alternates: { canonical: "/about" },
 };
 
 // 페이지 카피 — 도메인 값 아님(화면 문구). 유지보수 위해 배열로.
