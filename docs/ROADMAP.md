@@ -85,8 +85,15 @@
 - [x] **OG 이미지**(2026-07-30) — `app/opengraph-image.tsx`로 1200×630 브랜드 카드 생성(딥그린 + 골드 로고 + 도메인). 전 페이지 타입에서 `og:image` 1개씩 확인. `SITE_OPEN_GRAPH.images`로 지정 — ⚠️ openGraph를 재정의하는 상세 페이지는 **파일 기반 이미지도 상속받지 못하기** 때문
   - **제약(실측)**: ImageResponse는 `ttf`·`otf`·`woff`만 지원(우리 폰트는 `PretendardVariable.**woff2**` → 못 씀) + **번들 500KB 제한**. 그래서 ① **한글 미사용**(로고가 영문이라 가능) ② `fontWeight` 무효(기본 폰트 단일 두께)
   - [ ] **공고별 이미지**(제목·교회명 박힌) — 실데이터 후 검토. **한글 정적 폰트(ttf/otf) 확보가 선행**이며 500KB 안에 들어가야 한다(전체 한글 폰트는 초과 → subset 필요). 그때 굵기 문제도 함께 해결됨
-> ⚠️ **Search Console 사이트맵 등록은 실 공고 데이터가 들어온 뒤에.** 코드는 준비됐지만, 등록이 곧 "가짜 공고를 색인해달라"는 요청이 된다. sitemap은 `getAllJobCards()`(모집중만)를 쓰므로 DB 전환 시 자동으로 실 공고가 반영된다 — 파일 수정 불필요.
+- [x] **검수 반영**(2026-08-05) — OG 부속 태그 복구(`type`·`width`·`height`·`alt` — 파일 규약 우회로 사라졌던 것. 카톡·페북은 크기 없으면 첫 스크랩에서 썸네일을 놓친다) + `?v=` 캐시버스터(이미지 교체 시 카톡 캐시 무효화) + `satisfies`로 타입 검증(그냥 객체면 `images` 오타도 컴파일 통과) + 정적 4개 페이지 canonical + robots에 `/jobs/new`·`/jobs/*/edit` 추가 + 도메인 리터럴 `SITE_DOMAIN`으로 통합
+> ⚠️ **Search Console 사이트맵 등록은 실 공고 데이터가 들어온 뒤에.** 코드는 준비됐지만, 등록이 곧 "가짜 공고를 색인해달라"는 요청이 된다. sitemap은 `getAllJobCards()`(모집중만)를 쓰므로 DB 전환 시 자동으로 실 공고가 반영된다 — 파일 수정 불필요(빌드 매니페스트로 확인: sitemap prerender 엔트리에 `jobs`·`churches` 태그가 전파돼 `updateTag("jobs")`가 sitemap도 갱신).
 > 남은 것: 공고가 수만 건이 되면 sitemap 분할(index) · `updated_at` 생기면 `lastModified` 정교화(현재는 `postedAt`).
+
+**▶ SEO 검수에서 남은 미해결 3건 (2026-08-05 · 실데이터 전에 처리)**
+- [ ] **만료된 `OPEN` 공고** — mock 79건 중 **52건이 마감일 경과인데 `status=OPEN`**. 코드가 `status` 하나만 신뢰하므로 실데이터에서 그대로 재현된다 → `validThrough`가 과거인 `JobPosting`을 계속 내보내고, sitemap이 만료 URL을 신선한 콘텐츠로 광고하며, `/jobs`의 "지금 모집 중 N건"도 틀린다. 해법은 페이지가 아니라 **데이터 계층**(만료 OPEN→CLOSED 전환 배치) — cached scope에선 `new Date()`를 못 쓴다
+- [ ] **soft 404** — 없는 공고·교회(`/jobs/nope`)가 **HTTP 200**. PPR 셸이 먼저 나가고 `notFound()`가 `<Suspense>` 안에서 호출되기 때문(proxy 리다이렉트와 같은 제약). 지금은 Next가 `noindex`를 자동 주입해 색인은 막히나, **DB 전환 후 삭제 공고가 404/410 대신 200을 주면** Search Console에 soft 404가 쌓인다. 고치려면 PPR 셸 결정을 되돌려야 함 → 기록만
+- [ ] **지역·직분 랜딩 라우트** — 노리는 키워드는 `"OO지역 전도사 청빙"`인데 **그 키워드를 받을 URL이 없다**(`/jobs?region=SEOUL`은 canonical로 `/jobs`에 흡수). 쿼리 파라미터로 facet SEO를 하려 하지 말고 **전용 라우트**(`/jobs/region/seoul` 등 자체 H1·title·canonical)를 만드는 것이 정답. ⚠️ 그때 `/jobs`의 canonical도 재검토
+- [ ] 저비용 보강 후보: 공고 상세 `BreadcrumbList` JSON-LD · root `Organization` JSON-LD(`constants/business.ts`에 재료 있음) · `JobPosting.identifier`
 
 ### 1-6. 신뢰·법적 페이지
 - [x] 소개 (`/about`) — 정적, footer 전용 (mock 단계 완료)

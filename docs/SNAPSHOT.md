@@ -2,17 +2,19 @@
 
 > **이 문서 하나로 "지금 상황" 파악.** 역할 분리: [`CLAUDE.md`](../CLAUDE.md)(HOW·아키텍처·가드레일), [`SPEC.md`](./SPEC.md)(페이지 명세), [`ROADMAP.md`](./ROADMAP.md)(작업 단위), [`DATA.md`](./DATA.md)(데이터), [`INTERVIEWS.md`](./INTERVIEWS.md)(인터뷰).
 >
-> **작성 시점**: 2026-07-21 · **HEAD**: 이 스냅샷 커밋 (직전 코드 = `9dc1f16` /ship 커맨드 · `4a0fcab` church 사이드바 pricing 링크) · **dev = prod = origin**(2026-07-21 기준 — 2026-07-29 현재 dev 작업 트리에 미커밋 변경 有) · 🔗 도메인: https://www.minjob.co.kr (연결·SSL, mock 데이터) · min-job.vercel.app
+> **작성 시점**: 2026-08-05 · **HEAD**: 이 스냅샷 커밋 · ⚠️ **dev ≠ prod** — 로그인 실전환·SEO가 모두 `dev`에만 있다(직전 코드 = `b42ffc7`). **`prod`는 `4d0d1aa`에 고정**(KCP 심사 보호 — 아래 ▶ 참조) · 🔗 도메인: https://www.minjob.co.kr (연결·SSL / **prod에 배포된 것은 여전히 mock 데이터 + mock 로그인**)
 >
 > ▶ **2026-07-28 방향 전환**: 크롤러 도입(min_job_agent) + **개교회 채용**으로 범위 확장 (§0 한 문장 요약·§0 완료도·§6 방향 전환 기록).
 >
-> ▶ **2026-07-29 로그인 실전환**: mock 세션(`mj_session`) → **Supabase Auth Google OAuth**(§5 인증·§7 ①·§8). ⚠️ **아직 미커밋**(dev 작업 트리) · **prod 배포 보류** — KCP 심사에 기재한 계정 `test1@test.com`이 사라지고 결제창 경로에 도달할 수 없다(ROADMAP 1-8·8).
+> ▶ **2026-07-29 로그인 실전환**: mock 세션(`mj_session`) → **Supabase Auth Google OAuth** + 운영자 게이트(§5 인증·§7 ①·§8). **dev에 커밋 완료**(6커밋) · 🚨 **prod 배포 보류** — KCP 심사에 기재한 계정 `test1@test.com`이 사라지고 결제창 경로에 도달할 수 없다(ROADMAP 1-8·8).
+>
+> ▶ **2026-08-05 SEO 마감**: `sitemap.xml`·`robots.txt`·canonical·OG(이미지 포함) 완료(§7 6·§8 SEO). **dev에 커밋 완료.** 남은 것 = **Search Console 사이트맵 등록**(실데이터 후 — 등록이 곧 "가짜 공고 색인 요청") · **공고별 OG 이미지**(한글 정적 폰트 선행).
 
 ---
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**(→ **개교회 채용**으로 범위 확장: 사역직+일반직, 2026-07-28)를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + Supabase Auth Google OAuth 실 로그인 동작**(2026-07-29 — mock 세션·test 계정 폐기), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃(Server Action)·회원탈퇴 안내는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** 남은 것: SEO + terms/privacy 법률검토 + **교회 멤버십**(admin 4페이지 mock 완료 · 운영자 게이트는 2026-07-29 완료). **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 카드사 등록신청 제출(심사 3~15일 대기, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **KCP 심사 승인 대기** + Phase 1(admin 4페이지 mock 완료)(§7). **인증(로그인)만 실배선 완료**(2026-07-29), 나머지 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용·실카드결제(승인 후)는 Phase 1.
+흩어진 교회 **사역자 청빙 공고**(→ **개교회 채용**으로 범위 확장: 사역직+일반직, 2026-07-28)를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + Supabase Auth Google OAuth 실 로그인 동작**(2026-07-29 — mock 세션·test 계정 폐기), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃(Server Action)·회원탈퇴 안내는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** **✅ SEO 마감(2026-08-05)**: sitemap·robots·canonical·OG 이미지. 남은 것: terms/privacy 법률검토 + **교회 멤버십**(admin 4페이지 mock 완료 · 운영자 게이트는 2026-07-29 완료). **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 카드사 등록신청 제출(심사 3~15일 대기, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **KCP 심사 승인 대기** + Phase 1(admin 4페이지 mock 완료)(§7). **인증(로그인)만 실배선 완료**(2026-07-29), 나머지 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용·실카드결제(승인 후)는 Phase 1.
 
 > **▶ 방향 전환(2026-07-28, 법률 검토 완료)**: 자매 프로젝트 **min_job_agent 크롤러 도입 확정** — 데이터 수집을 사람 수집에서 **공개 공식 게시판 자동 수집 → AI 구조화 → 검수 큐(`review_data`) → 운영자 승격**으로 전환. 제품 범위도 **개교회 채용(사역직 MINISTRY + 일반직 GENERAL)**으로 확장. 가드레일 #1·#3 재정의. min_job 쪽 싱크(문서·코드·검수 브릿지)는 Phase로 진행(ROADMAP 1-10). 정본 = **CRAWLER_HANDOFF.md + min_job_agent/docs**.
 
@@ -31,7 +33,7 @@
 | 백엔드(Supabase 실사용) | ~15% | **Auth(Google OAuth)·운영자 게이트 완료(2026-07-29)**. 스키마·mutation·`lib/queries` mock→DB + **교회 멤버십** 잔여 (Phase 1, **최대 덩어리**) |
 | 데이터(실 공고·구조화) | ~5% | 실 공고 0·Claude 구조화 미연동 (다른 세션) |
 | 크롤러 연동(min_job_agent) | ~0% | **방향 전환 확정·문서 싱크 중** — 코드·enum·검수 브릿지 미착수 (정본=CRAWLER_HANDOFF.md) |
-| SEO | ~90% | **sitemap·robots·canonical·metadataBase·OG(이미지 포함) 완료(2026-07-30)**. 남은 것 = 실데이터 후 Search Console 등록 · 공고별 OG 이미지(한글 폰트 선행) · 유입 측정 |
+| SEO | ~80% (기술 마감 O, **유입 설계 X**) | **기술 요소 완료(2026-08-05)**: sitemap·robots·canonical·metadataBase·OG(이미지 포함)·JobPosting. 남은 것 = **지역·직분 랜딩 라우트**(노리는 키워드 `"OO지역 전도사 청빙"`를 받을 URL이 아직 없다 — §7 미해결 3) · 실데이터 후 Search Console 등록 · 공고별 OG 이미지(한글 폰트 선행) · 유입 측정 |
 | 법률/행정 | ~50% | 약관 법률검토 전 (사업자등록·통신판매 면제 O) |
 
 > 격차의 정체: **"보이는 절반"(디자인·인프라·결제 UI)은 무겁게 됐고, "안 보이는 심장"(백엔드·데이터·실동작)이 남았다.** "완료(mock)"에 안심하지 말 것(§1 범례 참조).
@@ -51,7 +53,7 @@
 | `/churches/[id]` 교회 상세 | ✅ | ✅ | ✅ | ✅ `e586fe0`·`38e6432`·`e1efa16` | mock |
 | `/about` 소개 | ✅ | ✅ | ✅ | ✅ `f787c3d` | 정적(+실집계) |
 | `/pricing` 노출 안내 | ✅ | ✅ | ✅ | ✅ `e35fcb8`·`59c7aa6`·`a0d4cdd` | 정적(+실집계) |
-| `/login` | ✅ | ✅ | ✅ | ✅ `c517faf` (+실 인증 전환 미커밋) | **Google OAuth 실 로그인**(2026-07-29 — 서버 렌더 폼·`?next=` 복귀·`?error=oauth`) |
+| `/login` | ✅ | ✅ | ✅ | ✅ `c517faf`·`a79692d` | **Google OAuth 실 로그인**(2026-07-29 — 서버 렌더 폼·`?next=` 복귀·`?error=oauth`) |
 | `/mypage` 사역자 view | ✅ | ✅ | ✅ | ✅ `8ded8d3`·`84d6b36` | mock(북마크·최근본 localStorage) + 하단 교회 CTA·계정(로그아웃 **실동작**·회원탈퇴 안내) |
 | `/mypage/verify` 교회 인증 폼 | ✅ | ✅ | ✅ | ✅ `8ded8d3` | mock UI(none/PENDING/APPROVED). REJECTED 화면·이메일발송 Phase 1 |
 | `/jobs/new` 공고 등록 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | **3스텝 위저드** mock + **인증 게이트**(hasChurchAccess). 저장 Phase 1 |
@@ -108,6 +110,17 @@ npx prettier --check <file>   # 포맷
 ⚠️ **로그인 테스트는 `npm run dev`로.** 세션 쿠키가 `secure`(production)라 로컬에서 `next start`를 http로 띄우면 로그인이 끝까지 진행되지 않는다.
 **확인 URL(mock)**: `/jobs`(공고 100·필터·정렬·페이지당) · `/jobs/job-010`(재공고 3회·유초등부) · `/jobs/job-004`(owned·제출서류 긴 것) · `/jobs/job-054`(CLOSED 배너) · `/churches/ch-saesomang`(재공고).
 
+**SEO 확인**(빌드 후 `npx next start`):
+```bash
+curl -s localhost:3000/robots.txt                       # 차단 목록 + Sitemap 줄
+curl -s localhost:3000/sitemap.xml | grep -c '<url>'    # 120 (정적 6 + 모집중 공고 + 교회 35)
+curl -s localhost:3000/jobs'?region=SEOUL&page=2' | grep canonical   # → /jobs 로 고정
+curl -s localhost:3000/jobs/job-054 | grep -c ld+json   # 0 (마감 공고엔 JobPosting 없음)
+curl -s localhost:3000/jobs/job-001 | grep -o 'og:image[:a-z]*'      # url·type·width·height·alt 5개
+curl -sI localhost:3000/opengraph-image                 # image/png 1200x630
+```
+⚠️ **인증 게이트 확인은 `next start`로** — proxy 307은 프로덕션 빌드에서만 정확히 재현된다.
+
 ---
 
 ## 5. 데이터 (mock 스키마 = 확정 진행 중)
@@ -157,18 +170,31 @@ DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**
 3. ✅ **PortOne 노출 결제 flow 구현·검증(2026-07-20, `5764fdc`)** — `/mypage/church/promote`(인증 게이트) → `promote-checkout.tsx`(client)에서 **PortOne V2 `requestPayment`**(KCP CARD 채널) 결제창 → 성공 시 `POST /api/payments/complete`가 **PortOne API로 실결제 조회 + 금액 서버 재계산(tier·weeks, 클라 불신) + `status===PAID` 대조**. 가격 단일 소스 = `EXPOSURE_PRODUCTS`/`exposurePrice`(constants). **KCP 테스트 결제 성공 확인.** env: `NEXT_PUBLIC_PORTONE_STORE_ID`·`_CHANNEL_KEY`·`PORTONE_API_SECRET`. ⚠️ paymentId 38자(KCP 40자 제한). ⚠️ **모바일 redirect 복귀 미처리** — 데스크톱 팝업(Promise)만 완료 화면·서버검증. 모바일 `?paymentId=` 복귀 처리 = Phase 1. 실 노출 적용(featured_tier·featured_until 세팅)·주문 저장도 Phase 1.
 4. ✅ **도메인 연결 + NHN KCP 전자결제 신청 제출(2026-07-20)** — 도메인 `minjob.co.kr` → Vercel(hosting.kr DNS: A `@`→216.198.79.1 + CNAME `www`→Vercel 전용, 대표=`www.minjob.co.kr`, SSL 자동). PortOne 전자결제 신청 **사전점검 6항목 통과**(URL=`https://www.minjob.co.kr`, 전화번호 반영으로 사업자정보 통과) → **가맹 심사 진행중**. **PG 결정: NHN KCP·신용카드 일반결제 단일 채널**(KPN·정기결제·간편결제·본인인증 미사용 — ROADMAP 1-8 PG결정). ⚠️ 승인 후: 실연동 채널(KCP) 키를 `_CHANNEL_KEY`에 교체 + 일반결제 계약 활성.
 5. ✅ **PG-API·실연동 채널 전환 + 카드사 등록신청 제출(2026-07-21)** — KCP PG-API(개인키+서비스 인증서) 발급 → PortOne **실연동** 채널 "MinJob NHN KCP"(`kcp_v2`·사이트코드 IP94F·PG-API 인증서/개인키) → 채널 키 `channel-key-bc781263-…`를 `_CHANNEL_KEY`(로컬 `.env` + Vercel)에 교체·재배포(STORE_ID·`PORTONE_API_SECRET` 불변). 라이브 결제창 = 실연동. **`partner.kcp.co.kr` 카드사 등록신청 제출 → 심사 3~15일 대기**(승인 시 실카드결제). 문의내용: test1 계정 + 결제창 경로(`/mypage/church/promote`) + 통신판매 면제 사유. ⚠️ **심사 중 URL·하단 사업자정보·상품/가격 변경 금지.** 🚨 **2026-07-29 충돌**: 실 로그인 전환으로 심사에 기재한 `test1@test.com`이 없어지고 교회 인증상태가 항상 null이라 결제창 경로에 도달할 수 없다 → **로그인 전환은 `dev`에만 두고 prod는 심사 통과까지 현행 유지**(선행: 교회 멤버십 배선 또는 심사자용 임시 접근 경로. 배포 시 KCP에 계정·경로 변경 선안내). ROADMAP 1-8·8.
-6. **나중 (실데이터·정식 오픈 즈음)**: **SEO**(`sitemap.ts`·`robots.ts` — 지금은 mock이라 오히려 색인 방지가 맞아 defer, 배포 시 필요하면 noindex 1줄만) · terms/privacy 법률 검토. **admin 4페이지**(셸·홈·`/admin/jobs`·`/admin/verify`·`/admin/ingest`) mock 구현 완료 2026-07-21 — 실 등록·검수 처리·구조화 API는 Phase 1.
+6. ✅ **SEO 마감(2026-08-05)** — 이전 "실데이터 즈음으로 defer" 결정을 **뒤집었다**: sitemap이 `lib/queries` seam에서 URL을 읽으므로 **DB 전환 시 재작업 0**이라, 미리 해두는 게 손해가 없다고 판단.
+   - `sitemap.ts`(정적 6 + 모집중 공고 + 교회 = 현재 120 URL) · `robots.ts`(공개 허용 / `/mypage`·`/admin`·`/login`·`/auth`·`/api`·`/jobs/new`·`/jobs/*/edit` 차단) · `metadataBase`(`constants/site.ts`) · **canonical 전 공개 페이지** · OG 공통값 + **OG 이미지**(`app/opengraph-image.tsx` 브랜드 카드).
+   - **고친 색인 결함 4개**: ① `/jobs` 필터·정렬·페이지 쿼리 조합이 각각 색인될 수 있던 것 → canonical 고정 ② 마감 공고에도 `JobPosting` 출력 → **모집중일 때만** ③ `/jobs`가 홈과 title 중복 → 검색용 title 부여 ④ openGraph를 재정의한 상세 페이지가 `og:image`·`site_name`을 잃던 것 → `SITE_OPEN_GRAPH` 공유.
+   - ⚠️ **Search Console 등록은 실데이터 후.** 코드는 준비됐지만 등록이 곧 "가짜 공고를 색인해달라"는 요청이다.
+   - 남은 것: **공고별 OG 이미지**(한글 정적 폰트 ttf/otf 선행 — satori는 woff2 불가 + 번들 500KB 제한) · **지역·직분 랜딩 라우트**(아래 미결 TODO).
+   - terms/privacy 법률 검토는 계속 대기. **admin 4페이지** mock 구현 완료(2026-07-21) — 실 등록·검수 처리·구조화 API는 Phase 1.
 7. **Phase 1 (본체) — mock→실 DB = 독립 2트랙**(2026-07-29 정리, ROADMAP Phase 1 노트):
    - **① 인증(로그인) — ✅ 완료(2026-07-29)**: Supabase Auth **Google OAuth 단독** + `auth/callback` route(PKCE code→세션) + `getCurrentUser` 실배선 + `proxy.ts`(세션 refresh + 1차 차단) + 페이지 `requireUser` + mock-auth·이메일·test 계정 제거. 카카오는 **오픈 전 추가**(provider 켜고 버튼 하나), 네이버 보류. **`users` 테이블 불필요**(`auth.users`가 id·email·이름 제공).
      - **admin 운영자 게이트 ✅ 완료(2026-07-29)**: `.env` `ADMIN_EMAILS` allowlist — proxy가 익명 307 + 운영자 아니면 `/`로, `/admin/verify`는 페이지에서도 `requireOperator()` 재확인. 목록 비면 아무도 접근 못 함(fail-closed). ⚠️ Vercel env 등록 필요.
      - **남은 인증 작업 1개**: **교회 멤버십** — `getCurrentUser`가 churchId·인증상태를 항상 null로 주어 교회 기능 전체가 닫혀 있다(②트랙에서 교회 테이블과 함께).
    - **② 데이터(공고·교회) — 크롤러 검수브릿지 준비 후**: ⚠️ 핵심은 seam 전환(쉬움)이 아니라 **데이터 유입**(크롤러 승격/교회 등록 mutation/seed). DB 비면 read 전환해도 빈 화면. read+write 도메인별 함께. `lib/queries` mock→DB · mutation `actions.ts` · 계정 북마크 · `/jobs/[id]/edit` 권한=교회 인증 멤버십 · **DATA 정합 패스**(모집인원·부임시기·전형절차·접수방법·서류 필수여부·사택 협의·교회 소개·대표 연락처) · **노출 결제 마무리**(주문 저장·실 노출 적용·모바일 redirect 복귀·KCP 승인 후 실결제 계약).
 > ✅ **완료(2026-07-14)**: `/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터).
-> **결정(2026-07-14)**: 배포 먼저(mock) → Supabase는 "연결만"(데이터 mock 유지) → SEO는 나중. Supabase/배포는 서로 독립이라 DB 먼저 할 필요 없음.
+> **결정(2026-07-14)**: 배포 먼저(mock) → Supabase는 "연결만"(데이터 mock 유지) → ~~SEO는 나중~~. Supabase/배포는 서로 독립이라 DB 먼저 할 필요 없음.
+> └ **2026-08-05 정정**: "SEO는 나중"은 **뒤집혔다** — sitemap이 seam에서 URL을 읽어 DB 전환 시 재작업이 0이므로 미리 해도 손해가 없다. 단 **Search Console 등록만** 실데이터 후로 미룬다(§7 6).
 > **온보딩 결정(2026-07-12)**: 가입 시 프로필 모달 없음 — 이름=SNS 닉네임/이메일 가입폼, 직분은 안 받음(인재 프로필 Phase 3), 담당자 정보=교회 인증 폼에서. 구직자 관심교회·알림 = Phase 2.
 > **시안 위치**: 이번 세션 확정 시안은 `docs/mockups/`에 커밋됨(스크래치패드는 기기 간 동기화 안 됨). 그 외 과거 시안은 로컬 scratchpad에만 존재.
 
-**미결 TODO**(코드에 표시): 정렬 "사례비순"(인터뷰 "세상적") 유지/축소 · 필터↔URL 동기화 시점 · 부서 세분화(ROADMAP 1-7) · CLOSED 공고 JSON-LD 제거 여부 · 아이콘 제거 범위(홈·목록의 지역핀·검색 돋보기도 뺄지).
+**미결 TODO**(코드에 표시): 정렬 "사례비순"(인터뷰 "세상적") 유지/축소 · 필터↔URL 동기화 시점 · 부서 세분화(ROADMAP 1-7) · 아이콘 제거 범위(홈·목록의 지역핀·검색 돋보기도 뺄지).
+> ~~CLOSED 공고 JSON-LD 제거 여부~~ → **결정(2026-08-05): 제거.** 구글이 마감 공고의 구조화 데이터 제거를 권장하고, `validThrough`만 믿으면 "마감일 없이 조기 마감"·"마감일 미래인데 마감" 공고가 모집중으로 노출된다. `status === "OPEN"`일 때만 출력.
+
+**▶ SEO 검수에서 나온 미해결 3건 (2026-08-05 — 실데이터 전에 처리)**
+1. **만료된 `OPEN` 공고** — mock 79건 중 **52건이 마감일 경과인데 status=OPEN**. 코드가 `status` 하나만 믿으므로 실데이터에서 그대로 재현된다 → `validThrough`가 과거인 `JobPosting`을 계속 내보내고 sitemap이 만료 URL을 신선한 콘텐츠로 광고하며 `/jobs`의 "지금 모집 중 N건"도 틀린다. 해법은 페이지가 아니라 **데이터 계층**(만료 OPEN→CLOSED 전환 배치) — cached scope에선 `new Date()`를 쓸 수 없다.
+2. **soft 404** — 없는 공고·교회(`/jobs/nope`)가 **HTTP 200**을 준다. PPR 셸이 먼저 나가고 `notFound()`가 `<Suspense>` 안에서 호출되기 때문(proxy 리다이렉트와 같은 제약). 지금은 Next가 `noindex`를 자동 주입해 색인은 막히지만, **DB 전환 후 삭제된 공고가 404/410 대신 200을 주면** Search Console에 soft 404가 쌓인다. 고치려면 PPR 셸 결정을 되돌려야 하므로 **일단 기록**.
+3. **지역·직분 랜딩 라우트 부재** — CLAUDE.md가 노리는 키워드는 `"OO지역 전도사 청빙"`인데 **그 키워드를 받을 URL이 없다**(`/jobs?region=SEOUL`은 canonical로 `/jobs`에 흡수). 쿼리 파라미터로 facet SEO를 하려 하지 말고 **전용 라우트**(`/jobs/region/seoul` 등, 자체 H1·title·canonical)를 만드는 것이 정답. "SEO 90%"는 이 부재를 감춘 수치다.
+> 그 외 저비용 보강 후보: 공고 상세 `BreadcrumbList` JSON-LD · root `Organization` JSON-LD(`constants/business.ts`에 재료 이미 있음) · `JobPosting.identifier`.
 
 ---
 
@@ -177,10 +203,11 @@ DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**
 - **Next.js 16.2.9**(App Router, `cacheComponents:true`) · **React 19** · **TS strict** · **Tailwind v4** · **shadcn/ui(Base UI)** · **Pretendard** · **Supabase = Auth만 실사용**(2026-07-29 · 데이터는 계속 mock, DB 전환은 Phase 1).
 - 색 = **딥그린+골드**(`globals.css` 토큰). 아이콘 = lucide(최소 사용).
 - 레이어: `page.tsx`=조합 / `*-view.tsx`=프레젠테이션(기본 서버) / `lib/queries/*`=데이터 seam(mock↔DB 본문만 교체) / `components/**`=재사용 UI.
-- 캐시(빌드 출력, 2026-07-29 측정): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/terms·/privacy = **`◐ PPR`**(이전 `○ Static`에서 바뀜 — 헤더 계정 영역이 세션을 읽는 dynamic hole이라 셸은 계속 prerender되지만 문서 응답은 `no-store`) · `/login`·인증(/mypage·/mypage/church·/jobs/new·edit) = `◐` · **`/admin`·`/admin/jobs`·`/admin/ingest`는 `○ Static` 유지**(admin 셸에 공개 헤더가 없음) · `/auth/callback`·`/api/payments/complete` = `ƒ` · `ƒ Proxy` 존재. 공고 데이터 자체는 계속 `'use cache'`+`cacheTag`+`cacheLife`.
+- 캐시(빌드 출력, 2026-07-29 측정): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/terms·/privacy = **`◐ PPR`**(이전 `○ Static`에서 바뀜 — 헤더 계정 영역이 세션을 읽는 dynamic hole이라 셸은 계속 prerender되지만 문서 응답은 `no-store`) · `/login`·인증(/mypage·/mypage/church·/jobs/new·edit) = `◐` · **`/admin`·`/admin/jobs`·`/admin/ingest`는 `○ Static` 유지**(admin 셸에 공개 헤더가 없음) · `/auth/callback`·`/api/payments/complete`·`/opengraph-image` = `ƒ` · **`/sitemap.xml`·`/robots.txt` = `○ Static`**(sitemap은 `cacheLife("days")`에서 온 `1d/1w` revalidate) · `ƒ Proxy` 존재. 공고 데이터 자체는 계속 `'use cache'`+`cacheTag`+`cacheLife`.
 - **실 인증(2026-07-29)**: Supabase Auth **Google OAuth 단독**. 흐름 = 서버 렌더 `<form action={signInWithGoogle}>`(JS 없이도 동작) → Server Action이 **Origin 헤더로 `redirectTo` 구성** → Supabase → 구글 → `app/auth/callback/route.ts`가 PKCE code를 세션으로 교환 → `next`로 **상대 경로 303**. `?next=`는 왕복 내내 유지되고 `safeInternalPath`가 오픈 리다이렉트를 막으며, 실패는 `?error=oauth`(+`next` 보존)로 돌린다. 세션 쿠키 = `httpOnly`+`secure`(배포)+`sameSite=lax`. 서버는 `getCurrentUser`(Supabase `getUser`) 사용 · 헤더 계정 영역은 **`<Suspense>` 안의 서버 컴포넌트**(`HeaderAccount`+`HeaderAccountFallback`) — 쿠키가 httpOnly라 client island로는 못 읽는다. 권한 파생 = `lib/auth.hasChurchAccess`(교회 테이블 전까지 항상 false).
 - **인증 2단 방어**: `proxy.ts`가 ① 세션 refresh ② `/mypage/**`·`/jobs/new`·`/jobs/[id]/edit`·**`/admin/**`** 비로그인 **1차 307 차단** ③ `/admin/**`은 로그인해도 운영자(`.env ADMIN_EMAILS`)가 아니면 `/`로 리다이렉트. 최종 권한 판단은 각 페이지의 `requireUser()`·`requireOperator()`(`lib/auth-guard.ts`, **인자 없음** — 복귀 경로는 proxy가 `x-pathname` 요청 헤더로 넘긴다)가 한다. 이유: cacheComponents에선 uncached read(쿠키)가 `<Suspense>` 안이어야 해서 페이지 안 redirect가 진짜 307이 아니라 **스트림 데이터(HTTP 200 + 스켈레톤)**로 나간다. ⚠️ `/admin`·`/admin/jobs`·`/admin/ingest`는 `○ Static` 유지 목적상 **페이지 게이트가 없어 proxy 판정에만 의존** → proxy는 Auth 장애 시에도 admin만은 fail-closed로 막는다.
-- ⚠️ `lib/supabase/*`·`proxy.ts`(+`lib/supabase/cookie-options.ts`·`lib/auth-guard.ts`·`login/actions.ts`·`mypage/actions.ts`)는 **존재**한다(2026-07-29). 아직 없는 것 = `types/database.ts`·공고/교회 mutation `actions.ts`. `lib/ingest/structure.ts`는 **mock 휴리스틱으로 존재**(Phase 1엔 Claude API Server Action).
+- **SEO(2026-08-05)**: `app/sitemap.ts`가 **`lib/queries` seam에서 URL을 읽는다** → mock→DB 전환 시 파일 무수정(빌드 매니페스트로 확인: sitemap prerender 엔트리에 `jobs`·`churches` 태그가 전파돼 `updateTag("jobs")`가 sitemap도 갱신한다. 태그가 실패해도 `1d` revalidate가 안전망). 모집중 공고만 실음(구글 권장). `app/robots.ts`는 공개 허용 + 인증·운영자·API·공고등록/수정 차단. canonical = 전 공개 페이지(홈·`/jobs`·정적 4개·상세 2종). OG = `constants/site.ts` `SITE_OPEN_GRAPH`(siteName·locale·이미지 url/type/width/height/alt + `?v=` 캐시버스터) — ⚠️ **Next는 `openGraph`를 통째로 교체**하므로 openGraph를 재정의하는 페이지는 이 상수를 반드시 펼쳐 써야 한다. OG 이미지는 `app/opengraph-image.tsx`(브랜드 카드, **한글 미사용** — satori가 woff2·가변폰트 불가 + 번들 500KB 제한).
+- ⚠️ `lib/supabase/*`·`proxy.ts`(+`lib/supabase/cookie-options.ts`·`lib/auth-guard.ts`·`lib/operator.ts`·`login/actions.ts`·`mypage/actions.ts`·`app/sitemap.ts`·`app/robots.ts`·`app/opengraph-image.tsx`·`constants/site.ts`)는 **존재**한다. 아직 없는 것 = `types/database.ts`·공고/교회 mutation `actions.ts`. `lib/ingest/structure.ts`는 **mock 휴리스틱으로 존재**(Phase 1엔 Claude API Server Action).
 
 ---
 
