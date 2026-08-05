@@ -23,7 +23,7 @@
 | enum | 컬럼 | 허용값(key) |
 |---|---|---|
 | **denomination** (교단) | `churches.denomination` | HAPDONG · TONGHAP · BAEKSEOK · GOSIN · HAPSIN · GAMLI · SEONGGYUL · BAPTIST · SUNBOK · ETC · `NULL`(=미상·무소속) (10키 = 9대형 + 기타. **기장=ETC** — 미상을 ETC에 넣지 말 것) |
-| **region** (광역) | `churches.region` | SEOUL · GYEONGGI · INCHEON · GANGWON · CHUNGBUK · CHUNGNAM · DAEJEON · SEJONG · GYEONGBUK · GYEONGNAM · DAEGU · ULSAN · BUSAN · JEONBUK · JEONNAM · GWANGJU · JEJU · OVERSEAS |
+| **region** (광역) | `churches.region` | SEOUL · GYEONGGI · INCHEON · GANGWON · CHUNGBUK · CHUNGNAM · DAEJEON · SEJONG · GYEONGBUK · GYEONGNAM · DAEGU · ULSAN · BUSAN · JEONBUK · JEONNAM · GWANGJU · JEJU · OVERSEAS · `NULL`(=미상, 원문 명시 81%) |
 | **church_channel** (채널) | `church_links.type` | HOMEPAGE · YOUTUBE · INSTAGRAM · FACEBOOK · BAND · ETC(기타) |
 | **job_kind** (직군) | `jobs.job_kind` | MINISTRY(사역직) · GENERAL(일반직) — 개교회 채용 구분 |
 | **position** (직분) | `jobs.position` | SENIOR_PASTOR · ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC (사역직 MINISTRY만 · GENERAL은 NULL — XOR CHECK로 강제) |
@@ -52,7 +52,7 @@
 | `id` | uuid PK, `gen_random_uuid()` | |
 | `name` | text NOT NULL | 교회명 |
 | `denomination` | text **NULL** (CHECK) | 교단. **NULL = 미상 또는 무소속·독립교회.** `ETC`와 구분할 것 — `ETC`는 "소속은 있고 우리 9키에 없는 교단"(기장 등)이라 미상을 섞으면 필터·거점 판정이 오염된다 |
-| `region` | text NOT NULL (CHECK) | 광역 (필터). **NOT NULL 유지** — 교회는 반드시 어딘가에 물리적으로 있고, 지역 없는 공고는 구직자 1순위 필터(통근)에서 안 걸려 목록에 있으나 마나다 |
+| `region` | text **NULL** (CHECK) | 광역 (필터). **NULL = 미상** (실측 원문 명시 81%). ⚠️ NULL이면 **지역 필터에서 무조건 탈락**해 사실상 안 보이는 공고가 된다 — 검수에서 교단보다 먼저 채울 값 |
 | `city` | text NULL | 시·군·구 (표시용 자유 텍스트) |
 | `founded_year` | int NULL | 창립 연도 |
 | `created_at` | timestamptz DEFAULT now() | |
@@ -116,7 +116,7 @@
 | `description` | text **NOT NULL** | 본문(운영자 요약 or 교회 작성 — 원문 통째 복제 X). **요약이 없으면 출처 링크만 있는 빈 껍데기**가 되어 가드레일 #1("요약 + 출처 링크")과 제품의 존재 이유를 부정한다 |
 | `featured_tier` | text NOT NULL DEFAULT 'NONE' (CHECK) | 노출 등급 — **현재 유효 노출의 비정규화 캐시**(원장은 `job_promotions`). 결제 완료 Server Action이 쓴다 |
 | `featured_until` | date NULL | 노출 만료일 — 〃. 만료 판정은 `today` 인자로(§3 노출 모델) |
-| `posted_at` | date NOT NULL | 등록일 |
+| `posted_at` | date **NULL** | 게시일. **NULL = 미상**(PCKWORLD 60건 — 게시판이 날짜를 안 준다). `fetched_at`으로 대체 금지(틀린 날짜 공개). ⚠️ **JSON-LD 생략 + 정렬 폴백 필수** — 위 최소 조건 절의 ⚠️ 3가지 |
 | `deadline` | date NULL | 마감(NULL=상시모집) |
 | `created_at` | timestamptz DEFAULT now() | |
 | `updated_at` | timestamptz DEFAULT now() | Server Action에서 갱신 |
@@ -129,36 +129,53 @@
 CHECK ( (job_kind = 'MINISTRY' AND position IS NOT NULL AND role     IS NULL)
      OR (job_kind = 'GENERAL'  AND role     IS NOT NULL AND position IS NULL) )
 
--- ② 지원 경로 최소 1개 — 지원할 방법이 없는 공고는 공고가 아니다.
-CHECK ( source_url   IS NOT NULL OR contact_email IS NOT NULL
-     OR contact_tel  IS NOT NULL OR contact_link  IS NOT NULL
-     OR contact_post IS NOT NULL )
+-- ② 연락처 최소 1개 — "어디로 지원하나"를 알 수 없는 공고는 공개할 값이 없다.
+--    ⚠️ source_url은 세지 않는다 (아래 근거)
+CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
+     OR contact_link  IS NOT NULL OR contact_post IS NOT NULL )
 ```
 
-②가 **두 수집 경로에서 각각 다른 일을 한다**: 크롤링 공고는 `source_url`이 항상 있어 자동 통과하고, **교회 직접 등록은 `source_url`이 NULL이라 연락처를 반드시 받게** 된다. 연락처를 별도 테이블로 쪼개지 않은 덕에 이 제약이 CHECK 하나로 가능하다(행 간 제약이면 trigger가 필요하고 DB Policy가 금지).
+**②에서 `source_url`을 뺀 이유(2026-08-05 확정)**: 세면 크롤링 공고는 `source_url`이 항상 있어 **CHECK가 항상 참 = 장식**이 된다. 빼면 제약이 두 경로에서 각각 일한다 — 크롤링은 연락처를 못 뽑으면 승격이 막혀 **운영자가 원문·포스터를 열어 입력**하게 되고(데이터 품질 상승), 교회 직접 등록은 `source_url`이 NULL이라 자동으로 연락처가 필수다. 연락처를 별도 테이블로 쪼개지 않은 덕에 이 제약이 CHECK 하나로 가능하다(행 간 제약이면 trigger가 필요하고 DB Policy가 금지).
+
+> **막히는 양은 크지 않다(크롤러 실측 3,181건).** 연락 수단 0종이 160건(5.0%)이지만 그 내역이 — 포스터 이미지에 연락처가 있는 것 79건(구조화가 이미지를 읽으면 채워짐) · **"청빙 완료되었습니다" 인사글 등 비채용 글 다수**(크롤러 게이트1에서 탈락, 애초에 승격 후보 아님) · 완전히 빈 공고 3건(`description`이 비어 6번에서 막힘). **승격 후보인데 연락처가 없는 공고는 실제로 극소수다.**
 
 ①의 트레이드오프: *"교역자 청빙"* 처럼 직분이 안 적힌 사역직 공고는 `POSITIONS.ETC`("기타")로 넣게 되어 **"기타 직분"과 "직분 미상"이 합쳐진다.** 전수 검수 전제라 운영자가 판단을 강제당하는 게 낫다고 봤다. 구분이 필요해지면 ①에서 `position IS NOT NULL`만 빼고 승격 게이트(앱 검증)로 내린다.
 
-#### 공고가 성립하는 최소 조건 — 8개 (= 크롤러 승격 판정 규칙)
+#### 공고가 성립하는 최소 조건 — 필수 4 + CHECK 2 (= 크롤러 승격 판정 규칙)
 
-| # | 조건 | 강제 방법 |
+**크롤러 백업 3,181건 실측으로 검증해 조건을 8개 → 6개로 줄였다(2026-08-05).** "이게 없으면 사역자가 이 공고를 보고 아무 행동도 할 수 없나"가 기준이다.
+
+| | 조건 | 강제 방법 | 실측 근거 |
+|---|---|---|---|
+| 🔴 | 어느 교회인가 | `jobs.church_id NOT NULL` | 교회명은 제목에 거의 100% |
+| 🔴 | 제목 | `jobs.title NOT NULL` | 3,181/3,181 |
+| 🔴 | 사역직/일반직 | `jobs.job_kind NOT NULL` | AI 판정, 애매하면 `confidence=low`로 운영자에게 |
+| 🔴 | 요약 | `jobs.description NOT NULL` | **빈 공고를 막는 유일한 장치** — 본문·이미지·첨부가 전무한 공고 CSU 53건 + YTUS 1건 실측 |
+| 🟡 | 직분 또는 직무 | CHECK ① | 겸직은 운영자 판정으로 |
+| 🟡 | 연락처 최소 1개 | CHECK ② | 0종 160건이지만 대부분 비채용 글·포스터 내 연락처 |
+
++ 시스템 필드 `status`(DEFAULT 'OPEN') · `source` · `featured_tier`(DEFAULT 'NONE') · `pay_period`(DEFAULT 'MONTH') — 항상 INSERT 시점에 알 수 있다.
+
+##### 필수에서 **뺀** 3개 — 게시판이 안 주거나 원문에 없을 수 있는 값
+
+| 필드 | 뺀 이유(실측) | **대신 화면이 해야 할 일** |
 |---|---|---|
-| 1 | 어느 교회인가 | `jobs.church_id NOT NULL` |
-| 2 | 지역을 아는가 | `churches.region NOT NULL` |
-| 3 | 제목 | `jobs.title NOT NULL` |
-| 4 | 사역직/일반직 | `jobs.job_kind NOT NULL` |
-| 5 | 직분(사역직) 또는 직무(일반직) | CHECK ① |
-| 6 | 요약 | `jobs.description NOT NULL` |
-| 7 | 등록일 | `jobs.posted_at NOT NULL` |
-| 8 | 지원 경로 최소 1개 | CHECK ② |
+| `churches.denomination` | 교회 서술 문장에 교단 명시 **2.8%**(CSU만 `order_name` 필드로 83%). 교회 1,004곳을 사람이 채우면 30초씩 8시간 — 비현실 | "교단 미상". `denomination_source`가 `stated`·`registry`·`operator`일 때만 **확정으로 표시**하고 `unknown`·`ai_guess`는 회색/미상 처리 |
+| `churches.region` | 광역 81% · 시군구 85% — 나머지 19%는 원문에 없다 | "지역 미상". ⚠️ **지역 필터 선택 시 무조건 탈락**한다(`filter-jobs.ts`가 `region.has(...)`) → 지역은 구직자 1순위 필터라 **사실상 안 보이는 공고**가 된다 |
+| `jobs.posted_at` | 게시일 없는 공고 **60건(PCKWORLD)** — 한국기독공보 광고검색은 목록에 날짜가 아예 없다(`list_has_dates: false`). 우리가 못 뽑는 게 아니라 게시판이 안 준다. `fetched_at` 대체는 **틀린 날짜 공개**라 금지 | "게시일 미상" + **아래 ⚠️ 3가지 처리 필수** |
 
-+ 시스템 필드 `status`(DEFAULT 'OPEN') · `source` · `featured_tier`(DEFAULT 'NONE') · `pay_period`(DEFAULT 'MONTH').
+> ⚠️ **`posted_at` nullable의 대가 — 반드시 함께 처리할 3가지.** 이걸 안 하면 SEO가 깨지고 런타임이 터진다:
+> 1. **JobPosting JSON-LD 생략** — `lib/seo.ts`가 `datePosted: job.postedAt`을 넣는데 `datePosted`는 **Google JobPosting 필수 필드**다. NULL이면 구조화 데이터가 invalid가 되어 그 공고가 Google Jobs에서 빠지고 Search Console에 오류로 잡힌다 → **NULL이면 JSON-LD 자체를 내지 않는다**(invalid보다 없는 게 낫다).
+> 2. **정렬 폴백** — `postedAt`은 정렬·재공고 판정에 10곳 이상에서 쓰이고 `localeCompare`·`reduce`가 NULL에 터진다. `posted_at ?? created_at`으로 폴백한다(대량 승격 시 `created_at`이 뭉쳐 정렬 품질은 떨어진다).
+> 3. **타입** — `Job.postedAt: string` → `string | null`, 사용처 전수 null 처리.
+>
+> 📌 **재검토 여지**: 대안은 `NOT NULL` 유지 + 운영자가 60건 날짜 입력(포스터에 대개 적혀 있어 **≈20분, 1회**)이었다. 위 3가지 영구 비용 + 60건 Google Jobs 제외보다 그게 싸다는 게 검토 의견이었으나, **운영자 결정으로 nullable을 택했다.** 되돌리려면 CHECK 없이 `NOT NULL` 한 줄이다.
 
-**교단은 이 목록에 없다** — 미상·무소속이 실재하므로 `denomination`은 nullable이다(§churches).
-
-**나머지는 전부 nullable**: 고용형태 · 사택 · 사례비/급여 · 마감일 · 자격 · 부서 · 제출서류 · 전형절차 · 모집인원 · 부임시기 · 근무요일 · 처우비고.
-
-> **크롤러가 받는 규칙(한 문장)**: 교회 매칭(지역 포함) · 제목 · 사역직/일반직 · 직분 또는 직무 · 요약 — **이 5개를 못 채우면 승격 불가.** 지원 경로는 `source_url`로 자동 충족. 실측(연락처 89% · 자격 90%, 직분은 제목에 거의 있음)이면 대부분 자동 통과하고, 막히는 건 원문 200자 미만 11% 중 요약이 안 나오는 것들 — 운영자가 원문 보고 채우거나 폐기한다.
+> **크롤러가 받는 규칙(한 문장)**: 교회 매칭 · 제목 · `job_kind` · 직분 또는 직무 · 요약 · 연락처 1개 — **이 6개를 못 채우면 승격 불가.** 교단·지역·게시일은 비어도 승격된다. 크롤러는 6개 중 못 채운 게 있으면 `confidence=low`로 표시해 운영자가 먼저 보게 한다(min_job_agent 구조화 단계).
+>
+> **검수 우선순위는 교단보다 지역이다** — ⓐ 커버율 81%로 이미 높아 채우기 쉽고 ⓑ 교회명만 검색해도 주소가 나오고 ⓒ 비면 필터에서 사라지는 실질 손실이 크다. 교단은 "미상"으로 공개해도 지원에 지장이 없다.
+>
+> ⚠️ **`church_id` 자동 매칭 금지** — 크롤러 실측에서 **이름이 같은 다른 교회**가 나왔다(선민교회: HAPDONG ×3 · GAMLI ×1 = 서로 다른 교회 둘). 이름으로 자동 연결하면 남의 공고가 한 교회 페이지에 뜨고 **재공고 횟수가 거짓**이 된다(우리 차별점이 무너진다). `review_data.matched_church_id`는 **후보 제시만**, 확정은 운영자가 한다.
 
 > ✅ **확정 설계(크롤러 피벗 2026-07-28)**: `job_kind` · `role` · `position` NULL 허용은 개교회 채용 확장(사역직 MINISTRY + 일반직 GENERAL) + 크롤러 `review_data` 정합을 위한 확정 설계다. 마이그레이션 SQL은 별도 작업(deferred).
 
@@ -168,7 +185,7 @@ CHECK ( source_url   IS NOT NULL OR contact_email IS NOT NULL
 >
 > **nullable 원칙 — "없으면 공고가 성립하나?"** 크롤링 원문 3,051건 실측 언급률(2026-08-04): 사택 40% · 전형절차 42% · 부임시기 45% · **고용형태 51%** · 모집인원 65% · 사례비·마감일 75% · 제출서류 88% · 연락처 89% · 자격/경력 90%. 원문 중간값 506자, **11%가 200자 미만**. 따라서:
 > - **nullable로 푼다** — 원문에 없을 수 있고 없어도 공고가 성립하는 것: `employment_type`(51%) · `housing_provided`(40%) · `churches.denomination`(미상·무소속 실재) · 위 신규 컬럼 전부. **DEFAULT로 값을 지어내지 않는다** — "언급 없음"을 "미제공"으로 바꾸면 우리가 틀린 정보를 생산한다.
-> - **NOT NULL·CHECK로 조인다** — 위 "최소 조건 8개". 여기선 제약이 **품질 게이트**로 작동해 승격 판정을 DB가 대신한다.
+> - **NOT NULL·CHECK로 조인다** — 위 "최소 조건 — 필수 4 + CHECK 2". 여기선 제약이 **품질 게이트**로 작동해 승격 판정을 DB가 대신한다.
 > - 화면에서 NULL은 **"정보 없음"** 으로 표시하고 필터에서는 제외한다(`qualification` NULL=무관과 같은 취급).
 
 ### `job_promotions` — 노출 구매 원장 (1 job : N, append-only)
@@ -338,10 +355,10 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 | `crawl_run` | 실행별 요약 (1실행 1행, 누적) — started/finished·mode·성공/실패 소스·신규 집계 |
 
 - **RLS = 운영자 전용**(min_job admin이 대시보드·검수에 read), 크롤러는 service-role로 write. **public 노출 없음.**
-- **승격 흐름**: admin 검수 UI가 `review_data`(PENDING)를 읽어 → 운영자 승인 시 **요약 + `source_url`·연락처 4컬럼 + `source=OPERATOR`·`owner_id=NULL`**로 `churches`/`jobs`에 INSERT(§10). 검수 메타는 넘기지 않음. **교단은 미상이면 `NULL`로 그대로 승격**(2026-08-05 — 과거 "승격 전 10키로 해소" 규칙은 철회). 승격 가능 여부는 §3 "최소 조건 8개"가 판정한다.
+- **승격 흐름**: admin 검수 UI가 `review_data`(PENDING)를 읽어 → 운영자 승인 시 **요약 + `source_url`·연락처 4컬럼 + `source=OPERATOR`·`owner_id=NULL`**로 `churches`/`jobs`에 INSERT(§10). 검수 메타는 넘기지 않음. **교단은 미상이면 `NULL`로 그대로 승격**(2026-08-05 — 과거 "승격 전 10키로 해소" 규칙은 철회). **지역·게시일도 미상이면 NULL로 승격**(2026-08-05 실데이터 검증). 승격 가능 여부는 §3 "최소 조건 — 필수 4 + CHECK 2"가 판정한다.
 - **`review_data` 주요 컬럼**(검수 브릿지가 읽는 것): `job_kind`·`role`·`title`·`position`·`department`·`employment_type`·`stipend_*` · `denomination`(+`denomination_source`·`denomination_evidence`·`raw_denomination` · **미상 가능**) · `contact` · `confidence` · `dedup_key` · `review_status`(PENDING/APPROVED/REJECTED) · `matched_church_id` FK→churches · `published_job_id` FK→jobs · `heresy_flag` 등. **전체 스키마·판정 정본은 min_job_agent SPEC §6.**
 - ⚠️ **크로스 리포 동기화 필요(2026-08-05)** — 이번 스키마 확정으로 `review_data`와 어긋나는 지점 4개. `review_data`는 min_job_agent 소유라 우리가 바꾸지 않고 **승격 시 매핑**하거나 크롤러 쪽에 반영을 요청한다:
   1. `stipend_*` → **`pay_*`** 개명 (min_job은 완료)
   2. `contact` 단일 → **`contact_email`·`contact_tel`·`contact_link`·`contact_post`** 4컬럼 분해
   3. `denomination` **미상 = NULL**(ETC 아님) — "미상 교단은 승격 전 해소" 규칙은 **철회**됐다(무소속·독립교회가 실재)
-  4. 승격 게이트 = **최소 조건 8개**(§3 jobs). 크롤러가 맞춰야 하는 건 5개: 교회 매칭(지역 포함)·제목·job_kind·직분 또는 직무·요약
+  4. 승격 게이트 = **필수 4 + CHECK 2**(§3 jobs). 크롤러가 맞춰야 하는 6개: 교회 매칭 · 제목 · job_kind · 직분 또는 직무 · 요약 · **연락처 1개**(source_url은 안 셈). 교단·지역·게시일은 비어도 승격 가능

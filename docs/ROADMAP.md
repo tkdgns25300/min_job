@@ -31,9 +31,17 @@
   3. 연락처 = **`jobs`에 컬럼 4개**(`contact_email`·`tel`·`link`·`post`) — `APPLY_METHODS`가 `ETC` 없는 닫힌 4키라 컬럼이 1:1. 별도 테이블(`church_links` 방식)은 열린 집합용이라 부적합
   4. **`apply_methods` jsonb + `contact` 단일 폐기** — 3번에 흡수(같은 것을 두 형태로 저장하던 설계)
   5. **`job_promotions` 테이블 신설**(결제 원장, `UNIQUE(payment_id)`로 멱등) + `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — HERO 구좌 판정·환불·이력은 원장이, 정렬 1차 키는 캐시가. `'use cache'`가 `now()`를 금지하므로 만료는 **`today` 인자 패턴**(하루 1캐시, Cron 불필요)
-  6. **최소 조건 8개**로 조임 — `description` NOT NULL 승격(요약 없으면 링크만 있는 빈 껍데기 = 가드레일 #1 위반). **`churches.denomination`은 NOT NULL 철회 → NULL 허용**(미상·무소속 독립교회가 실재. `ETC`에 섞으면 기장과 뒤섞여 필터·거점 판정 오염). `region`은 NOT NULL 유지
+  6. **최소 조건 = 필수 4 + CHECK 2** — `description` NOT NULL 승격(요약 없으면 링크만 있는 빈 껍데기 = 가드레일 #1 위반)
+- [x] **최소 조건을 크롤러 실데이터 3,181건으로 검증**(2026-08-05) — 초안 8개를 **6개로 줄였다**. DATA.md §3 "최소 조건" 절이 정본:
+  - **필수 4** `church_id` · `title` · `job_kind` · `description` / **CHECK 2** 직분 XOR 직무 · **연락처 ≥1**
+  - **필수에서 뺀 3개** — `churches.denomination`(원문 명시 **2.8%**, 교회 1,004곳 수동은 비현실) · `churches.region`(광역 81%) · `jobs.posted_at`(**PCKWORLD 60건** — 게시판이 날짜를 안 줌)
+  - **CHECK ②에서 `source_url`을 뺐다** — 세면 크롤링 공고는 항상 통과해 제약이 장식이 된다. 빼면 크롤링은 연락처를 채우게 되고(품질 상승) 교회 등록은 자동으로 연락처 필수
+  - 연락처는 **4컬럼 유지**(1칼럼 text로 되돌리지 않음) — 실측 **75.4%가 2종 이상**이라 text 하나면 뭉개지고 `mailto:`/`tel:` 링크를 못 만든다(모바일 UX)
+  - ⚠️ **`posted_at` nullable의 대가 3가지**(DATA.md에 상세): JobPosting JSON-LD 생략(`datePosted`는 Google 필수 필드) · 정렬 `posted_at ?? created_at` 폴백 · `Job.postedAt` 타입 null 처리 10곳+. 대안(`NOT NULL` 유지 + 60건 수동 ≈20분)이 더 싸다는 검토 의견은 남겨뒀다
+  - ⚠️ **`church_id` 자동 매칭 금지** — 동명이교회 실측(선민교회 HAPDONG ×3 · GAMLI ×1). 이름 매칭하면 남의 공고가 붙어 **재공고 횟수가 거짓**이 된다(차별점 붕괴). 후보 제시만, 확정은 운영자
+- [ ] **NULL 표시 UI 3개**(스키마를 푼 대가 — 안 하면 모르는 것을 아는 척한다): 교단 미상(`denomination_source`가 `stated`·`registry`·`operator`일 때만 확정 표시) · 지역 미상 · 게시일 미상. **검수 우선순위는 교단보다 지역**(비면 지역 필터에서 탈락 = 사실상 안 보이는 공고)
 - [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 2개** + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**
-- [ ] **크롤러 리포 동기화**(min_job_agent) — `review_data`가 우리 확정과 4곳 어긋난다(DATA.md §12 말미): `stipend_*`→`pay_*` · `contact` 단일→4컬럼 · 교단 미상=NULL(ETC 아님, "승격 전 해소" 철회) · 승격 게이트=최소 조건 8개. `review_data`는 min_job_agent 소유라 **승격 시 매핑하거나 크롤러 쪽에 반영 요청**
+- [ ] **크롤러 리포 동기화**(min_job_agent) — `review_data`가 우리 확정과 4곳 어긋난다(DATA.md §12 말미): `stipend_*`→`pay_*` · `contact` 단일→**4컬럼** · 교단 미상=NULL(ETC 아님, "승격 전 해소" 철회) · 승격 게이트=**필수 4 + CHECK 2**. `review_data`는 min_job_agent 소유라 **승격 시 매핑하거나 크롤러 쪽에 반영 요청**. 크롤러 쪽 담당 = 6개 중 못 채운 게 있으면 `confidence=low`로 표시(구조화 단계)
 - [ ] DB 타입 생성 — `types/database.ts`
 
 **병행 트랙 (Phase 0~1 내내)**
