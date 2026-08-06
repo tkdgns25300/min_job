@@ -194,7 +194,7 @@
 
 ### 1-10. 크롤러 연동 (min_job_agent — 데이터 수집 방식 전환)
 > **방향 전환(2026-07-28 확정, 법률 검토 완료).** 자매 프로젝트 `min_job_agent`가 **공개된 공식 게시판(교단·신학교)**을 자동 수집 → AI 구조화 → 검수 큐(`review_data`)에 적재한다. 운영자가 검수·승격하면 `churches`/`jobs`로 반영된다. 기존 "자동 크롤러 배제"(가드레일 #1)를 **재정의**한다 — 공개 공식 출처 한정, 영리 사이트 출처 배제는 유지, **크롤러 실운영은 법률 검토 완료가 전제(2026-07-28 확인 완료)**. staging 4테이블은 **min_job_agent 소유**(min_job은 인지만 — init.sql/마이그레이션 작성은 보류, SPEC 진화 중).
-> **정본**: `CRAWLER_HANDOFF.md` + `min_job_agent/docs`. 아래는 min_job 쪽 싱크 TODO.
+> **정본**: `../min_job_agent/docs/`(SPEC·CONTRACT·SOURCES·SNAPSHOT). ~~`CRAWLER_HANDOFF.md`~~ 는 6개 절 전부 CLAUDE.md·DATA.md·ROADMAP·SPEC에 흡수돼 **삭제됐다**(2026-08-05). 아래는 min_job 쪽 싱크 TODO.
 
 **(a) 문서·정책 싱크**
 - [x] 가드레일 #1(자동 크롤러 금지) 재정의 — 공개 공식 게시판 한정 자동 수집 허용(영리 사이트 출처 배제는 유지). CLAUDE.md·DATA.md 갱신 (완료 2026-07-29)
