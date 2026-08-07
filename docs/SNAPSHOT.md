@@ -146,10 +146,10 @@ DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**
 **공고가 성립하는 최소 조건 = 필수 4 + CHECK 2** (초안 8개를 크롤러 백업 **3,181건**으로 검증해 줄임)
 
 ```
-필수 4    church_id · title · job_kind · description
+필수 4    church_name · title · job_kind · description   ← church_id 아님(2026-08-06)
 CHECK ①   직분 XOR 직무   (MINISTRY→position 필수·role NULL / GENERAL→반대)
 CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
-해제 3    churches.denomination · churches.region · jobs.posted_at
+해제 4    churches.denomination · churches.region · jobs.posted_at · **jobs.church_id**
 시스템 4  status · source · featured_tier · pay_period  (전부 DEFAULT)
 ```
 
@@ -161,6 +161,12 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 - ⚠️ **검수 우선순위는 교단보다 지역** — 지역이 비면 지역 필터에서 무조건 탈락해 **사실상 안 보이는 공고**가 된다. 교단은 "미상"으로 공개해도 지원에 지장 없음.
 - ⚠️ **`church_id` 자동 매칭 금지** — 실측에 **동명이교회**가 있다(선민교회: HAPDONG ×3 · GAMLI ×1 = 서로 다른 교회 둘). 이름으로 자동 연결하면 남의 공고가 붙어 **재공고 횟수가 거짓**이 된다(차별점 붕괴). `matched_church_id`는 후보 제시만, 확정은 운영자.
 - ⚠️ **`posted_at` nullable의 대가 3가지**: JobPosting JSON-LD 생략(`datePosted`는 Google 필수 필드라 NULL이면 invalid) · 정렬 `posted_at ?? created_at` 폴백 · `Job.postedAt` 타입 null 처리 10곳+. **대안(`NOT NULL` 유지 + 60건 수동 ≈20분)이 더 싸다는 검토 의견은 DATA.md에 남겨뒀다** — 되돌리려면 한 줄.
+
+**교회 식별은 claim으로 미룬다(2026-08-06 — `church_id NOT NULL`을 뒤집었다).** 크롤러가 교회 묶기를 실측하니 자동 95%까지만 되고 사각지대가 남았다 — (교회명+광역) 1,203그룹 중 **검증 불가 67개** · **같은 연락처에 다른 교회명 83건**(`대구대동교회`/`대동교회` 표기 차이 + 교단 사무실 공유). 사람이 봐도 판정이 안 된다. 다른 교회를 합치면 이미 공개된 뒤라 되돌리기 어렵고, 안 합치면 나중에 병합할 수 있다 → **교회 행을 아예 만들지 않는다.**
+- 스키마 3개: `jobs.church_id` **NOT NULL 해제** · **`jobs.church_name` 추가**(NOT NULL, 공고가 말한 그대로) · **`jobs.region` 추가**
+- 교회가 가입·인증 후 **claim** → `church_id` 채워짐 → 교회 상세·재공고 켜짐. **claim이 교회 가입 유인이 된다**(mock `job-101` 클레임 데모와 같은 개념)
+- ⚠️ `jobs.region`은 §1 **비정규화 금지의 명시적 예외**(`featured_tier`와 같은 취급) — `church_id`가 NULL이면 JOIN이 안 돼 지역 필터가 통째로 죽는다(크롤링 공고 80%)
+- **대가**: 재공고 추적이 claim 전까지 작동 안 함 · `/churches/[id]`는 claim된 교회만 · 교단 필터도 claim 전까지 안 걸림
 
 **`job_promotions`(신설) = 결제 원장**: `UNIQUE(payment_id)`로 멱등(재시도돼도 노출 2번 적립 X) · `tier` CHECK는 `PREMIUM`/`HERO`만(`NONE`은 상품이 아님). `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — 정렬 1차 키라 최다 조회 경로이고, `'use cache'`가 `new Date()`를 금지해 캐시된 쿼리가 "오늘"을 못 만든다. 만료는 **`today` 인자 패턴**(`getListJobs("2026-08-06")` → 인자가 캐시 키 → 하루 1캐시, Cron 불필요). **`deadline` 지난 공고가 "모집중"으로 뜨는 문제(§7 미해결 1번)와 같은 해법** → 한 번에 정리.
 

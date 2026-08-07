@@ -11,7 +11,8 @@
 ## 1. 설계 원칙
 
 - **DB는 저장 전용.** trigger·custom function·복잡한 default expression 만들지 않는다. ID 발급·timestamp·집계·재공고 판정 등 로직은 전부 Server Action / query 함수. 내장 기능만 사용(`gen_random_uuid()`, `CHECK`, `FK`, array/`jsonb`).
-- **정규화 유지 (JOIN).** 교단·지역 필터는 `churches`를 JOIN해서 건다. 비정규화(공고에 교회 속성 복사) 안 함 — 우리 규모(초기 수백~수천)에선 JOIN + `'use cache'` 캐시로 충분. (대규모 인덱스 최적화 필요 시 나중에 재검토)
+- **정규화 유지 (JOIN).** 교단 필터는 `churches`를 JOIN해서 건다. 비정규화(공고에 교회 속성 복사) 안 함 — 우리 규모(초기 수백~수천)에선 JOIN + `'use cache'` 캐시로 충분. (대규모 인덱스 최적화 필요 시 나중에 재검토)
+  - ⚠️ **명시적 예외 2개** — 둘 다 "캐시된 쿼리가 JOIN·`now()` 없이 필터·정렬해야 한다"는 같은 이유다: **`jobs.region`**(`church_id`가 NULL일 수 있어 JOIN이 성립 안 함 — §3) · **`jobs.featured_tier`·`featured_until`**(원장은 `job_promotions`, 이건 현재 유효 노출 캐시 — §7). 예외를 늘릴 때는 이 두 사례와 같은 근거가 있는지 확인할 것.
 - **enum = 영어 대문자 key + 한글 라벨.** key는 DB에 저장(값)·URL params에 사용, 표시는 `constants/domain.ts`의 한글 라벨 맵. DB에서는 `CHECK` 제약으로 허용값 강제(별도 enum 타입 대신 `text + CHECK`로 확장 용이하게).
 - **컬럼명 = `snake_case`** (DB), 앱(TS)은 `camelCase`. Supabase 생성 타입이 매핑.
 - **가드레일 준수**: 공고 owner nullable · **지원용 공개 연락처(`contact_email`·`contact_tel`·`contact_link`·`contact_post`)만 저장·공개**(지원과 무관한 제3자 개인정보 X — 가드레일 #3 갱신 2026-07-28) · source로 출처 구분 · **수집 = 크롤러(공개 공식 게시판) + 사람 붙여넣기 → AI 구조화 → 운영자 검수·승격**("자동 크롤러 없음" 재정의, 가드레일 #1 갱신 · 법률 검토 완료).
@@ -23,7 +24,7 @@
 | enum | 컬럼 | 허용값(key) |
 |---|---|---|
 | **denomination** (교단) | `churches.denomination` | HAPDONG · TONGHAP · BAEKSEOK · GOSIN · HAPSIN · GAMLI · SEONGGYUL · BAPTIST · SUNBOK · ETC · `NULL`(=미상·무소속) (10키 = 9대형 + 기타. **기장=ETC** — 미상을 ETC에 넣지 말 것) |
-| **region** (광역) | `churches.region` | SEOUL · GYEONGGI · INCHEON · GANGWON · CHUNGBUK · CHUNGNAM · DAEJEON · SEJONG · GYEONGBUK · GYEONGNAM · DAEGU · ULSAN · BUSAN · JEONBUK · JEONNAM · GWANGJU · JEJU · OVERSEAS · `NULL`(=미상, 원문 명시 81%) |
+| **region** (광역) | `churches.region` · **`jobs.region`** | SEOUL · GYEONGGI · INCHEON · GANGWON · CHUNGBUK · CHUNGNAM · DAEJEON · SEJONG · GYEONGBUK · GYEONGNAM · DAEGU · ULSAN · BUSAN · JEONBUK · JEONNAM · GWANGJU · JEJU · OVERSEAS · `NULL`(=미상, 원문 명시 81%) |
 | **church_channel** (채널) | `church_links.type` | HOMEPAGE · YOUTUBE · INSTAGRAM · FACEBOOK · BAND · ETC(기타) |
 | **job_kind** (직군) | `jobs.job_kind` | MINISTRY(사역직) · GENERAL(일반직) — 개교회 채용 구분 |
 | **position** (직분) | `jobs.position` | SENIOR_PASTOR · ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC (사역직 MINISTRY만 · GENERAL은 NULL — XOR CHECK로 강제) |
@@ -82,7 +83,9 @@
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
 | `id` | uuid PK | |
-| `church_id` | uuid **NOT NULL** FK→churches | 소속 교회 |
+| `church_id` | uuid **NULL** FK→churches | 소속 교회. **NULL = 아직 어느 교회인지 확정 못 함**(크롤링 공고 기본값). 교회가 가입·인증 후 **claim하면 채워진다** → 그때 교회 상세·재공고 이력이 켜진다. ⚠️ 자동 매칭 금지 |
+| `church_name` | text **NOT NULL** | **공고가 말한 교회명 그대로**. `church_id`가 NULL이어도 화면에 교회를 표시할 수 있게 하는 값. 교회 직접 등록 시엔 교회 프로필에서 복사 |
+| `region` | text NULL (CHECK) | **공고 시점에 파악한 광역** — ⚠️ **의도적 비정규화**(§1 예외). `church_id`가 NULL이면 `churches`를 JOIN할 수 없어 지역 필터가 통째로 죽는다. 필터·정렬은 이 컬럼을 쓴다 |
 | `owner_id` | uuid FK→users **NULL** | **작성자(감사용)** — 운영자 등록=NULL (가드레일 #2). ⚠️ 편집 권한 게이트 아님 → 권한 = 그 공고 `church_id`의 인증 관리자 |
 | `title` | text NOT NULL | |
 | `job_kind` | text NOT NULL (CHECK) | MINISTRY(사역직)/GENERAL(일반직) — 개교회 채용 구분 |
@@ -147,7 +150,7 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 
 | | 조건 | 강제 방법 | 실측 근거 |
 |---|---|---|---|
-| 🔴 | 어느 교회인가 | `jobs.church_id NOT NULL` | 교회명은 제목에 거의 100% |
+| 🔴 | 어느 교회인가 | **`jobs.church_name NOT NULL`** (`church_id`는 nullable) | 교회명 커버율 **96%** — 없는 124건은 이 제약이 자동 차단 |
 | 🔴 | 제목 | `jobs.title NOT NULL` | 3,181/3,181 |
 | 🔴 | 사역직/일반직 | `jobs.job_kind NOT NULL` | AI 판정, 애매하면 `confidence=low`로 운영자에게 |
 | 🔴 | 요약 | `jobs.description NOT NULL` | **빈 공고를 막는 유일한 장치** — 본문·이미지·첨부가 전무한 공고 CSU 53건 + YTUS 1건 실측 |
@@ -175,7 +178,28 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 >
 > **검수 우선순위는 교단보다 지역이다** — ⓐ 커버율 81%로 이미 높아 채우기 쉽고 ⓑ 교회명만 검색해도 주소가 나오고 ⓒ 비면 필터에서 사라지는 실질 손실이 크다. 교단은 "미상"으로 공개해도 지원에 지장이 없다.
 >
-> ⚠️ **`church_id` 자동 매칭 금지** — 크롤러 실측에서 **이름이 같은 다른 교회**가 나왔다(선민교회: HAPDONG ×3 · GAMLI ×1 = 서로 다른 교회 둘). 이름으로 자동 연결하면 남의 공고가 한 교회 페이지에 뜨고 **재공고 횟수가 거짓**이 된다(우리 차별점이 무너진다). `review_data.matched_church_id`는 **후보 제시만**, 확정은 운영자가 한다.
+> ⚠️ **교회 식별은 claim으로 미룬다 (2026-08-06 확정 — 어제 `church_id NOT NULL`을 뒤집었다).**
+>
+> 크롤러가 교회 묶기를 실측했더니 **자동 95%까지만 되고 사각지대가 남았다**: (교회명+광역) 1,203그룹 중 신호 일관 511 · **검증 불가 67개**('일관'처럼 보이지만 실제로 다른 교회일 수 있음) · **같은 연락처에 다른 교회명 83건**(`대구대동교회`/`대동교회` 표기 차이 + 교단 사무실 공유). 사람이 봐도 판정이 안 되는 구간이다.
+>
+> **두 오류의 무게가 다르다** — 다른 교회를 합치면(B교회 페이지에 A교회 공고) 이미 공개된 뒤라 **되돌리기 어렵고**, 같은 교회를 나누면 중복 행이 생기지만 나중에 병합할 수 있다. 그래서 기본값을 "증거 없으면 합치지 않는다"로 두고, 끝까지 밀어 **교회 행을 아예 만들지 않는** 쪽으로 갔다.
+>
+> ```
+> 크롤링 공고   church_id = NULL          "모른다" (정직)
+>              church_name = "점촌제일교회"  공고가 말한 그대로
+>              region = GYEONGBUK
+>                  │
+>                  ▼  교회가 가입·인증 → "이 공고들이 귀 교회 것입니까?"
+>              church_id 채워짐 → 교회 상세·재공고 이력 작동
+> ```
+>
+> **확신 없는 `churches` 행을 만드는 것은 값을 지어내는 것**이고, 그건 위 nullable 원칙("DEFAULT로 값을 지어내지 않는다")과 같은 위반이다. 그리고 이 구조는 **claim을 교회 가입 유인으로 바꾼다**(mock의 `job-101` 클레임 데모가 같은 개념).
+>
+> **받아들인 대가 4개**:
+> 1. **재공고 추적이 claim 전까지 작동하지 않는다** — 우리 차별점인데 크롤링 공고엔 처음엔 없다. 크롤러의 `dedup_key`(끌어올림 묶음)가 부분 보완
+> 2. **`/churches/[id]`는 claim된 교회만** 존재한다
+> 3. **`jobs.region` 비정규화** — §1 "공고에 교회 속성 복사 안 함"의 **명시적 예외**. `featured_tier`와 같은 취급(캐시된 쿼리가 JOIN 없이 필터·정렬해야 함)
+> 4. **교단 필터는 claim 전까지 안 걸린다** — 다만 교단 명시가 2.8%뿐이라 실질 영향은 작다
 
 > ✅ **확정 설계(크롤러 피벗 2026-07-28)**: `job_kind` · `role` · `position` NULL 허용은 개교회 채용 확장(사역직 MINISTRY + 일반직 GENERAL) + 크롤러 `review_data` 정합을 위한 확정 설계다. 마이그레이션 SQL은 별도 작업(deferred).
 
@@ -266,7 +290,9 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 - `job_promotions(job_id)` — 공고별 결제 이력
 - `job_promotions(tier, starts_at, ends_at)` — HERO 구좌 잔여 판정(특정 주가 찼는지)
 - `jobs(position)`, `jobs(department)`, `jobs(employment_type)` — 목록 필터
-- `churches(denomination)`, `churches(region)` — 목록 필터(JOIN 대상)
+- `jobs(region)` — **지역 필터(최다 사용)**. `church_id`가 NULL일 수 있어 JOIN이 아니라 이 컬럼으로 건다
+- `jobs(church_id)` — 교회별 공고·재공고(claim된 것만)
+- `churches(denomination)`, `churches(region)` — 교회 상세·교단 필터(JOIN 대상)
 - `church_links(church_id)`
 - `bookmarks(user_id)`
 
