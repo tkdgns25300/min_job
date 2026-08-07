@@ -10,7 +10,9 @@
 >
 > ▶ **2026-08-05 KCP 심사 종료 → prod 동결 해제**: 카드사 등록신청 심사가 끝나 "심사 중 변경 금지" 제약이 풀렸다. **prod를 dev로 fast-forward**(7/29 로그인 전환 이후 23커밋 일괄 반영) + 테스트 계정 잔재 제거(ROADMAP 1-8·8). ⚠️ 결제 경로(`/mypage/church/promote`)는 `churchVerificationStatus` 하드코딩 `null` 때문에 **여전히 도달 불가** — 교회 멤버십 배선 전까지 비활성.
 >
-> ▶ **2026-08-05 스키마 확정**: `jobs` 미확정 7필드 + **스키마 6개 결정**(직분/직무 XOR CHECK · `stipend_*`→`pay_*` 개명 · 연락처 4컬럼 · `apply_methods` 폐기 · **`job_promotions` 신설**(테이블 7개) · 필수값 조임). **크롤러 실데이터 3,181건으로 검증해 최소 조건을 8개 → 필수 4 + CHECK 2로 줄였다**: 필수 `church_id`·`title`·`job_kind`·`description` / CHECK 직분XOR직무·연락처≥1. **뺀 3개 = 교단(명시 2.8%)·지역(81%)·게시일(PCKWORLD 60건)** — 게시판이 안 주거나 원문에 없는 값. 대가로 **NULL 표시 UI 3개 + `posted_at` 처리 3가지**(JSON-LD 생략·정렬 폴백·타입)가 숙제로 남았다. 근거·수치는 DATA.md §3, 결정 목록은 ROADMAP Phase 0. ⚠️ **확정은 문서에만 반영됐다** — `types/domain.ts`·mock은 아직 옛 스키마고 **15곳이 어긋난다**(ROADMAP Phase 0에 목록). 코드 변경은 `pay_*` 개명뿐. **마이그레이션 SQL도 아직 없다**(`supabase/` 폴더 없음) — 다음 관문은 `001_init.sql` + 타입·mock 정합을 **한 묶음으로** 도는 것.
+> ▶ **2026-08-05 스키마 확정**: `jobs` 미확정 7필드 + **스키마 6개 결정**(직분/직무 XOR CHECK · `stipend_*`→`pay_*` 개명 · 연락처 4컬럼 · `apply_methods` 폐기 · **`job_promotions` 신설**(테이블 7개) · 필수값 조임). **크롤러 실데이터 3,181건으로 검증해 최소 조건을 8개 → 필수 4 + CHECK 2로 줄였다**: 필수 `church_id`·`title`·`job_kind`·`description` / CHECK 직분XOR직무·연락처≥1. **뺀 3개 = 교단(명시 2.8%)·지역(81%)·게시일(PCKWORLD 60건)** — 게시판이 안 주거나 원문에 없는 값. 대가로 **NULL 표시 UI 3개 + `posted_at` 처리 3가지**(JSON-LD 생략·정렬 폴백·타입)가 숙제로 남았다. 근거·수치는 DATA.md §3, 결정 목록은 ROADMAP Phase 0. ⚠️ **확정은 문서에만 반영됐다** — `types/domain.ts`·mock은 아직 옛 스키마고 **18곳이 어긋난다**(ROADMAP Phase 0에 목록). 코드 변경은 `pay_*` 개명뿐. **마이그레이션 SQL도 아직 없다**(`supabase/` 폴더 없음) — 다음 관문은 `001_init.sql` + 타입·mock 정합을 **한 묶음으로** 도는 것.
+>
+> ▶ **2026-08-06 교회 식별을 claim으로 미룸**: 크롤러 요청 수용 — `jobs.church_id` **NOT NULL 해제** + `church_name`·`region` 추가. 교회 묶기가 자동 95%까지만 되고 **사람이 봐도 판정 안 되는 구간**이 남아(검증 불가 67개 · 같은 연락처 다른 교회명 83건), 확신 없는 `churches` 행을 만드는 대신 **교회가 claim할 때 채운다**. 필수 4의 1번이 `church_id` → `church_name`으로 교체. ⬜ **결정 2개 대기**(끌어올림 간격 N일 · `repostKey` 키 교체) — §7 상단.
 >
 > ▶ **2026-08-05 SEO 마감**: `sitemap.xml`·`robots.txt`·canonical·OG(이미지 포함) 완료(§7 6·§8 SEO). **dev에 커밋 완료.** 남은 것 = **Search Console 사이트맵 등록**(실데이터 후 — 등록이 곧 "가짜 공고 색인 요청") · **공고별 OG 이미지**(한글 정적 폰트 선행).
 
@@ -34,7 +36,7 @@
 | 인프라/배포 | ~90% | Vercel·도메인·SSL·Supabase 연결 완료 |
 | 수익화/결제 | ~70% | ✅ **KCP 가맹·카드사 심사 둘 다 통과 → 실카드결제 활성(2026-08-05)**. 남은 것 = 주문 저장(`job_promotions` INSERT)·실 노출 적용(featured)·모바일 redirect 복귀. ⚠️ **결제 경로 자체가 교회 멤버십에 막혀 도달 불가** |
 | 프론트 로직 디테일(1-9) | ~85% | URL동기화·404/error·위저드검증·모바일네비·?next·admin deep-link 완료(2026-07-29). pagination 잔여 |
-| 백엔드(Supabase 실사용) | ~20% | **Auth(Google OAuth)·운영자 게이트 완료(2026-07-29)**. **스키마 설계 확정(2026-08-05, 테이블 7개·필수 4+CHECK 2)** — 단 문서만이고 `supabase/` 폴더·SQL은 0줄, 타입·mock은 15곳 어긋남. mutation·`lib/queries` mock→DB + **교회 멤버십** 잔여 (Phase 1, **최대 덩어리**) |
+| 백엔드(Supabase 실사용) | ~20% | **Auth(Google OAuth)·운영자 게이트 완료(2026-07-29)**. **스키마 설계 확정(2026-08-05, 테이블 7개·필수 4+CHECK 2)** — 단 문서만이고 `supabase/` 폴더·SQL은 0줄, 타입·mock은 18곳 어긋남. mutation·`lib/queries` mock→DB + **교회 멤버십** 잔여 (Phase 1, **최대 덩어리**) |
 | 데이터(실 공고·구조화) | ~5% | 실 공고 0·Claude 구조화 미연동 (다른 세션) |
 | 크롤러 연동(min_job_agent) | ~10% | **크롤러는 수집 가동 중**(백업 3,181건 — 이 데이터로 우리 필수값을 검증했다). min_job 쪽은 스키마 정합만 끝났고 **검수 브릿지 미착수**. ⚠️ `review_data`와 4곳 어긋남(ROADMAP Phase 0). 정본 = `../min_job_agent/docs/` (CRAWLER_HANDOFF.md는 흡수 후 삭제) |
 | SEO | ~80% (기술 마감 O, **유입 설계 X**) | **기술 요소 완료(2026-08-05)**: sitemap·robots·canonical·metadataBase·OG(이미지 포함)·JobPosting. 남은 것 = **지역·직분 랜딩 라우트**(노리는 키워드 `"OO지역 전도사 청빙"`를 받을 URL이 아직 없다 — §7 미해결 3) · 실데이터 후 Search Console 등록 · 공고별 OG 이미지(한글 폰트 선행) · 유입 측정 |
@@ -166,7 +168,24 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 - 스키마 3개: `jobs.church_id` **NOT NULL 해제** · **`jobs.church_name` 추가**(NOT NULL, 공고가 말한 그대로) · **`jobs.region` 추가**
 - 교회가 가입·인증 후 **claim** → `church_id` 채워짐 → 교회 상세·재공고 켜짐. **claim이 교회 가입 유인이 된다**(mock `job-101` 클레임 데모와 같은 개념)
 - ⚠️ `jobs.region`은 §1 **비정규화 금지의 명시적 예외**(`featured_tier`와 같은 취급) — `church_id`가 NULL이면 JOIN이 안 돼 지역 필터가 통째로 죽는다(크롤링 공고 80%)
-- **대가**: 재공고 추적이 claim 전까지 작동 안 함 · `/churches/[id]`는 claim된 교회만 · 교단 필터도 claim 전까지 안 걸림
+- **대가 3개 (화면으로 말하면)**:
+  1. **재공고 추적 — 통째로 죽는 게 아니라 절반만 죽는다**(2026-08-06 정정). 아래 "재공고 키 불일치" 참조
+  2. **교회 이름이 링크가 아니라 텍스트** — `/churches/[id]`가 없으니 "점촌제일교회"가 그냥 글자로 뜬다. claim하면 링크가 생긴다
+  3. **교단 필터에 안 걸린다** — 교단은 `churches`에 있는데 그 행이 없다. **지역 필터는 걸린다**(그래서 `jobs.region`을 받았다). 교단은 원문 명시가 2.8%뿐이라 실질 손실은 작다
+
+##### ⚠️ 재공고 키 불일치 — 우리 코드와 크롤러가 다른 기준으로 센다
+
+```
+우리 코드   repostKey = 교회 + 직분 + 부서      ← church_id 필요  (src/lib/repost-tracking.ts:11)
+크롤러      dedup_key = 연락처 + 직분 + 부서    ← 교회를 몰라도 판정된다
+```
+
+| | claim 전 | 필요한 것 |
+|---|---|---|
+| **"이 자리를 또 뽑네"**(자리 단위) | ✅ 된다 — 연락처로 묶이니까 | 없음 |
+| **"이 교회가 총 5번 뽑았다"**(교회 단위 이력·교회 페이지 타임라인) | ❌ 안 된다 | claim |
+
+→ **`repostKey`의 `churchId`를 `contact`로 바꾸면 크롤링 공고도 claim 전에 재공고 배지가 붙는다.** 한 줄 변경. **결정 대기**(아래 §7 "결정할 것" 2번).
 
 **`job_promotions`(신설) = 결제 원장**: `UNIQUE(payment_id)`로 멱등(재시도돼도 노출 2번 적립 X) · `tier` CHECK는 `PREMIUM`/`HERO`만(`NONE`은 상품이 아님). `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — 정렬 1차 키라 최다 조회 경로이고, `'use cache'`가 `new Date()`를 금지해 캐시된 쿼리가 "오늘"을 못 만든다. 만료는 **`today` 인자 패턴**(`getListJobs("2026-08-06")` → 인자가 캐시 키 → 하루 1캐시, Cron 불필요). **`deadline` 지난 공고가 "모집중"으로 뜨는 문제(§7 미해결 1번)와 같은 해법** → 한 번에 정리.
 
@@ -176,7 +195,7 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 
 **교단은 native PG ENUM이 아니라 `text + CHECK`** — native ENUM은 값 삭제·순서 변경이 불가능한데 교단 목록은 아직 유동적이다(기장을 ETC에 넣어둔 상태). `constants/domain.ts`가 이미 단일 소스라 native ENUM의 실익이 없다.
 
-### 타입 (`src/types/domain.ts`) — ⚠️ **위 스키마와 15곳 어긋남**(§7 상단 참조)
+### 타입 (`src/types/domain.ts`) — ⚠️ **위 스키마와 18곳 어긋남**(§7 상단 참조)
 - `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)** · `ownerId?`(교회 직접 등록 소유). — 전부 additive/optional.
 - `CurrentUser` = `{id, email, name|null, churchId|null, churchName|null, churchVerificationStatus|null}` — **배타적 role 없음**(단일 계정). 권한 파생 `hasChurchAccess` = `lib/auth.ts`. `FilterDim`에 `qualification`.
 - `repost-tracking`: `RepostInfo` = `{ count, postings: RolePosting[] }` (상세 재공고 타임라인용).
@@ -213,25 +232,50 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 
 ### ▶▶ 지금 바로 다음 (2026-08-06 기준) — 여기부터 읽으면 된다
 
-**상태 한 줄**: 결제·인증·SEO·스키마 **결정**은 전부 끝났다. 이제 남은 건 **DB를 실제로 만드는 것**과 **교회 멤버십 배선** 둘뿐이고, 둘 다 지금 바로 착수 가능하다(외부 대기 0건).
+**상태 한 줄**: 결제·인증·SEO는 끝. 스키마 **결정**도 거의 끝났고 **결정 2개만 남았다**(아래). 남은 실작업은 **DB를 실제로 만드는 것**과 **교회 멤버십 배선** 둘뿐이며, 둘 다 외부 대기 0건이다.
 
 ```
-dev = prod = origin/* = 958c060   (2026-08-06 fast-forward 완료, merge 커밋 0)
+dev = prod = origin/* = c0aa4ec   (2026-08-06 fast-forward 완료, merge 커밋 0)
 빌드·prettier 통과 · 작업트리 깨끗 · supabase/ 폴더 없음(마이그레이션 0줄)
 ```
 
-**선택지 3개 — 추천 순서**
+#### ⬜ 결정할 것 2개 (집에서 먼저 정하면 나머지가 풀린다)
+
+**1️⃣ 끌어올림(bump) 간격 N일 — 크롤러 미결 ①. 추천 = 30일**
+
+교회가 공고를 위로 올리려고 **같은 공고를 반복 게시**한다. 실측: 점촌제일교회 전임 사역자 자리 하나가 3개월간 **31번**(2~7일마다, 게시판 3곳 CSU 23·DAESHIN 5·KWANGSHIN 1). 안 묶으면 우리 사이트에 똑같은 공고가 31개 뜬다.
+
+```
+같은 연락처 + 직분 + 부서 이면
+   마감일이 같다        → 같은 공고            (공고의 71%가 여기서 끝난다)
+   마감일이 없다 ┬ 간격 ≤ N일 → 끌어올림(하나로 묶음)
+                └ 간격 > N일 → 재공고(따로 센다)
+```
+**마감일 없는 29%에만 적용된다.** 연속 게시 간격 분포: `0~3일 27.9% · 4~7일 30.7% · 8~14일 20.4% · 15~30일 13.7% · 31일+ 7.2%`
+→ N=14일이면 검수 자리 **811개**, N=30일이면 **709개**, 묶지 않으면 1,400개.
+
+**왜 우리 문제인가**: 재공고 횟수는 우리 차별점이고, 구직자에게 **"사람이 자주 나가는 교회"** 라는 신호로 읽힌다. N이 작으면 끌어올림을 재공고로 잘못 세어 **점촌제일교회가 "재공고 31회"로 뜬다**(사실은 한 번 뽑는 중). N이 크면 진짜 재공고를 놓친다.
+
+**추천 30일 — 근거 3**: ⓐ **부풀리는 오류가 훨씬 나쁘다** — 멀쩡한 교회를 낙인찍는 건 명예 문제고 되돌리기 어렵다. 놓치는 건 정보가 없을 뿐. **교회 병합에서 쓴 것과 같은 비대칭 논리** ⓑ 실무상 2주 만에 같은 자리를 다시 뽑는 일은 드물다(면접·노회 절차만 몇 주) → 15~30일 구간(13.7%)은 재공고보다 끌어올림일 가능성이 높다 ⓒ 31일+(7.2%)는 그대로 재공고로 남아 진짜 신호는 보존된다.
+
+**2️⃣ `repostKey`를 `교회` → `연락처`로 바꿀까 — 추천 = 바꾼다**
+
+`src/lib/repost-tracking.ts:11`이 `churchId + position + department`로 센다. `church_id`가 NULL이면 크롤링 공고는 재공고 판정에서 통째로 빠진다. 크롤러는 같은 것을 `연락처 + 직분 + 부서`로 세고 **교회를 몰라도 판정된다.** 키를 맞추면 claim 전에도 자리 단위 재공고 배지가 붙는다. **한 줄 변경**이지만 재공고는 우리 차별점이라 임의로 바꾸지 않고 남겨둔다.
+> 주의: 연락처가 없는 공고(연락 수단 0종)는 이 키로 묶이지 않는다. 그리고 **교단 사무실이 연락처를 공유**하는 경우가 83건 있어(§ 교회 식별), 연락처만으로 묶으면 다른 교회 자리가 한 묶음이 될 수 있다 → `직분 + 부서`가 함께 걸리므로 실제 충돌은 드물지만 **claim 후에는 `church_id` 기준으로 재계산**하는 게 안전하다.
+
+**선택지 3개 — 위 결정 후 착수, 추천 순서**
 
 | | 작업 | 왜 / 막는 것 |
 |---|---|---|
-| **1️⃣ 추천** | **`001_init.sql` + 타입·mock 정합 (한 묶음)** | 결정이 다 끝나 바로 쓸 수 있다. **아래 ⚠️ 15곳 드리프트가 여기서만 해소**된다. 순서: `001_init.sql` → `types/database.ts` 생성 → `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체 |
+| **1️⃣ 추천** | **`001_init.sql` + 타입·mock 정합 (한 묶음)** | 결정이 다 끝나 바로 쓸 수 있다. **아래 ⚠️ 18곳 드리프트가 여기서만 해소**된다. 순서: `001_init.sql` → `types/database.ts` 생성 → `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체 |
 | 2️⃣ | **교회 멤버십 배선** | **매출을 여는 단일 스위치**(결제 인프라는 이미 완성). `getCurrentUser`가 `churchId`·`churchVerificationStatus`를 항상 `null`로 줘서 교회 기능 전체가 닫혀 있다. 단 `users`·`churches` 테이블이 필요하므로 **사실상 1️⃣이 선행** |
 | 3️⃣ | **NULL 표시 UI 3개**(교단·지역·게시일 미상) | mock 단계에서 지금 가능. 스키마를 푼 대가라 안 하면 **모르는 것을 아는 척**하게 된다. 1️⃣과 독립이라 아무 때나 |
 
-> ⚠️ **1️⃣ 착수 전 반드시 알아야 할 것 — 코드가 아직 옛 스키마다.** 2026-08-05 스키마 확정은 **문서(DATA.md)에만** 반영됐고 `types/domain.ts`·mock은 그대로다. 코드 변경은 `pay_*` 개명뿐. 어긋난 **15곳**(전체 목록 = ROADMAP Phase 0):
+> ⚠️ **1️⃣ 착수 전 반드시 알아야 할 것 — 코드가 아직 옛 스키마다.** 2026-08-05 스키마 확정은 **문서(DATA.md)에만** 반영됐고 `types/domain.ts`·mock은 그대로다. 코드 변경은 `pay_*` 개명뿐. 어긋난 **18곳**(전체 목록 = ROADMAP Phase 0):
 > - **TS가 DB보다 엄격** → DB가 NULL을 주면 타입이 거짓말(런타임 오류): `position` · `employmentType` · `postedAt` · `Church.denomination` · `Church.region`
 > - **TS가 DB보다 느슨** → **실제 모순**: `description: string | null` 인데 스키마는 `NOT NULL`. **이 상태로 공고 등록 Server Action을 붙이면 런타임 에러**
-> - **타입에 없는 필드 9개**: `contactEmail/Tel/Link/Post`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod`
+> - **타입에 없는 필드 11개**: `contactEmail/Tel/Link/Post`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod` · **`churchName`** · **`region`**(2026-08-06 추가분)
+> - **`churchId: string` → `string | null`**(2026-08-06 claim 결정) — `Job.churchId`를 참조하는 모든 곳이 null을 다뤄야 한다. `repostKey`도 여기 걸린다(위 결정 2번)
 > - 함께: `posted_at` nullable 처리 3가지(JSON-LD 생략 · 정렬 `posted_at ?? created_at` 폴백 · null 처리 10곳+) · mock JSON 101건에 신규 필드 채우기
 
 **▶ 배포 직후 확인할 것 2개 (2026-08-06 prod 첫 반영)** — 7/29 이후 30커밋이 한 번에 올라갔다:
@@ -250,7 +294,9 @@ dev = prod = origin/* = 958c060   (2026-08-06 fast-forward 완료, merge 커밋 
 | `1343491` | **`stipend_*` → `pay_*` 개명**(21파일, 코드 변경은 이게 전부) |
 | `6d53bd3` | 스키마 6개 결정(XOR CHECK · 연락처 4컬럼 · `apply_methods` 폐기 · `job_promotions` 신설 · 필수값) |
 | `5311d6f` | **크롤러 실데이터 3,181건으로 필수값 재검증** → 8개 → 필수 4 + CHECK 2 |
-| `958c060` | 코드↔문서 15곳 드리프트를 마이그레이션 전제조건으로 기록 |
+| `958c060` | 코드↔문서 드리프트를 마이그레이션 전제조건으로 기록 |
+| `81a7d4b` | 세션 핸드오프를 SNAPSHOT에 기록 + SPEC의 깨진 링크(삭제된 CRAWLER_HANDOFF.md) 수정 |
+| `c0aa4ec` | **교회 식별을 claim으로 미룸** — `church_id` NOT NULL 해제 · `church_name`·`region` 추가(크롤러 요청 수용) |
 
 그 외: `docs/CRAWLER_HANDOFF.md` **삭제**(6개 절 전부 CLAUDE.md·DATA.md·ROADMAP·SPEC에 흡수됐음을 하나씩 확인 후).
 

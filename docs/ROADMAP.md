@@ -48,12 +48,16 @@
   - **대가**: 재공고 추적이 claim 전까지 작동 안 함(크롤러 `dedup_key`가 부분 보완) · `/churches/[id]`는 claim된 교회만 · 교단 필터도 claim 전까지 안 걸림(명시 2.8%라 영향 작음)
 - [ ] **NULL 표시 UI 3개**(스키마를 푼 대가 — 안 하면 모르는 것을 아는 척한다): 교단 미상(`denomination_source`가 `stated`·`registry`·`operator`일 때만 확정 표시) · 지역 미상 · 게시일 미상. **검수 우선순위는 교단보다 지역**(비면 지역 필터에서 탈락 = 사실상 안 보이는 공고)
 - [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 2개** + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**
+- [ ] ⬜ **결정 대기 2개**(SNAPSHOT §7 상단에 근거 상세):
+  1. **끌어올림(bump) 간격 N일** — 크롤러 미결 ①. **추천 30일**(14일=검수 811건 / 30일=709건 / 묶지 않음=1,400건). 마감일 없는 29%에만 적용. 재공고 횟수는 "사람이 자주 나가는 교회" 신호라 **부풀리는 오류가 훨씬 나쁘다**(멀쩡한 교회를 낙인 → 되돌리기 어려움). 실측: 한 자리가 3개월간 31번 반복 게시된 사례
+  2. **`repostKey`를 `churchId` → `contact`로** — **추천: 바꾼다**. `church_id`가 NULL이면 크롤링 공고가 재공고 판정에서 통째로 빠진다. 크롤러 `dedup_key`(연락처+직분+부서)와 키를 맞추면 claim 전에도 자리 단위 재공고가 잡힌다. 한 줄 변경(`lib/repost-tracking.ts:11`). ⚠️ claim 후에는 `church_id` 기준 재계산이 안전(교단 사무실 연락처 공유 83건)
 - [ ] **크롤러 리포 동기화**(min_job_agent) — `review_data`가 우리 확정과 4곳 어긋난다(DATA.md §12 말미): `stipend_*`→`pay_*` · `contact` 단일→**4컬럼** · 교단 미상=NULL(ETC 아님, "승격 전 해소" 철회) · 승격 게이트=**필수 4 + CHECK 2**. `review_data`는 min_job_agent 소유라 **승격 시 매핑하거나 크롤러 쪽에 반영 요청**. 크롤러 쪽 담당 = 6개 중 못 채운 게 있으면 `confidence=low`로 표시(구조화 단계)
 - [ ] DB 타입 생성 — `types/database.ts`
-- [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합** — 스키마 확정(2026-08-05)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.** 어긋난 15곳:
+- [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.** 어긋난 18곳:
   - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` · `postedAt` · `Church.denomination` · `Church.region` — 전부 nullable로 풀어야 함
   - **TS가 DB보다 느슨**(폼이 NULL을 보내면 DB가 거부): `description: string | null` → **`string`**. ⚠️ 실제 모순이라 이 상태로 등록 Server Action을 붙이면 런타임 에러
-  - **타입에 아예 없는 필드**: `contactEmail`·`contactTel`·`contactLink`·`contactPost`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod`
+  - **타입에 아예 없는 필드**: `contactEmail`·`contactTel`·`contactLink`·`contactPost`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod` · **`churchName`** · **`region`**
+  - **`churchId: string` → `string | null`**(2026-08-06 claim 결정) — 참조하는 모든 곳이 null을 다뤄야 하고, `repostKey`(`lib/repost-tracking.ts:11`)가 여기 걸린다
   - 함께 필요한 것: `posted_at` nullable 처리 3가지(JSON-LD 생략·정렬 폴백·null 처리 10곳+) · mock JSON 101건에 신규 필드 채우기
   > **타이밍 = 마이그레이션과 한 묶음.** 지금 손으로 맞추면 `types/database.ts` 생성 때 같은 일을 두 번 한다. 순서: `001_init.sql` → `database.ts` 생성 → `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체. **이 항목이 마이그레이션 작업의 전제조건이다.**
 
