@@ -20,7 +20,7 @@ export function MypageView({ user, allCards }: { user: CurrentUser; allCards: Jo
 
       <MinisterActivity allCards={allCards} />
 
-      {/* 관심 교회 — Phase 2 (팔로우 → 재공고 알림, 재공고 추적 차별점) */}
+      {/* 관심 교회 — Phase 2 (팔로우 → 새 공고 알림) */}
       <section className="space-y-3">
         <h2 className="text-lg font-bold">관심 교회</h2>
         <div className="rounded-2xl border border-dashed p-6 text-center">

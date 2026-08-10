@@ -1,7 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
 import * as mock from "@/mocks";
 import type { AdminJob, AdminOverview, JobCard, JobDetail } from "@/types/domain";
-import type { RepostInfo } from "@/lib/repost-tracking";
 
 // 데이터 소스 seam (공고) — 페이지는 여기서만 가져온다.
 // 현재 mock 위임. DB 전환 시 본문만 service.ts Supabase 호출로 교체(시그니처·타입 동일).
@@ -71,13 +70,6 @@ export async function getJobDetail(id: string): Promise<JobDetail | null> {
   cacheTag("jobs", `job-${id}`);
   cacheLife("days");
   return mock.getJobDetail(id);
-}
-
-export async function getRepost(id: string): Promise<RepostInfo | null> {
-  "use cache";
-  cacheTag("jobs");
-  cacheLife("days");
-  return mock.getRepost(id);
 }
 
 export async function getSimilarJobs(id: string, limit = 4): Promise<JobCard[]> {

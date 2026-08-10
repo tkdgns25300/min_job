@@ -6,7 +6,8 @@ import type { CurrentUser } from "@/types/domain";
 //    서버 검증이 유일한 방어선이어야 한다(클라이언트 검증은 공격자가 건너뛸 수 있다).
 
 // 교회 view 개방 조건 — 인증된 교회 소속(church_id 연결 + 인증 완료). DATA §3 파생 규칙.
-export function hasChurchAccess(user: CurrentUser): boolean {
+// 타입 술어라 통과 후 `user.churchId`가 `string`으로 좁혀진다 — 교회 권한 판정이 곧 churchId 보장.
+export function hasChurchAccess(user: CurrentUser): user is CurrentUser & { churchId: string } {
   return user.churchId !== null && user.churchVerificationStatus === "APPROVED";
 }
 

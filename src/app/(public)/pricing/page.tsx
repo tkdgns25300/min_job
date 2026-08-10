@@ -18,7 +18,7 @@ const PLANS = [
     price: "무료",
     unit: "",
     aud: "모든 교회 — 먼저 공고를 올려보세요",
-    features: ["공고 등록·수정", "최신순 목록·검색 노출", "교회 페이지·재공고 이력"],
+    features: ["공고 등록·수정", "최신순 목록·검색 노출", "교회 페이지·지난 공고 이력"],
     cta: { label: "공고 등록", href: "/jobs/new", primary: false },
     highlight: false,
   },

@@ -1,7 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
 import * as mock from "@/mocks";
-import type { Church, ChurchOption } from "@/types/domain";
-import type { RoleHistory } from "@/lib/repost-tracking";
+import type { Church, ChurchOption, PastJob } from "@/types/domain";
 
 // 데이터 소스 seam (교회) — 페이지는 여기서만 가져온다.
 // 현재 mock 위임. DB 전환 시 본문만 service.ts Supabase 호출로 교체(시그니처·타입 동일).
@@ -21,9 +20,9 @@ export async function getChurchOptions(): Promise<ChurchOption[]> {
   return mock.getChurchOptions();
 }
 
-export async function getChurchTimeline(churchId: string): Promise<RoleHistory[]> {
+export async function getChurchPastJobs(churchId: string): Promise<PastJob[]> {
   "use cache";
   cacheTag("jobs");
   cacheLife("days");
-  return mock.getChurchTimeline(churchId);
+  return mock.getChurchPastJobs(churchId);
 }

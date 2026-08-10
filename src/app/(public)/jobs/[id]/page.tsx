@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { JobDetailView } from "./job-detail-view";
 import { RecordRecentlyViewed } from "@/components/job/record-recently-viewed";
-import { getChurchOpenJobs, getJobDetail, getRepost, getSimilarJobs } from "@/lib/queries/jobs";
+import { getChurchOpenJobs, getJobDetail, getSimilarJobs } from "@/lib/queries/jobs";
 import { jobPostingJsonLd, jobRoleSummary } from "@/lib/seo";
 import { churchLocation, formatPay } from "@/lib/format";
 import { REGIONS } from "@/constants/domain";
@@ -40,8 +40,6 @@ async function JobDetailContent({ params }: Params) {
   const { id } = await params;
   const detail = await getJobDetail(id);
   if (!detail) notFound();
-
-  const repost = await getRepost(id);
   const churchJobs = await getChurchOpenJobs(detail.church.id, id);
   const similar = await getSimilarJobs(id, 6);
 
@@ -50,7 +48,7 @@ async function JobDetailContent({ params }: Params) {
       {/* schema.org JobPosting JSON-LD (SEO) — 모집중일 때만.
           구글은 마감 공고의 구조화 데이터 제거를 권장한다. validThrough(마감일)만 믿으면
           "마감일 없이 조기 마감" 또는 "마감일이 미래인데 마감" 공고가 모집중으로 노출된다
-          → 상태를 직접 본다. 페이지 자체는 계속 열린다(재공고 이력·교회 진입 경로). */}
+          → 상태를 직접 본다. 페이지 자체는 계속 열린다(교회 진입 경로·롱테일 SEO). */}
       {detail.job.status === "OPEN" && (
         <script
           type="application/ld+json"
@@ -68,7 +66,7 @@ async function JobDetailContent({ params }: Params) {
             : undefined
         }
       />
-      <JobDetailView detail={detail} repost={repost} churchJobs={churchJobs} similar={similar} />
+      <JobDetailView detail={detail} churchJobs={churchJobs} similar={similar} />
     </>
   );
 }

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { JobForm } from "../../job-form";
 import { JobStatusPanel } from "./status-panel";
 import { getEditableJob } from "@/lib/queries/users";
 import { getChurch } from "@/lib/queries/churches";
 import { requireUser } from "@/lib/auth-guard";
+import { hasChurchAccess } from "@/lib/auth";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -26,10 +27,11 @@ async function EditContent({ params }: Params) {
   const { id } = await params;
   const user = await requireUser();
 
-  // 소유권 검사 — 남의 공고·운영자 공고(owner 없음)는 notFound(존재 노출 최소화, 가드레일 #2).
-  // 운영자 공고 수정은 여기가 아니라 admin에서.
-  const job = await getEditableJob(id, user.id);
-  if (!job) notFound();
+  // 편집 권한 = 그 공고 church_id의 인증 관리자 (작성자 일치 아님 — 가드레일 #2·DATA §4).
+  // 담당자가 여럿이고 교체될 수 있어 작성자로 묶으면 안 된다. 운영자 공고 수정은 admin에서.
+  if (!hasChurchAccess(user)) redirect("/mypage/verify");
+  const job = await getEditableJob(id, user.churchId);
+  if (!job) notFound(); // 남의 교회 공고 — 존재 노출 최소화
   const church = await getChurch(job.churchId);
 
   return (

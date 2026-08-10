@@ -80,7 +80,7 @@ export async function getChurchDashboard(churchId: string): Promise<ChurchDashbo
   return mock.getChurchDashboard(churchId);
 }
 
-/** 수정 화면용 공고 — 권한 불일치(남의 공고·미인증)는 null → notFound */
-export async function getEditableJob(id: string, userId: string): Promise<Job | null> {
-  return mock.getEditableJob(id, userId);
+/** 수정 화면용 공고 — 권한 = 그 공고 church_id의 인증 관리자. 남의 교회 공고는 null → notFound */
+export async function getEditableJob(id: string, churchId: string): Promise<Job | null> {
+  return mock.getEditableJob(id, churchId);
 }

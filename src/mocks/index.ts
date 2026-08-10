@@ -10,13 +10,8 @@ import type {
   Job,
   JobCard,
   JobDetail,
+  PastJob,
 } from "@/types/domain";
-import {
-  getRepostInfo,
-  groupByRole,
-  type RepostInfo,
-  type RoleHistory,
-} from "@/lib/repost-tracking";
 import { DENOMINATIONS, DEPARTMENTS, POSITIONS, REGIONS } from "@/constants/domain";
 
 // mock 데이터 — 페이지를 만들며 채워나간다. 모든 페이지 완료 시 이 형태가 최종 스키마.
@@ -85,13 +80,6 @@ export function getJobDetail(id: string): JobDetail | null {
   return { job, church };
 }
 
-/** 재공고 정보 — 같은 교회·같은 자리의 반복 공고 집계 (마감 공고 포함) */
-export function getRepost(id: string): RepostInfo | null {
-  const job = jobs.find((j) => j.id === id);
-  if (!job) return null;
-  return getRepostInfo(job, jobs);
-}
-
 /** 교회 단건 (없으면 null → notFound) */
 export function getChurch(id: string): Church | null {
   return churchById.get(id) ?? null;
@@ -109,9 +97,18 @@ export function getChurchOpenJobs(churchId: string, excludeId?: string): JobCard
   return openJobs.filter((j) => j.churchId === churchId && j.id !== excludeId).map(toCard);
 }
 
-/** 교회의 공고 이력 — 자리별 그룹(현재+지난, 재공고 집계). 검수 중(PENDING)은 공개 전이라 제외 */
-export function getChurchTimeline(churchId: string): RoleHistory[] {
-  return groupByRole(jobs.filter((j) => j.churchId === churchId && j.status !== "PENDING"));
+/** 교회의 지난 공고 — 마감된 것만 최신순. 검수 중(PENDING)은 공개 전이라 제외 */
+export function getChurchPastJobs(churchId: string): PastJob[] {
+  return jobs
+    .filter((j) => j.churchId === churchId && j.status === "CLOSED")
+    .map((j) => ({
+      id: j.id,
+      position: j.position,
+      department: j.department,
+      postedAt: j.postedAt,
+      deadline: j.deadline,
+    }))
+    .sort((a, b) => b.postedAt.localeCompare(a.postedAt));
 }
 
 /** 비슷한 공고 — 같은 부서 우선·같은 지역 보충 (현재 공고·같은 교회 제외) */
@@ -173,10 +170,10 @@ export function getChurchDashboard(churchId: string) {
   };
 }
 
-/** 수정 가능 공고 — mock: owner 일치. 실구현은 "그 공고 church_id의 인증 관리자"로 판정(DATA §4). 불일치 → null(notFound) */
-export function getEditableJob(id: string, userId: string): Job | null {
+/** 수정 가능 공고 — 권한 = 그 공고 church_id의 인증 관리자(DATA §4). 다른 교회 공고 → null(notFound) */
+export function getEditableJob(id: string, churchId: string): Job | null {
   const job = jobs.find((j) => j.id === id);
-  return job && job.ownerId === userId ? job : null;
+  return job && job.churchId === churchId ? job : null;
 }
 
 // --- 운영자(admin) — 전체 공고 관리. 실구현은 operator RLS(DATA §RLS) + 인증 게이트(Phase 1). ---

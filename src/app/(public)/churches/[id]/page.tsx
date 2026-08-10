@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ChurchDetailView } from "./church-detail-view";
 import { churchMetaLine } from "@/lib/format";
-import { getChurch, getChurchTimeline } from "@/lib/queries/churches";
+import { getChurch, getChurchPastJobs } from "@/lib/queries/churches";
 import { getChurchOpenJobs } from "@/lib/queries/jobs";
 import { SITE_OPEN_GRAPH } from "@/constants/site";
 
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const openCount = (await getChurchOpenJobs(id)).length;
   const description = `${church.name} (${churchMetaLine(church)}) 교역자 청빙${
     openCount > 0 ? ` · 현재 ${openCount}건 모집 중` : ""
-  }. 교회 정보·채널·재공고 이력을 민잡에서 확인하세요.`;
+  }. 교회 정보·채널·지난 공고를 민잡에서 확인하세요.`;
   return {
     title: `${church.name} 청빙 | 민잡`,
     description,
@@ -41,9 +41,9 @@ async function ChurchDetailContent({ params }: Params) {
   if (!church) notFound();
 
   const openJobs = await getChurchOpenJobs(id);
-  const timeline = await getChurchTimeline(id);
+  const pastJobs = await getChurchPastJobs(id);
 
-  return <ChurchDetailView church={church} openJobs={openJobs} timeline={timeline} />;
+  return <ChurchDetailView church={church} openJobs={openJobs} pastJobs={pastJobs} />;
 }
 
 function ChurchDetailSkeleton() {

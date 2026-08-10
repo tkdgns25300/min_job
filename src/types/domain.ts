@@ -40,6 +40,16 @@ export interface Church {
   links: ChurchLink[]; // 교회 채널 — 없으면 빈 배열
 }
 
+// 교회 상세의 '지난 공고' 한 줄 — 마감된 공고를 최신순으로 보여주기 위한 최소 형태.
+// (자리별 묶음·재공고 집계는 2026-08-07에 제거했다 — ROADMAP 1-4 참조)
+export interface PastJob {
+  id: string;
+  position: Position;
+  department: Department | null;
+  postedAt: string;
+  deadline: string | null;
+}
+
 // 공고 — 스키마는 페이지 작업하며 확장한다. (상세 페이지에서 아래 상세 필드 확정)
 export interface Job {
   id: string;
@@ -68,7 +78,6 @@ export interface Job {
   sourceUrl: string | null; // 원문 링크 (운영자 수집 공고). 재호스팅 대신 링크로 안내
   role: string | null; // 일반직(GENERAL) 분류 자유텍스트(방송·행정 등). 사역직은 null
   contact: string | null; // 지원용 공개 연락처(전화·이메일·링크). 가드레일 #3
-  ownerId?: string | null; // 소유 계정(교회 직접 등록만) — 운영자 공고는 없음. 가드레일 #2: 공고를 user에 강결합하지 않는다
 }
 
 // 로그인 사용자 — 단일 계정 모델(DATA §3). 모든 계정은 기본 사역자(MINISTER).

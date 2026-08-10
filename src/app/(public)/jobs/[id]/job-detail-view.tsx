@@ -15,7 +15,6 @@ import {
   type JobSource,
 } from "@/constants/domain";
 import type { Church, Job, JobCard as JobCardData, JobDetail } from "@/types/domain";
-import type { RepostInfo } from "@/lib/repost-tracking";
 
 const externalLinkAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
 
@@ -76,16 +75,8 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-// 상단 헤더 (풀폭) — 교회 정체성 + 제목 + 재공고 배지
-function PostHeader({
-  job,
-  church,
-  repost,
-}: {
-  job: Job;
-  church: Church;
-  repost: RepostInfo | null;
-}) {
+// 상단 헤더 (풀폭) — 교회 정체성 + 제목
+function PostHeader({ job, church }: { job: Job; church: Church }) {
   return (
     <div>
       <div className="flex items-start justify-between gap-3">
@@ -102,56 +93,10 @@ function PostHeader({
       </div>
 
       <div className="mt-5">
-        {repost && (
-          <span className="mb-2 inline-block rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
-            재공고 {repost.count}회
-          </span>
-        )}
         <h1 className="text-2xl leading-snug font-bold break-keep">{job.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{jobRoleLine(job)}</p>
       </div>
     </div>
-  );
-}
-
-// 재공고 이력 (차별점) — 요약 + 해석 힌트 + 지난 공고 접이식 타임라인
-function RepostHistory({ job, repost }: { job: Job; repost: RepostInfo }) {
-  const past = repost.postings.filter((p) => p.id !== job.id);
-  return (
-    <Section title="공고 이력">
-      <p className="mt-3 text-base font-bold break-keep">
-        이 자리를 최근 <span className="text-primary">{repost.count}번</span> 공고했어요
-      </p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        자주 비는 자리일 수 있어요. 근무 환경을 확인해 보세요.
-      </p>
-      {past.length > 0 && (
-        <details className="mt-3">
-          <summary className="inline-block cursor-pointer text-sm font-semibold text-primary underline underline-offset-4 [&::-webkit-details-marker]:hidden">
-            지난 공고 {past.length}건 보기
-          </summary>
-          <ul className="mt-3 divide-y divide-border border-t">
-            {past.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 py-2.5 text-sm">
-                <span className="tabular-nums text-muted-foreground">
-                  {p.postedAt} ~ {p.deadline ?? "상시"}
-                </span>
-                <span
-                  className={cn(
-                    "ml-auto rounded-full px-2 py-0.5 text-xs font-bold",
-                    p.status === "OPEN"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {JOB_STATUSES[p.status]}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-    </Section>
   );
 }
 
@@ -160,13 +105,11 @@ function MainContent({
   job,
   church,
   churchJobs,
-  repost,
   apply,
 }: {
   job: Job;
   church: Church;
   churchJobs: JobCardData[];
-  repost: RepostInfo | null;
   apply: ApplyTarget | null;
 }) {
   const location = churchLocation(church);
@@ -244,8 +187,6 @@ function MainContent({
           </a>
         )}
       </Section>
-
-      {repost && <RepostHistory job={job} repost={repost} />}
 
       <Section title={church.name}>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -357,7 +298,7 @@ function SimilarJobsSection({ jobs, moreHref }: { jobs: JobCardData[]; moreHref:
   );
 }
 
-// 마감 배너 — 무채색. 페이지는 살려둔다(재공고 이력·롱테일 SEO).
+// 마감 배너 — 무채색. 페이지는 살려둔다(롱테일 SEO).
 function ClosedBanner({ hasSimilar }: { hasSimilar: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
@@ -383,12 +324,10 @@ function SourceNote({ source }: { source: JobSource }) {
 
 export function JobDetailView({
   detail,
-  repost,
   churchJobs,
   similar,
 }: {
   detail: JobDetail;
-  repost: RepostInfo | null;
   churchJobs: JobCardData[];
   similar: JobCardData[];
 }) {
@@ -410,16 +349,10 @@ export function JobDetailView({
 
       {job.status === "CLOSED" && <ClosedBanner hasSimilar={similar.length > 0} />}
 
-      <PostHeader job={job} church={church} repost={repost} />
+      <PostHeader job={job} church={church} />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-        <MainContent
-          job={job}
-          church={church}
-          churchJobs={churchJobs}
-          repost={repost}
-          apply={apply}
-        />
+        <MainContent job={job} church={church} churchJobs={churchJobs} apply={apply} />
         <SummaryAside job={job} apply={apply} />
       </div>
 

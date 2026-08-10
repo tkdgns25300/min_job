@@ -4,34 +4,26 @@ import { ChurchGallery } from "@/components/church/church-gallery";
 import { churchLocation, churchMetaLine, formatPay, jobRoleLine } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { DEPARTMENTS, POSITIONS } from "@/constants/domain";
-import type { Church, JobCard as JobCardData } from "@/types/domain";
-import { REPOST_MIN_COUNT, type RoleHistory } from "@/lib/repost-tracking";
+import type { Church, JobCard as JobCardData, PastJob } from "@/types/domain";
 
 const externalAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
 
 // 자리 이름: 부서 + 직분 (예: "유초등부 전도사")
-function roleLabel(role: Pick<RoleHistory, "position" | "department">): string {
+function roleLabel(role: Pick<PastJob, "position" | "department">): string {
   return [role.department ? DEPARTMENTS[role.department] : null, POSITIONS[role.position]]
     .filter(Boolean)
     .join(" ");
 }
 
-// 현재 모집 카드 — 교회 상세 컨텍스트(교회명 반복 없음). 재공고면 배지.
-function OpenJobCard({ job, repostCount }: { job: JobCardData; repostCount: number }) {
+// 현재 모집 카드 — 교회 상세 컨텍스트(교회명 반복 없음)
+function OpenJobCard({ job }: { job: JobCardData }) {
   const hasPay = job.payMin !== null || job.payMax !== null;
   return (
     <Link
       href={`/jobs/${job.id}`}
       className="flex h-full flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/40"
     >
-      <div className="flex items-start gap-2">
-        <h3 className="flex-1 leading-snug font-bold break-keep">{job.title}</h3>
-        {repostCount >= REPOST_MIN_COUNT && (
-          <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
-            재공고 {repostCount}회
-          </span>
-        )}
-      </div>
+      <h3 className="leading-snug font-bold break-keep">{job.title}</h3>
       <p className="text-sm text-muted-foreground">{jobRoleLine(job)}</p>
       <p
         className={cn("mt-auto pt-1 font-bold", hasPay ? "text-primary" : "text-muted-foreground")}
@@ -45,11 +37,11 @@ function OpenJobCard({ job, repostCount }: { job: JobCardData; repostCount: numb
 export function ChurchDetailView({
   church,
   openJobs,
-  timeline,
+  pastJobs,
 }: {
   church: Church;
   openJobs: JobCardData[];
-  timeline: RoleHistory[];
+  pastJobs: PastJob[];
 }) {
   const meta = church.foundedYear
     ? `${churchMetaLine(church)} · ${church.foundedYear}년 설립`
@@ -57,17 +49,8 @@ export function ChurchDetailView({
   const location = churchLocation(church);
   const mapUrl = `https://map.naver.com/p/search/${encodeURIComponent(`${church.name} ${location}`)}`;
 
-  // 자리별 총 공고 수(재공고 배지용) — position+department로 매칭
-  const repostCountFor = (job: JobCardData) =>
-    timeline.find((r) => r.position === job.position && r.department === job.department)?.postings
-      .length ?? 1;
-
-  // 지난 공고(마감) — 자리 라벨 붙여 최신순
-  const pastPostings = timeline
-    .flatMap((r) =>
-      r.postings.filter((p) => p.status === "CLOSED").map((p) => ({ ...p, role: roleLabel(r) })),
-    )
-    .sort((a, b) => b.postedAt.localeCompare(a.postedAt));
+  // 지난 공고(마감) — 자리 라벨을 붙여 표시
+  const pastPostings = pastJobs.map((p) => ({ ...p, role: roleLabel(p) }));
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8 px-4 pt-6 pb-24">
@@ -109,7 +92,7 @@ export function ChurchDetailView({
         {openJobs.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {openJobs.map((job) => (
-              <OpenJobCard key={job.id} job={job} repostCount={repostCountFor(job)} />
+              <OpenJobCard key={job.id} job={job} />
             ))}
           </div>
         ) : (
