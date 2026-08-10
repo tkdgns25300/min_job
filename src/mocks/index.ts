@@ -147,8 +147,9 @@ function toMyJob(j: Job) {
 }
 
 /**
- * 교회 관리 대시보드 — 그 교회 공고 전부(church_id 기준). 권한 = 교회 인증 멤버십(owner 일치 아님).
- * managed = 교회 직접 등록(source=CHURCH, 편집 대상) / claimableCount = 운영자 등록(owner 없음) 건수.
+ * 교회 관리 대시보드 — 그 교회 공고 전부(church_id 기준). 권한 = 교회 인증 멤버십.
+ * managed = 교회 직접 등록(source=CHURCH, **편집 대상**) / claimableCount = 운영자 등록(클레임 대상) 건수.
+ * ⚠️ 이 managed 조건은 `getEditableJob`의 편집 게이트와 **같은 술어**여야 한다(화면과 동작 일치).
  * 운영자 등록 공고를 "가져와 관리"(클레임)하면 source가 CHURCH로 전환된다(Phase 1).
  */
 export function getChurchDashboard(churchId: string) {
@@ -170,10 +171,15 @@ export function getChurchDashboard(churchId: string) {
   };
 }
 
-/** 수정 가능 공고 — 권한 = 그 공고 church_id의 인증 관리자(DATA §4). 다른 교회 공고 → null(notFound) */
+/**
+ * 수정 가능 공고 — 권한 = 그 공고 church_id의 인증 관리자(DATA §4).
+ * ⚠️ `source=CHURCH`만 편집 대상. 운영자 등록 공고는 **클레임("가져오기")을 거쳐야** 편집된다
+ * — 교회 대시보드가 managed/claimable을 나눠 보여주므로, 여기서 열어주면 화면과 어긋난다.
+ * 다른 교회 공고·미클레임 공고 → null(notFound)
+ */
 export function getEditableJob(id: string, churchId: string): Job | null {
   const job = jobs.find((j) => j.id === id);
-  return job && job.churchId === churchId ? job : null;
+  return job && job.churchId === churchId && job.source === "CHURCH" ? job : null;
 }
 
 // --- 운영자(admin) — 전체 공고 관리. 실구현은 operator RLS(DATA §RLS) + 인증 게이트(Phase 1). ---

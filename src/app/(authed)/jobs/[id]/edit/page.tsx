@@ -28,10 +28,12 @@ async function EditContent({ params }: Params) {
   const user = await requireUser();
 
   // 편집 권한 = 그 공고 church_id의 인증 관리자 (작성자 일치 아님 — 가드레일 #2·DATA §4).
-  // 담당자가 여럿이고 교체될 수 있어 작성자로 묶으면 안 된다. 운영자 공고 수정은 admin에서.
+  // 담당자가 여럿이고 교체될 수 있어 작성자로 묶으면 안 된다.
   if (!hasChurchAccess(user)) redirect("/mypage/verify");
+  // 운영자 등록 공고는 클레임("가져오기") 전까지 제외 — 대시보드가 managed/claimable을 나눠
+  // 보여주므로 여기서 열어주면 화면과 어긋난다(수정해도 source가 OPERATOR로 남아 "가져오세요"가 계속 뜬다).
   const job = await getEditableJob(id, user.churchId);
-  if (!job) notFound(); // 남의 교회 공고 — 존재 노출 최소화
+  if (!job) notFound(); // 남의 교회 공고·미클레임 공고 — 존재 노출 최소화
   const church = await getChurch(job.churchId);
 
   return (

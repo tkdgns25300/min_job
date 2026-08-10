@@ -27,7 +27,7 @@ export type MyJob = Pick<
 export interface ChurchDashboard {
   church: Pick<Church, "name" | "denomination" | "region" | "city"> | null;
   managed: MyJob[]; // 교회 직접 등록(source=CHURCH) — 편집 대상
-  claimableCount: number; // 운영자 등록(owner 없음) — "가져와 관리" 대상
+  claimableCount: number; // 운영자 등록(source=OPERATOR) — "가져와 관리"(클레임) 대상
 }
 
 /**
@@ -75,12 +75,16 @@ function displayName(metadata: Record<string, unknown>): string | null {
   return candidates.find((v): v is string => typeof v === "string" && v.trim() !== "") ?? null;
 }
 
-/** 교회 관리 대시보드 — 권한은 교회 인증 멤버십(owner 일치 아님, DATA §4) */
+/** 교회 관리 대시보드 — 권한은 교회 인증 멤버십(DATA §4) */
 export async function getChurchDashboard(churchId: string): Promise<ChurchDashboard> {
   return mock.getChurchDashboard(churchId);
 }
 
-/** 수정 화면용 공고 — 권한 = 그 공고 church_id의 인증 관리자. 남의 교회 공고는 null → notFound */
+/**
+ * 수정 화면용 공고 — 권한 = 그 공고 church_id의 인증 관리자 **+ `source=CHURCH`**.
+ * 운영자 등록 공고는 클레임 전까지 편집 불가(대시보드의 managed/claimable 구분과 일치).
+ * 남의 교회 공고·미클레임 공고는 null → notFound
+ */
 export async function getEditableJob(id: string, churchId: string): Promise<Job | null> {
   return mock.getEditableJob(id, churchId);
 }

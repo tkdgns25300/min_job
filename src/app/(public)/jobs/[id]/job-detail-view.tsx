@@ -7,13 +7,7 @@ import { JobCard } from "@/components/job/job-card";
 import { ChurchChannels } from "@/components/church/church-channels";
 import { churchLocation, churchMetaLine, formatPay, jobRoleLine } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import {
-  EMPLOYMENT_TYPES,
-  JOB_SOURCES,
-  JOB_STATUSES,
-  POSITIONS,
-  type JobSource,
-} from "@/constants/domain";
+import { EMPLOYMENT_TYPES, JOB_SOURCES, POSITIONS, type JobSource } from "@/constants/domain";
 import type { Church, Job, JobCard as JobCardData, JobDetail } from "@/types/domain";
 
 const externalLinkAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
