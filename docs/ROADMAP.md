@@ -22,8 +22,8 @@
 - [x] Vercel 연결 + 첫 배포 (2026-07-18) — https://min-job.vercel.app/ (mock 데이터, 시크릿 없음)
 
 ### DB 스키마 (DATA.md 확정 완료 — Phase 1에서 구축)
-> DATA.md에 스키마·enum·인덱스·RLS·재공고·노출 모델 확정됨. 아래는 Phase 1에서 진행.
-- [x] **DATA.md 작성** — 봉인 결정 확정(정규화/JOIN·직교화·enum·재공고키·노출 2종·사례비 period·RLS 의도)
+> DATA.md에 스키마·enum·인덱스·RLS·노출 모델 확정됨. 아래는 Phase 1에서 진행.
+- [x] **DATA.md 작성** — 봉인 결정 확정(정규화/JOIN·직교화·enum·노출 2종·사례비 period·RLS 의도)
 - [x] **`jobs` 미확정 7필드 확정 + nullable 원칙**(2026-08-04) — DATA.md §3의 ⚠️ 블록 해소. 신규 컬럼 `headcount`·`start_timing`·`process_steps`·`optional_docs`·`housing_note`·`benefit_note`, `employment_type` NOT NULL→NULL, `housing_provided` nullable boolean(**enum 신설 X** — DEFAULT false가 "언급 없음"을 "미제공"으로 왜곡). 근거 = 크롤링 원문 3,051건 언급률 실측(고용형태 51%·사택 40%)
 - [x] **스키마 6개 결정 확정**(2026-08-05) — 위 nullable 원칙을 조이고 구조를 정리했다. DATA.md §2·§3·§5·§7·§9·§12 반영:
   1. `position`/`role` **분리 유지** + **XOR CHECK** — 합치면 한 칼럼이 "통제 enum + 자유텍스트" 두 값 공간을 가져 TS 타입이 `string`으로 무너진다. CHECK로 "일반직인데 직분이 박힌" 행을 존재 불가로
@@ -38,26 +38,27 @@
   - **CHECK ②에서 `source_url`을 뺐다** — 세면 크롤링 공고는 항상 통과해 제약이 장식이 된다. 빼면 크롤링은 연락처를 채우게 되고(품질 상승) 교회 등록은 자동으로 연락처 필수
   - 연락처는 **4컬럼 유지**(1칼럼 text로 되돌리지 않음) — 실측 **75.4%가 2종 이상**이라 text 하나면 뭉개지고 `mailto:`/`tel:` 링크를 못 만든다(모바일 UX)
   - ⚠️ **`posted_at` nullable의 대가 3가지**(DATA.md에 상세): JobPosting JSON-LD 생략(`datePosted`는 Google 필수 필드) · 정렬 `posted_at ?? created_at` 폴백 · `Job.postedAt` 타입 null 처리 10곳+. 대안(`NOT NULL` 유지 + 60건 수동 ≈20분)이 더 싸다는 검토 의견은 남겨뒀다
-  - ⚠️ **`church_id` 자동 매칭 금지** — 동명이교회 실측(선민교회 HAPDONG ×3 · GAMLI ×1). 이름 매칭하면 남의 공고가 붙어 **재공고 횟수가 거짓**이 된다(차별점 붕괴). 후보 제시만, 확정은 운영자
+  - ⚠️ **`church_id` 자동 매칭 금지** — 동명이교회 실측(선민교회 HAPDONG ×3 · GAMLI ×1). 이름 매칭하면 **남의 교회 페이지에 남의 공고가 뜬다**(되돌리기 어렵다). 후보 제시만, 확정은 운영자
 - [x] **교회 식별을 claim으로 미룸 — 스키마 3개 변경**(2026-08-06, 크롤러 요청 수용. **위 `church_id NOT NULL`을 뒤집는다**):
   - `jobs.church_id` **NOT NULL 해제**(NULL = 아직 확정 못 함) · **`jobs.church_name text NOT NULL` 추가**(공고가 말한 그대로) · **`jobs.region text NULL` 추가**
   - **근거(크롤러 실측)**: 교회 묶기가 자동 95%까지만 되고 사각지대가 남는다 — (교회명+광역) 1,203그룹 중 **검증 불가 67개**('일관'처럼 보이나 다른 교회일 수 있음) · **같은 연락처에 다른 교회명 83건**(표기 차이 + 교단 사무실 공유). **사람이 봐도 판정이 안 된다.** 다른 교회를 합치면 되돌리기 어렵고(이미 공개), 안 합치면 나중에 병합 가능 → "증거 없으면 합치지 않는다"를 끝까지 밀어 **교회 행을 아예 만들지 않는다**
-  - 교회가 가입·인증 후 **claim**하면 `church_id`가 채워지고 교회 상세·재공고가 켜진다 → **claim이 교회 가입 유인이 된다**(mock `job-101` 클레임 데모와 같은 개념)
+  - 교회가 가입·인증 후 **claim**하면 `church_id`가 채워지고 교회 상세가 켜진다 → **claim이 교회 가입 유인이 된다**(mock `job-101` 클레임 데모와 같은 개념)
   - **필수 4의 1번이 `church_id` → `church_name`으로 교체**(커버율 96%, 없는 124건은 제약이 자동 차단). 개수는 그대로 4개
   - ⚠️ **`jobs.region`은 §1 "비정규화 금지"의 명시적 예외** — `church_id`가 NULL이면 JOIN이 성립 안 해 지역 필터가 통째로 죽는다(크롤링 공고 80%). `featured_tier`와 같은 취급으로 §1에 예외 2개를 명시했다
-  - **대가**: 재공고 추적이 claim 전까지 작동 안 함(크롤러 `dedup_key`가 부분 보완) · `/churches/[id]`는 claim된 교회만 · 교단 필터도 claim 전까지 안 걸림(명시 2.8%라 영향 작음)
+  - **대가**: `/churches/[id]`는 claim된 교회만 · 교단 필터도 claim 전까지 안 걸림(명시 2.8%라 영향 작음) · **재공고 추적은 아예 제거**(위 결정 완료 2번)
 - [ ] **NULL 표시 UI 3개**(스키마를 푼 대가 — 안 하면 모르는 것을 아는 척한다): 교단 미상(`denomination_source`가 `stated`·`registry`·`operator`일 때만 확정 표시) · 지역 미상 · 게시일 미상. **검수 우선순위는 교단보다 지역**(비면 지역 필터에서 탈락 = 사실상 안 보이는 공고)
 - [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 2개** + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**
-- [ ] ⬜ **결정 대기 2개**(SNAPSHOT §7 상단에 근거 상세):
-  1. **끌어올림(bump) 간격 N일** — 크롤러 미결 ①. **추천 30일**(14일=검수 811건 / 30일=709건 / 묶지 않음=1,400건). 마감일 없는 29%에만 적용. 재공고 횟수는 "사람이 자주 나가는 교회" 신호라 **부풀리는 오류가 훨씬 나쁘다**(멀쩡한 교회를 낙인 → 되돌리기 어려움). 실측: 한 자리가 3개월간 31번 반복 게시된 사례
-  2. **`repostKey`를 `churchId` → `contact`로** — **추천: 바꾼다**. `church_id`가 NULL이면 크롤링 공고가 재공고 판정에서 통째로 빠진다. 크롤러 `dedup_key`(연락처+직분+부서)와 키를 맞추면 claim 전에도 자리 단위 재공고가 잡힌다. 한 줄 변경(`lib/repost-tracking.ts:11`). ⚠️ claim 후에는 `church_id` 기준 재계산이 안전(교단 사무실 연락처 공유 83건)
+- [x] **결정 완료(2026-08-07) — 중복/재공고는 지금 안 한다**:
+  1. **끌어올림(bump) 판정은 min_job 일이 아니다** — 크롤러(min_job_agent)가 수집 단계에서 묶고, **min_job admin 검수 화면에서 "이거 끌어올리시겠습니까?"** 로 운영자에게 확인받는다. 우리는 N일 임계값을 정하지 않는다
+  2. **재공고 추적 기능 자체를 제거**(보류) — `lib/repost-tracking.ts` 삭제. 판정 키가 `church_id`에 묶여 있었는데 그게 nullable이 되면서 claim 전 공고가 전부 `null:직분:부서` 한 덩어리로 합쳐져 **거짓 숫자를 공개**하게 된다. "안 잡힌다"가 아니라 **틀린 값이 나온다**는 게 제거 이유. 되살리는 조건·후보 키는 DATA.md §6
+  3. **`owner_id` 컬럼 제거** — 유일한 사용처 `getEditableJob`이 이 컬럼으로 편집 권한을 판정하고 있었는데 그게 가드레일 #2 위반이었다(담당자는 여럿·교체됨). 권한을 `church_id` 기준으로 바꾸고 컬럼을 없앴다
 - [ ] **크롤러 리포 동기화**(min_job_agent) — `review_data`가 우리 확정과 4곳 어긋난다(DATA.md §12 말미): `stipend_*`→`pay_*` · `contact` 단일→**4컬럼** · 교단 미상=NULL(ETC 아님, "승격 전 해소" 철회) · 승격 게이트=**필수 4 + CHECK 2**. `review_data`는 min_job_agent 소유라 **승격 시 매핑하거나 크롤러 쪽에 반영 요청**. 크롤러 쪽 담당 = 6개 중 못 채운 게 있으면 `confidence=low`로 표시(구조화 단계)
 - [ ] DB 타입 생성 — `types/database.ts`
 - [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.** 어긋난 18곳:
   - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` · `postedAt` · `Church.denomination` · `Church.region` — 전부 nullable로 풀어야 함
   - **TS가 DB보다 느슨**(폼이 NULL을 보내면 DB가 거부): `description: string | null` → **`string`**. ⚠️ 실제 모순이라 이 상태로 등록 Server Action을 붙이면 런타임 에러
   - **타입에 아예 없는 필드**: `contactEmail`·`contactTel`·`contactLink`·`contactPost`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod` · **`churchName`** · **`region`**
-  - **`churchId: string` → `string | null`**(2026-08-06 claim 결정) — 참조하는 모든 곳이 null을 다뤄야 하고, `repostKey`(`lib/repost-tracking.ts:11`)가 여기 걸린다
+  - **`churchId: string` → `string | null`**(2026-08-06 claim 결정) — 참조하는 모든 곳이 null을 다뤄야 한다
   - 함께 필요한 것: `posted_at` nullable 처리 3가지(JSON-LD 생략·정렬 폴백·null 처리 10곳+) · mock JSON 101건에 신규 필드 채우기
   > **타이밍 = 마이그레이션과 한 묶음.** 지금 손으로 맞추면 `types/database.ts` 생성 때 같은 일을 두 번 한다. 순서: `001_init.sql` → `database.ts` 생성 → `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체. **이 항목이 마이그레이션 작업의 전제조건이다.**
 
@@ -226,7 +227,7 @@
 
 - [ ] **재공고 vs 중복 판정축 — 시간 근접성 추가.** 현재 `repostKey`(`lib/repost-tracking.ts`)는 `교회+직분+부서`뿐이고 **시간 축이 없다** → "같은 시기에 두 경로로 올라온 중복"과 "반년 뒤 다시 올린 재공고"를 구별할 수 없다. 판정 신호(강→약): 같은 자리 + **게시일 근접(예: 30일 내)** → 중복 후보 · **마감일 일치** → 거의 확정 · 제목·본문 유사도 / 사례비·부임시기 일치 → 보조 · 같은 자리인데 **게시일이 멀다 → 재공고(병합 금지)**
 - [ ] **중복일 때 우선순위 = 교회 직접 등록.** 교회가 본인 조건·연락처를 직접 쓴 쪽이 정확하다. 처리: 크롤링분은 **승격하지 않고**, 기존 공고에 `source_url`(원문 링크)만 붙이고 `review_data.published_job_id`를 그 기존 공고로 기록 → 다음 크롤에서 재등장 방지(컬럼은 이미 있음). 출처 링크가 붙어 신뢰도도 오른다
-- [ ] **반대 방향(더 흔할 것) — 등록 시 클레임 유도.** 크롤링 공고가 먼저 올라가 있고(`source=OPERATOR`·`owner_id=NULL`) 그 교회가 나중에 인증해 직접 올리려는 경우, 새로 등록하면 중복이 된다. 클레임("가져와 관리")은 설계돼 있으나 **`/jobs/new`에 안내가 없다** → 등록 화면에서 "이 교회의 기존 공고 N건 — 가져올까요?"를 먼저 보여줄 것
+- [ ] **반대 방향(더 흔할 것) — 등록 시 클레임 유도.** 크롤링 공고가 먼저 올라가 있고(`source=OPERATOR`) 그 교회가 나중에 인증해 직접 올리려는 경우, 새로 등록하면 중복이 된다. 클레임("가져와 관리")은 설계돼 있으나 **`/jobs/new`에 안내가 없다** → 등록 화면에서 "이 교회의 기존 공고 N건 — 가져올까요?"를 먼저 보여줄 것
 - [ ] **교회 dedup** — 운영자 수집 시 기존 교회 수기 매칭(DATA §6). 크롤 매칭은 `matched_church_id`로 후보 제시, 자동 생성 금지
 > 크롤러 **실운영은 법률 검토 완료가 전제**(2026-07-28 확인 완료). 결제(1-8)·페이지 로직 마감(1-9)은 이 트랙과 병행.
 
@@ -245,14 +246,14 @@
 
 ## Phase 2: 차별화 + 자생 전환
 
-> 일부 기능은 DATA.md의 B 결정(재공고 키·거리·프리미엄 만료)에 의존.
+> 일부 기능은 DATA.md의 B 결정(거리·프리미엄 만료)에 의존.
 
 ### 2-1. 차별화 기능
-- [ ] 재공고 추적 (`lib/repost-tracking.ts`) — 교회·자리 식별 키 기반 + 공고/교회 상세에 배지
+- [ ] **재공고 추적 되살리기** — ⛔ 2026-08-07 제거됨(`lib/repost-tracking.ts` 삭제). **claim이 돌아 `church_id`가 채워진 뒤**가 자연스럽다. 후보 키 = `church_id + 직분 + 부서`(claim된 것만) 또는 크롤러와 같은 `연락처 + 직분 + 부서`. 조건·근거 = DATA.md §6
 - [ ] 거리 기반 필터 + **교회 위치 지도 연결(네이버/카카오)** — 위치·교통·전도환경 파악이 사역자 최대 관심(1-7). 주소→지도 링크는 저비용이라 Phase 1에서 링크만 먼저 가능
 
 ### 2-2. 사역자 편의 (재방문 유도)
-- [ ] **관심 교회 팔로우 + 재공고 알림** (`church_follows`) — 재공고 추적 차별점과 직결. (로그인·북마크는 단일 계정이라 Phase 1로 이동 = 1-4)
+- [ ] **관심 교회 팔로우 + 새 공고 알림** (`church_follows`). (로그인·북마크는 단일 계정이라 Phase 1로 이동 = 1-4)
 
 ### 2-2b. 검수·신뢰 (교회 등록 늘면)
 - [ ] **사후 신고 기능** — "이 공고 부적절 신고" 버튼(구직자가 걸러줌, 대형 플랫폼식 사후 모니터링)
@@ -266,7 +267,7 @@
 - [ ] 정렬 반영 — 프리미엄·대표 광고 우선 노출
 - [ ] 결제 초기 수동 처리 (자동 결제 연동은 Phase 3)
 
-> **Phase 2 완료 기준**: 재공고 정보 노출 + 거리 필터 + 첫 프리미엄 노출.
+> **Phase 2 완료 기준**: 거리 필터 + 첫 프리미엄 노출.
 
 **병행 트랙**
 - [ ] 신학교 커뮤니티·단톡방 침투 (마케팅 1·2순위)

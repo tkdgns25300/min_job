@@ -20,7 +20,7 @@
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**(→ **개교회 채용**으로 범위 확장: 사역직+일반직, 2026-07-28)를 모아 구조화·비교·재공고추적으로 차별화하는 채용 플랫폼. **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + Supabase Auth Google OAuth 실 로그인 동작**(2026-07-29 — mock 세션·test 계정 폐기), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃(Server Action)·회원탈퇴 안내는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** **✅ SEO 마감(2026-08-05)**: sitemap·robots·canonical·OG 이미지. 남은 것: terms/privacy 법률검토 + **교회 멤버십**(admin 4페이지 mock 완료 · 운영자 게이트는 2026-07-29 완료). **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 가맹 심사 + 카드사 등록 둘 다 통과 → 실카드결제 활성(2026-08-05, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **Phase 1 — 교회 멤버십 배선**(결제 경로의 유일한 블로커) + 데이터 유입(§7). **인증(로그인)만 실배선 완료**(2026-07-29), 나머지 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용은 Phase 1.
+흩어진 교회 **사역자 청빙 공고**(→ **개교회 채용**으로 범위 확장: 사역직+일반직, 2026-07-28)를 모아 구조화·비교로 차별화하는 채용 플랫폼(재공고 추적은 2026-08-07 보류). **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + Supabase Auth Google OAuth 실 로그인 동작**(2026-07-29 — mock 세션·test 계정 폐기), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃(Server Action)·회원탈퇴 안내는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** **✅ SEO 마감(2026-08-05)**: sitemap·robots·canonical·OG 이미지. 남은 것: terms/privacy 법률검토 + **교회 멤버십**(admin 4페이지 mock 완료 · 운영자 게이트는 2026-07-29 완료). **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 가맹 심사 + 카드사 등록 둘 다 통과 → 실카드결제 활성(2026-08-05, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **Phase 1 — 교회 멤버십 배선**(결제 경로의 유일한 블로커) + 데이터 유입(§7). **인증(로그인)만 실배선 완료**(2026-07-29), 나머지 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용은 Phase 1.
 
 > **▶ 방향 전환(2026-07-28, 법률 검토 완료)**: 자매 프로젝트 **min_job_agent 크롤러 도입 확정** — 데이터 수집을 사람 수집에서 **공개 공식 게시판 자동 수집 → AI 구조화 → 검수 큐(`review_data`) → 운영자 승격**으로 전환. 제품 범위도 **개교회 채용(사역직 MINISTRY + 일반직 GENERAL)**으로 확장. 가드레일 #1·#3 재정의. min_job 쪽 싱크(문서·코드·검수 브릿지)는 Phase로 진행(ROADMAP 1-10). 정본 = **`../min_job_agent/docs/`**(CRAWLER_HANDOFF.md는 흡수 후 삭제, 2026-08-05).
 
@@ -114,7 +114,7 @@ npm run lint     # eslint
 npx prettier --check <file>   # 포맷
 ```
 ⚠️ **로그인 테스트는 `npm run dev`로.** 세션 쿠키가 `secure`(production)라 로컬에서 `next start`를 http로 띄우면 로그인이 끝까지 진행되지 않는다.
-**확인 URL(mock)**: `/jobs`(공고 100·필터·정렬·페이지당) · `/jobs/job-010`(재공고 3회·유초등부) · `/jobs/job-004`(owned·제출서류 긴 것) · `/jobs/job-054`(CLOSED 배너) · `/churches/ch-saesomang`(재공고).
+**확인 URL(mock)**: `/jobs`(공고 100·필터·정렬·페이지당) · `/jobs/job-010`(유초등부) · `/jobs/job-004`(owned·제출서류 긴 것) · `/jobs/job-054`(CLOSED 배너) · `/churches/ch-saesomang`(지난 공고 목록).
 
 **SEO 확인**(빌드 후 `npx next start`):
 ```bash
@@ -132,7 +132,7 @@ curl -sI localhost:3000/opengraph-image                 # image/png 1200x630
 ## 5. 데이터 (mock 스키마 = 확정 진행 중)
 
 ### mock 현황 (`src/mocks/`)
-- **churches.json 35개** · **jobs.json 101개**. 분포: OPEN 79 / CLOSED 22 / PENDING 0(**전수 검수 결정(2026-08-05) 이후에도 mutation이 없어 아직 0** — 검수 큐 구현 시 발생) · OPERATOR(owner 없음)·CHURCH 혼합. 재공고 데모 4교회 · **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. ✅ **KIJANG(갈릴리교회) → ETC 교정 완료 · denomination 10키 전환**(Phase 2, 2026-07-29). 전 공고 `jobKind=MINISTRY`.
+- **churches.json 35개** · **jobs.json 101개**. 분포: OPEN 79 / CLOSED 22 / PENDING 0(**전수 검수 결정(2026-08-05) 이후에도 mutation이 없어 아직 0** — 검수 큐 구현 시 발생) · OPERATOR(owner 없음)·CHURCH 혼합. **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. ✅ **KIJANG(갈릴리교회) → ETC 교정 완료 · denomination 10키 전환**(Phase 2, 2026-07-29). 전 공고 `jobKind=MINISTRY`.
 - **church-verifications.json 7건**(admin/verify 검수용): 검수중 4·인증완료 2·반려 1. 기존 교회 매칭 6 + 신규 교회 신청 1(id null). PII는 **전건 명백한 합성값**(@example.com·010-0000-000X) — vf-005에 남아 있던 `test1@test.com`(과거 mock 계정 잔재)은 KCP 심사 종료 후 합성값으로 교체(2026-08-05).
 - **인증(2026-07-29 실 전환)**: mock 로그인 계정(`src/lib/mock-auth.ts`)·테스트 계정(`test1@test.com`·`test2@test.com`)·세션 쿠키 `mj_session`은 **전부 삭제**됐다(코드·mock 데이터에 테스트 계정 잔재 0건 — 2026-08-05 확인). 이제 로그인 수단은 **Supabase Auth Google OAuth 단독** — 이메일/비밀번호 로그인도 없다. 세션 = Supabase 쿠키(`httpOnly` + 배포 시 `secure` + `sameSite=lax`, `lib/supabase/cookie-options.ts`). 카카오는 **오픈 전 추가**, 네이버는 Supabase 기본 미지원이라 보류. ⚠️ 로컬에서 `next start`를 http로 띄우면 `secure` 때문에 로그인이 끝까지 진행되지 않는다 — 로그인 테스트는 `npm run dev`로.
 
@@ -161,31 +161,21 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 - **해제 3개의 실측 근거**: 교단 명시 **2.8%**(CSU만 `order_name`으로 83%, 교회 1,004곳 수동은 비현실) · 광역 **81%** · 게시일 없는 공고 **60건**(PCKWORLD — 게시판이 날짜를 안 줌. `fetched_at` 대체는 틀린 날짜 공개라 금지).
 - **교단 `NULL` ≠ `ETC`** — `ETC`는 "소속은 있고 우리 9키에 없는 교단"(기장). 미상을 섞으면 필터·거점 판정이 오염된다.
 - ⚠️ **검수 우선순위는 교단보다 지역** — 지역이 비면 지역 필터에서 무조건 탈락해 **사실상 안 보이는 공고**가 된다. 교단은 "미상"으로 공개해도 지원에 지장 없음.
-- ⚠️ **`church_id` 자동 매칭 금지** — 실측에 **동명이교회**가 있다(선민교회: HAPDONG ×3 · GAMLI ×1 = 서로 다른 교회 둘). 이름으로 자동 연결하면 남의 공고가 붙어 **재공고 횟수가 거짓**이 된다(차별점 붕괴). `matched_church_id`는 후보 제시만, 확정은 운영자.
+- ⚠️ **`church_id` 자동 매칭 금지** — 실측에 **동명이교회**가 있다(선민교회: HAPDONG ×3 · GAMLI ×1 = 서로 다른 교회 둘). 이름으로 자동 연결하면 **남의 교회 페이지에 남의 공고가 뜬다**(차별점 붕괴). `matched_church_id`는 후보 제시만, 확정은 운영자.
 - ⚠️ **`posted_at` nullable의 대가 3가지**: JobPosting JSON-LD 생략(`datePosted`는 Google 필수 필드라 NULL이면 invalid) · 정렬 `posted_at ?? created_at` 폴백 · `Job.postedAt` 타입 null 처리 10곳+. **대안(`NOT NULL` 유지 + 60건 수동 ≈20분)이 더 싸다는 검토 의견은 DATA.md에 남겨뒀다** — 되돌리려면 한 줄.
 
 **교회 식별은 claim으로 미룬다(2026-08-06 — `church_id NOT NULL`을 뒤집었다).** 크롤러가 교회 묶기를 실측하니 자동 95%까지만 되고 사각지대가 남았다 — (교회명+광역) 1,203그룹 중 **검증 불가 67개** · **같은 연락처에 다른 교회명 83건**(`대구대동교회`/`대동교회` 표기 차이 + 교단 사무실 공유). 사람이 봐도 판정이 안 된다. 다른 교회를 합치면 이미 공개된 뒤라 되돌리기 어렵고, 안 합치면 나중에 병합할 수 있다 → **교회 행을 아예 만들지 않는다.**
 - 스키마 3개: `jobs.church_id` **NOT NULL 해제** · **`jobs.church_name` 추가**(NOT NULL, 공고가 말한 그대로) · **`jobs.region` 추가**
-- 교회가 가입·인증 후 **claim** → `church_id` 채워짐 → 교회 상세·재공고 켜짐. **claim이 교회 가입 유인이 된다**(mock `job-101` 클레임 데모와 같은 개념)
+- 교회가 가입·인증 후 **claim** → `church_id` 채워짐 → 교회 상세 켜짐. **claim이 교회 가입 유인이 된다**(mock `job-101` 클레임 데모와 같은 개념)
 - ⚠️ `jobs.region`은 §1 **비정규화 금지의 명시적 예외**(`featured_tier`와 같은 취급) — `church_id`가 NULL이면 JOIN이 안 돼 지역 필터가 통째로 죽는다(크롤링 공고 80%)
 - **대가 3개 (화면으로 말하면)**:
-  1. **재공고 추적 — 통째로 죽는 게 아니라 절반만 죽는다**(2026-08-06 정정). 아래 "재공고 키 불일치" 참조
+  1. **재공고 추적 — 기능을 제거했다**(2026-08-07). 아래 참조
   2. **교회 이름이 링크가 아니라 텍스트** — `/churches/[id]`가 없으니 "점촌제일교회"가 그냥 글자로 뜬다. claim하면 링크가 생긴다
   3. **교단 필터에 안 걸린다** — 교단은 `churches`에 있는데 그 행이 없다. **지역 필터는 걸린다**(그래서 `jobs.region`을 받았다). 교단은 원문 명시가 2.8%뿐이라 실질 손실은 작다
 
-##### ⚠️ 재공고 키 불일치 — 우리 코드와 크롤러가 다른 기준으로 센다
+##### 재공고 추적은 제거됐다(2026-08-07)
 
-```
-우리 코드   repostKey = 교회 + 직분 + 부서      ← church_id 필요  (src/lib/repost-tracking.ts:11)
-크롤러      dedup_key = 연락처 + 직분 + 부서    ← 교회를 몰라도 판정된다
-```
-
-| | claim 전 | 필요한 것 |
-|---|---|---|
-| **"이 자리를 또 뽑네"**(자리 단위) | ✅ 된다 — 연락처로 묶이니까 | 없음 |
-| **"이 교회가 총 5번 뽑았다"**(교회 단위 이력·교회 페이지 타임라인) | ❌ 안 된다 | claim |
-
-→ **`repostKey`의 `churchId`를 `contact`로 바꾸면 크롤링 공고도 claim 전에 재공고 배지가 붙는다.** 한 줄 변경. **결정 대기**(아래 §7 "결정할 것" 2번).
+키가 `church_id:직분:부서`였는데 `church_id`가 nullable이 되면서 claim 전 공고가 전부 `null:직분:부서`로 합쳐져 **무관한 교회의 공고가 합산된 거짓 숫자**가 나온다. 그래서 기능을 통째로 뺐다(§7 결정 완료 · DATA.md §6). 끌어올림 판정은 크롤러 + admin 검수 확인으로 넘어갔다.
 
 **`job_promotions`(신설) = 결제 원장**: `UNIQUE(payment_id)`로 멱등(재시도돼도 노출 2번 적립 X) · `tier` CHECK는 `PREMIUM`/`HERO`만(`NONE`은 상품이 아님). `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — 정렬 1차 키라 최다 조회 경로이고, `'use cache'`가 `new Date()`를 금지해 캐시된 쿼리가 "오늘"을 못 만든다. 만료는 **`today` 인자 패턴**(`getListJobs("2026-08-06")` → 인자가 캐시 키 → 하루 1캐시, Cron 불필요). **`deadline` 지난 공고가 "모집중"으로 뜨는 문제(§7 미해결 1번)와 같은 해법** → 한 번에 정리.
 
@@ -196,9 +186,9 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 **교단은 native PG ENUM이 아니라 `text + CHECK`** — native ENUM은 값 삭제·순서 변경이 불가능한데 교단 목록은 아직 유동적이다(기장을 ETC에 넣어둔 상태). `constants/domain.ts`가 이미 단일 소스라 native ENUM의 실익이 없다.
 
 ### 타입 (`src/types/domain.ts`) — ⚠️ **위 스키마와 18곳 어긋남**(§7 상단 참조)
-- `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)** · `ownerId?`(교회 직접 등록 소유). — 전부 additive/optional.
+- `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)**. (`ownerId`는 2026-08-07 제거)
 - `CurrentUser` = `{id, email, name|null, churchId|null, churchName|null, churchVerificationStatus|null}` — **배타적 role 없음**(단일 계정). 권한 파생 `hasChurchAccess` = `lib/auth.ts`. `FilterDim`에 `qualification`.
-- `repost-tracking`: `RepostInfo` = `{ count, postings: RolePosting[] }` (상세 재공고 타임라인용).
+- `PastJob` = `{ id, position, department, postedAt, deadline }` — 교회 상세의 '지난 공고' 평면 목록(2026-08-07, 구 `RoleHistory` 대체).
 - `Church`에 **`photos?: string[]`**(첫 장=커버; DATA `church_photos` 1:N 테이블). 기존 `photoUrl` 폐기.
 
 ### seam (`src/lib/queries/*.ts`, `'use cache'`+`cacheTag`+`cacheLife("days")`)
@@ -216,8 +206,8 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 - **▶ prod 동결 해제 + fast-forward(2026-08-06)**: 심사 중 걸려 있던 "URL·사업자정보·상품/가격 변경 금지" 제약이 풀려 **prod를 dev로 30커밋 fast-forward**(`4d0d1aa` → `958c060`, merge 커밋 0). 7/29 로그인 실전환·SEO·스키마 개명이 이때 prod에 처음 반영됐다.
 - **▶ 방향 전환(2026-07-28) — 크롤러 도입 + 개교회 채용으로 범위 확장 (되돌리지 말 것)**: 2026-07-28 크롤러 도입 확정 + 개교회 채용으로 범위 확장(사역직 MINISTRY + 일반직 GENERAL). 가드레일 #1·#3 재정의(법률 검토 완료). 정본 = **`../min_job_agent/docs/`**(CRAWLER_HANDOFF.md는 흡수 후 삭제, 2026-08-05). min_job 싱크 = **문서/코드/검수 브릿지 Phase로 진행**(ROADMAP 1-10). staging 4테이블은 min_job_agent 소유(min_job은 인지만), init.sql/마이그레이션 보류. denomination 10키·jobs `jobKind`(MINISTRY/GENERAL)·`role`·`contact` = types+mock 반영 완료(Phase 2, 2026-07-29). `position` NULL 허용·일반직 UI·필터는 크롤러 실데이터 시(deferred).
 - **/jobs**: 대표광고를 **리스트 안에 통합**(별도 밴드 폐기, 배경 틴트 없이 작은 "광고" 태그, 티어 차이=노출 위치) · **검색 존**(옅은 초록 밴드: H1+설명+"모집 중 N건") · **결과 툴바**(정렬 + **페이지당 20/50/100**) · **자격/경력·사택 필터 추가**(성별·결혼 필터 금지) · 최근 본 공고 정보형 · 교회 CTA 위젯 · 좌필터 스크롤(우레일만 sticky). "총 N건" = 모집 중(HERO 포함).
-- **/jobs/[id]**: **단일 흐름 본문(여백형)** + **우측 요약 카드 B**(지원하기 상단 + 사례비·마감·고용) + **재공고 이력 접이식** + 비슷한 6개+더보기 + **아이콘 없음** + 지도 placeholder.
-- **/churches/[id]**(재설계): 얇은 허브 — 순서 **커버(사진 갤러리·라이트박스) → 채널(brand 색·아이콘) → 청빙 공고(현재+지난 통합, 재공고 배지) → 위치(지도)**. 공고가 방문 의도라 위로. **아바타 폐기** · **교회 소개 텍스트 미채택**(채널·유튜브로 파악 대체) · 카드 hover=`bg-muted/40`. 사진 = `Church.photos[]`(mock placeholder SVG, 업로드 Phase 1).
+- **/jobs/[id]**: **단일 흐름 본문(여백형)** + **우측 요약 카드 B**(지원하기 상단 + 사례비·마감·고용) + 비슷한 6개+더보기 + **아이콘 없음** + 지도 placeholder.
+- **/churches/[id]**(재설계): 얇은 허브 — 순서 **커버(사진 갤러리·라이트박스) → 채널(brand 색·아이콘) → 청빙 공고(현재 + 지난 공고 접이식) → 위치(지도)**. 공고가 방문 의도라 위로. **아바타 폐기** · **교회 소개 텍스트 미채택**(채널·유튜브로 파악 대체) · 카드 hover=`bg-muted/40`. 사진 = `Church.photos[]`(mock placeholder SVG, 업로드 Phase 1).
 - **지원 모델**: **사이트 내 지원 안 받음** — 원문/교회로 안내. 교회 직접 등록은 나중 `applyMethod` 필드(Phase 1). 사이트 내 지원 중개는 Phase 3.
 - **지도**: Phase 1 = 링크/placeholder, Phase 2 = 네이버/카카오 임베드(주소 필드+API 키).
 - **헤더/계정(2026-07-13)**: 아바타 = **마이페이지 직행 링크**(드롭다운 폐기). 우측 상시 **"교회 공고 등록"**(로그인 상태로 분기: 비로그인→/login, 미인증→/verify, 인증→/church). 로그아웃·**회원탈퇴**는 `/mypage` 계정 섹션. **2026-07-29 정정**: 로그아웃 = Server Action(`signOut`, `scope:"local"`로 다른 기기 세션 유지) · **회원탈퇴 danger zone 버튼은 제거** — 자동 탈퇴(계정·연관 데이터 삭제)가 미구현이라 "준비 중" 안내 + 운영자 mailto로 대체(로그아웃만 하고 삭제했다고 말하지 않기 위해). footer 위 전 페이지 공통 여백 `mt-16 sm:mt-20`. 골드-틴트 대비 텍스트 토큰 `--gold-ink`.
@@ -239,29 +229,15 @@ dev = prod = origin/* = c0aa4ec   (2026-08-06 fast-forward 완료, merge 커밋 
 빌드·prettier 통과 · 작업트리 깨끗 · supabase/ 폴더 없음(마이그레이션 0줄)
 ```
 
-#### ⬜ 결정할 것 2개 (집에서 먼저 정하면 나머지가 풀린다)
+#### ✅ 결정 완료 (2026-08-07) — 중복/재공고는 지금 안 한다
 
-**1️⃣ 끌어올림(bump) 간격 N일 — 크롤러 미결 ①. 추천 = 30일**
+| 결정 | 내용 |
+|---|---|
+| **끌어올림(bump)** | **min_job 일이 아니다.** 크롤러(min_job_agent)가 수집 단계에서 묶고, min_job admin 검수 화면에서 **"이거 끌어올리시겠습니까?"** 로 운영자에게 확인받는다. N일 임계값을 우리가 정하지 않는다 |
+| **재공고 추적** | **기능 자체를 제거**(보류). `lib/repost-tracking.ts` 삭제 · 공고 상세 배지·이력 섹션 제거 · 교회 상세는 평면 "지난 공고" 목록으로. **이유는 "안 잡힌다"가 아니라 "틀린 값이 나온다"** — 키가 `church_id:직분:부서`인데 `church_id`가 nullable이 되면서 claim 전 공고가 전부 `null:직분:부서` 한 덩어리로 합쳐져 무관한 교회들의 공고가 합산된다 |
+| **`owner_id`** | **컬럼 제거.** 유일한 사용처 `getEditableJob`이 이 컬럼으로 편집 권한을 판정하고 있었는데 **그게 가드레일 #2 위반**이었다(담당자는 여럿·교체됨 · 운영자 공고는 작성자가 없어 영영 편집 불가). 권한을 `church_id`(그 교회 인증 관리자) 기준으로 바꾸고 컬럼을 없앴다. `hasChurchAccess`를 타입 술어로 만들어 통과 후 `churchId`가 `string`으로 좁혀진다 |
 
-교회가 공고를 위로 올리려고 **같은 공고를 반복 게시**한다. 실측: 점촌제일교회 전임 사역자 자리 하나가 3개월간 **31번**(2~7일마다, 게시판 3곳 CSU 23·DAESHIN 5·KWANGSHIN 1). 안 묶으면 우리 사이트에 똑같은 공고가 31개 뜬다.
-
-```
-같은 연락처 + 직분 + 부서 이면
-   마감일이 같다        → 같은 공고            (공고의 71%가 여기서 끝난다)
-   마감일이 없다 ┬ 간격 ≤ N일 → 끌어올림(하나로 묶음)
-                └ 간격 > N일 → 재공고(따로 센다)
-```
-**마감일 없는 29%에만 적용된다.** 연속 게시 간격 분포: `0~3일 27.9% · 4~7일 30.7% · 8~14일 20.4% · 15~30일 13.7% · 31일+ 7.2%`
-→ N=14일이면 검수 자리 **811개**, N=30일이면 **709개**, 묶지 않으면 1,400개.
-
-**왜 우리 문제인가**: 재공고 횟수는 우리 차별점이고, 구직자에게 **"사람이 자주 나가는 교회"** 라는 신호로 읽힌다. N이 작으면 끌어올림을 재공고로 잘못 세어 **점촌제일교회가 "재공고 31회"로 뜬다**(사실은 한 번 뽑는 중). N이 크면 진짜 재공고를 놓친다.
-
-**추천 30일 — 근거 3**: ⓐ **부풀리는 오류가 훨씬 나쁘다** — 멀쩡한 교회를 낙인찍는 건 명예 문제고 되돌리기 어렵다. 놓치는 건 정보가 없을 뿐. **교회 병합에서 쓴 것과 같은 비대칭 논리** ⓑ 실무상 2주 만에 같은 자리를 다시 뽑는 일은 드물다(면접·노회 절차만 몇 주) → 15~30일 구간(13.7%)은 재공고보다 끌어올림일 가능성이 높다 ⓒ 31일+(7.2%)는 그대로 재공고로 남아 진짜 신호는 보존된다.
-
-**2️⃣ `repostKey`를 `교회` → `연락처`로 바꿀까 — 추천 = 바꾼다**
-
-`src/lib/repost-tracking.ts:11`이 `churchId + position + department`로 센다. `church_id`가 NULL이면 크롤링 공고는 재공고 판정에서 통째로 빠진다. 크롤러는 같은 것을 `연락처 + 직분 + 부서`로 세고 **교회를 몰라도 판정된다.** 키를 맞추면 claim 전에도 자리 단위 재공고 배지가 붙는다. **한 줄 변경**이지만 재공고는 우리 차별점이라 임의로 바꾸지 않고 남겨둔다.
-> 주의: 연락처가 없는 공고(연락 수단 0종)는 이 키로 묶이지 않는다. 그리고 **교단 사무실이 연락처를 공유**하는 경우가 83건 있어(§ 교회 식별), 연락처만으로 묶으면 다른 교회 자리가 한 묶음이 될 수 있다 → `직분 + 부서`가 함께 걸리므로 실제 충돌은 드물지만 **claim 후에는 `church_id` 기준으로 재계산**하는 게 안전하다.
+> **되살릴 때**: claim이 돌아 `church_id`가 채워진 뒤가 자연스럽다. 후보 키 = `church_id + 직분 + 부서`(claim된 것만) 또는 크롤러와 같은 `연락처 + 직분 + 부서`. 마감(CLOSED) 공고 공개 정책은 그대로 유지된다(교회 상세의 지난 공고가 그 위에서 돈다). 근거·조건 = DATA.md §6.
 
 **선택지 3개 — 위 결정 후 착수, 추천 순서**
 
@@ -428,8 +404,8 @@ dev = prod = origin/* = c0aa4ec   (2026-08-06 fast-forward 완료, merge 커밋 
 > ⚠️ 이전 "가입 시 역할 하드 분기 + `users.role = SEEKER|CHURCH`"는 **폐기**. 아래 단일 계정 모델로 대체(타 플랫폼 재조사 근거 §E + LinkedIn/원티드/Indeed 중간형).
 - **단일 계정 + 역할 view**: 계정은 하나, 모든 계정은 기본 **사역자(MINISTER)**. **교회 인증(증빙 + 운영자 승인) 통과 시** 같은 계정에 **교회(CHURCH) view** 개방. 부교역자가 구직자이면서 자기 교회 담당자인 케이스를 단일 정체성이 자연 처리.
 - **"교회 계정" 없음**: 교회는 `churches` 엔티티, 사람 계정은 관리 자격. `users`에서 `role` 제거 → **`church_id`(nullable·다대일=다중 담당자) + `church_verification_status`(PENDING/APPROVED/REJECTED)**. 파생 `hasChurchAccess = church_id && APPROVED`. **가입 시 역할 선택 불필요**.
-- **공고 소유 = 교회 엔티티**. `jobs.owner_id`는 작성자(감사)로 강등 — **편집 권한 = 그 교회 인증 관리자 여부**(owner 일치 X). 담당자 이동 시 공고는 교회 잔류(owner NULL)·클레임으로 회수. 인증은 **교회별**.
-- Phase: **로그인·교회 인증·공고관리·북마크 = Phase 1**(북마크는 단일 계정이라 이동), 관심 교회 팔로우·재공고 알림 = Phase 2.
+- **공고 소유 = 교회 엔티티**. `jobs.owner_id`는 **제거됨(2026-08-07)** — **편집 권한 = 그 교회 인증 관리자 여부**. 담당자 이동 시 공고는 교회 잔류·클레임으로 회수. 인증은 **교회별**.
+- Phase: **로그인·교회 인증·공고관리·북마크 = Phase 1**(북마크는 단일 계정이라 이동), 관심 교회 팔로우·새 공고 알림 = Phase 2.
 - 상세 스키마 = DATA §2·§3(users)·§4·§9. 페이지 명세 = SPEC 사용자 모델·§B·/mypage 블록.
 
 ### B. 교회 인증 (공고 게재 게이트 — "누구나" 차단)
@@ -442,13 +418,13 @@ dev = prod = origin/* = c0aa4ec   (2026-08-06 fast-forward 완료, merge 커밋 
 - **제외**: 지원자 관리·이력서 열람(사이트 내 지원 X) · 결제/세금계산서(Phase 2) · 인재검색·제안(Phase 2)
 
 ### D. `/mypage` 사역자 view
-- **Phase 1**: 최근 본 공고 + **북마크**(단일 계정이라 Phase 1로 이동). **Phase 2**: **관심 교회 팔로우·재공고 알림**(관심기업 번안 = 재공고추적 차별점 직결) + 알림/계정 설정. 지원현황·이력서공개·받은제안 **제외**.
+- **Phase 1**: 최근 본 공고 + **북마크**(단일 계정이라 Phase 1로 이동). **Phase 2**: **관심 교회 팔로우·새 공고 알림**(관심기업 번안) + 알림/계정 설정. 지원현황·이력서공개·받은제안 **제외**.
 
 ### E. 조사 근거 (subagent, 2026-07-10)
 - 타 플랫폼 마이페이지: **기업** = 공고 목록(상태축) + 액션(복사=재등록 표준) + 지원자관리(이력서 열람) + 유료상품·결제·세금계산서 + 기업정보. **개인** = 스크랩/북마크 + 지원현황 + 이력서공개 + 열람기업·받은제안 + 최근본/추천.
 - **니치**: 청빙넷·기독정보넷 = 게시판형(통합 관리 UI 없음). **갓피플만** 마이페이지+유료노출+공고 CRUD 보유(사업자등록증 증빙 필수).
 
 ### F. TODO (집에서)
-1. ✅ **SPEC/DATA/§10 반영 완료(2026-07-12)**: role 제거 → `church_id` + `church_verification_status` · owner_id 작성자로 강등 · 교회 인증(증빙+승인) · /mypage 상태별 섹션 (DATA §2·§3·§4·§9, SPEC 사용자 모델·§B·/mypage)
+1. ✅ **SPEC/DATA/§10 반영 완료(2026-07-12)**: role 제거 → `church_id` + `church_verification_status` · owner_id 작성자로 강등(→ 2026-08-07 완전 제거) · 교회 인증(증빙+승인) · /mypage 상태별 섹션 (DATA §2·§3·§4·§9, SPEC 사용자 모델·§B·/mypage)
 2. **/mypage 교회 view 코드 구현**(mock 위, 업로드·승인·클레임 실동작은 Phase 1) ← 다음
 3. ~~로그인 역할 선택 흐름~~ → **불필요 확정**: 단일 계정(로그인=사역자), 교회는 인증으로 승격. 로그인 UI 변경 없음

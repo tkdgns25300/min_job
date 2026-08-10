@@ -6,7 +6,7 @@
 
 ## Project
 
-흩어진 **개교회 채용 공고**를 한 곳에 모아, 구조화된 정보로 검색·비교하게 해주는 채용 플랫폼. 범위는 **사역직(MINISTRY, 부목사·전도사 중심, 담임목사 포함)과 일반직(GENERAL)을 아우르는 개교회 채용 허브**이되, 주력은 여전히 사역직이다. 여러 신학교·교단 게시판에 분산된 공고를 크롤러·사람이 수집하고 AI로 구조화해 노출한다. 타겟 시장은 한국 개신교(기독교) 교역자 청빙 전반(특정 교단에 한정하지 않음)이며, 초기 집중 거점은 예장합동·통합이다. **단순 "모아보기"를 넘어 구조화·비교·신뢰정보(재공고 추적)로 차별화한다.** 1인 개발자(백엔드) 사이드 프로젝트, 운영 리소스 최소화가 핵심 제약.
+흩어진 **개교회 채용 공고**를 한 곳에 모아, 구조화된 정보로 검색·비교하게 해주는 채용 플랫폼. 범위는 **사역직(MINISTRY, 부목사·전도사 중심, 담임목사 포함)과 일반직(GENERAL)을 아우르는 개교회 채용 허브**이되, 주력은 여전히 사역직이다. 여러 신학교·교단 게시판에 분산된 공고를 크롤러·사람이 수집하고 AI로 구조화해 노출한다. 타겟 시장은 한국 개신교(기독교) 교역자 청빙 전반(특정 교단에 한정하지 않음)이며, 초기 집중 거점은 예장합동·통합이다. **단순 "모아보기"를 넘어 구조화·비교로 차별화한다.** (신뢰정보 = 재공고 추적은 **보류** — 2026-08-07, 교회 식별을 claim으로 미루면서 판정 기반이 사라졌다. ROADMAP 1-4) 1인 개발자(백엔드) 사이드 프로젝트, 운영 리소스 최소화가 핵심 제약.
 
 **Stack**: Next.js 16 (App Router, Cache Components) · React 19 · TypeScript strict · Tailwind v4 + shadcn/ui (Base UI) · Supabase (PostgreSQL + Auth) · Vercel · npm
 
@@ -150,7 +150,7 @@ src/
 
 ### Query (`lib/queries/*.ts`) — 데이터 소스 seam (mock ↔ DB)
 - **페이지·view는 데이터를 여기서만 가져온다.** `@/mocks` 직접 import 금지 — 데이터 출처를 이 레이어에 은닉해, mock→DB 전환 시 **페이지 코드 0 변경**.
-- **함수는 `async` + `'use cache'` + `cacheTag`** (read 전용). fetch + transform + return, 집계·재공고 계산 등 비즈니스 로직은 여기.
+- **함수는 `async` + `'use cache'` + `cacheTag`** (read 전용). fetch + transform + return, 집계·파생 계산 등 비즈니스 로직은 여기.
 - **mock 단계**: 내부에서 `mocks/*` 위임(현재). **DB 전환**: 본문만 `createServiceClient()`(service.ts) Supabase 호출로 교체 — 시그니처·반환 타입 동일.
 - **쿠키·헤더 절대 만지지 마라** — cached scope 안에서 호출됨
 - **예외(인증 의존·PII read)** — `'use cache'`/`cacheTag`를 쓰지 않는 함수들:
@@ -208,7 +208,7 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 
 ## DB Policy
 
-- **DB는 데이터 저장 전용**. DB trigger·custom function·복잡한 default expression 만들지 않는다. ID 발급·timestamp 갱신·집계·재공고 판정 등 모든 비즈니스 로직은 Server Action / query 함수에서.
+- **DB는 데이터 저장 전용**. DB trigger·custom function·복잡한 default expression 만들지 않는다. ID 발급·timestamp 갱신·집계 등 모든 비즈니스 로직은 Server Action / query 함수에서.
 - 내장 기능(`gen_random_uuid()`, sequence `nextval()`, CHECK, FK)만 사용.
 
 ## 가드레일 (MinJob 고유 — 절대 위반 금지)
@@ -216,7 +216,7 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 법적·정책적 이유로 정한 원칙. 코드 작성 시 반드시 준수한다. 근거는 DATA.md.
 
 1. **공개 공식 게시판 한정 자동 수집 허용 (운영자 검수 전제).** 크롤러(min_job_agent, 형제 리포)로 공개 공식 게시판(교단·신학교·총회)의 공고를 자동 수집한다 — 단 **원문 재게시 없이 요약(description) + 출처 링크(source_url)**, 개인정보 최소, 출처 표기, 교회 요청 시 opt-out. 수집물은 리뷰 큐(review_data)에 쌓고 **운영자 검수·승격 전까지 절대 자동 공개하지 않는다** (크롤러는 운영자 보조 도구). 영리 청빙사이트(청빙넷 등)는 제외. 정식 오픈 전 법률 검토 완료(2026-07-28) — DB권·부정경쟁(잡코리아 vs 사람인) 리스크는 이 포지셔닝으로 방어한다.
-2. **공고 소유자(owner)는 nullable.** 공고는 교회 계정에 필수 종속되지 않는다. 운영자 등록 공고는 소유자 없이('운영자 등록') 저장하고, 교회 직접 등록 공고는 그 교회가 소유한다. 공고를 user의 자식으로 강결합하지 않는다.
+2. **공고에 작성자(user) 컬럼을 두지 않는다.** 공고는 교회(`jobs.church_id`)에 속하고, **편집 권한 = 그 교회의 인증 관리자**다. 운영자 등록 공고는 `source=OPERATOR`로만 구분한다. ~~`owner_id`~~ 는 **제거했다**(2026-08-07) — 유일한 사용처가 편집 권한 게이트였는데 그게 바로 이 가드레일 위반이었다(담당자는 여럿이고 교체된다). 공고를 user의 자식으로 강결합하지 않는다.
 3. **지원용 공개 연락처는 추출·공개, 그 외 개인정보는 저장 안 함.** 공고에 지원용으로 명시 공개된 연락처(전화·이메일·지원 링크)는 `jobs.contact`로 추출·공개한다. 지원과 무관한 제3자 개인정보는 추출·저장하지 않는다. 교회가 직접 등록할 때는 본인이 연락처를 입력하게 한다.
 4. **영리 청빙 사이트(청빙넷 등)를 출처로 삼지 않는다.** 크롤러·사람 수집 모두 공공·교단·신학교 공식 게시판을 우선한다.
 
@@ -272,5 +272,5 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 4. **새 페이지**: 데이터는 query 함수에서 `'use cache'`+`cacheTag`+`cacheLife`(페이지엔 붙이지 않음), 인증·검색 의존은 `<Suspense>`. 상세는 `generateMetadata` + canonical + JobPosting JSON-LD(모집중만) + sitemap 반영
 5. **새 mutation**: actions.ts 끝에서 `updateTag(resource)`, 영향 태그 모두 invalidate
 6. **DB 접근**: `lib/supabase/{server,service}.ts` 중 적절한 것. 새 클라이언트 X
-7. **가드레일 준수**: 크롤링은 공개 공식 게시판 한정 · 운영자 검수·승격 전 자동 공개 없음 · 요약+출처 링크·opt-out 준수 · 공고 owner nullable · 지원용 공개 연락처만 추출(그 외 개인정보 저장 없음) · 영리 사이트 출처 아님
+7. **가드레일 준수**: 크롤링은 공개 공식 게시판 한정 · 운영자 검수·승격 전 자동 공개 없음 · 요약+출처 링크·opt-out 준수 · 공고에 작성자 컬럼 없음(권한=교회 인증 관리자) · 지원용 공개 연락처만 추출(그 외 개인정보 저장 없음) · 영리 사이트 출처 아님
 8. **cached scope**: cookies/headers/searchParams 안 만짐, 비결정적 값은 인자로

@@ -10,12 +10,12 @@
 
 ## 1. 설계 원칙
 
-- **DB는 저장 전용.** trigger·custom function·복잡한 default expression 만들지 않는다. ID 발급·timestamp·집계·재공고 판정 등 로직은 전부 Server Action / query 함수. 내장 기능만 사용(`gen_random_uuid()`, `CHECK`, `FK`, array/`jsonb`).
+- **DB는 저장 전용.** trigger·custom function·복잡한 default expression 만들지 않는다. ID 발급·timestamp·집계 등 로직은 전부 Server Action / query 함수. 내장 기능만 사용(`gen_random_uuid()`, `CHECK`, `FK`, array/`jsonb`).
 - **정규화 유지 (JOIN).** 교단 필터는 `churches`를 JOIN해서 건다. 비정규화(공고에 교회 속성 복사) 안 함 — 우리 규모(초기 수백~수천)에선 JOIN + `'use cache'` 캐시로 충분. (대규모 인덱스 최적화 필요 시 나중에 재검토)
   - ⚠️ **명시적 예외 2개** — 둘 다 "캐시된 쿼리가 JOIN·`now()` 없이 필터·정렬해야 한다"는 같은 이유다: **`jobs.region`**(`church_id`가 NULL일 수 있어 JOIN이 성립 안 함 — §3) · **`jobs.featured_tier`·`featured_until`**(원장은 `job_promotions`, 이건 현재 유효 노출 캐시 — §7). 예외를 늘릴 때는 이 두 사례와 같은 근거가 있는지 확인할 것.
 - **enum = 영어 대문자 key + 한글 라벨.** key는 DB에 저장(값)·URL params에 사용, 표시는 `constants/domain.ts`의 한글 라벨 맵. DB에서는 `CHECK` 제약으로 허용값 강제(별도 enum 타입 대신 `text + CHECK`로 확장 용이하게).
 - **컬럼명 = `snake_case`** (DB), 앱(TS)은 `camelCase`. Supabase 생성 타입이 매핑.
-- **가드레일 준수**: 공고 owner nullable · **지원용 공개 연락처(`contact_email`·`contact_tel`·`contact_link`·`contact_post`)만 저장·공개**(지원과 무관한 제3자 개인정보 X — 가드레일 #3 갱신 2026-07-28) · source로 출처 구분 · **수집 = 크롤러(공개 공식 게시판) + 사람 붙여넣기 → AI 구조화 → 운영자 검수·승격**("자동 크롤러 없음" 재정의, 가드레일 #1 갱신 · 법률 검토 완료).
+- **가드레일 준수**: 공고에 작성자 컬럼 없음(권한=교회 인증 관리자) · **지원용 공개 연락처(`contact_email`·`contact_tel`·`contact_link`·`contact_post`)만 저장·공개**(지원과 무관한 제3자 개인정보 X — 가드레일 #3 갱신 2026-07-28) · source로 출처 구분 · **수집 = 크롤러(공개 공식 게시판) + 사람 붙여넣기 → AI 구조화 → 운영자 검수·승격**("자동 크롤러 없음" 재정의, 가드레일 #1 갱신 · 법률 검토 완료).
 
 ---
 
@@ -83,10 +83,9 @@
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
 | `id` | uuid PK | |
-| `church_id` | uuid **NULL** FK→churches | 소속 교회. **NULL = 아직 어느 교회인지 확정 못 함**(크롤링 공고 기본값). 교회가 가입·인증 후 **claim하면 채워진다** → 그때 교회 상세·재공고 이력이 켜진다. ⚠️ 자동 매칭 금지 |
+| `church_id` | uuid **NULL** FK→churches | 소속 교회. **NULL = 아직 어느 교회인지 확정 못 함**(크롤링 공고 기본값). 교회가 가입·인증 후 **claim하면 채워진다** → 그때 교회 상세가 켜진다. ⚠️ 자동 매칭 금지 |
 | `church_name` | text **NOT NULL** | **공고가 말한 교회명 그대로**. `church_id`가 NULL이어도 화면에 교회를 표시할 수 있게 하는 값. 교회 직접 등록 시엔 교회 프로필에서 복사 |
 | `region` | text NULL (CHECK) | **공고 시점에 파악한 광역** — ⚠️ **의도적 비정규화**(§1 예외). `church_id`가 NULL이면 `churches`를 JOIN할 수 없어 지역 필터가 통째로 죽는다. 필터·정렬은 이 컬럼을 쓴다 |
-| `owner_id` | uuid FK→users **NULL** | **작성자(감사용)** — 운영자 등록=NULL (가드레일 #2). ⚠️ 편집 권한 게이트 아님 → 권한 = 그 공고 `church_id`의 인증 관리자 |
 | `title` | text NOT NULL | |
 | `job_kind` | text NOT NULL (CHECK) | MINISTRY(사역직)/GENERAL(일반직) — 개교회 채용 구분 |
 | `position` | text NULL (CHECK) | 직분 (사역직 MINISTRY만). **아래 XOR CHECK로 MINISTRY면 필수** |
@@ -169,7 +168,7 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 
 > ⚠️ **`posted_at` nullable의 대가 — 반드시 함께 처리할 3가지.** 이걸 안 하면 SEO가 깨지고 런타임이 터진다:
 > 1. **JobPosting JSON-LD 생략** — `lib/seo.ts`가 `datePosted: job.postedAt`을 넣는데 `datePosted`는 **Google JobPosting 필수 필드**다. NULL이면 구조화 데이터가 invalid가 되어 그 공고가 Google Jobs에서 빠지고 Search Console에 오류로 잡힌다 → **NULL이면 JSON-LD 자체를 내지 않는다**(invalid보다 없는 게 낫다).
-> 2. **정렬 폴백** — `postedAt`은 정렬·재공고 판정에 10곳 이상에서 쓰이고 `localeCompare`·`reduce`가 NULL에 터진다. `posted_at ?? created_at`으로 폴백한다(대량 승격 시 `created_at`이 뭉쳐 정렬 품질은 떨어진다).
+> 2. **정렬 폴백** — `postedAt`은 정렬에 여러 곳에서 쓰이고 `localeCompare`·`reduce`가 NULL에 터진다. `posted_at ?? created_at`으로 폴백한다(대량 승격 시 `created_at`이 뭉쳐 정렬 품질은 떨어진다).
 > 3. **타입** — `Job.postedAt: string` → `string | null`, 사용처 전수 null 처리.
 >
 > 📌 **재검토 여지**: 대안은 `NOT NULL` 유지 + 운영자가 60건 날짜 입력(포스터에 대개 적혀 있어 **≈20분, 1회**)이었다. 위 3가지 영구 비용 + 60건 Google Jobs 제외보다 그게 싸다는 게 검토 의견이었으나, **운영자 결정으로 nullable을 택했다.** 되돌리려면 CHECK 없이 `NOT NULL` 한 줄이다.
@@ -190,13 +189,13 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 >              region = GYEONGBUK
 >                  │
 >                  ▼  교회가 가입·인증 → "이 공고들이 귀 교회 것입니까?"
->              church_id 채워짐 → 교회 상세·재공고 이력 작동
+>              church_id 채워짐 → 교회 상세 활성
 > ```
 >
 > **확신 없는 `churches` 행을 만드는 것은 값을 지어내는 것**이고, 그건 위 nullable 원칙("DEFAULT로 값을 지어내지 않는다")과 같은 위반이다. 그리고 이 구조는 **claim을 교회 가입 유인으로 바꾼다**(mock의 `job-101` 클레임 데모가 같은 개념).
 >
 > **받아들인 대가 4개**:
-> 1. **재공고 추적이 claim 전까지 작동하지 않는다** — 우리 차별점인데 크롤링 공고엔 처음엔 없다. 크롤러의 `dedup_key`(끌어올림 묶음)가 부분 보완
+> 1. **재공고 추적은 아예 보류했다**(§6) — 판정 키가 `church_id`에 묶여 있어 claim 전에는 거짓 숫자가 나온다. 끌어올림 판정은 크롤러 + admin 검수 확인으로 넘겼다
 > 2. **`/churches/[id]`는 claim된 교회만** 존재한다
 > 3. **`jobs.region` 비정규화** — §1 "공고에 교회 속성 복사 안 함"의 **명시적 예외**. `featured_tier`와 같은 취급(캐시된 쿼리가 JOIN 없이 필터·정렬해야 함)
 > 4. **교단 필터는 claim 전까지 안 걸린다** — 다만 교단 명시가 2.8%뿐이라 실질 영향은 작다
@@ -248,7 +247,7 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 
 - **교회 view 개방 조건** = `church_id IS NOT NULL AND church_verification_status='APPROVED'` → 파생 `hasChurchAccess`.
 - **다중 담당자**: 여러 user가 같은 `church_id`(다대일) → 한 교회에 담당자 여럿. 권한은 "그 교회 인증 관리자인가"로 판정(공고 owner 일치 X). Phase 1은 각자 독립 인증, 초대형은 Phase 2(→ `church_members` 조인 테이블로 승격).
-- **이동**: 담당자가 다른 교회로 옮기면 기존 링크 해제(그 교회 공고는 `owner_id NULL`로 교회에 잔류·운영자 관리 가능·재공고 이력 보존) → 새 교회 재인증. 인증은 **교회별**.
+- **이동**: 담당자가 다른 교회로 옮기면 기존 링크 해제(공고는 `church_id`에 매여 있어 교회에 그대로 잔류 — 작성자 컬럼이 없으므로 아무것도 끊기지 않는다) → 새 교회 재인증. 인증은 **교회별**.
 - 운영자(admin)는 **DB 컬럼으로 두지 않는다** — `.env` `ADMIN_EMAILS` allowlist로 판정(2026-07-29, `lib/operator.ts`, 목록 비면 fail-closed). 남은 것 = 실 DB 전환 시 operator RLS. 개인정보 최소 수집.
 
 ### `bookmarks` — 사역자 북마크 (Phase 1 — 단일 계정이라 이동. 지금은 localStorage)
@@ -271,12 +270,11 @@ churches ──1:N──▶ church_links · church_photos  (채널·사진)
    │
    │ 1:N
    ▼
-jobs ── owner_id ─▶ users        (작성자, nullable — 권한 게이트 아님)
    ▲
    │ N:1 (bookmarks)
 users ──▶ bookmarks ◀── jobs     (Phase 2)
 ```
-- **공고 소유 = 교회 엔티티(`jobs.church_id`)**. `owner_id`는 작성자 기록용 — **편집 권한은 그 교회의 인증 관리자 여부로 판정**(owner 일치 X). 운영자 등록=`owner_id NULL`/`source=OPERATOR`, 교회 등록=`owner_id`=작성 user/`source=CHURCH`.
+- **공고 소유 = 교회 엔티티(`jobs.church_id`)**. 작성자 컬럼은 **두지 않는다**(2026-08-07 `owner_id` 제거) — **편집 권한은 그 교회의 인증 관리자 여부로 판정**. 운영자 등록=`source=OPERATOR`, 교회 등록=`owner_id`=작성 user/`source=CHURCH`.
 - **교회 관리 링크**: 인증 승인 시 `users.church_id` 연결(다대일 → 다중 담당자). 담당자 이동 = 링크 해제(공고는 교회 잔류·owner NULL) → 새 교회 재인증. 인증은 교회별.
 
 ---
@@ -284,27 +282,29 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 ## 5. 인덱스
 
 - `jobs(status)` — 대부분 쿼리가 OPEN 필터
-- `jobs(church_id)` — 교회별 공고 / 재공고 / 교회 상세
+- `jobs(church_id)` — 교회별 공고 · 교회 상세
 - `jobs(posted_at DESC)` — 최신순 정렬
 - `jobs(featured_tier, featured_until)` — 노출(프리미엄·대표광고) 조회
 - `job_promotions(job_id)` — 공고별 결제 이력
 - `job_promotions(tier, starts_at, ends_at)` — HERO 구좌 잔여 판정(특정 주가 찼는지)
 - `jobs(position)`, `jobs(department)`, `jobs(employment_type)` — 목록 필터
 - `jobs(region)` — **지역 필터(최다 사용)**. `church_id`가 NULL일 수 있어 JOIN이 아니라 이 컬럼으로 건다
-- `jobs(church_id)` — 교회별 공고·재공고(claim된 것만)
+- `jobs(church_id)` — 교회별 공고(claim된 것만)
 - `churches(denomination)`, `churches(region)` — 교회 상세·교단 필터(JOIN 대상)
 - `church_links(church_id)`
 - `bookmarks(user_id)`
 
 ---
 
-## 6. 재공고 추적 (차별점)
+## 6. 재공고 추적 — ⛔ **보류(2026-08-07)**
 
-- **식별 키** = `church_id + position + department` (같은 교회의 같은 자리). `lib/repost-tracking.ts` `repostKey()`.
-- **DB 컬럼 없음** — query에서 계산(같은 키 공고를 그룹핑). `getRepostInfo`(단건 배지), `groupByRole`(교회 타임라인).
-- 재공고 판정 = 같은 자리 **2회 이상**(`REPOST_MIN_COUNT=2`).
-- **마감(CLOSED) 공고도 집계·공개** — 재공고 이력·교회 타임라인의 근거(§9 참조).
-- 교회 dedup: 운영자 수집 시 기존 교회 **수기 매칭**(없으면 생성). 교회 계정은 가입 시 연결이라 dedup 불필요. (드문 중복은 운영자 수동 병합)
+**기능을 코드에서 제거했다.** `lib/repost-tracking.ts` 삭제 · 공고 상세의 "재공고 N회" 배지·이력 섹션 제거 · 교회 상세는 자리별 묶음 대신 **평면 "지난 공고" 목록**(`getChurchPastJobs` → `PastJob[]`)으로 교체.
+
+**왜 뺐나** — 판정 키가 `church_id + position + department`였는데 **`church_id`가 nullable이 됐다**(교회 식별을 claim으로 미룸, §3). 그러면 claim 전 공고가 전부 `null:직분:부서` 한 덩어리로 묶여 **서로 무관한 교회들의 공고가 합산된 거짓 숫자**가 나온다. "안 잡힌다"가 아니라 **틀린 값을 공개한다**는 게 문제였다.
+
+**끌어올림(bump) 판정도 우리 일이 아니다** — 크롤러(min_job_agent)가 수집 단계에서 묶고, min_job admin 검수 화면에서 *"이거 끌어올리시겠습니까?"* 로 운영자에게 확인받는다. 우리는 N일 임계값을 정하지 않는다.
+
+**되살릴 때** — claim이 돌아 `church_id`가 채워진 뒤가 자연스럽다. 그때 키는 `church_id + position + department`(claim된 것만) 또는 크롤러와 같은 `연락처 + 직분 + 부서` 중 선택. **마감(CLOSED) 공고를 공개 유지하는 정책은 그대로**(§9 RLS) — 교회 상세의 지난 공고가 그 위에서 돈다.
 
 ---
 
@@ -337,7 +337,7 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 
 | 테이블 | SELECT | INSERT/UPDATE/DELETE |
 |---|---|---|
-| `jobs` | **public (OPEN + CLOSED 모두)** ← 재공고 이력·교회 타임라인이 마감 공고 노출 | **인증 관리자(그 공고 church_id)** + operator(전체, owner NULL 포함) |
+| `jobs` | **public (OPEN + CLOSED 모두)** ← 교회 상세의 '지난 공고'가 마감 공고를 노출 | **인증 관리자(그 공고 church_id)** + operator(전체, owner NULL 포함) |
 | `churches` · `church_links` · `church_photos` | public | operator (+ 인증 관리자가 자기 교회 row) |
 | `users` | 본인 | 본인 (`church_verification_status`는 운영자만 승인/변경) |
 | `job_promotions` | **본인 교회 공고만**(결제 이력 = 그 교회 것) + operator | **INSERT는 Server Action(service-role)만** — 결제 검증 통과 후. UPDATE/DELETE 없음(append-only 원장, 환불은 `status` 변경으로 operator만) |
@@ -351,7 +351,7 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 ## 10. 구조화(ingest) 정책
 
 - **수집 경로 2가지(2026-07-28 재정의)**: ① **크롤러(`min_job_agent`)가 공개 공식 게시판(신학교·교단, 31곳)에서 자동 수집** ② **사람이 붙여넣은 텍스트**. 두 경로 모두 → AI 구조화 → **리뷰 큐(`review_data`) → 운영자 검수·승격**. "자동 크롤러 없음" 원칙은 **"공개 공식 게시판 대상 크롤러 + 사람 게이트(운영자 검수 없이는 절대 공개 X)"**로 재정의(가드레일 #1 갱신, 법률 검토 완료 2026-07-28). 상업·비공식 출처는 여전히 배제(가드레일 #4).
-- 운영자 등록 = `source=OPERATOR`, `owner_id NULL`. 교회 매칭은 기존 교회 선택/생성(크롤러는 `review_data.matched_church_id` 후보 제시).
+- 운영자 등록 = `source=OPERATOR`. 교회 매칭은 기존 교회 선택/생성(크롤러는 `review_data.matched_church_id` 후보 제시).
 - **지원용 공개 연락처(`contact`)는 저장·공개** — 교회가 지원받으려 공개한 전화·이메일·지원 링크만. 지원과 무관한 제3자 개인정보는 저장·노출하지 않음(가드레일 #3 갱신). 그 외 교회 공개 채널(`church_links`)·원문 링크(`source_url`)로도 안내.
 - 크롤러 staging 4테이블(§12)은 `min_job_agent`가 소유. min_job은 `review_data`를 admin 검수 브릿지로 **읽어** 승격만 한다(직접 생성·변경 X).
 
@@ -364,7 +364,7 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 - **이용약관·개인정보처리방침** — 현재 초안, **정식 운영 전 법률 검토 필수** (ROADMAP 1-6). privacy의 수집항목·위탁·보유기간은 검토 시 스키마와 정합 확인(크롤러 수집 적법성과는 별개 항목)- **enum/type 공유 방식** — min_job `constants/domain.ts`·`types/domain.ts`의 도메인 enum·타입을 크롤러(`min_job_agent`)가 어떻게 공유할지(copy / npm package / path 참조) 미정
 - **자동 결제 연동** (Phase 3)
 - **인재 DB**(`minister_profiles`, 계정에 1:1) — 사역자 프로필 (Phase 3, 개인정보 동의). "구직 중" opt-in 노출 + "제외 교회"(자기 교회엔 숨김)
-- **관심 교회 팔로우**(`church_follows`) + 재공고 알림 (Phase 2, 사역자 view)
+- **관심 교회 팔로우**(`church_follows`) + 새 공고 알림 (Phase 2, 사역자 view)
 - **교회 인증 증빙 문서 보관·파기 정책** (`users.verification_doc_path` — 개인정보 검토와 함께 확정)
 
 ---
@@ -381,7 +381,7 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 | `crawl_run` | 실행별 요약 (1실행 1행, 누적) — started/finished·mode·성공/실패 소스·신규 집계 |
 
 - **RLS = 운영자 전용**(min_job admin이 대시보드·검수에 read), 크롤러는 service-role로 write. **public 노출 없음.**
-- **승격 흐름**: admin 검수 UI가 `review_data`(PENDING)를 읽어 → 운영자 승인 시 **요약 + `source_url`·연락처 4컬럼 + `source=OPERATOR`·`owner_id=NULL`**로 `churches`/`jobs`에 INSERT(§10). 검수 메타는 넘기지 않음. **교단은 미상이면 `NULL`로 그대로 승격**(2026-08-05 — 과거 "승격 전 10키로 해소" 규칙은 철회). **지역·게시일도 미상이면 NULL로 승격**(2026-08-05 실데이터 검증). 승격 가능 여부는 §3 "최소 조건 — 필수 4 + CHECK 2"가 판정한다.
+- **승격 흐름**: admin 검수 UI가 `review_data`(PENDING)를 읽어 → 운영자 승인 시 **요약 + `source_url`·연락처 4컬럼 + `source=OPERATOR`**로 `churches`/`jobs`에 INSERT(§10). 검수 메타는 넘기지 않음. **교단은 미상이면 `NULL`로 그대로 승격**(2026-08-05 — 과거 "승격 전 10키로 해소" 규칙은 철회). **지역·게시일도 미상이면 NULL로 승격**(2026-08-05 실데이터 검증). 승격 가능 여부는 §3 "최소 조건 — 필수 4 + CHECK 2"가 판정한다.
 - **`review_data` 주요 컬럼**(검수 브릿지가 읽는 것): `job_kind`·`role`·`title`·`position`·`department`·`employment_type`·`stipend_*` · `denomination`(+`denomination_source`·`denomination_evidence`·`raw_denomination` · **미상 가능**) · `contact` · `confidence` · `dedup_key` · `review_status`(PENDING/APPROVED/REJECTED) · `matched_church_id` FK→churches · `published_job_id` FK→jobs · `heresy_flag` 등. **전체 스키마·판정 정본은 min_job_agent SPEC §6.**
 - ⚠️ **크로스 리포 동기화 필요(2026-08-05)** — 이번 스키마 확정으로 `review_data`와 어긋나는 지점 4개. `review_data`는 min_job_agent 소유라 우리가 바꾸지 않고 **승격 시 매핑**하거나 크롤러 쪽에 반영을 요청한다:
   1. `stipend_*` → **`pay_*`** 개명 (min_job은 완료)
