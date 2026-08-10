@@ -120,7 +120,7 @@ src/
 │   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications (도메인 1파일)
 │   ├── ingest/structure.ts        AI 구조화 파이프라인 (현재 키워드 휴리스틱)
 │   ├── bookmarks.ts · recent-jobs.ts · recent-searches.ts   localStorage 클라이언트 헬퍼
-│   └── repost-tracking.ts · seo.ts · format.ts · utils.ts
+│   └── seo.ts · format.ts · utils.ts
 ├── mocks/                         **현재 데이터 소스**(jobs·churches·church-verifications JSON + index.ts)
 │                                  — lib/queries만 접근. DB 전환 시 이 폴더가 사라진다
 ├── types/domain.ts                공유 도메인 타입 (⬜ database.ts = Supabase 생성, 아직 없음)
