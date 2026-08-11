@@ -66,7 +66,14 @@
   1. **끌어올림(bump) 판정은 min_job 일이 아니다** — 크롤러(min_job_agent)가 수집 단계에서 묶고, **min_job admin 검수 화면에서 "이거 끌어올리시겠습니까?"** 로 운영자에게 확인받는다. 우리는 N일 임계값을 정하지 않는다
   2. **재공고 추적 기능 자체를 제거**(보류) — `lib/repost-tracking.ts` 삭제. 판정 키가 `church_id`에 묶여 있었는데 그게 nullable이 되면서 claim 전 공고가 전부 `null:직분:부서` 한 덩어리로 합쳐져 **거짓 숫자를 공개**하게 된다. "안 잡힌다"가 아니라 **틀린 값이 나온다**는 게 제거 이유. 되살리는 조건·후보 키는 DATA.md §6
   3. **`owner_id` 컬럼 제거** — 유일한 사용처 `getEditableJob`이 이 컬럼으로 편집 권한을 판정하고 있었는데 그게 가드레일 #2 위반이었다(담당자는 여럿·교체됨). 권한을 `church_id` 기준으로 바꾸고 컬럼을 없앴다
-- [ ] **크롤러 리포 동기화**(min_job_agent) — `review_data`가 우리 확정과 4곳 어긋난다(DATA.md §12 말미): `stipend_*`→`pay_*` · `contact` 단일→**4컬럼** · 교단 미상=NULL(ETC 아님, "승격 전 해소" 철회) · 승격 게이트=**필수 4 + CHECK 2**. `review_data`는 min_job_agent 소유라 **승격 시 매핑하거나 크롤러 쪽에 반영 요청**. 크롤러 쪽 담당 = 6개 중 못 채운 게 있으면 `confidence=low`로 표시(구조화 단계)
+- [x] 📮 **크롤러(min_job_agent)에 회신 완료(2026-08-11)** — 아래 4건 전달. min_job 쪽 확정이 `review_data`에 반영돼야 검수 브릿지가 무엇을 받을지 정해진다. `review_data`는 **min_job_agent 소유**라 우리가 바꾸지 않고 **회신 → 그쪽 반영** 또는 **승격 시 매핑**한다.
+  1. **`stipend_*` → `pay_*` 개명** (min_job 코드 완료 2026-08-07) — 일반직은 사례비가 아니라 근로계약 급여라 `stipend`가 절반만 맞았다
+  2. **`contact` 단일 → 4컬럼**(`contact_email`·`contact_tel`·`contact_link`·`contact_post`) — 실측 **75.4%가 2종 이상**이라 한 문자열에 뭉개면 `mailto:`/`tel:` 링크를 못 만든다(모바일 UX). `APPLY_METHODS`가 `ETC` 없는 닫힌 4키라 컬럼이 1:1
+  3. **교단 미상 = `NULL`**(`ETC` 아님) — `ETC`는 "소속은 있고 우리 9키에 없는 교단"(기장)이라 미상을 섞으면 필터·거점 판정이 오염된다. ~~"미상 교단은 승격 전 해소"~~ 규칙은 **철회**(무소속·독립교회가 실재)
+  4. **`job_kind` 배열화** — 혼합 공고("교육전도사 2명 · 관리직원 1명")를 지금 스키마는 **표현 자체를 못 한다**(CHECK가 `position`+`role` 동시 보유를 금지) → 크롤러가 만나면 반드시 절반을 버려야 했다. `position` 배열화와 같은 이유·같은 CHECK로 해소(min_job 코드 완료 2026-08-07)
+  > 승격 게이트도 함께 전달: **필수 4**(`church_name`·`title`·`job_kind`·`description`) **+ CHECK 2**(job_kind↔position/role 상호 일치 · 연락처 ≥1, `source_url`은 안 셈). 크롤러가 맞출 6개 = 교회 매칭 · 제목 · job_kind · 직분 또는 직무 · 요약 · 연락처 1개. **교단·지역·게시일은 비어도 승격 가능.**
+  > ⚠️ **CHECK에 `array_length` 쓰지 말 것** — 빈 배열에 NULL을 반환하고 Postgres CHECK는 **NULL을 통과**시켜, "직분 없는 사역직 공고"가 들어온다. `COALESCE(cardinality(...), 0)` 형태(DATA.md §3). 실 Postgres 8케이스 검증 완료
+- [x] 📮 **전달 완료(2026-08-11) — `review_data.published_job_id`가 단수다.** Phase 2에서 한 글의 여러 자리를 `jobs` N건으로 나누려면 **어느 것을 기록할지 정할 수 없고** 다음 크롤에서 재등장 방지가 깨진다. 그때 배열(`published_job_ids`)이나 조인 테이블이 필요하다 — min_job_agent 소관이라 **미리 알려두기만** 한다
 - [ ] DB 타입 생성 — `types/database.ts`
 - [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.** 어긋난 18곳:
   - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` · `postedAt` · `Church.denomination` · `Church.region` — 전부 nullable로 풀어야 함
