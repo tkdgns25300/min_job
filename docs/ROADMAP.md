@@ -46,6 +46,20 @@
   - **필수 4의 1번이 `church_id` → `church_name`으로 교체**(커버율 96%, 없는 124건은 제약이 자동 차단). 개수는 그대로 4개
   - ⚠️ **`jobs.region`은 §1 "비정규화 금지"의 명시적 예외** — `church_id`가 NULL이면 JOIN이 성립 안 해 지역 필터가 통째로 죽는다(크롤링 공고 80%). `featured_tier`와 같은 취급으로 §1에 예외 2개를 명시했다
   - **대가**: `/churches/[id]`는 claim된 교회만 · 교단 필터도 claim 전까지 안 걸림(명시 2.8%라 영향 작음) · **재공고 추적은 아예 제거**(위 결정 완료 2번)
+- [x] **`position`·`job_kind` 배열화 확정**(2026-08-07) — 한 글에 자리가 여럿인 공고를 표현하기 위해. DATA.md §2·§3(판정 규칙 절)·§5 반영:
+  - **`position text[]`** — 한 자리에 여러 직분 자격을 열어둔 공고가 **826건**. 대표 1개만 담으면 나머지로 검색한 사람에게 안 보인다(= 지원자를 놓친다)
+  - **`job_kind text[]`** — 혼합 공고("교육전도사 2명 · 관리직원 1명")를 **지금 스키마는 표현 자체를 못 한다**(CHECK가 position+role 동시 보유를 금지) → 크롤러가 만나면 반드시 절반을 버려야 했다. 실제 건수는 121건(3.8%)보다 적지만 비용이 타입 1곳+mock뿐이라 채택
+  - **CHECK ① biconditional로 재작성** — 🔴 **`array_length` 금지**: 빈 배열에 NULL을 반환하는데 Postgres CHECK는 **NULL을 통과**시킨다(FALSE일 때만 거부). 그대로 두면 "직분 없는 사역직 공고"가 들어온다. **`COALESCE(cardinality(...), 0)`** 형태로. 실 Postgres 8케이스 검증 완료(min_job_agent)
+  - **인덱스 GIN** + 필터는 `=` → **`@> ARRAY['X']`**
+  - **`department`·`employment_type`은 단일 유지** — 다중 케이스가 2%대(69건·76건)라 NULL로 감수. 배열화하면 코드가 대폭 늘고 실익이 작다
+  - **필드별 판정 규칙**: "자리가 몇 개냐"가 아니라 필드마다 **"적혀 있나 → 하나로 정해지나"**. 자리 수가 영향을 주는 칸은 `job_kind`·`position`(배열)·`headcount`(원문 보존) 셋뿐
+- [ ] **배열화 코드 반영** — ⚠️ 구조화 결과 확인 후 착수(스키마 SQL과 한 묶음):
+  - 선행: **`jobRoleLine`(format.ts) / `jobRoleSummary`(seo.ts) 중복 통합** — 완전히 같은 3줄이 복붙돼 있어, 통합 전에 배열화하면 축약 로직을 두 번 쓴다
+  - `job_kind`: 타입 1곳 + mock (UI 미구현이라 그 외 0곳)
+  - `position`: 타입 4곳 + `filter-jobs.ts`(매칭 한 줄 — **필터 UI·URL 상태는 이미 `Set`이라 무변경**) + 검색 인덱스·`bump` + 표시(format·seo·admin-job-row·my-job-row) + 상세 링크 + mock 101건
+  - 폼: **`ChipSelect` 다중화**(이미 칩 UI라 토글만) · admin ingest의 `EnumSelect`는 **새 다중선택 필요**
+  - 목록 카드 축약 **"부목사 외 2 · 유초등부"**(상세에선 전부 표시)
+  - ⚠️ `ChurchVerification.applicant.position`은 **배열화 제외**(담당자 개인 직분)
 - [ ] **NULL 표시 UI 3개**(스키마를 푼 대가 — 안 하면 모르는 것을 아는 척한다): 교단 미상(`denomination_source`가 `stated`·`registry`·`operator`일 때만 확정 표시) · 지역 미상 · 게시일 미상. **검수 우선순위는 교단보다 지역**(비면 지역 필터에서 탈락 = 사실상 안 보이는 공고)
 - [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 2개** + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**
 - [x] **결정 완료(2026-08-07) — 중복/재공고는 지금 안 한다**:

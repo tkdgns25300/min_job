@@ -26,8 +26,8 @@
 | **denomination** (교단) | `churches.denomination` | HAPDONG · TONGHAP · BAEKSEOK · GOSIN · HAPSIN · GAMLI · SEONGGYUL · BAPTIST · SUNBOK · ETC · `NULL`(=미상·무소속) (10키 = 9대형 + 기타. **기장=ETC** — 미상을 ETC에 넣지 말 것) |
 | **region** (광역) | `churches.region` · **`jobs.region`** | SEOUL · GYEONGGI · INCHEON · GANGWON · CHUNGBUK · CHUNGNAM · DAEJEON · SEJONG · GYEONGBUK · GYEONGNAM · DAEGU · ULSAN · BUSAN · JEONBUK · JEONNAM · GWANGJU · JEJU · OVERSEAS · `NULL`(=미상, 원문 명시 81%) |
 | **church_channel** (채널) | `church_links.type` | HOMEPAGE · YOUTUBE · INSTAGRAM · FACEBOOK · BAND · ETC(기타) |
-| **job_kind** (직군) | `jobs.job_kind` | MINISTRY(사역직) · GENERAL(일반직) — 개교회 채용 구분 |
-| **position** (직분) | `jobs.position` | SENIOR_PASTOR · ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC (사역직 MINISTRY만 · GENERAL은 NULL — XOR CHECK로 강제) |
+| **job_kind** (직군) | `jobs.job_kind` **`text[]`** | MINISTRY(사역직) · GENERAL(일반직) — 개교회 채용 구분. **배열**: 한 글에 두 종류가 섞인 공고("교육전도사 2명 · 관리직원 1명")를 표현하려면 필요. 빈 배열 금지(CHECK ①) |
+| **position** (직분) | `jobs.position` **`text[]`** | SENIOR_PASTOR · ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC. **배열**: 한 자리에 여러 직분 자격을 열어둔 공고("전임사역자(전도사, 강도사, 목사)")가 **826건**이라 대표 1개만 담으면 나머지로 검색한 사람에게 안 보인다. `job_kind`에 MINISTRY가 없으면 NULL (CHECK ①) |
 | **department** (부서) | `jobs.department` | INFANT · CHILDREN · YOUTH · YOUNG_ADULT · DISTRICT · WORSHIP · ADMIN · ETC · `NULL` |
 | **employment_type** (고용형태) | `jobs.employment_type` | FULL_TIME · SEMI_FULL_TIME · PART_TIME · `NULL`(=미상, 원문 언급률 51%) |
 | **qualification** (자격/경력) | `jobs.qualification` | ANY · ENTRY · EXPERIENCED · ORDAINED · SEMINARIAN · `NULL`(=무관) |
@@ -87,13 +87,13 @@
 | `church_name` | text **NOT NULL** | **공고가 말한 교회명 그대로**. `church_id`가 NULL이어도 화면에 교회를 표시할 수 있게 하는 값. 교회 직접 등록 시엔 교회 프로필에서 복사 |
 | `region` | text NULL (CHECK) | **공고 시점에 파악한 광역** — ⚠️ **의도적 비정규화**(§1 예외). `church_id`가 NULL이면 `churches`를 JOIN할 수 없어 지역 필터가 통째로 죽는다. 필터·정렬은 이 컬럼을 쓴다 |
 | `title` | text NOT NULL | |
-| `job_kind` | text NOT NULL (CHECK) | MINISTRY(사역직)/GENERAL(일반직) — 개교회 채용 구분 |
-| `position` | text NULL (CHECK) | 직분 (사역직 MINISTRY만). **아래 XOR CHECK로 MINISTRY면 필수** |
-| `role` | text NULL | 일반직 직무(**자유 텍스트 · 통제 목록 아님**): 방송·미디어·행정·시설 등. **XOR CHECK로 GENERAL이면 필수** |
+| `job_kind` | **text[]** NOT NULL (CHECK) | MINISTRY(사역직)/GENERAL(일반직). **배열** — 혼합 공고 표현용(§ 여러 자리 판정 규칙) |
+| `position` | **text[]** NULL (CHECK) | 직분. **배열 — 자리 수·자격 범위를 전부 담는다**(§ 여러 자리 판정 규칙). `job_kind`에 MINISTRY가 있으면 비어 있을 수 없다(CHECK ①) |
+| `role` | text NULL | 일반직 직무(**자유 텍스트 · 통제 목록 아님**): 방송·미디어·행정·시설 등. **단일 유지** — 통제 목록이 아니라 필터 축이 아니고, "방송·행정"을 한 문자열로 쓸 수 있다. `job_kind`에 GENERAL이 있으면 필수(CHECK ①) |
 | `department` | text NULL (CHECK) | 부서 |
 | `employment_type` | text **NULL** (CHECK) | 고용형태. **NULL=미상** — 원문 언급률 51%뿐이라 NOT NULL이면 승격 시 임의값 강요 |
 | `qualification` | text NULL (CHECK) | 자격/경력 요건 (필터). NULL=무관 |
-| `headcount` | text NULL | 모집 인원. **int 아님** — "약간명"·"1~2명" 같은 비정형이 흔함 |
+| `headcount` | text NULL | 모집 인원 **+ 자리 구성 원문 보존**. **int 아님** — "약간명"·"1~2명" 같은 비정형이 흔함. 한 글에 여러 자리가 있으면 원문("1.부목사(전임) 2.교육목사 3.여전도사")을 **그대로** 담는다 → **Phase 2에서 자리별로 나눌 때 이 값이 근거**가 된다 |
 | `start_timing` | text NULL | 부임 시기 — "즉시"·"협의"·"2월 중" 비정형 |
 | `housing_provided` | boolean **NULL** | 사택 (필터). **NULL=정보 없음/협의 · true=제공 · false=명시적 미제공** |
 | `housing_note` | text NULL | 사택 비정형 표현("사택 협의"·"보증금 지원") — `pay_note`와 동일 역할 |
@@ -126,10 +126,20 @@
 #### `jobs` 테이블 CHECK 제약 (2개)
 
 ```sql
--- ① 직분/직무 XOR — 종류에 맞는 쪽이 반드시 있고, 반대쪽은 반드시 비어 있다.
---    "일반직인데 직분이 박힌" 행이 존재 자체로 불가능해진다.
-CHECK ( (job_kind = 'MINISTRY' AND position IS NOT NULL AND role     IS NULL)
-     OR (job_kind = 'GENERAL'  AND role     IS NOT NULL AND position IS NULL) )
+-- ① job_kind ↔ position/role 상호 일치 (biconditional)
+--    "사역직이 있으면 직분이 있고, 없으면 직분도 없다" — XOR보다 강하다(양방향 차단).
+--    혼합 공고({MINISTRY,GENERAL} + position + role)도 이 형태라야 표현된다.
+--
+-- ⚠️ array_length 쓰지 말 것 — 빈 배열 '{}'에 NULL을 반환하는데,
+--    Postgres CHECK는 결과가 FALSE일 때만 거부하고 **NULL은 통과**시킨다.
+--    → array_length 로 쓰면 "직분 없는 사역직 공고"가 그대로 들어온다.
+--    cardinality 는 빈 배열에 0을 준다. 배열 자체가 NULL일 수 있어 COALESCE를 한 겹 더.
+--    (실 Postgres 8케이스 검증 완료 — min_job_agent, 2026-08-07)
+CHECK (
+      COALESCE(cardinality(job_kind), 0) > 0
+  AND ('MINISTRY' = ANY(job_kind)) = COALESCE(cardinality(position) > 0, false)
+  AND ('GENERAL'  = ANY(job_kind)) = (role IS NOT NULL)
+)
 
 -- ② 연락처 최소 1개 — "어디로 지원하나"를 알 수 없는 공고는 공개할 값이 없다.
 --    ⚠️ source_url은 세지 않는다 (아래 근거)
@@ -141,7 +151,52 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 
 > **막히는 양은 크지 않다(크롤러 실측 3,181건).** 연락 수단 0종이 160건(5.0%)이지만 그 내역이 — 포스터 이미지에 연락처가 있는 것 79건(구조화가 이미지를 읽으면 채워짐) · **"청빙 완료되었습니다" 인사글 등 비채용 글 다수**(크롤러 게이트1에서 탈락, 애초에 승격 후보 아님) · 완전히 빈 공고 3건(`description`이 비어 6번에서 막힘). **승격 후보인데 연락처가 없는 공고는 실제로 극소수다.**
 
-①의 트레이드오프: *"교역자 청빙"* 처럼 직분이 안 적힌 사역직 공고는 `POSITIONS.ETC`("기타")로 넣게 되어 **"기타 직분"과 "직분 미상"이 합쳐진다.** 전수 검수 전제라 운영자가 판단을 강제당하는 게 낫다고 봤다. 구분이 필요해지면 ①에서 `position IS NOT NULL`만 빼고 승격 게이트(앱 검증)로 내린다.
+①의 동작:
+
+| `job_kind` | `position` | `role` | |
+|---|---|---|---|
+| `{MINISTRY}` | 있음 | NULL | ✅ |
+| `{GENERAL}` | NULL/`{}` | 있음 | ✅ |
+| `{MINISTRY,GENERAL}` | 있음 | 있음 | ✅ **혼합 공고** |
+| `{}` 또는 NULL | — | — | ⛔ |
+| `{MINISTRY}` | 없음 | — | ⛔ 사역직인데 직분 없음 |
+| `{GENERAL}` | 있음 | — | ⛔ 일반직인데 직분 박힘 |
+
+직분이 안 적힌 사역직 공고(*"교역자 청빙"*)는 `POSITIONS.ETC`로 넣는다 — "기타 직분"과 "직분 미상"이 합쳐지지만, 전수 검수 전제라 운영자가 판단을 강제당하는 게 낫다고 봤다.
+
+#### 한 글에 여러 자리가 있을 때 — 필드별 판정 규칙 (2026-08-07 확정)
+
+게시판 글 하나에 자리가 여럿인 경우가 흔하다. **판단 기준은 "자리가 몇 개냐"가 아니라 필드마다 "이 칸의 값이 하나로 정해지냐"다.**
+
+```
+그 칸의 값이 공고에 적혀 있나?
+├─ 아니오          → NULL      "모른다"        ← 자리 수와 무관
+└─ 예 → 자리마다 다른가?
+        ├─ 아니오  → 채운다                    ← 자리가 4개여도 채운다
+        └─ 예      → NULL      "하나를 고르면 거짓이 된다"
+```
+
+**자리 수가 영향을 주는 칸은 `job_kind`·`position`(배열) · `headcount`(원문 보존) 셋뿐이다.** 나머지는 위 두 질문으로만 판단한다.
+
+실제 공고(성원교회)로 보면 — 자리가 4개인데도 대부분 채워진다:
+
+| 원문 | 필드 | 값 | 왜 |
+|---|---|---|---|
+| 모집인원: 전임목사, 교육목사, 여전도사, 교육전도사 | `position` | `{ASSOCIATE_PASTOR, EVANGELIST}` | 배열. 4문구 → 2키(중복 제거). "교육"은 `department` 축, "전임"은 `employment_type` 축이라 직분에서 빠진다(직교화 원칙) |
+| 〃 | `headcount` | `"전임목사, 교육목사, 여전도사, 교육전도사 00명"` | **원문 그대로** — 자리 구성이 여기 남는다 |
+| 모집부서: 주일학교 | `department` | 하나로 정해지면 채운다 | ⚠️ 우리 enum과 1:1이 아닌 표현(주일학교·교육부)은 `ETC`/NULL 후보 — 검수에서 판단 |
+| 지원자격: 1980년 이후 출생자 | `requirements[]` | 채운다 | 자리 공통 |
+| 사례비: 교회 내규 대로 | `pay_note` | 채운다 | 자리 공통 |
+| (없음) | `employment_type` | NULL | **안 적혀 있어서** — 자리 수와 무관 |
+| 제출기한: 충원시까지 | `deadline` | NULL | 날짜가 아니다(= 상시모집) |
+
+**자리마다 다를 때만 비운다** — *"1.부목사(전임) 2.교육목사 3.여전도사(전임)"* 에서 `employment_type`은 부목사·여전도사만 전임이고 교육목사는 안 적혀 **하나로 못 정하므로** NULL. 셋 다 (전임)이었으면 `FULL_TIME`을 채운다.
+
+> ⚠️ **틀린 값으로 필터에 걸리는 것보다 안 걸리는 게 낫다.** `employment_type=FULL_TIME`으로 찍으면 파트를 찾던 사람이 헛걸음하고, 전임을 찾던 사람은 교육목사 자리도 전임인 줄 안다. §nullable 원칙("DEFAULT로 값을 지어내지 않는다")의 연장이다.
+
+**규모(크롤러 실측)**: 직분 2개 이상 언급 중 대부분은 *한 자리인데 자격만 열어둔 것*(`"전임사역자(전도사, 강도사, 목사)"` — 826건)이라 **전부 채워진다**. 자리가 진짜 여럿이라 일부 칸이 비는 건 소수다. `department` 다중 69건(2.2%) · `employment_type` 열어둠 76건(2.4%) → 둘 다 **단일 컬럼 유지**하고 NULL로 감수한다(배열화하면 min_job 코드가 대폭 늘고 실익이 2%대).
+
+**Phase 2에서 자리별로 나눌 때**: `review_data` 1행 → `jobs` N건. 근거는 `headcount`의 원문과 `source_data`의 원자료라 **재수집 없이** 가능하다. ⚠️ 단 `review_data.published_job_id`가 **단수**라 N건을 기록할 수 없다 — 그때 배열이나 조인 테이블이 필요하다(min_job_agent 소관).
 
 #### 공고가 성립하는 최소 조건 — 필수 4 + CHECK 2 (= 크롤러 승격 판정 규칙)
 
@@ -151,9 +206,9 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 |---|---|---|---|
 | 🔴 | 어느 교회인가 | **`jobs.church_name NOT NULL`** (`church_id`는 nullable) | 교회명 커버율 **96%** — 없는 124건은 이 제약이 자동 차단 |
 | 🔴 | 제목 | `jobs.title NOT NULL` | 3,181/3,181 |
-| 🔴 | 사역직/일반직 | `jobs.job_kind NOT NULL` | AI 판정, 애매하면 `confidence=low`로 운영자에게 |
+| 🔴 | 사역직/일반직 | `jobs.job_kind` **비어 있지 않은 배열**(CHECK ①) | AI 판정, 애매하면 `confidence=low`로 운영자에게 |
 | 🔴 | 요약 | `jobs.description NOT NULL` | **빈 공고를 막는 유일한 장치** — 본문·이미지·첨부가 전무한 공고 CSU 53건 + YTUS 1건 실측 |
-| 🟡 | 직분 또는 직무 | CHECK ① | 겸직은 운영자 판정으로 |
+| 🟡 | 직분 또는 직무 | CHECK ① | `job_kind`와 상호 일치. 혼합 공고는 둘 다 채운다 |
 | 🟡 | 연락처 최소 1개 | CHECK ② | 0종 160건이지만 대부분 비채용 글·포스터 내 연락처 |
 
 + 시스템 필드 `status`(DEFAULT 'OPEN') · `source` · `featured_tier`(DEFAULT 'NONE') · `pay_period`(DEFAULT 'MONTH') — 항상 INSERT 시점에 알 수 있다.
@@ -288,7 +343,8 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 - `jobs(featured_tier, featured_until)` — 노출(프리미엄·대표광고) 조회
 - `job_promotions(job_id)` — 공고별 결제 이력
 - `job_promotions(tier, starts_at, ends_at)` — HERO 구좌 잔여 판정(특정 주가 찼는지)
-- `jobs(position)`, `jobs(department)`, `jobs(employment_type)` — 목록 필터
+- `jobs(department)`, `jobs(employment_type)` — 목록 필터
+- **`jobs USING GIN (position)`**, **`jobs USING GIN (job_kind)`** — 배열 컬럼. 필터는 `=`가 아니라 **`@> ARRAY['EVANGELIST']`** 로 건다
 - `jobs(region)` — **지역 필터(최다 사용)**. `church_id`가 NULL일 수 있어 JOIN이 아니라 이 컬럼으로 건다
 - `jobs(church_id)` — 교회별 공고(claim된 것만)
 - `churches(denomination)`, `churches(region)` — 교회 상세·교단 필터(JOIN 대상)
