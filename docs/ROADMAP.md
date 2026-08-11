@@ -17,7 +17,7 @@
 - [x] README
 - [x] Supabase 프로젝트 생성 + 클라이언트(`lib/supabase/{server,service,session}.ts`) — `server`·`session`은 인증에서 실사용, `service`는 아직 미사용(DB 전환 시)
 - [x] Proxy — `src/proxy.ts` (2026-07-29): **세션 refresh + 비로그인 1차 차단(진짜 307)**. ⚠️ 원래 계획한 "(authed)/admin 인증 게이트"와 다름 — cacheComponents 제약상 페이지 안 redirect는 200+스켈레톤이 되므로 proxy가 1차, 페이지 `requireUser`가 최종 방어선인 **2단 구조**로 결정. **admin도 게이트 적용**(`/admin/**` 비로그인 307 + 비운영자 → `/`, Auth 장애 시에도 fail-closed)
-- [x] **운영자(admin) 게이트** (2026-07-29) — `.env` `ADMIN_EMAILS`(쉼표 구분) allowlist. `proxy.ts`가 `/admin/*`에서 비로그인은 307, 로그인했어도 운영자 아니면 `/`로. PII 화면 `/admin/verify`는 페이지에서도 `requireOperator()` 재확인(fail-closed: 목록이 비면 아무도 접근 못 함). 판정은 JWT claims의 email로 하므로 추가 왕복 없음. ⚠️ **Vercel env에도 `ADMIN_EMAILS`를 넣어야** 배포본에서 열린다. 남은 것: 실 DB 전환 시 operator RLS.
+- [x] **운영자(admin) 게이트** (2026-07-29) — `.env` `ADMIN_EMAILS`(쉼표 구분) allowlist. `proxy.ts`가 `/admin/*`에서 비로그인은 307, 로그인했어도 운영자 아니면 `/`로. PII 화면 `/admin/verify`는 페이지에서도 `requireOperator()` 재확인(fail-closed: 목록이 비면 아무도 접근 못 함). 판정은 JWT claims의 email로 하므로 추가 왕복 없음. ✅ **Vercel env `ADMIN_EMAILS` 등록·prod 실동작 확인 완료(2026-08-11)**. 남은 것: 실 DB 전환 시 operator RLS.
 - [x] `.env` 로컬 셋업 (Supabase 키) — URL·publishable·secret 3개 설정 완료
 - [x] Vercel 연결 + 첫 배포 (2026-07-18) — https://min-job.vercel.app/ (mock 데이터, 시크릿 없음)
 

@@ -254,9 +254,11 @@ dev = prod = origin/* = c0aa4ec   (2026-08-06 fast-forward 완료, merge 커밋 
 > - **`churchId: string` → `string | null`**(2026-08-06 claim 결정) — `Job.churchId`를 참조하는 모든 곳이 null을 다뤄야 한다
 > - 함께: `posted_at` nullable 처리 3가지(JSON-LD 생략 · 정렬 `posted_at ?? created_at` 폴백 · null 처리 10곳+) · mock JSON 101건에 신규 필드 채우기
 
-**▶ 배포 직후 확인할 것 2개 (2026-08-06 prod 첫 반영)** — 7/29 이후 30커밋이 한 번에 올라갔다:
-1. **Google 로그인이 prod 도메인에서 실제로 되는지** — Supabase Redirect URL + Google OAuth 승인된 리디렉션 URI에 `https://www.minjob.co.kr/auth/callback`이 있어야 한다. `localhost`만 등록돼 있으면 prod 콜백이 실패한다.
-2. **Vercel env에 `ADMIN_EMAILS`가 등록됐는지** — 없으면 fail-closed라 **본인도 `/admin`에 못 들어간다**.
+**▶ 배포 확인 — ✅ 완료(2026-08-11)**. prod에서 구글 로그인·`/admin` 접근 실동작 확인. 아래는 그때 정리된 설정 정본이다:
+1. **Google Cloud 승인된 리디렉션 URI = Supabase 콜백 하나뿐**(`https://<ref>.supabase.co/auth/v1/callback`). ⚠️ **우리 도메인을 여기 넣지 않는다** — 구글은 Supabase까지만 알면 되고, Supabase가 우리 앱으로 다시 보낸다. (한 번 잘못 안내했던 지점)
+   - **Supabase → Authentication → URL Configuration**이 우리 도메인을 아는 곳이다: **Site URL = `https://www.minjob.co.kr`**(경로 없이) · **Redirect URLs = `https://www.minjob.co.kr/auth/callback**` + `http://localhost:3000/auth/callback**`**. `**`는 `?next=` 쿼리까지 허용하는 와일드카드고, **localhost가 없으면 로컬 `npm run dev` 로그인이 안 된다.**
+   - ⚠️ **Supabase 무료 플랜은 약 7일 무요청이면 프로젝트를 자동 일시정지**한다. 멈추면 Auth가 죽어 **아무도 로그인할 수 없다**(코드가 fail-closed로 미로그인 강등 → 사이트는 살아 있지만 로그인만 안 됨). 대시보드에서 `Resume project`. **정식 오픈 전 Pro 검토 필요** — 주말 지나고 멈추면 실서비스가 막힌다.돼 있으면 prod 콜백이 실패한다.
+2. **Vercel env `ADMIN_EMAILS`** — ✅ `tkdgns25300@gmail.com`(Production·Preview). 없으면 fail-closed라 **본인도 `/admin`에 못 들어간다**. 코드가 기대하는 나머지 3개(`NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`·`SUPABASE_SECRET_KEY`)도 이름 일치 확인.
 3. (참고) `test1@test.com`은 이제 로그인이 안 된다. KCP 심사가 끝나 문제는 아니지만 카드사 재확인 요청이 오면 알고 있어야 한다.
 
 **▶ 이번 세션(2026-08-05~06)에 한 일 — 커밋 순서**
