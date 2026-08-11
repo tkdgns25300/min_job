@@ -267,7 +267,7 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 
 코드 작성 후 확인:
 1. `npm run build` 통과 (TypeScript + Cache Components 검증)
-2. 미사용 import/변수 없음 · `any` 없음 · 단일 책임
+2. 미사용 import/변수 없음(`noUnusedLocals`·`noUnusedParameters`가 `npm run build`에서 TS6133으로 잡는다) · `any` 없음 · 단일 책임
 3. 네이밍만으로 역할 이해 가능
 4. **새 페이지**: 데이터는 query 함수에서 `'use cache'`+`cacheTag`+`cacheLife`(페이지엔 붙이지 않음), 인증·검색 의존은 `<Suspense>`. 상세는 `generateMetadata` + canonical + JobPosting JSON-LD(모집중만) + sitemap 반영
 5. **새 mutation**: actions.ts 끝에서 `updateTag(resource)`, 영향 태그 모두 invalidate
