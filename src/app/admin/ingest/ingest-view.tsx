@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { ChipMultiSelect } from "@/components/job/chip-select";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,11 +190,10 @@ function DraftPanel({
             />
           </Field>
           <Field label="직분">
-            <EnumSelect
-              labels={POSITIONS}
+            <ChipMultiSelect
+              options={POSITIONS}
               value={draft.position}
               onChange={(v) => patch({ position: v })}
-              placeholder="직분 선택"
             />
           </Field>
           <Field label="담당 부서">

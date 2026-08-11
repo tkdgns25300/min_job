@@ -31,7 +31,7 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
   const result = jobs.filter((j) => {
     if (s.denomination.size && !s.denomination.has(j.church.denomination)) return false;
     if (s.region.size && !s.region.has(j.church.region)) return false;
-    if (s.position.size && !s.position.has(j.position)) return false;
+    if (s.position.size && !j.position.some((p) => s.position.has(p))) return false;
     if (s.department.size && (!j.department || !s.department.has(j.department))) return false;
     if (s.employmentType.size && !s.employmentType.has(j.employmentType)) return false;
     if (s.qualification.size && (!j.qualification || !s.qualification.has(j.qualification)))
@@ -56,7 +56,7 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
         j.title,
         REGIONS[j.church.region],
         j.church.city ?? "",
-        POSITIONS[j.position],
+        ...j.position.map((p) => POSITIONS[p]),
         j.department ? DEPARTMENTS[j.department] : "",
         DENOMINATIONS[j.church.denomination],
         EMPLOYMENT_TYPES[j.employmentType],

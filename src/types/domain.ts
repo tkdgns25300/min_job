@@ -44,7 +44,7 @@ export interface Church {
 // (자리별 묶음·재공고 집계는 2026-08-07에 제거했다 — ROADMAP 1-4 참조)
 export interface PastJob {
   id: string;
-  position: Position;
+  position: Position[];
   department: Department | null;
   postedAt: string;
   deadline: string | null;
@@ -55,8 +55,8 @@ export interface Job {
   id: string;
   churchId: string;
   title: string;
-  jobKind: JobKind; // 사역직/일반직 — 최상위 채용 구분
-  position: Position; // 사역 직분. 일반직 nullable화는 크롤러 실데이터 시(ROADMAP 1-10)
+  jobKind: JobKind[]; // 사역직/일반직 — 최상위 채용 구분. 배열: 한 글에 두 종류가 섞인 공고 표현(DATA §3 판정 규칙)
+  position: Position[]; // 사역 직분 — **배열**. 자리 수·자격 범위를 전부 담는다(DATA §3 판정 규칙)
   department: Department | null;
   employmentType: EmploymentType;
   qualification?: Qualification; // 자격/경력 요건 (필터). 미지정 = 무관 취급. 실데이터에선 필수화 예정
@@ -103,7 +103,7 @@ export interface JobCard {
   id: string;
   title: string;
   church: Pick<Church, "name" | "denomination" | "region" | "city">;
-  position: Position;
+  position: Position[];
   department: Department | null;
   employmentType: EmploymentType;
   qualification?: Qualification;
@@ -124,7 +124,7 @@ export interface AdminJob {
   id: string;
   title: string;
   church: Pick<Church, "id" | "name" | "denomination" | "region">;
-  position: Position;
+  position: Position[];
   department: Department | null;
   employmentType: EmploymentType;
   status: JobStatus;

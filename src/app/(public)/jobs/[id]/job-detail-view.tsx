@@ -5,9 +5,15 @@ import { buttonVariants } from "@/components/ui/button";
 import { JobActions } from "@/components/job/job-actions";
 import { JobCard } from "@/components/job/job-card";
 import { ChurchChannels } from "@/components/church/church-channels";
-import { churchLocation, churchMetaLine, formatPay, jobRoleLine } from "@/lib/format";
+import {
+  churchLocation,
+  churchMetaLine,
+  formatPay,
+  jobRoleLine,
+  positionLabel,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { EMPLOYMENT_TYPES, JOB_SOURCES, POSITIONS, type JobSource } from "@/constants/domain";
+import { EMPLOYMENT_TYPES, JOB_SOURCES, type JobSource } from "@/constants/domain";
 import type { Church, Job, JobCard as JobCardData, JobDetail } from "@/types/domain";
 
 const externalLinkAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
@@ -88,7 +94,7 @@ function PostHeader({ job, church }: { job: Job; church: Church }) {
 
       <div className="mt-5">
         <h1 className="text-2xl leading-snug font-bold break-keep">{job.title}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{jobRoleLine(job)}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{jobRoleLine(job, { full: true })}</p>
       </div>
     </div>
   );
@@ -212,7 +218,10 @@ function MainContent({
                     >
                       <span className="min-w-0 flex-1 truncate group-hover:underline">
                         {cj.title}
-                        <span className="text-muted-foreground"> · {POSITIONS[cj.position]}</span>
+                        <span className="text-muted-foreground">
+                          {" "}
+                          · {positionLabel(cj.position)}
+                        </span>
                       </span>
                       <span
                         className={cn(
@@ -327,10 +336,13 @@ export function JobDetailView({
 }) {
   const { job, church } = detail;
   const apply = getApplyTarget(job, church);
-  // "더 보기" — 넓은 탐색은 /jobs로 (부서 우선, 없으면 직분으로 미리 필터)
-  const moreHref = job.department
-    ? `/jobs?department=${job.department}`
-    : `/jobs?position=${job.position}`;
+  // "더 보기" — 넓은 탐색은 /jobs로 (부서 우선, 없으면 직분으로 미리 필터).
+  // ⚠️ 직분은 배열이라 **반복 파라미터**로 넘긴다(`?position=A&position=B`) — jobs-url-state가
+  // `searchParams.getAll(dim)`으로 읽으므로 콤마로 이으면 "A,B" 한 값이 되어 아무것도 안 걸린다.
+  const moreParams = job.department
+    ? [`department=${job.department}`]
+    : job.position.map((p) => `position=${p}`);
+  const moreHref = moreParams.length > 0 ? `/jobs?${moreParams.join("&")}` : "/jobs";
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6">

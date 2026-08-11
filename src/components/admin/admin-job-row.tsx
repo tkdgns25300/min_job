@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { positionLabel } from "@/lib/format";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
@@ -13,7 +14,6 @@ import {
   FEATURED_TIERS,
   JOB_SOURCES,
   JOB_STATUSES,
-  POSITIONS,
 } from "@/constants/domain";
 import type { AdminJob, JobStatus } from "@/types/domain";
 
@@ -116,7 +116,7 @@ export function AdminJobRow({
   onFeature: () => void;
 }) {
   const role = [
-    POSITIONS[job.position],
+    positionLabel(job.position),
     job.department && DEPARTMENTS[job.department],
     EMPLOYMENT_TYPES[job.employmentType],
   ]

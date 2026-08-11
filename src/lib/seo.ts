@@ -1,11 +1,5 @@
-import {
-  DENOMINATIONS,
-  REGIONS,
-  POSITIONS,
-  DEPARTMENTS,
-  EMPLOYMENT_TYPES,
-  type EmploymentType,
-} from "@/constants/domain";
+import { REGIONS, type EmploymentType } from "@/constants/domain";
+import { churchMetaLine, jobRoleLine } from "@/lib/format";
 import type { JobDetail } from "@/types/domain";
 
 // 우리 고용형태 → schema.org employmentType enum 매핑
@@ -17,18 +11,11 @@ const SCHEMA_EMPLOYMENT: Record<EmploymentType, string> = {
 
 const KRW_PER_MAN = 10000; // 만원 → 원
 
-// 공고 한 줄 요약 (메타 description 폴백)
+// 공고 한 줄 요약 (메타 description 폴백) — 표시 포맷은 format.ts가 단일 소스.
+// 직접 조립하지 말 것: 직분 표기가 바뀌면(배열·축약) 여기까지 따라와야 한다.
 export function jobRoleSummary(detail: JobDetail): string {
   const { job, church } = detail;
-  const role = [
-    POSITIONS[job.position],
-    job.department ? DEPARTMENTS[job.department] : null,
-    EMPLOYMENT_TYPES[job.employmentType],
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  const location = `${REGIONS[church.region]}${church.city ? ` ${church.city}` : ""}`;
-  return `${church.name} · ${DENOMINATIONS[church.denomination]} · ${location} · ${role}`;
+  return `${church.name} · ${churchMetaLine(church)} · ${jobRoleLine(job)}`;
 }
 
 // schema.org JobPosting JSON-LD — 검색엔진 구조화 노출 (SEO 성장 엔진)

@@ -26,7 +26,7 @@ export interface IngestDraft {
   churchName: string;
   denomination: Denomination | null;
   region: Region | null;
-  position: Position | null;
+  position: Position[]; // 배열 — 원문에 여러 직분이 나열될 수 있다(DATA §3)
   department: Department | null;
   employmentType: EmploymentType | null;
   payMin: string;
@@ -44,7 +44,7 @@ function emptyIngestDraft(): IngestDraft {
     churchName: "",
     denomination: null,
     region: null,
-    position: null,
+    position: [],
     department: null,
     employmentType: null,
     payMin: "",
@@ -74,11 +74,10 @@ const POSITION_PRIORITY: Position[] = [
   "LICENSED_MINISTER",
   "SENIOR_PASTOR",
 ];
-function matchPosition(text: string): Position | null {
-  for (const key of POSITION_PRIORITY) {
-    if (text.includes(POSITIONS[key])) return key;
-  }
-  return null;
+// 원문에 나열된 직분을 **전부** 뽑는다("1.부목사 2.교육목사 3.여전도사" → 부목사·전도사).
+// 순서는 POSITION_PRIORITY 기준(담임은 최후 — 부목사 공고가 담임으로 뒤집히지 않게).
+function matchPositions(text: string): Position[] {
+  return POSITION_PRIORITY.filter((key) => text.includes(POSITIONS[key]));
 }
 
 // 고용형태 — "준전임"이 "전임"을 부분 포함하므로 좁은 것부터 검사(라벨은 constants에서).
@@ -136,7 +135,7 @@ export function structureJobText(text: string): IngestDraft {
     churchName: src.match(/[가-힣]{2,10}교회/)?.[0] ?? "",
     denomination: matchLabel(src, DENOMINATIONS),
     region: matchLabel(src, REGIONS),
-    position: matchPosition(src),
+    position: matchPositions(src),
     department: matchLabel(src, DEPARTMENTS),
     employmentType: matchEmployment(src),
     ...parsePay(src),

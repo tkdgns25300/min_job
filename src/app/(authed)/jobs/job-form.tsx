@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "./form-section";
-import { ChipSelect } from "./chip-select";
+import { ChipMultiSelect, ChipSelect } from "@/components/job/chip-select";
 import { ListField } from "./list-field";
 import { CheckList, type CheckItem } from "./check-list";
 import { StepBar, FlowSection, TOTAL_STEPS } from "./job-wizard";
@@ -38,7 +38,7 @@ const METHOD_PLACEHOLDER: Record<ApplyMethod, string> = {
 // mock draft — Job 스키마보다 넓다(모집인원·부임시기·전형절차·접수방법·서류 필수여부는 Phase 1에서 DATA 반영).
 interface JobDraft {
   title: string;
-  position: Position | null;
+  position: Position[]; // 배열 — 자리가 여럿이거나 자격을 열어둔 공고(DATA §3)
   positionEtc: string;
   department: Department | null;
   departmentEtc: string;
@@ -64,7 +64,7 @@ interface JobDraft {
 function toDraft(job?: Job): JobDraft {
   return {
     title: job?.title ?? "",
-    position: job?.position ?? null,
+    position: job?.position ?? [],
     positionEtc: "",
     department: job?.department ?? null,
     departmentEtc: "",
@@ -111,7 +111,7 @@ const REQUIRED_MESSAGES: Record<RequiredField, string> = {
 function missingRequired(draft: JobDraft): RequiredField[] {
   const missing: RequiredField[] = [];
   if (!draft.title.trim()) missing.push("title");
-  if (!draft.position) missing.push("position");
+  if (draft.position.length === 0) missing.push("position");
   if (!draft.employmentType) missing.push("employmentType");
   if (Object.keys(draft.applyMethods).length === 0) missing.push("applyMethods");
   return missing;
@@ -308,13 +308,13 @@ function stepSections(
               />
             </Field>
             <Field label="직분" required error={errorOf("position")}>
-              <ChipSelect
+              <ChipMultiSelect
                 options={POSITIONS}
                 value={draft.position}
                 onChange={(v) => patch({ position: v })}
               />
               <EtcInput
-                show={draft.position === "ETC"}
+                show={draft.position.includes("ETC")}
                 value={draft.positionEtc}
                 onChange={(v) => patch({ positionEtc: v })}
                 label="직분"

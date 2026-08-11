@@ -1,18 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { positionLabel } from "@/lib/format";
 import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  DEPARTMENTS,
-  EMPLOYMENT_TYPES,
-  FEATURED_TIERS,
-  JOB_STATUSES,
-  POSITIONS,
-} from "@/constants/domain";
+import { DEPARTMENTS, EMPLOYMENT_TYPES, FEATURED_TIERS, JOB_STATUSES } from "@/constants/domain";
 import type { JobStatus } from "@/types/domain";
 import type { MyJob } from "@/lib/queries/users";
 
@@ -92,7 +87,7 @@ function OverflowMenu({ items, label }: { items: MenuItem[]; label: string }) {
 export function MyJobRow({ job }: { job: MyJob }) {
   const isClosed = job.status === "CLOSED";
   const roleLine = [
-    POSITIONS[job.position],
+    positionLabel(job.position),
     job.department && DEPARTMENTS[job.department],
     EMPLOYMENT_TYPES[job.employmentType],
   ]

@@ -1,16 +1,25 @@
 import Link from "next/link";
 import { ChurchChannels } from "@/components/church/church-channels";
 import { ChurchGallery } from "@/components/church/church-gallery";
-import { churchLocation, churchMetaLine, formatPay, jobRoleLine } from "@/lib/format";
+import {
+  churchLocation,
+  churchMetaLine,
+  formatPay,
+  jobRoleLine,
+  positionLabel,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { DEPARTMENTS, POSITIONS } from "@/constants/domain";
+import { DEPARTMENTS } from "@/constants/domain";
 import type { Church, JobCard as JobCardData, PastJob } from "@/types/domain";
 
 const externalAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
 
 // 자리 이름: 부서 + 직분 (예: "유초등부 전도사")
 function roleLabel(role: Pick<PastJob, "position" | "department">): string {
-  return [role.department ? DEPARTMENTS[role.department] : null, POSITIONS[role.position]]
+  return [
+    role.department ? DEPARTMENTS[role.department] : null,
+    positionLabel(role.position, { full: true }),
+  ]
     .filter(Boolean)
     .join(" ");
 }

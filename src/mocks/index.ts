@@ -261,7 +261,7 @@ export function getSearchSuggestions(): string[] {
       bump(REGIONS[church.region]);
       bump(DENOMINATIONS[church.denomination]);
     }
-    bump(POSITIONS[j.position]);
+    for (const p of j.position) bump(POSITIONS[p]);
     if (j.department) bump(DEPARTMENTS[j.department]);
   }
   return [...counts.entries()]
