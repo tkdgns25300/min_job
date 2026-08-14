@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { JobDetailView } from "./job-detail-view";
 import { RecordRecentlyViewed } from "@/components/job/record-recently-viewed";
 import { getChurchOpenJobs, getJobDetail, getSimilarJobs } from "@/lib/queries/jobs";
-import { jobPostingJsonLd, jobRoleSummary } from "@/lib/seo";
+import { breadcrumbJsonLd, jobPostingJsonLd, jobRoleSummary } from "@/lib/seo";
 import { churchLocation, formatPay } from "@/lib/format";
 import { REGIONS } from "@/constants/domain";
 import { SITE_OPEN_GRAPH } from "@/constants/site";
@@ -49,6 +49,15 @@ async function JobDetailContent({ params }: Params) {
           구글은 마감 공고의 구조화 데이터 제거를 권장한다. validThrough(마감일)만 믿으면
           "마감일 없이 조기 마감" 또는 "마감일이 미래인데 마감" 공고가 모집중으로 노출된다
           → 상태를 직접 본다. 페이지 자체는 계속 열린다(교회 진입 경로·롱테일 SEO). */}
+      {/* BreadcrumbList JSON-LD — 검색 결과에 URL 대신 경로를 보여준다. 마감 공고도 유효 */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbJsonLd([{ name: "청빙 공고", path: "/jobs" }, { name: detail.job.title }]),
+          ),
+        }}
+      />
       {detail.isPubliclyOpen && (
         <script
           type="application/ld+json"

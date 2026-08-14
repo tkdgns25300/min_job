@@ -1,5 +1,7 @@
 import { REGIONS, type EmploymentType } from "@/constants/domain";
 import { churchMetaLine, jobRoleLine } from "@/lib/format";
+import { BUSINESS_INFO } from "@/constants/business";
+import { SITE_OPEN_GRAPH, SITE_URL } from "@/constants/site";
 import type { JobDetail } from "@/types/domain";
 
 // 우리 고용형태 → schema.org employmentType enum 매핑
@@ -59,6 +61,52 @@ export function jobPostingJsonLd(detail: JobDetail) {
       },
     },
     baseSalary,
-    directApply: false,
+    // 민잡이 부여한 공고 번호. 구글이 같은 공고를 사이트 간·시점 간 추적하는 데 쓴다(권장 필드).
+    identifier: { "@type": "PropertyValue", name: SITE_OPEN_GRAPH.siteName, value: job.id },
+    directApply: false, // 사이트 내 지원 없음 — 교회 연락처로 직접 지원(SPEC 지원 모델)
+  };
+}
+
+/**
+ * Organization JSON-LD — 사이트 운영 주체(민잡). root layout에서 전 페이지 공통 출력.
+ * 공고의 `hiringOrganization`(교회)과 다르다 — 이건 **서비스 자신**을 설명한다.
+ * ⚠️ 로고는 정사각 파일이 생기면 `logo`를 추가한다(없어도 유효).
+ */
+export function organizationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_OPEN_GRAPH.siteName,
+    url: SITE_URL,
+    email: BUSINESS_INFO.email,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: BUSINESS_INFO.address,
+      addressCountry: "KR",
+    },
+  };
+}
+
+/** 빵부스러기 한 칸 — 마지막 칸은 현재 페이지라 `path`를 주지 않는다(구글 권장) */
+interface Crumb {
+  name: string;
+  path?: string;
+}
+
+/**
+ * BreadcrumbList JSON-LD — 검색 결과에서 URL 대신 경로를 보여준다.
+ * 홈은 항상 첫 칸이라 호출부가 넘기지 않는다.
+ */
+export function breadcrumbJsonLd(trail: Crumb[]) {
+  const crumbs: Crumb[] = [{ name: "홈", path: "/" }, ...trail];
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: c.name,
+      ...(c.path ? { item: `${SITE_URL}${c.path}` } : {}),
+    })),
   };
 }

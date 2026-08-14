@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ChurchDetailView } from "./church-detail-view";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { churchMetaLine } from "@/lib/format";
 import { getChurch, getChurchPastJobs } from "@/lib/queries/churches";
 import { getChurchOpenJobs } from "@/lib/queries/jobs";
@@ -43,7 +44,21 @@ async function ChurchDetailContent({ params }: Params) {
   const openJobs = await getChurchOpenJobs(id);
   const pastJobs = await getChurchPastJobs(id);
 
-  return <ChurchDetailView church={church} openJobs={openJobs} pastJobs={pastJobs} />;
+  return (
+    <>
+      {/* BreadcrumbList JSON-LD — 교회 목록 페이지는 없으므로 공고 목록을 상위로 둔다
+          (구직자는 공고에서 교회로 들어온다 — SPEC 교회 상세 진입 경로) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbJsonLd([{ name: "청빙 공고", path: "/jobs" }, { name: church.name }]),
+          ),
+        }}
+      />
+      <ChurchDetailView church={church} openJobs={openJobs} pastJobs={pastJobs} />
+    </>
+  );
 }
 
 function ChurchDetailSkeleton() {
