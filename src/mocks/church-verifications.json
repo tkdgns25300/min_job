@@ -20,7 +20,7 @@
       "fileName": "사업자등록증_은혜로교회.pdf"
     },
     "status": "PENDING",
-    "submittedAt": "2026-07-20",
+    "submittedAt": "2026-08-12",
     "reviewedAt": null,
     "rejectionReason": null
   },
@@ -45,7 +45,7 @@
       "fileName": "고유번호증_한빛교회.jpg"
     },
     "status": "PENDING",
-    "submittedAt": "2026-07-19",
+    "submittedAt": "2026-08-11",
     "reviewedAt": null,
     "rejectionReason": null
   },
@@ -70,7 +70,7 @@
       "fileName": "고유번호증_생명수교회.pdf"
     },
     "status": "PENDING",
-    "submittedAt": "2026-07-18",
+    "submittedAt": "2026-08-10",
     "reviewedAt": null,
     "rejectionReason": null
   },
@@ -95,7 +95,7 @@
       "fileName": "사업자등록증_주안에교회.png"
     },
     "status": "PENDING",
-    "submittedAt": "2026-07-16",
+    "submittedAt": "2026-08-08",
     "reviewedAt": null,
     "rejectionReason": null
   },
@@ -120,8 +120,8 @@
       "fileName": "고유번호증_새벽빛교회.pdf"
     },
     "status": "APPROVED",
-    "submittedAt": "2026-07-10",
-    "reviewedAt": "2026-07-11",
+    "submittedAt": "2026-08-02",
+    "reviewedAt": "2026-08-03",
     "rejectionReason": null
   },
   {
@@ -145,8 +145,8 @@
       "fileName": "사업자등록증_빛과소금교회.pdf"
     },
     "status": "APPROVED",
-    "submittedAt": "2026-07-08",
-    "reviewedAt": "2026-07-09",
+    "submittedAt": "2026-07-31",
+    "reviewedAt": "2026-08-01",
     "rejectionReason": null
   },
   {
@@ -170,8 +170,8 @@
       "fileName": "제출서류_반석교회.jpg"
     },
     "status": "REJECTED",
-    "submittedAt": "2026-07-06",
-    "reviewedAt": "2026-07-07",
+    "submittedAt": "2026-07-29",
+    "reviewedAt": "2026-07-30",
     "rejectionReason": "제출한 서류가 흐려 고유번호를 확인할 수 없어요. 선명한 고유번호증 사본으로 다시 신청해 주세요."
   }
 ]
