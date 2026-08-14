@@ -7,13 +7,29 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { MyJob } from "@/lib/queries/users";
 
-type TabKey = "all" | "open" | "closed";
+// "내려감" = status는 OPEN인데 공개 목록에서 빠진 것(마감일 경과·상시모집 90일 초과, DATA §6-1).
+// 판정은 seam이 실어 보낸 값을 쓴다(lib/job-visibility) — 여기서 날짜를 다시 계산하지 않는다.
+type TabKey = "all" | "open" | "hidden" | "closed";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "all", label: "전체" },
   { key: "open", label: "게재 중" },
+  { key: "hidden", label: "내려감" },
   { key: "closed", label: "마감" },
 ];
+
+const EMPTY_MESSAGE: Record<TabKey, string> = {
+  all: "공고가 없어요.",
+  open: "게재 중인 공고가 없어요.",
+  hidden: "내려간 공고가 없어요.",
+  closed: "마감된 공고가 없어요.",
+};
+
+const MATCHES: Record<Exclude<TabKey, "all">, (job: MyJob) => boolean> = {
+  open: (j) => j.isPubliclyOpen,
+  hidden: (j) => j.hiddenReason !== null,
+  closed: (j) => j.status === "CLOSED",
+};
 
 // 교회 공고 목록 — 상태 탭(전체·게재중·마감)으로 필터. 개수는 탭 라벨 배지로.
 export function ChurchJobList({ jobs }: { jobs: MyJob[] }) {
@@ -21,23 +37,17 @@ export function ChurchJobList({ jobs }: { jobs: MyJob[] }) {
 
   const counts: Record<TabKey, number> = {
     all: jobs.length,
-    open: jobs.filter((j) => j.status === "OPEN").length,
-    closed: jobs.filter((j) => j.status === "CLOSED").length,
+    open: jobs.filter(MATCHES.open).length,
+    hidden: jobs.filter(MATCHES.hidden).length,
+    closed: jobs.filter(MATCHES.closed).length,
   };
-  const filtered =
-    tab === "all"
-      ? jobs
-      : jobs.filter((j) => (tab === "open" ? j.status === "OPEN" : j.status === "CLOSED"));
+  const filtered = tab === "all" ? jobs : jobs.filter(MATCHES[tab]);
 
   // 빈 상태 — 공고 자체가 없으면 첫 등록 유도, 탭 필터 결과만 비면 탭별 안내
   const emptyMessage =
     jobs.length === 0
       ? "아직 등록한 공고가 없어요. 첫 공고를 등록해 보세요 — 등록은 무료예요."
-      : tab === "open"
-        ? "게재 중인 공고가 없어요."
-        : tab === "closed"
-          ? "마감된 공고가 없어요."
-          : "공고가 없어요.";
+      : EMPTY_MESSAGE[tab];
 
   return (
     <div>

@@ -23,6 +23,13 @@ const STATUS_VARIANT: Record<JobStatus, "default" | "secondary" | "outline"> = {
   PENDING: "outline",
 };
 
+// status가 OPEN인데 공개 목록에서 내려간 경우 — "게재중"으로 뭉뚱그리면 운영자가
+// 자기 사이트에서 뭐가 안 보이는지 알 수 없다 (DATA §6-1). 판정은 lib/job-visibility.
+const HIDDEN_LABEL: Record<"deadline" | "stale", string> = {
+  deadline: "기간 지남",
+  stale: "오래됨",
+};
+
 // 케밥 메뉴 — DropdownMenu 미설치라 직접 구현. 테이블이 overflow-x-auto(=overflow-y도 auto)라
 // absolute 메뉴가 마지막 행에서 잘림 → body로 portal + fixed 위치로 클리핑 탈출.
 // 바깥 클릭·Escape·스크롤·리사이즈에 닫힘 + ARIA. 항목은 mock no-op(Phase 1 Server Action).
@@ -133,7 +140,13 @@ export function AdminJobRow({
       </td>
       <td className="px-4 py-3 align-middle whitespace-nowrap">{job.church.name}</td>
       <td className="px-4 py-3 align-middle">
-        <Badge variant={STATUS_VARIANT[job.status]}>{JOB_STATUSES[job.status]}</Badge>
+        {job.hiddenReason ? (
+          <Badge variant="outline" title="공개 목록에서 내려갔어요">
+            {HIDDEN_LABEL[job.hiddenReason]}
+          </Badge>
+        ) : (
+          <Badge variant={STATUS_VARIANT[job.status]}>{JOB_STATUSES[job.status]}</Badge>
+        )}
       </td>
       <td className="px-4 py-3 align-middle whitespace-nowrap">
         {job.featuredTier === "NONE" ? (

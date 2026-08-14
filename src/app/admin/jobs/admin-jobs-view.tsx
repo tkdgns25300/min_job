@@ -20,15 +20,18 @@ import {
 } from "@/constants/domain";
 import type { AdminJob } from "@/types/domain";
 
-// 공고 검수 제거 — 교회 인증이 유일 게이트라 검수중 탭 없음(모집중/마감만)
-type Tab = "all" | "OPEN" | "CLOSED";
+// 공고 검수 제거 — 교회 인증이 유일 게이트라 검수중 탭 없음.
+// "내려감" = status는 OPEN인데 공개 목록에서 빠진 것(마감일 경과·상시모집 90일 초과, DATA §6-1).
+// 운영자가 마감일을 늘릴지 교회에 연락할지 판단하려면 이것만 골라볼 수 있어야 한다.
+type Tab = "all" | "OPEN" | "HIDDEN" | "CLOSED";
 
 // 노출 필터 — 홈 "노출중(유료)" 카드가 딥링크하는 축. paid = 유료노출 전체(featuredTier≠NONE)
 type FeaturedFilter = "all" | "paid" | FeaturedTier;
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "all", label: "전체" },
-  { key: "OPEN", label: JOB_STATUSES.OPEN },
+  { key: "OPEN", label: "게재중" },
+  { key: "HIDDEN", label: "내려감" },
   { key: "CLOSED", label: JOB_STATUSES.CLOSED },
 ];
 
@@ -43,7 +46,7 @@ function seedFilters(sp: ReadonlyURLSearchParams) {
   const denom = sp.get("denom");
   const region = sp.get("region");
   return {
-    tab: (tab === "OPEN" || tab === "CLOSED" ? tab : "all") as Tab,
+    tab: (tab === "OPEN" || tab === "HIDDEN" || tab === "CLOSED" ? tab : "all") as Tab,
     featured: (featured === "paid" || isKey(FEATURED_TIERS, featured)
       ? featured
       : "all") as FeaturedFilter,
@@ -68,7 +71,8 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
   const counts = useMemo(
     () => ({
       all: jobs.length,
-      OPEN: jobs.filter((j) => j.status === "OPEN").length,
+      OPEN: jobs.filter((j) => j.isPubliclyOpen).length,
+      HIDDEN: jobs.filter((j) => j.hiddenReason !== null).length,
       CLOSED: jobs.filter((j) => j.status === "CLOSED").length,
     }),
     [jobs],
@@ -77,7 +81,9 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
     return jobs.filter((j) => {
-      if (tab !== "all" && j.status !== tab) return false;
+      if (tab === "OPEN" && !j.isPubliclyOpen) return false;
+      if (tab === "HIDDEN" && j.hiddenReason === null) return false;
+      if (tab === "CLOSED" && j.status !== "CLOSED") return false;
       if (featured === "paid" && j.featuredTier === "NONE") return false;
       if (featured !== "all" && featured !== "paid" && j.featuredTier !== featured) return false;
       if (source !== "all" && j.source !== source) return false;

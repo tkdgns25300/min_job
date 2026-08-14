@@ -1,3 +1,4 @@
+import type { HiddenReason } from "@/lib/job-visibility";
 import type {
   Denomination,
   Region,
@@ -129,6 +130,10 @@ export type ChurchOption = Pick<Church, "id" | "name" | "denomination" | "region
 
 // 운영자 공고 관리 테이블용 projection — 전체 상태·출처 포함(공개 카드와 달리 CLOSED·PENDING·운영자/교회 구분). (admin/jobs)
 export interface AdminJob {
+  /** 공개 목록에 실제로 뜨는가 (DATA §6-1). `status`만 보면 내려간 공고를 "게재중"으로 표시하게 된다 */
+  isPubliclyOpen: boolean;
+  /** 내려간 이유 — 상태 배지를 사유별로 나누는 데 쓴다. 노출 중이거나 교회가 직접 마감했으면 null */
+  hiddenReason: HiddenReason;
   id: string;
   title: string;
   church: Pick<Church, "id" | "name" | "denomination" | "region">;
@@ -144,8 +149,9 @@ export interface AdminJob {
 
 // 운영자 홈 요약 — 요약 수치. (admin 홈) ※ 공고 검수 제거 — 교회 인증이 유일 게이트
 export interface AdminOverview {
-  featuredCount: number; // 노출중(유료, OPEN)
-  weekCount: number; // 이번 주 등록(최신 게시일 기준 7일)
+  featuredCount: number; // 노출중(유료) — 실제 공개 노출 기준(DATA §6-1)
+  weekCount: number; // 이번 주 등록(오늘 기준 RECENT_WINDOW_DAYS)
+  hiddenCount: number; // 게재중이나 공개 목록에서 내려간 건수 — 운영자가 손봐야 할 대상
   totalCount: number; // 전체 공고
 }
 

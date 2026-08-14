@@ -217,9 +217,11 @@ export function getEditableJob(id: string, churchId: string): Job | null {
 // --- 운영자(admin) — 전체 공고 관리. 실구현은 operator RLS(DATA §RLS) + 인증 게이트(Phase 1). ---
 
 // 운영자 관리 행 projection — 전체 상태·출처 + 교회 조인(공개 카드와 달리 CLOSED·PENDING 포함)
-function toAdminRow(job: Job): AdminJob {
+function toAdminRow(job: Job, today: string): AdminJob {
   const church = churchById.get(job.churchId);
   return {
+    isPubliclyOpen: isPubliclyOpen(job, today),
+    hiddenReason: hiddenReason(job, today),
     id: job.id,
     title: job.title,
     church: {
@@ -240,21 +242,22 @@ function toAdminRow(job: Job): AdminJob {
 }
 
 /** 운영자 공고 관리 — 전체 공고(모든 상태·출처), 최신순. 탭·필터는 클라이언트가 처리 */
-export function getAdminJobs(): AdminJob[] {
-  return [...jobs].sort((a, b) => b.postedAt.localeCompare(a.postedAt)).map(toAdminRow);
+export function getAdminJobs(today: string): AdminJob[] {
+  return [...jobs]
+    .sort((a, b) => b.postedAt.localeCompare(a.postedAt))
+    .map((j) => toAdminRow(j, today));
 }
 
 /** 운영자 홈 요약 — 노출중·이번주·전체. (공고 검수 제거: 교회 인증이 유일 게이트) */
 export function getAdminOverview(today: string): AdminOverview {
-  const all = getAdminJobs(); // 최신순 AdminJob[]
+  const all = getAdminJobs(today); // 최신순 AdminJob[]
   // "노출중" = **실제로 공개 목록에 뜨는** 유료 공고. status만 보면 만료돼 숨겨진 유료 공고까지
   // 세어 운영자에게 부풀린 수치를 보여준다(실측 7건).
-  const featuredCount = all.filter(
-    (j) => j.featuredTier !== "NONE" && isPubliclyOpen(j, today),
-  ).length;
+  const featuredCount = all.filter((j) => j.featuredTier !== "NONE" && j.isPubliclyOpen).length;
   // 이번 주 = 오늘 기준 7일 내 — getJobStats와 같은 기준(둘이 갈리면 홈/admin 숫자가 어긋난다)
   const weekCount = all.filter((j) => j.postedAt >= addDays(today, -RECENT_WINDOW_DAYS)).length;
-  return { featuredCount, weekCount, totalCount: all.length };
+  const hiddenCount = all.filter((j) => j.hiddenReason !== null).length;
+  return { featuredCount, weekCount, hiddenCount, totalCount: all.length };
 }
 
 /**
