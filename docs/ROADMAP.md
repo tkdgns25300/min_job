@@ -30,14 +30,14 @@
   2. `stipend_*` → **`pay_*` 개명**(코드 완료, 21파일) — 일반직(GENERAL)은 사례비가 아니라 근로계약 급여라 `stipend`가 절반만 맞았다. 한글 라벨은 `job_kind`로 분기
   3. 연락처 = **`jobs`에 컬럼 4개**(`contact_email`·`tel`·`link`·`post`) — `APPLY_METHODS`가 `ETC` 없는 닫힌 4키라 컬럼이 1:1. 별도 테이블(`church_links` 방식)은 열린 집합용이라 부적합
   4. **`apply_methods` jsonb + `contact` 단일 폐기** — 3번에 흡수(같은 것을 두 형태로 저장하던 설계)
-  5. **`job_promotions` 테이블 신설**(결제 원장, `UNIQUE(payment_id)`로 멱등) + `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — HERO 구좌 판정·환불·이력은 원장이, 정렬 1차 키는 캐시가. `'use cache'`가 `now()`를 금지하므로 만료는 **`today` 인자 패턴**(하루 1캐시, Cron 불필요)
-  6. **최소 조건 = 필수 4 + CHECK 2** — `description` NOT NULL 승격(요약 없으면 링크만 있는 빈 껍데기 = 가드레일 #1 위반)
+  5. **`job_promotions` 테이블 신설**(결제 원장, `UNIQUE(payment_id)`로 멱등) + `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — HERO 구좌 판정·환불·이력은 원장이, 정렬 1차 키는 캐시가. 만료는 **seam이 `todayInSeoul()`을 만들어 넘긴다**(cached scope 계산 · 하루 1캐시 · Cron 불필요)
+  6. **최소 조건 = 필수 4 + CHECK 2**(→ `posted_at` 복귀로 **현재는 필수 5**, 2026-08-14) — `description` NOT NULL 승격(요약 없으면 링크만 있는 빈 껍데기 = 가드레일 #1 위반)
 - [x] **최소 조건을 크롤러 실데이터 3,181건으로 검증**(2026-08-05) — 초안 8개를 **6개로 줄였다**. DATA.md §3 "최소 조건" 절이 정본:
   - **필수 4** ~~`church_id`~~ → **`church_name`**(2026-08-06 교체, 아래 항목) · `title` · `job_kind` · `description` / **CHECK 2** 직분 XOR 직무 · **연락처 ≥1**
   - **필수에서 뺀 3개** — `churches.denomination`(원문 명시 **2.8%**, 교회 1,004곳 수동은 비현실) · `churches.region`(광역 81%) · `jobs.posted_at`(**PCKWORLD 60건** — 게시판이 날짜를 안 줌)
   - **CHECK ②에서 `source_url`을 뺐다** — 세면 크롤링 공고는 항상 통과해 제약이 장식이 된다. 빼면 크롤링은 연락처를 채우게 되고(품질 상승) 교회 등록은 자동으로 연락처 필수
   - 연락처는 **4컬럼 유지**(1칼럼 text로 되돌리지 않음) — 실측 **75.4%가 2종 이상**이라 text 하나면 뭉개지고 `mailto:`/`tel:` 링크를 못 만든다(모바일 UX)
-  - ⚠️ **`posted_at` nullable의 대가 3가지**(DATA.md에 상세): JobPosting JSON-LD 생략(`datePosted`는 Google 필수 필드) · 정렬 `posted_at ?? created_at` 폴백 · `Job.postedAt` 타입 null 처리 10곳+. 대안(`NOT NULL` 유지 + 60건 수동 ≈20분)이 더 싸다는 검토 의견은 남겨뒀다
+  - ✅ **`posted_at`은 NOT NULL로 복귀**(2026-08-14, 크롤러도 필수 확정) — nullable의 대가 3가지(JSON-LD 생략·정렬 폴백·타입 null 처리)가 전부 사라졌다
   - ⚠️ **`church_id` 자동 매칭 금지** — 동명이교회 실측(선민교회 HAPDONG ×3 · GAMLI ×1). 이름 매칭하면 **남의 교회 페이지에 남의 공고가 뜬다**(되돌리기 어렵다). 후보 제시만, 확정은 운영자
 - [x] **교회 식별을 claim으로 미룸 — 스키마 3개 변경**(2026-08-06, 크롤러 요청 수용. **위 `church_id NOT NULL`을 뒤집는다**):
   - `jobs.church_id` **NOT NULL 해제**(NULL = 아직 확정 못 함) · **`jobs.church_name text NOT NULL` 추가**(공고가 말한 그대로) · **`jobs.region text NULL` 추가**
@@ -60,7 +60,13 @@
   - 폼: **`ChipSelect` 다중화**(이미 칩 UI라 토글만) · admin ingest의 `EnumSelect`는 **새 다중선택 필요**
   - 목록 카드 축약 **"부목사 외 2 · 유초등부"**(상세에선 전부 표시)
   - ⚠️ `ChurchVerification.applicant.position`은 **배열화 제외**(담당자 개인 직분)
-- [ ] **NULL 표시 UI 3개**(스키마를 푼 대가 — 안 하면 모르는 것을 아는 척한다): 교단 미상(`denomination_source`가 `stated`·`registry`·`operator`일 때만 확정 표시) · 지역 미상 · 게시일 미상. **검수 우선순위는 교단보다 지역**(비면 지역 필터에서 탈락 = 사실상 안 보이는 공고)
+- [ ] **공개 노출 만료 규칙 구현**(2026-08-14 착수) — DATA.md §6-1이 정본. `status`는 OPEN 유지하고 **파생 계산**으로 숨긴다(배치·Cron 없음).
+  - `constants` **`ALWAYS_OPEN_MAX_DAYS = 90`** · `mocks/index.ts`의 **모듈 상수 `openJobs` → 함수**(지금은 서버 시작 시각에 고정돼 날짜 조건을 못 쓴다) + `isPubliclyOpen(job, today)` 도입(사용처 9곳)
+  - `lib/queries/jobs.ts` **cached scope 안에서 `today` 계산**해 mock에 전달 — 호출부가 전부 프리렌더라 인자로 넘기면 빌드 시각이 굳는다(CLAUDE.md 제약 #2)
+  - `seo.ts` 만료 시 `JobPosting` 미출력 · 상세에 "마감" 배너 · `getJobStats`의 "최신 게시일을 오늘 대신 쓰는" 우회 제거
+  - 교회 대시보드에 "게시 90일 경과 — 갱신하면 다시 노출" 안내
+  - ⚠️ `sitemap.ts`·페이지는 **변경 없음** — seam이 걸러준다
+- [ ] **NULL 표시 UI 2개**(스키마를 푼 대가 — 안 하면 모르는 것을 아는 척한다. ~~게시일~~ 은 필수 복귀로 제외): 교단 미상(`denomination_source`가 `stated`·`registry`·`operator`일 때만 확정 표시) · 지역 미상 · 게시일 미상. **검수 우선순위는 교단보다 지역**(비면 지역 필터에서 탈락 = 사실상 안 보이는 공고)
 - [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 2개** + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**
 - [x] **결정 완료(2026-08-07) — 중복/재공고는 지금 안 한다**:
   1. **끌어올림(bump) 판정은 min_job 일이 아니다** — 크롤러(min_job_agent)가 수집 단계에서 묶고, **min_job admin 검수 화면에서 "이거 끌어올리시겠습니까?"** 로 운영자에게 확인받는다. 우리는 N일 임계값을 정하지 않는다
@@ -71,12 +77,12 @@
   2. **`contact` 단일 → 4컬럼**(`contact_email`·`contact_tel`·`contact_link`·`contact_post`) — 실측 **75.4%가 2종 이상**이라 한 문자열에 뭉개면 `mailto:`/`tel:` 링크를 못 만든다(모바일 UX). `APPLY_METHODS`가 `ETC` 없는 닫힌 4키라 컬럼이 1:1
   3. **교단 미상 = `NULL`**(`ETC` 아님) — `ETC`는 "소속은 있고 우리 9키에 없는 교단"(기장)이라 미상을 섞으면 필터·거점 판정이 오염된다. ~~"미상 교단은 승격 전 해소"~~ 규칙은 **철회**(무소속·독립교회가 실재)
   4. **`job_kind` 배열화** — 혼합 공고("교육전도사 2명 · 관리직원 1명")를 지금 스키마는 **표현 자체를 못 한다**(CHECK가 `position`+`role` 동시 보유를 금지) → 크롤러가 만나면 반드시 절반을 버려야 했다. `position` 배열화와 같은 이유·같은 CHECK로 해소(min_job 코드 완료 2026-08-07)
-  > 승격 게이트도 함께 전달: **필수 4**(`church_name`·`title`·`job_kind`·`description`) **+ CHECK 2**(job_kind↔position/role 상호 일치 · 연락처 ≥1, `source_url`은 안 셈). 크롤러가 맞출 6개 = 교회 매칭 · 제목 · job_kind · 직분 또는 직무 · 요약 · 연락처 1개. **교단·지역·게시일은 비어도 승격 가능.**
+  > 승격 게이트도 함께 전달: **필수 5**(`church_name`·`title`·`job_kind`·`description`·`posted_at`) **+ CHECK 2**(job_kind↔position/role 상호 일치 · 연락처 ≥1, `source_url`은 안 셈). 크롤러가 맞출 6개 = 교회 매칭 · 제목 · job_kind · 직분 또는 직무 · 요약 · 연락처 1개. **교단·지역·게시일은 비어도 승격 가능.**
   > ⚠️ **CHECK에 `array_length` 쓰지 말 것** — 빈 배열에 NULL을 반환하고 Postgres CHECK는 **NULL을 통과**시켜, "직분 없는 사역직 공고"가 들어온다. `COALESCE(cardinality(...), 0)` 형태(DATA.md §3). 실 Postgres 8케이스 검증 완료
 - [x] 📮 **전달 완료(2026-08-11) — `review_data.published_job_id`가 단수다.** Phase 2에서 한 글의 여러 자리를 `jobs` N건으로 나누려면 **어느 것을 기록할지 정할 수 없고** 다음 크롤에서 재등장 방지가 깨진다. 그때 배열(`published_job_ids`)이나 조인 테이블이 필요하다 — min_job_agent 소관이라 **미리 알려두기만** 한다
 - [ ] DB 타입 생성 — `types/database.ts`
 - [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.** 어긋난 18곳:
-  - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` · `postedAt` · `Church.denomination` · `Church.region` — 전부 nullable로 풀어야 함
+  - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` · `Church.denomination` · `Church.region` — nullable로 풀어야 함. (`postedAt`은 NOT NULL 복귀로 **해소**)
   - **TS가 DB보다 느슨**(폼이 NULL을 보내면 DB가 거부): `description: string | null` → **`string`**. ⚠️ 실제 모순이라 이 상태로 등록 Server Action을 붙이면 런타임 에러
   - **타입에 아예 없는 필드**: `contactEmail`·`contactTel`·`contactLink`·`contactPost`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod` · **`churchName`** · **`region`**
   - **`churchId: string` → `string | null`**(2026-08-06 claim 결정) — 참조하는 모든 곳이 null을 다뤄야 한다

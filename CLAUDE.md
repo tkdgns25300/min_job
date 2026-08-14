@@ -202,7 +202,9 @@ DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. �
 cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐:
 
 1. **cached scope 안에서 `cookies()`/`headers()`/`searchParams` 절대 호출 X** — 검색·필터는 dynamic 페이지로
-2. **`new Date()` 등 비결정적 값은 인자로 전달** (캐시 시점에 frozen)
+2. **`new Date()`·`Math.random()` 등 비결정적 값은 캐시 엔트리가 만들어질 때 한 번 평가되고, 그 엔트리가 사는 동안 고정된다.** 금지가 아니라 **성질**이다 — 필요한 정확도와 `cacheLife` 갱신 주기를 비교해 판단한다.
+   - **갱신 주기로 충분하면 cached scope 안에서 계산한다.** 예: 공고 만료 판정은 `cacheLife("days")`라 날짜가 하루마다 갱신된다 — 만료가 최대 하루 늦게 반영되지만 공고 목록 자체가 하루 캐시라 무해하다.
+   - **요청 시각 정확도가 필요하면** 캐시 밖에서 만들어 인자로 넘긴다. ⚠️ 단 그 **호출부가 dynamic이 되어 PPR을 잃는다** — `/jobs`·홈처럼 프리렌더되는 페이지에서는 `new Date()`가 **빌드 시각으로 굳는다**(`await connection()`으로 강제하면 `◐ PPR` → `ƒ`).
 3. **dynamic 데이터는 `<Suspense>`로 감싸기**
 4. **공고 상세는 빌드타임 prerender 안 함** — `generateStaticParams` 없이 `<Suspense>`로 감싼다. **데이터**는 `getJobDetail`의 `'use cache'`+`cacheTag("jobs", "job-<id>")`가 캐시하고, **페이지 셸은 요청마다 렌더**된다(셸까지 캐시하려면 별도 결정 필요). datePosted 등 시간 표시는 클라이언트에서 계산
 

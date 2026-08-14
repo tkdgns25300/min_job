@@ -117,8 +117,8 @@
 | `process_steps` | text[] DEFAULT '{}' | 전형 절차(서류→면접→설교…). `requirements`와 동일 패턴 |
 | `description` | text **NOT NULL** | 본문(운영자 요약 or 교회 작성 — 원문 통째 복제 X). **요약이 없으면 출처 링크만 있는 빈 껍데기**가 되어 가드레일 #1("요약 + 출처 링크")과 제품의 존재 이유를 부정한다 |
 | `featured_tier` | text NOT NULL DEFAULT 'NONE' (CHECK) | 노출 등급 — **현재 유효 노출의 비정규화 캐시**(원장은 `job_promotions`). 결제 완료 Server Action이 쓴다 |
-| `featured_until` | date NULL | 노출 만료일 — 〃. 만료 판정은 `today` 인자로(§3 노출 모델) |
-| `posted_at` | date **NULL** | 게시일. **NULL = 미상**(PCKWORLD 60건 — 게시판이 날짜를 안 준다). `fetched_at`으로 대체 금지(틀린 날짜 공개). ⚠️ **JSON-LD 생략 + 정렬 폴백 필수** — 위 최소 조건 절의 ⚠️ 3가지 |
+| `featured_until` | date NULL | 노출 만료일 — 〃. 만료 판정은 §6-1과 같은 경로(seam이 `todayInSeoul()` 생성) |
+| `posted_at` | date **NOT NULL** | 게시일. **필수 복귀(2026-08-14)** — 8/5에 nullable로 풀었다가 되돌렸다(크롤러도 필수로 확정). `fetched_at`으로 대체 금지(틀린 날짜 공개) — 게시판이 날짜를 안 주는 공고(PCKWORLD 60건)는 **검수에서 운영자가 입력**한다(포스터에 대개 적혀 있다). **상시모집 만료 판정의 기준일**이기도 하다(§공개 노출 규칙) |
 | `deadline` | date NULL | 마감(NULL=상시모집) |
 | `created_at` | timestamptz DEFAULT now() | |
 | `updated_at` | timestamptz DEFAULT now() | Server Action에서 갱신 |
@@ -198,9 +198,9 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 
 **Phase 2에서 자리별로 나눌 때**: `review_data` 1행 → `jobs` N건. 근거는 `headcount`의 원문과 `source_data`의 원자료라 **재수집 없이** 가능하다. ⚠️ 단 `review_data.published_job_id`가 **단수**라 N건을 기록할 수 없다 — 그때 배열이나 조인 테이블이 필요하다(min_job_agent 소관).
 
-#### 공고가 성립하는 최소 조건 — 필수 4 + CHECK 2 (= 크롤러 승격 판정 규칙)
+#### 공고가 성립하는 최소 조건 — 필수 5 + CHECK 2 (= 크롤러 승격 판정 규칙)
 
-**크롤러 백업 3,181건 실측으로 검증해 조건을 8개 → 6개로 줄였다(2026-08-05).** "이게 없으면 사역자가 이 공고를 보고 아무 행동도 할 수 없나"가 기준이다.
+**크롤러 백업 3,181건 실측으로 검증해 조건을 8개 → 7개로 줄였다(2026-08-05).** "이게 없으면 사역자가 이 공고를 보고 아무 행동도 할 수 없나"가 기준이다.
 
 | | 조건 | 강제 방법 | 실측 근거 |
 |---|---|---|---|
@@ -208,25 +208,18 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 | 🔴 | 제목 | `jobs.title NOT NULL` | 3,181/3,181 |
 | 🔴 | 사역직/일반직 | `jobs.job_kind` **비어 있지 않은 배열**(CHECK ①) | AI 판정, 애매하면 `confidence=low`로 운영자에게 |
 | 🔴 | 요약 | `jobs.description NOT NULL` | **빈 공고를 막는 유일한 장치** — 본문·이미지·첨부가 전무한 공고 CSU 53건 + YTUS 1건 실측 |
+| 🔴 | 게시일 | `jobs.posted_at NOT NULL` | JobPosting의 `datePosted`가 Google 필수 필드고, **상시모집 90일 판정의 기준일**이다. 없는 60건은 검수에서 입력 |
 | 🟡 | 직분 또는 직무 | CHECK ① | `job_kind`와 상호 일치. 혼합 공고는 둘 다 채운다 |
 | 🟡 | 연락처 최소 1개 | CHECK ② | 0종 160건이지만 대부분 비채용 글·포스터 내 연락처 |
 
 + 시스템 필드 `status`(DEFAULT 'OPEN') · `source` · `featured_tier`(DEFAULT 'NONE') · `pay_period`(DEFAULT 'MONTH') — 항상 INSERT 시점에 알 수 있다.
 
-##### 필수에서 **뺀** 3개 — 게시판이 안 주거나 원문에 없을 수 있는 값
+##### 필수에서 **뺀** 2개 — 게시판이 안 주거나 원문에 없을 수 있는 값
 
 | 필드 | 뺀 이유(실측) | **대신 화면이 해야 할 일** |
 |---|---|---|
 | `churches.denomination` | 교회 서술 문장에 교단 명시 **2.8%**(CSU만 `order_name` 필드로 83%). 교회 1,004곳을 사람이 채우면 30초씩 8시간 — 비현실 | "교단 미상". `denomination_source`가 `stated`·`registry`·`operator`일 때만 **확정으로 표시**하고 `unknown`·`ai_guess`는 회색/미상 처리 |
 | `churches.region` | 광역 81% · 시군구 85% — 나머지 19%는 원문에 없다 | "지역 미상". ⚠️ **지역 필터 선택 시 무조건 탈락**한다(`filter-jobs.ts`가 `region.has(...)`) → 지역은 구직자 1순위 필터라 **사실상 안 보이는 공고**가 된다 |
-| `jobs.posted_at` | 게시일 없는 공고 **60건(PCKWORLD)** — 한국기독공보 광고검색은 목록에 날짜가 아예 없다(`list_has_dates: false`). 우리가 못 뽑는 게 아니라 게시판이 안 준다. `fetched_at` 대체는 **틀린 날짜 공개**라 금지 | "게시일 미상" + **아래 ⚠️ 3가지 처리 필수** |
-
-> ⚠️ **`posted_at` nullable의 대가 — 반드시 함께 처리할 3가지.** 이걸 안 하면 SEO가 깨지고 런타임이 터진다:
-> 1. **JobPosting JSON-LD 생략** — `lib/seo.ts`가 `datePosted: job.postedAt`을 넣는데 `datePosted`는 **Google JobPosting 필수 필드**다. NULL이면 구조화 데이터가 invalid가 되어 그 공고가 Google Jobs에서 빠지고 Search Console에 오류로 잡힌다 → **NULL이면 JSON-LD 자체를 내지 않는다**(invalid보다 없는 게 낫다).
-> 2. **정렬 폴백** — `postedAt`은 정렬에 여러 곳에서 쓰이고 `localeCompare`·`reduce`가 NULL에 터진다. `posted_at ?? created_at`으로 폴백한다(대량 승격 시 `created_at`이 뭉쳐 정렬 품질은 떨어진다).
-> 3. **타입** — `Job.postedAt: string` → `string | null`, 사용처 전수 null 처리.
->
-> 📌 **재검토 여지**: 대안은 `NOT NULL` 유지 + 운영자가 60건 날짜 입력(포스터에 대개 적혀 있어 **≈20분, 1회**)이었다. 위 3가지 영구 비용 + 60건 Google Jobs 제외보다 그게 싸다는 게 검토 의견이었으나, **운영자 결정으로 nullable을 택했다.** 되돌리려면 CHECK 없이 `NOT NULL` 한 줄이다.
 
 > **크롤러가 받는 규칙(한 문장)**: 교회 매칭 · 제목 · `job_kind` · 직분 또는 직무 · 요약 · 연락처 1개 — **이 6개를 못 채우면 승격 불가.** 교단·지역·게시일은 비어도 승격된다. 크롤러는 6개 중 못 채운 게 있으면 `confidence=low`로 표시해 운영자가 먼저 보게 한다(min_job_agent 구조화 단계).
 >
@@ -263,7 +256,7 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 >
 > **nullable 원칙 — "없으면 공고가 성립하나?"** 크롤링 원문 3,051건 실측 언급률(2026-08-04): 사택 40% · 전형절차 42% · 부임시기 45% · **고용형태 51%** · 모집인원 65% · 사례비·마감일 75% · 제출서류 88% · 연락처 89% · 자격/경력 90%. 원문 중간값 506자, **11%가 200자 미만**. 따라서:
 > - **nullable로 푼다** — 원문에 없을 수 있고 없어도 공고가 성립하는 것: `employment_type`(51%) · `housing_provided`(40%) · `churches.denomination`(미상·무소속 실재) · 위 신규 컬럼 전부. **DEFAULT로 값을 지어내지 않는다** — "언급 없음"을 "미제공"으로 바꾸면 우리가 틀린 정보를 생산한다.
-> - **NOT NULL·CHECK로 조인다** — 위 "최소 조건 — 필수 4 + CHECK 2". 여기선 제약이 **품질 게이트**로 작동해 승격 판정을 DB가 대신한다.
+> - **NOT NULL·CHECK로 조인다** — 위 "최소 조건 — 필수 5 + CHECK 2". 여기선 제약이 **품질 게이트**로 작동해 승격 판정을 DB가 대신한다.
 > - 화면에서 NULL은 **"정보 없음"** 으로 표시하고 필터에서는 제외한다(`qualification` NULL=무관과 같은 취급).
 
 ### `job_promotions` — 노출 구매 원장 (1 job : N, append-only)
@@ -285,7 +278,7 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 >
 > **원장이 필요한 이유 4가지**: ① 주문·결제 이력(칼럼 2개는 현재 상태만 담아 이력 소실) ② 한 공고가 여러 번 구매(4주 쓰고 또 4주) ③ **`HERO`는 "구좌 한정"** 상품이라 "9월 첫째 주가 찼나"를 알려면 기간 행이 필요 — 칼럼만으론 미래 판매 불가 ④ 환불·정산 대응(KCP 월 4회 정산).
 >
-> **만료 강등 = `today` 인자 패턴.** 캐시 안에서 "오늘"을 만들 수 없지만 밖에서 넣어줄 수는 있다 — 페이지가 `getListJobs("2026-08-05")`로 날짜를 넘기면 그 인자가 캐시 키가 되어 **하루에 캐시 1개**가 생기고, 자정이 지나면 새 키로 만료가 자동 반영된다(Cron 불필요). **`deadline` 지난 공고가 "모집중"으로 뜨는 문제(ROADMAP 1-5)와 원인·해법이 같아** 한 번에 정리된다.
+> **만료 강등 = seam이 `todayInSeoul()`을 만들어 넘긴다.** `'use cache'` 안에서 `new Date()`는 엔트리 생성 시 한 번 평가되고 그동안 고정되는데, 호출부가 전부 프리렌더 스코프라 거기서 만들면 **빌드 시각이 굳는다** → `lib/queries/*`가 만들어 넘기고 `cacheLife("days")`로 하루마다 갱신된다(최대 하루 지연, 목록 자체가 하루 캐시라 무해). **`deadline` 만료(§6-1)와 같은 코드 경로.**
 
 ### `users` — 계정 프로필 (Supabase `auth.users`와 1:1)
 
@@ -365,17 +358,41 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 
 ---
 
+## 6-1. 공개 노출 규칙 — 만료 (2026-08-14 확정)
+
+`status` 하나만 믿으면 **마감일이 지난 공고가 영원히 "모집중"** 으로 남는다. 실측: mock OPEN 79건 중 **55건이 마감일 경과**. 크롤링 공고의 75%가 마감일을 가지므로 실데이터에서 그대로 재현된다 — sitemap이 만료 URL을 신선한 콘텐츠로 광고하고 `JobPosting`이 과거 `validThrough`를 계속 내보낸다.
+
+```
+공개 목록에 뜬다 =
+    status === 'OPEN'
+    AND ( deadline !== null ? deadline >= today
+                            : posted_at + ALWAYS_OPEN_MAX_DAYS >= today )
+```
+
+| 결정 | 근거 |
+|---|---|
+| **`status`는 `OPEN` 그대로 두고 파생 계산으로 숨긴다** | 크롤링 공고가 실제로 마감됐는지 **우리는 모른다**. 모르는 걸 `CLOSED`로 쓰면 "교회가 닫은 것"과 "우리가 날짜로 판단한 것"이 구별되지 않고 되돌릴 수 없다(§nullable 원칙과 같은 이유). 파생이면 원본이 보존되고 90→120일 변경이 즉시 반영된다. **배치·Cron 불필요** |
+| **`CLOSED`는 진짜 의사표시만** | 교회가 "마감했습니다"를 누른 것만 저장(Phase 1 mutation) |
+| **`ALWAYS_OPEN_MAX_DAYS = 90`** | 상시모집(마감일 없음)이 방치돼 영구히 "모집중"으로 남는 것을 막는다. mock 상시모집 20건의 게시 경과일 = 최소 36 · 중간 63 · 최대 113일 → 90일이면 3건이 걸린다. **짧게 잡아 살아있는 공고를 숨기는 게 더 나쁜 오류**라 넉넉히 잡았다 |
+| **`today`는 cached scope 안에서 계산한다** | 호출부(`/jobs`·홈·`sitemap.xml`)가 전부 프리렌더 스코프라 거기서 `new Date()`를 부르면 **빌드 시각이 굳는다**. 캐시 안에서 계산하면 `cacheLife("days")`와 함께 하루마다 갱신된다 — 만료가 최대 하루 늦지만 공고 목록 자체가 하루 캐시라 무해하다. 인자로 넘기려면 `await connection()`이 필요하고 `/jobs`·홈이 **`◐ PPR` → `ƒ`** 로 떨어진다 (CLAUDE.md `'use cache'` 제약 #2) |
+
+**숨김 범위**
+
+| 곳 | 처리 |
+|---|---|
+| 목록·검색·홈 · `sitemap.xml` · `JobPosting` JSON-LD | **제외** |
+| **공고 상세 페이지** | **살린다** + "마감" 배너 — 기존 롱테일 SEO 정책과 일관(`status=CLOSED`도 그렇게 동작) |
+| 교회 상세의 "지난 공고" | 계속 보임 |
+| **교회 대시보드** | **계속 보임** + "게시 90일 경과 — 갱신하면 다시 노출" 안내. 교회 입장에서 "우리 공고가 갑자기 사라졌다"가 되면 안 된다. 갱신(= `posted_at` 갱신)은 Phase 1 mutation |
+
+---
+
 ## 7. 노출(광고) 모델 — 프리미엄·대표광고 2종
 
 - **저장은 2군데** — 원장 `job_promotions`(결제 이력·구좌 판정) + 캐시 `jobs.featured_tier`·`featured_until`(현재 유효 노출). 근거는 §3 `job_promotions`.
   - **프리미엄**(PREMIUM) = 목록 상단 고정 + 강조 배지
   - **대표광고**(HERO) = 홈·목록 최상단 추천(AD) 슬롯, 더 크게. **구좌 한정** → 특정 주가 찼는지는 `job_promotions`의 기간 행으로 판정(캐시 컬럼으로는 미래 판매 불가)
-- **만료 자동 강등 = `today` 인자 패턴.** ⚠️ **`'use cache'` 안에서 `now()`를 쓸 수 없다**(비결정적 값 금지 — 캐시 시점에 얼어붙는다). 대신 페이지가 오늘 날짜를 인자로 넘긴다:
-  ```ts
-  const jobs = await getListJobs("2026-08-05");   // 캐시 밖에서 오늘을 만든다
-  // 캐시 안: featured_until < today 면 NONE 취급 — 인자가 캐시 키라 하루 1캐시
-  ```
-  자정이 지나면 새 캐시 키가 생겨 만료가 자동 반영된다(Cron·배치 불필요). **`deadline` 지난 공고가 "모집중"으로 뜨는 문제와 원인·해법이 같다**(ROADMAP 1-5) → 같은 인자로 함께 해결.
+- **만료 자동 강등 = cached scope 계산.** ⚠️ `'use cache'` 안에서 `new Date()`는 **엔트리가 만들어질 때 한 번** 평가되고 그동안 고정된다(CLAUDE.md 제약 #2). 호출부(`/jobs`·홈·`sitemap.xml`)가 전부 프리렌더 스코프라 **거기서 만들면 빌드 시각이 굳으므로**, `lib/queries/*`가 `todayInSeoul()`로 만들어 mock/DB에 넘긴다. `cacheLife("days")`와 함께 하루마다 갱신되어 만료가 최대 하루 늦게 반영된다(목록 자체가 하루 캐시라 무해). 인자로 받으려면 `await connection()`이 필요하고 `◐ PPR` → `ƒ`. **`deadline` 만료(§6-1)와 같은 코드 경로.**
 - **정렬 반영**: 노출 등급 우선 → 최신순(`posted_at`). (끌어올리기/bump 없음 — 저볼륨이라 제외)
 - **가격은 확정**(`EXPOSURE_PRODUCTS` 단일 소스: PREMIUM 주 7만/4주 24만 · HERO 주 15만/4주 50만, VAT 포함). 결제·서버 검증 구현 완료, **실카드결제 활성(2026-08-05)**. `/pricing`은 아직 "문의" — 교회 멤버십 미배선으로 결제 경로에 도달 불가(ROADMAP 1-8·8).
 - 기독 B2B 배너 광고 = 별도 광고주·ad ops → Phase 2+ 옵션(레일 슬롯만).
@@ -438,10 +455,10 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 | `crawl_run` | 실행별 요약 (1실행 1행, 누적) — started/finished·mode·성공/실패 소스·신규 집계 |
 
 - **RLS = 운영자 전용**(min_job admin이 대시보드·검수에 read), 크롤러는 service-role로 write. **public 노출 없음.**
-- **승격 흐름**: admin 검수 UI가 `review_data`(PENDING)를 읽어 → 운영자 승인 시 **요약 + `source_url`·연락처 4컬럼 + `source=OPERATOR`**로 `churches`/`jobs`에 INSERT(§10). 검수 메타는 넘기지 않음. **교단은 미상이면 `NULL`로 그대로 승격**(2026-08-05 — 과거 "승격 전 10키로 해소" 규칙은 철회). **지역·게시일도 미상이면 NULL로 승격**(2026-08-05 실데이터 검증). 승격 가능 여부는 §3 "최소 조건 — 필수 4 + CHECK 2"가 판정한다.
+- **승격 흐름**: admin 검수 UI가 `review_data`(PENDING)를 읽어 → 운영자 승인 시 **요약 + `source_url`·연락처 4컬럼 + `source=OPERATOR`**로 `churches`/`jobs`에 INSERT(§10). 검수 메타는 넘기지 않음. **교단은 미상이면 `NULL`로 그대로 승격**(2026-08-05 — 과거 "승격 전 10키로 해소" 규칙은 철회). **지역이 미상이면 NULL로 승격**(2026-08-05 실데이터 검증). 게시일은 **필수**라 없으면 검수에서 입력(2026-08-14). 승격 가능 여부는 §3 "최소 조건 — 필수 5 + CHECK 2"가 판정한다.
 - **`review_data` 주요 컬럼**(검수 브릿지가 읽는 것): `job_kind`·`role`·`title`·`position`·`department`·`employment_type`·`stipend_*` · `denomination`(+`denomination_source`·`denomination_evidence`·`raw_denomination` · **미상 가능**) · `contact` · `confidence` · `dedup_key` · `review_status`(PENDING/APPROVED/REJECTED) · `matched_church_id` FK→churches · `published_job_id` FK→jobs · `heresy_flag` 등. **전체 스키마·판정 정본은 min_job_agent SPEC §6.**
 - ⚠️ **크로스 리포 동기화 필요(2026-08-05)** — 이번 스키마 확정으로 `review_data`와 어긋나는 지점 4개. `review_data`는 min_job_agent 소유라 우리가 바꾸지 않고 **승격 시 매핑**하거나 크롤러 쪽에 반영을 요청한다:
   1. `stipend_*` → **`pay_*`** 개명 (min_job은 완료)
   2. `contact` 단일 → **`contact_email`·`contact_tel`·`contact_link`·`contact_post`** 4컬럼 분해
   3. `denomination` **미상 = NULL**(ETC 아님) — "미상 교단은 승격 전 해소" 규칙은 **철회**됐다(무소속·독립교회가 실재)
-  4. 승격 게이트 = **필수 4 + CHECK 2**(§3 jobs). 크롤러가 맞춰야 하는 6개: 교회 매칭 · 제목 · job_kind · 직분 또는 직무 · 요약 · **연락처 1개**(source_url은 안 셈). 교단·지역·게시일은 비어도 승격 가능
+  4. 승격 게이트 = **필수 5 + CHECK 2**(§3 jobs). 크롤러가 맞춰야 하는 7개: 교회 매칭 · 제목 · job_kind · 직분 또는 직무 · 요약 · **게시일**(2026-08-14 필수 복귀) · **연락처 1개**(source_url은 안 셈). 교단·지역은 비어도 승격 가능

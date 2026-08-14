@@ -38,7 +38,7 @@
 | 인프라/배포 | ~90% | Vercel·도메인·SSL·Supabase 연결 완료 |
 | 수익화/결제 | ~70% | ✅ **KCP 가맹·카드사 심사 둘 다 통과 → 실카드결제 활성(2026-08-05)**. 남은 것 = 주문 저장(`job_promotions` INSERT)·실 노출 적용(featured)·모바일 redirect 복귀. ⚠️ **결제 경로 자체가 교회 멤버십에 막혀 도달 불가** |
 | 프론트 로직 디테일(1-9) | ~85% | URL동기화·404/error·위저드검증·모바일네비·?next·admin deep-link 완료(2026-07-29). pagination 잔여 |
-| 백엔드(Supabase 실사용) | ~20% | **Auth(Google OAuth)·운영자 게이트 완료(2026-07-29)**. **스키마 설계 확정(2026-08-05, 테이블 7개·필수 4+CHECK 2)** — 단 문서만이고 `supabase/` 폴더·SQL은 0줄, 타입·mock은 18곳 어긋남. mutation·`lib/queries` mock→DB + **교회 멤버십** 잔여 (Phase 1, **최대 덩어리**) |
+| 백엔드(Supabase 실사용) | ~20% | **Auth(Google OAuth)·운영자 게이트 완료(2026-07-29)**. **스키마 설계 확정(2026-08-05, 테이블 7개·필수 5+CHECK 2)** — 단 문서만이고 `supabase/` 폴더·SQL은 0줄, 타입·mock은 18곳 어긋남. mutation·`lib/queries` mock→DB + **교회 멤버십** 잔여 (Phase 1, **최대 덩어리**) |
 | 데이터(실 공고·구조화) | ~5% | 실 공고 0·Claude 구조화 미연동 (다른 세션) |
 | 크롤러 연동(min_job_agent) | ~10% | **크롤러는 수집 가동 중**(백업 3,181건 — 이 데이터로 우리 필수값을 검증했다). min_job 쪽은 스키마 정합만 끝났고 **검수 브릿지 미착수**. ⚠️ `review_data`와 4곳 어긋남(ROADMAP Phase 0). 정본 = `../min_job_agent/docs/` (CRAWLER_HANDOFF.md는 흡수 후 삭제) |
 | SEO | ~80% (기술 마감 O, **유입 설계 X**) | **기술 요소 완료(2026-08-05)**: sitemap·robots·canonical·metadataBase·OG(이미지 포함)·JobPosting. 남은 것 = **지역·직분 랜딩 라우트**(노리는 키워드 `"OO지역 전도사 청빙"`를 받을 URL이 아직 없다 — §7 미해결 3) · 실데이터 후 Search Console 등록 · 공고별 OG 이미지(한글 폰트 선행) · 유입 측정 |
@@ -134,7 +134,7 @@ curl -sI localhost:3000/opengraph-image                 # image/png 1200x630
 ## 5. 데이터 (mock 스키마 = 확정 진행 중)
 
 ### mock 현황 (`src/mocks/`)
-- **churches.json 35개** · **jobs.json 101개**. 분포: OPEN 79 / CLOSED 22 / PENDING 0(**전수 검수 결정(2026-08-05) 이후에도 mutation이 없어 아직 0** — 검수 큐 구현 시 발생) · OPERATOR(owner 없음)·CHURCH 혼합. **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. ✅ **KIJANG(갈릴리교회) → ETC 교정 완료 · denomination 10키 전환**(Phase 2, 2026-07-29). 전 공고 `jobKind=MINISTRY`.
+- **churches.json 35개** · **jobs.json 101개**(2026-08-14 날짜 현행화 — 상대 관계 보존한 채 +37일 이동). 분포: **공개 노출 63건**(유료 8 · HERO 3 · 이번 주 새 공고 9) / 마감일 경과 12 · 상시 90일 초과 4 **← 만료 기능 시연용** / CLOSED 22 / PENDING 0(**전수 검수 결정(2026-08-05) 이후에도 mutation이 없어 아직 0** — 검수 큐 구현 시 발생) · OPERATOR·CHURCH 혼합. **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. 전 공고 `jobKind=["MINISTRY"]`.
 - **church-verifications.json 7건**(admin/verify 검수용): 검수중 4·인증완료 2·반려 1. 기존 교회 매칭 6 + 신규 교회 신청 1(id null). PII는 **전건 명백한 합성값**(@example.com·010-0000-000X) — vf-005에 남아 있던 `test1@test.com`(과거 mock 계정 잔재)은 KCP 심사 종료 후 합성값으로 교체(2026-08-05).
 - **인증(2026-07-29 실 전환)**: mock 로그인 계정(`src/lib/mock-auth.ts`)·테스트 계정(`test1@test.com`·`test2@test.com`)·세션 쿠키 `mj_session`은 **전부 삭제**됐다(코드·mock 데이터에 테스트 계정 잔재 0건 — 2026-08-05 확인). 이제 로그인 수단은 **Supabase Auth Google OAuth 단독** — 이메일/비밀번호 로그인도 없다. 세션 = Supabase 쿠키(`httpOnly` + 배포 시 `secure` + `sameSite=lax`, `lib/supabase/cookie-options.ts`). 카카오는 **오픈 전 추가**, 네이버는 Supabase 기본 미지원이라 보류. ⚠️ 로컬에서 `next start`를 http로 띄우면 `secure` 때문에 로그인이 끝까지 진행되지 않는다 — 로그인 테스트는 `npm run dev`로.
 
@@ -147,13 +147,13 @@ DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**
 
 **테이블 7개**: `churches` · `church_links` · `church_photos` · `jobs` · **`job_promotions`(신설)** · `users` (+ Phase 2 `bookmarks`)
 
-**공고가 성립하는 최소 조건 = 필수 4 + CHECK 2** (초안 8개를 크롤러 백업 **3,181건**으로 검증해 줄임)
+**공고가 성립하는 최소 조건 = 필수 5 + CHECK 2** (초안 8개를 크롤러 백업 **3,181건**으로 검증해 줄이고, `posted_at`을 2026-08-14에 되돌렸다)
 
 ```
-필수 4    church_name · title · job_kind · description   ← church_id 아님(2026-08-06)
+필수 5    church_name · title · job_kind · description · posted_at   ← church_id 아님(2026-08-06) · posted_at 복귀(2026-08-14)
 CHECK ①   직분 XOR 직무   (MINISTRY→position 필수·role NULL / GENERAL→반대)
 CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
-해제 4    churches.denomination · churches.region · jobs.posted_at · **jobs.church_id**
+해제 3    churches.denomination · churches.region · **jobs.church_id**   (~~posted_at~~ 은 2026-08-14 필수 복귀)
 시스템 4  status · source · featured_tier · pay_period  (전부 DEFAULT)
 ```
 
@@ -179,7 +179,7 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 
 키가 `church_id:직분:부서`였는데 `church_id`가 nullable이 되면서 claim 전 공고가 전부 `null:직분:부서`로 합쳐져 **무관한 교회의 공고가 합산된 거짓 숫자**가 나온다. 그래서 기능을 통째로 뺐다(§7 결정 완료 · DATA.md §6). 끌어올림 판정은 크롤러 + admin 검수 확인으로 넘어갔다.
 
-**`job_promotions`(신설) = 결제 원장**: `UNIQUE(payment_id)`로 멱등(재시도돼도 노출 2번 적립 X) · `tier` CHECK는 `PREMIUM`/`HERO`만(`NONE`은 상품이 아님). `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — 정렬 1차 키라 최다 조회 경로이고, `'use cache'`가 `new Date()`를 금지해 캐시된 쿼리가 "오늘"을 못 만든다. 만료는 **`today` 인자 패턴**(`getListJobs("2026-08-06")` → 인자가 캐시 키 → 하루 1캐시, Cron 불필요). **`deadline` 지난 공고가 "모집중"으로 뜨는 문제(§7 미해결 1번)와 같은 해법** → 한 번에 정리.
+**`job_promotions`(신설) = 결제 원장**: `UNIQUE(payment_id)`로 멱등(재시도돼도 노출 2번 적립 X) · `tier` CHECK는 `PREMIUM`/`HERO`만(`NONE`은 상품이 아님). `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — 정렬 1차 키라 최다 조회 경로이고, `'use cache'` 안의 `new Date()`는 엔트리 생성 시 고정된다. 만료는 **seam(`lib/queries/*`)이 `todayInSeoul()`을 만들어 넘긴다** — 호출부가 전부 프리렌더라 거기서 만들면 빌드 시각이 굳는다. `cacheLife("days")`로 하루마다 갱신(최대 하루 지연, Cron 불필요). **`deadline` 지난 공고가 "모집중"으로 뜨는 문제(§7 미해결 1번)와 같은 해법** → 한 번에 정리.
 
 **폐기된 것**: `contact text`(단일) · `apply_methods jsonb` — 같은 것을 두 형태로 저장하는 설계였다. 연락처는 **`jobs`의 4컬럼**(`contact_email`·`tel`·`link`·`post`). 테이블로 안 쪼갠 이유 = `APPLY_METHODS`가 `ETC` 없는 **닫힌 4키**라 컬럼이 1:1(폼의 `Partial<Record<ApplyMethod,string>>`와 정확히 대응, JOIN 0). 1칼럼 text로도 안 되는 이유 = 실측 **75.4%가 2종 이상**이라 뭉개지고 `mailto:`/`tel:` 링크를 못 만든다(모바일 UX).
 
@@ -203,7 +203,7 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 
 ## 6. 이번 세션 확정 설계 (되돌리지 말 것)
 
-- **▶ 스키마 6개 결정(2026-08-05, 실데이터 검증 완료 — 되돌리지 말 것)**: ① `position`/`role` **분리 유지 + XOR CHECK**(합치면 한 칼럼이 "통제 enum + 자유텍스트" 두 값 공간을 가져 TS 타입이 `string`으로 무너진다) ② `stipend_*` → **`pay_*` 개명** ③ 연락처 = **`jobs`의 4컬럼**(테이블도 jsonb도 아님) ④ **`apply_methods`·`contact` 단일 폐기** ⑤ **`job_promotions` 신설** + `featured_*`는 캐시 컬럼 유지 ⑥ **필수 4 + CHECK 2**로 조이고 교단·지역·게시일은 해제. 근거·수치 = §5 "스키마 확정", 정본 = DATA.md §3.
+- **▶ 스키마 6개 결정(2026-08-05, 실데이터 검증 완료 — 되돌리지 말 것)**: ① `position`/`role` **분리 유지 + XOR CHECK**(합치면 한 칼럼이 "통제 enum + 자유텍스트" 두 값 공간을 가져 TS 타입이 `string`으로 무너진다) ② `stipend_*` → **`pay_*` 개명** ③ 연락처 = **`jobs`의 4컬럼**(테이블도 jsonb도 아님) ④ **`apply_methods`·`contact` 단일 폐기** ⑤ **`job_promotions` 신설** + `featured_*`는 캐시 컬럼 유지 ⑥ **필수 4 + CHECK 2**로 조이고 교단·지역·게시일은 해제(→ **게시일은 2026-08-14에 필수 복귀**, 현재는 필수 5). 근거·수치 = §5 "스키마 확정", 정본 = DATA.md §3.
 - **▶ 결제 트랙 종료(2026-08-05)**: NHN KCP **가맹 심사 + 카드사 등록 둘 다 통과 → 실카드결제 활성.** 결제 인프라는 여기서 닫는다. 남은 건 결제가 아니라 **접근**(교회 멤버십)과 **적용**(featured 세팅·주문 저장). `/pricing`의 "온라인 결제는 준비 중 — 지금은 문의로" 카피는 **그대로 둔다** — 게이트 때문에 실제로 아무도 온라인 결제를 못 해서 **아직 사실이다.** 교회 멤버십이 붙는 시점에 4곳(page.tsx 63·159·256행 + CTA)을 함께 전환한다.
 - **▶ prod 동결 해제 + fast-forward(2026-08-06)**: 심사 중 걸려 있던 "URL·사업자정보·상품/가격 변경 금지" 제약이 풀려 **prod를 dev로 30커밋 fast-forward**(`4d0d1aa` → `958c060`, merge 커밋 0). 7/29 로그인 실전환·SEO·스키마 개명이 이때 prod에 처음 반영됐다.
 - **▶ 방향 전환(2026-07-28) — 크롤러 도입 + 개교회 채용으로 범위 확장 (되돌리지 말 것)**: 2026-07-28 크롤러 도입 확정 + 개교회 채용으로 범위 확장(사역직 MINISTRY + 일반직 GENERAL). 가드레일 #1·#3 재정의(법률 검토 완료). 정본 = **`../min_job_agent/docs/`**(CRAWLER_HANDOFF.md는 흡수 후 삭제, 2026-08-05). min_job 싱크 = **문서/코드/검수 브릿지 Phase로 진행**(ROADMAP 1-10). staging 4테이블은 min_job_agent 소유(min_job은 인지만), init.sql/마이그레이션 보류. denomination 10키·jobs `jobKind`(MINISTRY/GENERAL)·`role`·`contact` = types+mock 반영 완료(Phase 2, 2026-07-29). `position` NULL 허용·일반직 UI·필터는 크롤러 실데이터 시(deferred).
@@ -247,7 +247,7 @@ mock 기준 **79건 → 21건**. 크게 줄지만 나머지 58건은 지금 거�
 | 결정 | 내용 |
 |---|---|
 | **`status`는 OPEN 유지 · 배치 UPDATE 안 한다** | 크롤링 공고가 실제로 마감됐는지 **우리는 모른다**. 모르는 걸 `CLOSED`로 써버리면 "교회가 닫은 것"과 "우리가 시간으로 판단한 것"이 구별되지 않고 되돌릴 수 없다(§nullable 원칙과 같은 이유). **파생 계산**으로 숨기면 원본이 보존되고 90→120일 변경이 즉시 반영된다. Cron도 불필요 |
-| **`today` 인자 패턴** | `'use cache'`가 `now()`를 금지하므로 페이지가 오늘 날짜를 인자로 넘긴다 → 인자가 캐시 키 → 하루 1캐시. **`featured_until` 만료와 같은 코드 경로**라 한 번에 처리 |
+| **`today`는 cached scope 안에서 계산**(2026-08-14 정정) | 원래 "페이지가 인자로 넘긴다"였으나 **호출부 3곳(`/jobs`·홈·`sitemap.xml`)이 전부 프리렌더 스코프**라 거기서 `new Date()`를 부르면 빌드 시각이 굳는다. 캐시 안에서 계산하면 `cacheLife("days")`와 함께 하루마다 갱신된다(만료 최대 1일 지연 — 목록 자체가 하루 캐시라 무해). 인자 방식은 `await connection()`이 필요해 두 페이지가 **`◐ PPR` → `ƒ`** 로 떨어진다 |
 | **`CLOSED`는 진짜 의사표시만** | 교회가 "마감했습니다"라고 누른 것만 저장(Phase 1 mutation) |
 | **`ALWAYS_OPEN_MAX_DAYS = 90`** | 상시모집(마감일 없음)이 방치돼 영구히 "모집중"으로 남는 것을 막는다. mock 상시모집 20건의 게시 경과일은 최소 36·중간 63·최대 113일 — 90일이면 3건이 걸린다. **짧게 잡아 살아있는 공고를 숨기는 게 더 나쁜 오류** |
 | **숨김 범위** | 목록·검색·홈·sitemap·JSON-LD에서 **제외**. **공고 상세는 살린다** + "마감" 배너(기존 롱테일 SEO 정책과 일관) · 교회 상세의 "지난 공고"에도 계속 보임 |
@@ -274,7 +274,7 @@ mock 기준 **79건 → 21건**. 크게 줄지만 나머지 58건은 지금 거�
 |---|---|---|
 | **1️⃣ 추천** | **`001_init.sql` + 타입·mock 정합 (한 묶음)** | 결정이 다 끝나 바로 쓸 수 있다. **아래 ⚠️ 18곳 드리프트가 여기서만 해소**된다. 순서: `001_init.sql` → `types/database.ts` 생성 → `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체 |
 | 2️⃣ | **교회 멤버십 배선** | **매출을 여는 단일 스위치**(결제 인프라는 이미 완성). `getCurrentUser`가 `churchId`·`churchVerificationStatus`를 항상 `null`로 줘서 교회 기능 전체가 닫혀 있다. 단 `users`·`churches` 테이블이 필요하므로 **사실상 1️⃣이 선행** |
-| 3️⃣ | **NULL 표시 UI 3개**(교단·지역·게시일 미상) | mock 단계에서 지금 가능. 스키마를 푼 대가라 안 하면 **모르는 것을 아는 척**하게 된다. 1️⃣과 독립이라 아무 때나 |
+| 3️⃣ | **NULL 표시 UI 2개**(교단·지역 미상 — 게시일은 필수 복귀로 제외) | mock 단계에서 지금 가능. 스키마를 푼 대가라 안 하면 **모르는 것을 아는 척**하게 된다. 1️⃣과 독립이라 아무 때나 |
 
 > ⚠️ **1️⃣ 착수 전 반드시 알아야 할 것 — 코드가 아직 옛 스키마다.** 2026-08-05 스키마 확정은 **문서(DATA.md)에만** 반영됐고 `types/domain.ts`·mock은 그대로다. 코드 변경은 `pay_*` 개명뿐. 어긋난 **18곳**(전체 목록 = ROADMAP Phase 0):
 > - **TS가 DB보다 엄격** → DB가 NULL을 주면 타입이 거짓말(런타임 오류): `position` · `employmentType` · `postedAt` · `Church.denomination` · `Church.region`
