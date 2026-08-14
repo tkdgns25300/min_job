@@ -26,8 +26,10 @@ async function PromoteContent() {
   if (!hasChurchAccess(user) || !user.churchId) redirect("/mypage/church");
 
   const dashboard = await getChurchDashboard(user.churchId);
+  // 공개 목록에 실제로 노출되는 공고만 결제 대상 — 만료돼 숨겨진 공고를 상단 고정해도
+  // 아무도 볼 수 없다(마감일 경과·상시모집 90일 초과). status만 보면 그런 공고에 과금하게 된다.
   const openJobs = dashboard.managed
-    .filter((job) => job.status === "OPEN")
+    .filter((job) => job.isPubliclyOpen)
     .map((job) => ({ id: job.id, title: job.title }));
 
   return (

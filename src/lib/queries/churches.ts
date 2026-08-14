@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
 import * as mock from "@/mocks";
+import { todayInSeoul } from "@/lib/job-visibility";
 import type { Church, ChurchOption, PastJob } from "@/types/domain";
 
 // 데이터 소스 seam (교회) — 페이지는 여기서만 가져온다.
@@ -24,5 +25,5 @@ export async function getChurchPastJobs(churchId: string): Promise<PastJob[]> {
   "use cache";
   cacheTag("jobs");
   cacheLife("days");
-  return mock.getChurchPastJobs(churchId);
+  return mock.getChurchPastJobs(churchId, todayInSeoul());
 }

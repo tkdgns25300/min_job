@@ -7,7 +7,13 @@ import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { DEPARTMENTS, EMPLOYMENT_TYPES, FEATURED_TIERS, JOB_STATUSES } from "@/constants/domain";
+import {
+  DEPARTMENTS,
+  EMPLOYMENT_TYPES,
+  FEATURED_TIERS,
+  JOB_STATUSES,
+  ALWAYS_OPEN_MAX_DAYS,
+} from "@/constants/domain";
 import type { JobStatus } from "@/types/domain";
 import type { MyJob } from "@/lib/queries/users";
 
@@ -84,8 +90,15 @@ function OverflowMenu({ items, label }: { items: MenuItem[]; label: string }) {
 
 // 마이페이지 관리 행 — 액션은 상태별로: 게재중=수정+⋯(마감·삭제), 마감=재등록+⋯(삭제).
 // 삭제·마감은 파괴적/상태변경이라 ⋯ 뒤로(오클릭 방지). 조회·북마크 지표는 집계 준비 중.
+// 공개 목록에서 내려간 이유별 안내 — 판정은 lib/job-visibility, 여기는 문구만(도메인 로직 X)
+const HIDDEN_NOTICE: Record<"deadline" | "stale", string> = {
+  deadline: "마감일이 지나 목록에서 내려갔어요 — 마감일을 늘리면 다시 노출돼요.",
+  stale: `게시 후 ${ALWAYS_OPEN_MAX_DAYS}일이 지나 목록에서 내려갔어요 — 갱신하면 다시 노출돼요.`,
+};
+
 export function MyJobRow({ job }: { job: MyJob }) {
   const isClosed = job.status === "CLOSED";
+  const hidden = job.hiddenReason;
   const roleLine = [
     positionLabel(job.position),
     job.department && DEPARTMENTS[job.department],
@@ -118,6 +131,11 @@ export function MyJobRow({ job }: { job: MyJob }) {
           )}
           {job.postedAt} 게시 · {job.deadline ? `${job.deadline} 마감` : "상시모집"}
         </p>
+        {/* 게재중인데 공개 목록에 안 보이는 경우 — 왜 안 보이는지 교회가 알아야 한다(DATA §6-1).
+            status는 OPEN이라 배지만으로는 알 수 없어 별도 안내가 필요하다. */}
+        {hidden && (
+          <p className="mt-1.5 text-xs font-semibold text-gold-ink">{HIDDEN_NOTICE[hidden]}</p>
+        )}
         {job.status === "PENDING" ? (
           <p className="mt-1.5 text-xs text-muted-foreground">
             검수 중이에요 — 확인이 끝나면 곧 게재돼요.

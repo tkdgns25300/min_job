@@ -49,7 +49,7 @@ async function JobDetailContent({ params }: Params) {
           구글은 마감 공고의 구조화 데이터 제거를 권장한다. validThrough(마감일)만 믿으면
           "마감일 없이 조기 마감" 또는 "마감일이 미래인데 마감" 공고가 모집중으로 노출된다
           → 상태를 직접 본다. 페이지 자체는 계속 열린다(교회 진입 경로·롱테일 SEO). */}
-      {detail.job.status === "OPEN" && (
+      {detail.isPubliclyOpen && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingJsonLd(detail)) }}

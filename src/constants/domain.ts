@@ -99,6 +99,14 @@ export const FEATURED_TIERS = {
 } as const;
 export type FeaturedTier = keyof typeof FEATURED_TIERS;
 
+// 상시모집(마감일 없음) 공고의 공개 유효 기간(일). 이 기간이 지나면 공개 목록에서 내린다.
+// 마감일 없이 방치된 공고가 영구히 "모집중"으로 남는 것을 막는다 (DATA.md §6-1).
+// 짧게 잡아 살아있는 공고를 숨기는 게 더 나쁜 오류라 넉넉히 잡았다.
+export const ALWAYS_OPEN_MAX_DAYS = 90;
+
+// "이번 주 새 공고" 집계 창(일). 홈 스탯과 운영자 홈이 같은 값을 써야 숫자가 갈리지 않는다.
+export const RECENT_WINDOW_DAYS = 7;
+
 // 노출 상품(결제) — 가격 단일 소스(promote 결제 페이지 + 서버 금액 검증 공용). VAT 포함가(원).
 // 가격 확정은 SNAPSHOT §9(BM). NONE은 유료 상품 아님.
 export const EXPOSURE_PRODUCTS = {

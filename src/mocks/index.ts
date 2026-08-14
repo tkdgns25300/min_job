@@ -12,7 +12,14 @@ import type {
   JobDetail,
   PastJob,
 } from "@/types/domain";
-import { DENOMINATIONS, DEPARTMENTS, POSITIONS, REGIONS } from "@/constants/domain";
+import { addDays, hiddenReason, isPubliclyOpen } from "@/lib/job-visibility";
+import {
+  DENOMINATIONS,
+  DEPARTMENTS,
+  POSITIONS,
+  RECENT_WINDOW_DAYS,
+  REGIONS,
+} from "@/constants/domain";
 
 // mock 데이터 — 페이지를 만들며 채워나간다. 모든 페이지 완료 시 이 형태가 최종 스키마.
 // (실제 DB 연동 시 lib/queries/*.ts + Supabase로 대체)
@@ -22,10 +29,11 @@ const verifications = verificationsData as unknown as ChurchVerification[];
 
 const churchById = new Map(churches.map((c) => [c.id, c]));
 
-function toCard(job: Job): JobCard {
+function toCard(job: Job, today: string): JobCard {
   const church = churchById.get(job.churchId);
   return {
     id: job.id,
+    isPubliclyOpen: isPubliclyOpen(job, today),
     title: job.title,
     church: {
       name: church?.name ?? "알 수 없는 교회",
@@ -47,37 +55,53 @@ function toCard(job: Job): JobCard {
   };
 }
 
-const openJobs = jobs.filter((j) => j.status === "OPEN");
+/** 공개 목록 대상 공고 (호출 시점의 today 기준) — 판정은 lib/job-visibility */
+function openJobsOn(today: string): Job[] {
+  return jobs.filter((j) => isPubliclyOpen(j, today));
+}
 
 /** 대표광고(HERO) 공고 — 홈 추천 슬롯 */
-export function getAdJobs(): JobCard[] {
-  return openJobs.filter((j) => j.featuredTier === "HERO").map(toCard);
+export function getAdJobs(today: string): JobCard[] {
+  return openJobsOn(today)
+    .filter((j) => j.featuredTier === "HERO")
+    .map((j) => toCard(j, today));
 }
 
 /** 리스트 공고 — 대표광고(HERO)는 별도 추천 슬롯이라 제외. 프리미엄 우선 + 최신순 */
-export function getListJobs(limit = 8): JobCard[] {
+export function getListJobs(today: string, limit = 8): JobCard[] {
   const rank = (t: string) => (t === "PREMIUM" ? 0 : 1);
-  return openJobs
+  return openJobsOn(today)
     .filter((j) => j.featuredTier !== "HERO")
     .sort(
       (a, b) => rank(a.featuredTier) - rank(b.featuredTier) || b.postedAt.localeCompare(a.postedAt),
     )
     .slice(0, limit)
-    .map(toCard);
+    .map((j) => toCard(j, today));
 }
 
-/** 전체 모집 중 공고 카드 (목록 페이지 클라이언트 필터용) */
-export function getAllJobCards(): JobCard[] {
-  return openJobs.map(toCard);
+/** 전체 모집 중 공고 카드 (목록 페이지 클라이언트 필터용) — 만료분 제외 */
+export function getAllJobCards(today: string): JobCard[] {
+  return openJobsOn(today).map((j) => toCard(j, today));
+}
+
+/**
+ * 저장한 공고(북마크) 해석용 카드 — **만료·마감분까지 포함**한다.
+ * 북마크는 클라이언트 localStorage의 id 목록이라 서버가 전체 카드를 넘겨 매칭시킨다.
+ * 공개 목록(`getAllJobCards`)을 쓰면 만료된 순간 저장한 공고가 **아무 안내 없이 증발**한다
+ * — 카드의 `isPubliclyOpen`으로 "마감" 표시를 붙여 보여준다. 검수 중(PENDING)은 공개 전이라 제외.
+ * (Phase 1에서 계정 귀속 bookmarks 테이블 서버 조회로 대체 — 이 전체-카드 전달은 mock 과도기)
+ */
+export function getSavedJobCards(today: string): JobCard[] {
+  return jobs.filter((j) => j.status !== "PENDING").map((j) => toCard(j, today));
 }
 
 /** 공고 상세 — 공고 + 소속 교회 (없으면 null → notFound) */
-export function getJobDetail(id: string): JobDetail | null {
+export function getJobDetail(id: string, today: string): JobDetail | null {
   const job = jobs.find((j) => j.id === id);
   if (!job) return null;
   const church = churchById.get(job.churchId);
   if (!church) return null;
-  return { job, church };
+  return { job, church, isPubliclyOpen: isPubliclyOpen(job, today) };
 }
 
 /** 교회 단건 (없으면 null → notFound) */
@@ -93,14 +117,20 @@ export function getChurchOptions(): ChurchOption[] {
 }
 
 /** 교회의 현재 모집 중 공고 (excludeId 지정 시 해당 공고 제외 — 공고 상세의 "이 교회 다른 모집") */
-export function getChurchOpenJobs(churchId: string, excludeId?: string): JobCard[] {
-  return openJobs.filter((j) => j.churchId === churchId && j.id !== excludeId).map(toCard);
+export function getChurchOpenJobs(churchId: string, today: string, excludeId?: string): JobCard[] {
+  return openJobsOn(today)
+    .filter((j) => j.churchId === churchId && j.id !== excludeId)
+    .map((j) => toCard(j, today));
 }
 
-/** 교회의 지난 공고 — 마감된 것만 최신순. 검수 중(PENDING)은 공개 전이라 제외 */
-export function getChurchPastJobs(churchId: string): PastJob[] {
+/**
+ * 교회의 지난 공고 — 최신순. 검수 중(PENDING)은 공개 전이라 제외.
+ * ⚠️ `status === "CLOSED"`만 보면 **만료된 OPEN 공고가 현재 목록에도 지난 공고에도 안 뜬다**
+ *    (실측 35개 교회 중 8곳이 통째로 빈 페이지가 됐다). 공개에서 내려간 것은 전부 여기로 모은다.
+ */
+export function getChurchPastJobs(churchId: string, today: string): PastJob[] {
   return jobs
-    .filter((j) => j.churchId === churchId && j.status === "CLOSED")
+    .filter((j) => j.churchId === churchId && j.status !== "PENDING" && !isPubliclyOpen(j, today))
     .map((j) => ({
       id: j.id,
       position: j.position,
@@ -112,11 +142,11 @@ export function getChurchPastJobs(churchId: string): PastJob[] {
 }
 
 /** 비슷한 공고 — 같은 부서 우선·같은 지역 보충 (현재 공고·같은 교회 제외) */
-export function getSimilarJobs(id: string, limit = 4): JobCard[] {
+export function getSimilarJobs(id: string, today: string, limit = 4): JobCard[] {
   const base = jobs.find((j) => j.id === id);
   if (!base) return [];
   const baseChurch = churchById.get(base.churchId);
-  const pool = openJobs.filter((j) => j.id !== id && j.churchId !== base.churchId);
+  const pool = openJobsOn(today).filter((j) => j.id !== id && j.churchId !== base.churchId);
 
   const byDept = pool.filter((j) => base.department !== null && j.department === base.department);
   const byRegion = pool.filter(
@@ -125,14 +155,16 @@ export function getSimilarJobs(id: string, limit = 4): JobCard[] {
       baseChurch != null &&
       churchById.get(j.churchId)?.region === baseChurch.region,
   );
-  return [...byDept, ...byRegion].slice(0, limit).map(toCard);
+  return [...byDept, ...byRegion].slice(0, limit).map((j) => toCard(j, today));
 }
 
 // --- 마이페이지 데이터 조회(mock) — 세션·계정은 Supabase Auth(lib/queries/users.ts). ---
 
 // 마이페이지 관리 행 projection — 관리·표시에 필요한 필드만
-function toMyJob(j: Job) {
+function toMyJob(j: Job, today: string) {
   return {
+    isPubliclyOpen: isPubliclyOpen(j, today),
+    hiddenReason: hiddenReason(j, today),
     id: j.id,
     title: j.title,
     status: j.status,
@@ -152,7 +184,7 @@ function toMyJob(j: Job) {
  * ⚠️ 이 managed 조건은 `getEditableJob`의 편집 게이트와 **같은 술어**여야 한다(화면과 동작 일치).
  * 운영자 등록 공고를 "가져와 관리"(클레임)하면 source가 CHURCH로 전환된다(Phase 1).
  */
-export function getChurchDashboard(churchId: string) {
+export function getChurchDashboard(churchId: string, today: string) {
   const church = churchById.get(churchId);
   const churchJobs = jobs
     .filter((j) => j.churchId === churchId)
@@ -166,7 +198,7 @@ export function getChurchDashboard(churchId: string) {
           city: church.city,
         }
       : null,
-    managed: churchJobs.filter((j) => j.source === "CHURCH").map(toMyJob),
+    managed: churchJobs.filter((j) => j.source === "CHURCH").map((j) => toMyJob(j, today)),
     claimableCount: churchJobs.filter((j) => j.source === "OPERATOR").length,
   };
 }
@@ -213,19 +245,15 @@ export function getAdminJobs(): AdminJob[] {
 }
 
 /** 운영자 홈 요약 — 노출중·이번주·전체. (공고 검수 제거: 교회 인증이 유일 게이트) */
-export function getAdminOverview(): AdminOverview {
+export function getAdminOverview(today: string): AdminOverview {
   const all = getAdminJobs(); // 최신순 AdminJob[]
-  // "노출중" = 실제 게재 중(OPEN)인 유료 공고만 — 마감 featured는 노출 아님
-  const featuredCount = all.filter((j) => j.status === "OPEN" && j.featuredTier !== "NONE").length;
-  // 이번 주 = 최신 게시일 기준 7일 내 (결정성 유지 — getJobStats와 동일 방식, 현재 시각 미사용)
-  let weekCount = 0;
-  if (all.length > 0) {
-    const latest = all.reduce((m, j) => (j.postedAt > m ? j.postedAt : m), all[0].postedAt);
-    const ref = new Date(latest);
-    ref.setDate(ref.getDate() - 7);
-    const weekAgo = ref.toISOString().slice(0, 10);
-    weekCount = all.filter((j) => j.postedAt >= weekAgo).length;
-  }
+  // "노출중" = **실제로 공개 목록에 뜨는** 유료 공고. status만 보면 만료돼 숨겨진 유료 공고까지
+  // 세어 운영자에게 부풀린 수치를 보여준다(실측 7건).
+  const featuredCount = all.filter(
+    (j) => j.featuredTier !== "NONE" && isPubliclyOpen(j, today),
+  ).length;
+  // 이번 주 = 오늘 기준 7일 내 — getJobStats와 같은 기준(둘이 갈리면 홈/admin 숫자가 어긋난다)
+  const weekCount = all.filter((j) => j.postedAt >= addDays(today, -RECENT_WINDOW_DAYS)).length;
   return { featuredCount, weekCount, totalCount: all.length };
 }
 
@@ -248,13 +276,13 @@ export function getVerifications(): ChurchVerification[] {
  * 직분·부서·지역·교단 라벨 + 교회명. 공고 수 많은 순 정렬(가나다 보조).
  * '기타(ETC)' 라벨은 검색어로 무의미해 제외. 클라이언트가 이 목록을 prefix/부분 매칭한다.
  */
-export function getSearchSuggestions(): string[] {
+export function getSearchSuggestions(today: string): string[] {
   const counts = new Map<string, number>();
   const bump = (term: string | null | undefined) => {
     if (!term || term === "기타") return;
     counts.set(term, (counts.get(term) ?? 0) + 1);
   };
-  for (const j of openJobs) {
+  for (const j of openJobsOn(today)) {
     const church = churchById.get(j.churchId);
     if (church) {
       bump(church.name);
@@ -273,30 +301,30 @@ export function getSearchSuggestions(): string[] {
  * 홈 스탯 — 지금 모집 중 / 이번 주 새 공고 / 함께하는 교회(누적 참여).
  * 함께하는 교회 = 공고를 올린 적 있는 교회 수(누적) — "청빙 중 교회"와 다른 개념.
  */
-export function getJobStats(): { openCount: number; newThisWeek: number; churchCount: number } {
-  const openCount = openJobs.length;
+export function getJobStats(today: string): {
+  openCount: number;
+  newThisWeek: number;
+  churchCount: number;
+} {
+  const open = openJobsOn(today);
   const churchCount = new Set(jobs.map((j) => j.churchId)).size;
-  if (openCount === 0) return { openCount: 0, newThisWeek: 0, churchCount };
-  // 결정성 유지: 기준일 = 최신 공고 등록일 (현재 시각 미사용)
-  const latest = openJobs.reduce((m, j) => (j.postedAt > m ? j.postedAt : m), openJobs[0].postedAt);
-  const ref = new Date(latest);
-  ref.setDate(ref.getDate() - 7);
-  const weekAgo = ref.toISOString().slice(0, 10);
-  const newThisWeek = openJobs.filter((j) => j.postedAt >= weekAgo).length;
-  return { openCount, newThisWeek, churchCount };
+  // "이번 주" = 오늘 기준 7일 내. (구: 최신 공고 등록일을 오늘 대신 쓰던 우회 — today가 생겨 제거)
+  const weekAgo = addDays(today, -RECENT_WINDOW_DAYS);
+  const newThisWeek = open.filter((j) => j.postedAt >= weekAgo).length;
+  return { openCount: open.length, newThisWeek, churchCount };
 }
 
 /**
  * about 커버리지 스탯 — 모집 중 공고 / 등록 교회 / 지역·교단 폭. 실 데이터 집계라 항상 정확.
  */
-export function getCoverageStats(): {
+export function getCoverageStats(today: string): {
   openCount: number;
   churchCount: number;
   regionCount: number;
   denominationCount: number;
 } {
   return {
-    openCount: openJobs.length,
+    openCount: openJobsOn(today).length,
     churchCount: churches.length,
     regionCount: new Set(churches.map((c) => c.region)).size,
     denominationCount: new Set(churches.map((c) => c.denomination)).size,

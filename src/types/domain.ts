@@ -96,11 +96,19 @@ export interface CurrentUser {
 export interface JobDetail {
   job: Job;
   church: Church;
+  /**
+   * 아직 지원할 수 있는 공고인가 — 마감일 경과·상시모집 90일 초과면 false (DATA.md §6-1).
+   * ⚠️ `job.status`만 보면 안 된다. 상세 페이지는 프리렌더라 거기서 오늘 날짜를 만들 수 없어
+   *    **판정을 seam(cached scope)이 해서 내려준다**(CLAUDE.md `'use cache'` 제약 #2).
+   */
+  isPubliclyOpen: boolean;
 }
 
 // 공고 카드 표시용 projection (job + church 조인 결과)
 export interface JobCard {
   id: string;
+  /** 공개 목록에 뜨는가 (DATA §6-1) — 저장한 공고 목록은 만료된 것도 보여주되 마감으로 표시한다 */
+  isPubliclyOpen: boolean;
   title: string;
   church: Pick<Church, "name" | "denomination" | "region" | "city">;
   position: Position[];

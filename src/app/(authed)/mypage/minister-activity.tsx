@@ -125,7 +125,15 @@ function SavedRow({ job, onUnsave }: { job: JobCard; onUnsave: (id: string) => v
     <article className="relative flex items-center gap-3 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-5">
       <Link href={`/jobs/${job.id}`} className="absolute inset-0" aria-label={job.title} />
       <div className="min-w-0 flex-1">
-        <h3 className="truncate font-semibold tracking-tight">{job.title}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="truncate font-semibold tracking-tight">{job.title}</h3>
+          {/* 저장 목록은 만료 공고도 보여준다(조용히 사라지면 안 됨) — 대신 모집중이 아님을 표시 */}
+          {!job.isPubliclyOpen && (
+            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground">
+              마감
+            </span>
+          )}
+        </div>
         <p className="mt-1 truncate text-xs text-muted-foreground">
           {churchLocation(job.church)} · {job.church.name}
         </p>

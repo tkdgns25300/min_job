@@ -2,6 +2,7 @@ import { cache } from "react";
 import { unstable_rethrow } from "next/navigation";
 import * as mock from "@/mocks";
 import { createClient } from "@/lib/supabase/server";
+import { todayInSeoul, type HiddenReason } from "@/lib/job-visibility";
 import type { Church, CurrentUser, Job } from "@/types/domain";
 
 // 데이터 소스 seam (인증 사용자) — 인증 페이지는 여기서만 가져온다.
@@ -21,7 +22,16 @@ export type MyJob = Pick<
   | "department"
   | "employmentType"
   | "source"
->;
+> & {
+  /**
+   * 공개 목록에 실제로 노출되는가 — 마감일 경과·상시모집 90일 초과면 false (DATA.md §6-1).
+   * `status`는 교회의 명시적 의사표시(마감 버튼)라 별개다. 교회 화면은 둘 다 보여준다:
+   * 숨겨진 공고에 노출 결제를 팔면 안 되고, 교회는 왜 안 보이는지 알아야 한다.
+   */
+  isPubliclyOpen: boolean;
+  /** 내려간 이유 (안내 문구 선택용) — 노출 중이거나 교회가 직접 마감했으면 null */
+  hiddenReason: HiddenReason;
+};
 
 // 교회 관리 대시보드 — 그 교회 공고(church_id 기준) + 클레임 가능(운영자 등록) 건수
 export interface ChurchDashboard {
@@ -75,9 +85,13 @@ function displayName(metadata: Record<string, unknown>): string | null {
   return candidates.find((v): v is string => typeof v === "string" && v.trim() !== "") ?? null;
 }
 
-/** 교회 관리 대시보드 — 권한은 교회 인증 멤버십(DATA §4) */
+/**
+ * 교회 관리 대시보드 — 권한은 교회 인증 멤버십(DATA §4).
+ * ⚠️ 이 함수는 `'use cache'`가 없다(인증 의존) → 여기서 오늘 날짜를 만들어도 굳지 않는다.
+ *    공개 목록 쪽(`queries/jobs.ts`)은 cached scope라 사정이 다르다(CLAUDE.md 제약 #2).
+ */
 export async function getChurchDashboard(churchId: string): Promise<ChurchDashboard> {
-  return mock.getChurchDashboard(churchId);
+  return mock.getChurchDashboard(churchId, todayInSeoul());
 }
 
 /**

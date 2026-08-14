@@ -23,11 +23,12 @@ interface ApplyTarget {
   label: string;
 }
 
-// 지원 동선 — 원문(수집 공고) 우선, 없으면 교회 홈페이지. 마감 공고는 사실확인용 원문 보기만.
-function getApplyTarget(job: Job, church: Church): ApplyTarget | null {
+// 지원 동선 — 원문(수집 공고) 우선, 없으면 교회 홈페이지.
+// 만료 공고는 사실확인용 원문 보기만 — 지원을 유도하면 안 된다(마감일 경과·상시모집 90일 초과 포함).
+function getApplyTarget(job: Job, church: Church, isPubliclyOpen: boolean): ApplyTarget | null {
   if (job.sourceUrl) return { url: job.sourceUrl, label: "원문 공고 보기" };
   const homepage = church.links.find((l) => l.type === "HOMEPAGE")?.url ?? null;
-  if (job.status !== "CLOSED" && homepage) {
+  if (isPubliclyOpen && homepage) {
     return { url: homepage, label: "교회 홈페이지에서 지원 안내 확인" };
   }
   return null;
@@ -302,10 +303,17 @@ function SimilarJobsSection({ jobs, moreHref }: { jobs: JobCardData[]; moreHref:
 }
 
 // 마감 배너 — 무채색. 페이지는 살려둔다(롱테일 SEO).
-function ClosedBanner({ hasSimilar }: { hasSimilar: boolean }) {
+// 공개에서 내려간 이유별 문구 — "마감"으로 뭉뚱그리지 않는다.
+// 상시모집 90일 초과는 **교회가 마감한 적이 없다**(우리는 실제 마감 여부를 모른다 — DATA §6-1).
+function closedHeadline(job: Job): string {
+  if (job.status === "CLOSED") return "이 공고는 마감됐어요.";
+  return job.deadline ? "모집 기간이 지났어요." : "게시한 지 오래돼 목록에서 내렸어요.";
+}
+
+function ClosedBanner({ job, hasSimilar }: { job: Job; hasSimilar: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
-      <span className="font-semibold text-foreground">이 공고는 마감됐어요.</span>
+      <span className="font-semibold text-foreground">{closedHeadline(job)}</span>
       <span>공고 내용은 이력 확인을 위해 남겨 둡니다.</span>
       {hasSimilar && (
         <a href="#similar-jobs" className="font-medium text-primary hover:underline">
@@ -335,7 +343,7 @@ export function JobDetailView({
   similar: JobCardData[];
 }) {
   const { job, church } = detail;
-  const apply = getApplyTarget(job, church);
+  const apply = getApplyTarget(job, church, detail.isPubliclyOpen);
   // "더 보기" — 넓은 탐색은 /jobs로 (부서 우선, 없으면 직분으로 미리 필터).
   // ⚠️ 직분은 배열이라 **반복 파라미터**로 넘긴다(`?position=A&position=B`) — jobs-url-state가
   // `searchParams.getAll(dim)`으로 읽으므로 콤마로 이으면 "A,B" 한 값이 되어 아무것도 안 걸린다.
@@ -353,7 +361,9 @@ export function JobDetailView({
         ← 목록으로
       </Link>
 
-      {job.status === "CLOSED" && <ClosedBanner hasSimilar={similar.length > 0} />}
+      {job.status !== "PENDING" && !detail.isPubliclyOpen && (
+        <ClosedBanner job={job} hasSimilar={similar.length > 0} />
+      )}
 
       <PostHeader job={job} church={church} />
 
