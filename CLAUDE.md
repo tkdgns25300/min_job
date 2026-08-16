@@ -119,6 +119,9 @@ src/
 │   ├── operator.ts                운영자 판정(.env ADMIN_EMAILS) — 서버 전용
 │   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications (도메인 1파일)
 │   ├── ingest/structure.ts        AI 구조화 파이프라인 (현재 키워드 휴리스틱)
+│   ├── job-visibility.ts          만료 판정 단일 소스(todayInSeoul·isPubliclyOpen·hiddenReason)
+│   ├── job-church.ts              공고↔교회 파생 — church_id가 null일 수 있어 생긴 로직
+│   │                              (jobChurchRef=표시값 규칙 · churchIdentityKey=교회 수 집계)
 │   ├── bookmarks.ts · recent-jobs.ts · recent-searches.ts   localStorage 클라이언트 헬퍼
 │   └── seo.ts · format.ts · utils.ts
 ├── mocks/                         **현재 데이터 소스**(jobs·churches·church-verifications JSON + index.ts)

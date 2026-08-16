@@ -67,7 +67,7 @@
   - 교회 대시보드에 "게시 90일 경과 — 갱신하면 다시 노출" 안내
   - ⚠️ `sitemap.ts`·페이지는 **변경 없음** — seam이 걸러준다
 - [ ] **NULL 표시 UI 2개**(스키마를 푼 대가 — 안 하면 모르는 것을 아는 척한다. ~~게시일~~ 은 필수 복귀로 제외): 교단 미상(`denomination_source`가 `stated`·`registry`·`operator`일 때만 확정 표시) · 지역 미상 · 게시일 미상. **검수 우선순위는 교단보다 지역**(비면 지역 필터에서 탈락 = 사실상 안 보이는 공고)
-- [ ] 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 2개** + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**
+- [ ] ⏸ **크롤러 구조화 데이터 유입 후 착수**(2026-08-16 결정 — 구조는 확정, 실데이터가 바꾸는 건 제약 임계값뿐. 신규 DB라 미루는 비용 거의 없음) 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 4개**(①직분↔직무 ②연락처≥1 ③수집공고 source_url ④교회등록 church_id) + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**
 - [x] **결정 완료(2026-08-07) — 중복/재공고는 지금 안 한다**:
   1. **끌어올림(bump) 판정은 min_job 일이 아니다** — 크롤러(min_job_agent)가 수집 단계에서 묶고, **min_job admin 검수 화면에서 "이거 끌어올리시겠습니까?"** 로 운영자에게 확인받는다. 우리는 N일 임계값을 정하지 않는다
   2. **재공고 추적 기능 자체를 제거**(보류) — `lib/repost-tracking.ts` 삭제. 판정 키가 `church_id`에 묶여 있었는데 그게 nullable이 되면서 claim 전 공고가 전부 `null:직분:부서` 한 덩어리로 합쳐져 **거짓 숫자를 공개**하게 된다. "안 잡힌다"가 아니라 **틀린 값이 나온다**는 게 제거 이유. 되살리는 조건·후보 키는 DATA.md §6
@@ -81,13 +81,21 @@
   > ⚠️ **CHECK에 `array_length` 쓰지 말 것** — 빈 배열에 NULL을 반환하고 Postgres CHECK는 **NULL을 통과**시켜, "직분 없는 사역직 공고"가 들어온다. `COALESCE(cardinality(...), 0)` 형태(DATA.md §3). 실 Postgres 8케이스 검증 완료
 - [x] 📮 **전달 완료(2026-08-11) — `review_data.published_job_id`가 단수다.** Phase 2에서 한 글의 여러 자리를 `jobs` N건으로 나누려면 **어느 것을 기록할지 정할 수 없고** 다음 크롤에서 재등장 방지가 깨진다. 그때 배열(`published_job_ids`)이나 조인 테이블이 필요하다 — min_job_agent 소관이라 **미리 알려두기만** 한다
 - [ ] DB 타입 생성 — `types/database.ts`
-- [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.** 어긋난 18곳:
-  - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` · `Church.denomination` · `Church.region` — nullable로 풀어야 함. (`postedAt`은 NOT NULL 복귀로 **해소**)
+- [x] ✅ **교회 조인 경로 정합 (2026-08-16 — 드리프트 5곳 선행 해소)** — claim 결정(2026-08-06)이 DATA.md에만 반영돼 있어 코드가 **없는 값을 지어내고 있었다**: 조인 실패 시 교단을 `ETC`, 지역을 `SEOUL`로 메우고(→ 미상이 기타교단·서울로 둔갑해 필터 오염), 공고 상세는 교회가 없으면 **404**를 냈다(→ 크롤 공고가 통째로 안 열림). 함께 고친 것: `getSimilarJobs`의 `churchId` 비교(둘 다 NULL이면 무관한 교회가 "같은 교회"로 묶임) · `getSearchSuggestions`(크롤 교회명 누락) · `getJobStats`(NULL이 한 덩어리로 접힘) · `getCoverageStats`(NULL을 교단·지역 하나로 셈).
+  - 해소된 드리프트: **`Church.denomination`·`Church.region` nullable** · **`Job.churchName`·`Job.region` 추가** · **`Job.churchId` nullable**
+  - 새로 생긴 것: `types/domain.ts`의 `JobChurchRef`(조인 결과가 아닌 "공고가 가리키는 교회") · `lib/job-church.ts`(`jobChurchRef`·`normalizeChurchName`·`churchIdentityKey`)
+  - 표시 규칙은 SPEC(공고 상세 §미claim 축소 표시)에 확정 — 공개는 조각 생략, 운영자만 "미상" 명시
+- [ ] ⬜ **`/admin/jobs`에서 "지역·교단 미상" 공고를 찾을 수 없다** (위 작업이 드러낸 공백 — 기능 작업이라 분리)
+  - 테이블이 교회명만 렌더하고 교단·지역 열이 없다. 게다가 교단·지역 **필터를 고르면 미상 공고가 아무 표시 없이 사라진다**(값이 없으니 어떤 선택에도 안 걸린다).
+  - DATA §3은 지역 NULL을 *"검수에서 교단보다 먼저 채울 값"*이라고 못 박는데, 정작 **검수 큐에서 그 대상을 못 찾는다.** 크롤 실데이터가 들어오면 바로 아픈 지점(실측 원문 지역 명시 81%).
+  - 필요한 것: 교단·지역 열 추가(미상은 "미상" 표기) + 필터에 "미상" 선택지. `AdminOverview.hiddenCount`처럼 **"미상 N건" 카운터**도 후보.
+- [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합 (나머지 15곳)** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.**
+  - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` — nullable로 풀어야 함. (`postedAt`은 NOT NULL 복귀로, `Church.denomination`·`Church.region`은 위 항목으로 **해소**)
   - **TS가 DB보다 느슨**(폼이 NULL을 보내면 DB가 거부): `description: string | null` → **`string`**. ⚠️ 실제 모순이라 이 상태로 등록 Server Action을 붙이면 런타임 에러
-  - **타입에 아예 없는 필드**: `contactEmail`·`contactTel`·`contactLink`·`contactPost`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod` · **`churchName`** · **`region`**
-  - **`churchId: string` → `string | null`**(2026-08-06 claim 결정) — 참조하는 모든 곳이 null을 다뤄야 한다
-  - 함께 필요한 것: `posted_at` nullable 처리 3가지(JSON-LD 생략·정렬 폴백·null 처리 10곳+) · mock JSON 101건에 신규 필드 채우기
+  - **타입에 아예 없는 필드 12개**: `contactEmail`·`contactTel`·`contactLink`·`contactPost`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod`
+  - 함께 필요한 것: mock JSON 101건에 신규 필드 채우기
   > **타이밍 = 마이그레이션과 한 묶음.** 지금 손으로 맞추면 `types/database.ts` 생성 때 같은 일을 두 번 한다. 순서: `001_init.sql` → `database.ts` 생성 → `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체. **이 항목이 마이그레이션 작업의 전제조건이다.**
+  > ⚠️ 원래 "18곳"이라 적었으나 실제 열거는 20곳이었다(`postedAt` 해소 후 개수를 다시 세지 않은 탓). 위 5곳을 뺀 **15곳**이 남은 정확한 수다.
 
 **병행 트랙 (Phase 0~1 내내)**
 - [x] 도메인 확보 — **minjob.co.kr**(hosting.kr 등록). (.com은 일본 서비스 선점)

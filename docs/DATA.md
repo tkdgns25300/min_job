@@ -12,7 +12,7 @@
 
 - **DB는 저장 전용.** trigger·custom function·복잡한 default expression 만들지 않는다. ID 발급·timestamp·집계 등 로직은 전부 Server Action / query 함수. 내장 기능만 사용(`gen_random_uuid()`, `CHECK`, `FK`, array/`jsonb`).
 - **정규화 유지 (JOIN).** 교단 필터는 `churches`를 JOIN해서 건다. 비정규화(공고에 교회 속성 복사) 안 함 — 우리 규모(초기 수백~수천)에선 JOIN + `'use cache'` 캐시로 충분. (대규모 인덱스 최적화 필요 시 나중에 재검토)
-  - ⚠️ **명시적 예외 2개** — 둘 다 "캐시된 쿼리가 JOIN·`now()` 없이 필터·정렬해야 한다"는 같은 이유다: **`jobs.region`**(`church_id`가 NULL일 수 있어 JOIN이 성립 안 함 — §3) · **`jobs.featured_tier`·`featured_until`**(원장은 `job_promotions`, 이건 현재 유효 노출 캐시 — §7). 예외를 늘릴 때는 이 두 사례와 같은 근거가 있는지 확인할 것.
+  - ⚠️ **명시적 예외 3개** — 앞의 둘은 "캐시된 쿼리가 JOIN·`now()` 없이 필터·정렬해야 한다"는 같은 이유다: **`jobs.region`**(`church_id`가 NULL일 수 있어 JOIN이 성립 안 함 — §3) · **`jobs.featured_tier`·`featured_until`**(원장은 `job_promotions`, 이건 현재 유효 노출 캐시 — §7). 세 번째는 근거가 다르다: **`jobs.church_name`**(2026-08-06) — `church_id`가 NULL이면 조인 상대가 없어 교회명을 보여줄 다른 출처가 없다(§3). 예외를 늘릴 때는 이 세 사례와 같은 근거가 있는지 확인할 것.
 - **enum = 영어 대문자 key + 한글 라벨.** key는 DB에 저장(값)·URL params에 사용, 표시는 `constants/domain.ts`의 한글 라벨 맵. DB에서는 `CHECK` 제약으로 허용값 강제(별도 enum 타입 대신 `text + CHECK`로 확장 용이하게).
 - **컬럼명 = `snake_case`** (DB), 앱(TS)은 `camelCase`. Supabase 생성 타입이 매핑.
 - **가드레일 준수**: 공고에 작성자 컬럼 없음(권한=교회 인증 관리자) · **지원용 공개 연락처(`contact_email`·`contact_tel`·`contact_link`·`contact_post`)만 저장·공개**(지원과 무관한 제3자 개인정보 X — 가드레일 #3 갱신 2026-07-28) · source로 출처 구분 · **수집 = 크롤러(공개 공식 게시판) + 사람 붙여넣기 → AI 구조화 → 운영자 검수·승격**("자동 크롤러 없음" 재정의, 가드레일 #1 갱신 · 법률 검토 완료).
@@ -83,8 +83,8 @@
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
 | `id` | uuid PK | |
-| `church_id` | uuid **NULL** FK→churches | 소속 교회. **NULL = 아직 어느 교회인지 확정 못 함**(크롤링 공고 기본값). 교회가 가입·인증 후 **claim하면 채워진다** → 그때 교회 상세가 켜진다. ⚠️ 자동 매칭 금지 |
-| `church_name` | text **NOT NULL** | **공고가 말한 교회명 그대로**. `church_id`가 NULL이어도 화면에 교회를 표시할 수 있게 하는 값. 교회 직접 등록 시엔 교회 프로필에서 복사 |
+| `church_id` | uuid **NULL** FK→churches | 소속 교회. **NULL = 아직 어느 교회인지 확정 못 함**(크롤링 공고 기본값). 교회가 가입·인증 후 **claim하면 채워진다** → 그때 교회 상세가 켜진다. ⚠️ 자동 매칭 금지. **NULL은 `source='OPERATOR'`일 때만 가능** — 교회 직접 등록(`CHURCH`)은 인증 관리자만 할 수 있어 `church_id`가 반드시 있다 → `CHECK (source = 'OPERATOR' OR church_id IS NOT NULL)` |
+| `church_name` | text **NOT NULL** | **공고가 말한 교회명 그대로**(§1 예외). `church_id`가 NULL이어도 화면에 교회를 표시할 수 있게 하는 값. 교회 직접 등록 시엔 교회 프로필에서 복사 |
 | `region` | text NULL (CHECK) | **공고 시점에 파악한 광역** — ⚠️ **의도적 비정규화**(§1 예외). `church_id`가 NULL이면 `churches`를 JOIN할 수 없어 지역 필터가 통째로 죽는다. 필터·정렬은 이 컬럼을 쓴다 |
 | `title` | text NOT NULL | |
 | `job_kind` | **text[]** NOT NULL (CHECK) | MINISTRY(사역직)/GENERAL(일반직). **배열** — 혼합 공고 표현용(§ 여러 자리 판정 규칙) |
@@ -104,7 +104,7 @@
 | `benefit_note` | text NULL | 그 외 처우 비고(4대보험·교육비·안식월 등 자유 텍스트) |
 | `status` | text NOT NULL DEFAULT 'OPEN' (CHECK) | OPEN/CLOSED |
 | `source` | text NOT NULL (CHECK) | OPERATOR/CHURCH |
-| `source_url` | text NULL | 원문 링크(운영자 수집). 재호스팅 대신 링크 |
+| `source_url` | text NULL | 원문 링크(운영자 수집). 재호스팅 대신 링크. **`source='OPERATOR'`면 필수** — 수집물은 공개 게시판에서 오므로 원문이 반드시 있고, 가드레일 #1이 "요약 + 출처 링크"를 요구한다 → `CHECK (source = 'CHURCH' OR source_url IS NOT NULL)` |
 | `contact_email` | text NULL | **지원용 공개 연락처** — 이메일 |
 | `contact_tel` | text NULL | 〃 전화 |
 | `contact_link` | text NULL | 〃 홈페이지·지원 양식 링크 |
@@ -213,6 +213,8 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 | 🟡 | 연락처 최소 1개 | CHECK ② | 0종 160건이지만 대부분 비채용 글·포스터 내 연락처 |
 
 + 시스템 필드 `status`(DEFAULT 'OPEN') · `source` · `featured_tier`(DEFAULT 'NONE') · `pay_period`(DEFAULT 'MONTH') — 항상 INSERT 시점에 알 수 있다.
+
+> ⚠️ **`jobs`의 CHECK는 4개인데 승격 게이트는 위 2개뿐이다.** 나머지 ③ `source='CHURCH' OR source_url IS NOT NULL` · ④ `source='OPERATOR' OR church_id IS NOT NULL`은 크롤 데이터에선 항상 참이라(수집물엔 원문 URL이 있고 `source`는 언제나 `OPERATOR`) 승격 판정에 관여하지 않는다.
 
 ##### 필수에서 **뺀** 2개 — 게시판이 안 주거나 원문에 없을 수 있는 값
 
