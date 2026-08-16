@@ -159,10 +159,13 @@ function DraftPanel({
             placeholder="교회명 입력·검색"
             aria-label="교회명"
           />
+          {/* 운영자 화면이라 미상을 숨기지 않는다 — 검수에서 채워야 할 값이다(DATA §3) */}
           <p className="text-xs text-muted-foreground">
             {matched ? (
               <span className="text-primary">
-                기존 교회 연결 · {DENOMINATIONS[matched.denomination]} {REGIONS[matched.region]}
+                기존 교회 연결 ·{" "}
+                {matched.denomination ? DENOMINATIONS[matched.denomination] : "교단 미상"}{" "}
+                {matched.region ? REGIONS[matched.region] : "지역 미상"}
               </span>
             ) : draft.churchName.trim() ? (
               <span className="text-gold-ink">신규 교회로 생성</span>

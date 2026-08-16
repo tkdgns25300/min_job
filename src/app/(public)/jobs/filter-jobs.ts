@@ -6,6 +6,7 @@ import {
   QUALIFICATIONS,
   REGIONS,
 } from "@/constants/domain";
+import { normalizeChurchName } from "@/lib/job-church";
 import type { FilterDim, JobCard, SortKey } from "@/types/domain";
 
 // mock 단계 클라이언트 필터/정렬 (순수 함수).
@@ -29,8 +30,10 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
   const s = c.selected;
 
   const result = jobs.filter((j) => {
-    if (s.denomination.size && !s.denomination.has(j.church.denomination)) return false;
-    if (s.region.size && !s.region.has(j.church.region)) return false;
+    // 미상(null)은 축을 고른 순간 탈락한다 — 모르는 값을 아무 칸에나 넣으면 필터가 거짓말이 된다.
+    // (지역 미상 공고가 사실상 안 보이게 되는 건 알고 있는 대가 — 검수에서 먼저 채운다, DATA §3)
+    if (s.denomination.size && !s.denomination.has(j.church.denomination ?? "")) return false;
+    if (s.region.size && !s.region.has(j.church.region ?? "")) return false;
     if (s.position.size && !j.position.some((p) => s.position.has(p))) return false;
     if (s.department.size && (!j.department || !s.department.has(j.department))) return false;
     if (s.employmentType.size && !s.employmentType.has(j.employmentType)) return false;
@@ -53,12 +56,16 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
       // (검색어 완성 후보와 소스를 맞춰, 제안한 검색어가 반드시 결과로 이어지게 한다)
       const hay = [
         j.church.name,
+        // 정규화형도 넣는다 — 검색어 완성이 교회명 표기 흔들림("○○ 교회"/"예장합동 ○○교회")을
+        // 하나로 묶어 대표 하나만 제안하므로, 원문 표기만 훑으면 **제안한 말로 검색했는데 안 나오는**
+        // 공고가 생긴다(getSearchSuggestions와 짝을 이루는 계약).
+        normalizeChurchName(j.church.name),
         j.title,
-        REGIONS[j.church.region],
+        j.church.region ? REGIONS[j.church.region] : "",
         j.church.city ?? "",
         ...j.position.map((p) => POSITIONS[p]),
         j.department ? DEPARTMENTS[j.department] : "",
-        DENOMINATIONS[j.church.denomination],
+        j.church.denomination ? DENOMINATIONS[j.church.denomination] : "",
         EMPLOYMENT_TYPES[j.employmentType],
         j.qualification ? QUALIFICATIONS[j.qualification] : "",
       ].join(" ");

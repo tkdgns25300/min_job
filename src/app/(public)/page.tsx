@@ -58,7 +58,9 @@ export default async function HomePage() {
               <span className="hidden h-8 w-px bg-white/15 sm:block" />
               <HeroStat value={stats.newThisWeek} unit="건" label="이번 주 새 공고" />
               <span className="hidden h-8 w-px bg-white/15 sm:block" />
-              <HeroStat value={stats.churchCount} unit="곳" label="함께하는 교회" />
+              {/* "함께하는"은 쓸 수 없다 — 수집 공고의 교회들은 민잡과 함께하기로 한 적이 없다.
+                  "청빙 중"은 사실이고, 옆의 두 스탯과 시제(현재)도 맞는다. */}
+              <HeroStat value={stats.churchCount} unit="곳" label="청빙 중인 교회" />
             </dl>
           </div>
         </div>

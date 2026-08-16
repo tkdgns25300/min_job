@@ -33,8 +33,9 @@ export interface ChurchLink {
 export interface Church {
   id: string;
   name: string;
-  denomination: Denomination;
-  region: Region; // 광역 (필터용)
+  /** 교단. null = 미상 또는 무소속·독립교회 — `ETC`("소속은 있고 우리 9키에 없는 교단")와 구분한다(DATA §3) */
+  denomination: Denomination | null;
+  region: Region | null; // 광역 (필터용). null = 미상
   city: string | null; // 시·군·구 (표시용 자유 텍스트)
   foundedYear: number | null; // 창립 연도 (null = 미상)
   photos?: string[]; // 교회 사진(첫 장 = 커버). 없으면 기본 커버. 실 업로드는 Phase 1
@@ -54,7 +55,19 @@ export interface PastJob {
 // 공고 — 스키마는 페이지 작업하며 확장한다. (상세 페이지에서 아래 상세 필드 확정)
 export interface Job {
   id: string;
-  churchId: string;
+  /**
+   * 소속 교회. **null = 아직 어느 교회인지 확정 못 함**(크롤링 공고 기본값 — 자동 매칭 금지).
+   * 교회가 가입·인증 후 claim하면 채워지고, 그때 교회 상세·채널이 켜진다(DATA §3).
+   */
+  churchId: string | null;
+  /** 공고가 말한 교회명 그대로 — `churchId`가 null이어도 교회를 표시할 수 있게 하는 값(DATA §3) */
+  churchName: string;
+  /**
+   * 공고 시점에 파악한 광역. null = 미상 → **지역 필터에서 탈락**한다(검수에서 먼저 채울 값).
+   * ⚠️ 의도적 비정규화(DATA §1 예외) — `churchId`가 null이면 `churches`를 JOIN할 수 없어
+   *    지역 필터가 통째로 죽는다. 필터·정렬은 교회가 아니라 이 값을 쓴다.
+   */
+  region: Region | null;
   title: string;
   jobKind: JobKind[]; // 사역직/일반직 — 최상위 채용 구분. 배열: 한 글에 두 종류가 섞인 공고 표현(DATA §3 판정 규칙)
   position: Position[]; // 사역 직분 — **배열**. 자리 수·자격 범위를 전부 담는다(DATA §3 판정 규칙)
@@ -96,7 +109,13 @@ export interface CurrentUser {
 // 공고 상세 페이지용 — 공고 + 소속 교회 전체
 export interface JobDetail {
   job: Job;
-  church: Church;
+  /** claim된 교회만. null = 미claim(크롤링 공고) → 교회 프로필 섹션·상세 링크·채널을 그리지 않는다 */
+  church: Church | null;
+  /**
+   * 표시용 교회 정보 — **seam이 파생해서 내려준다**(호출부가 각자 조합하면 답이 갈린다).
+   * 실제로 헤더는 공고의 이름, 프로필 섹션은 교회의 이름을 써서 **한 화면에 이름이 두 개** 나왔다.
+   */
+  churchRef: JobChurchRef;
   /**
    * 아직 지원할 수 있는 공고인가 — 마감일 경과·상시모집 90일 초과면 false (DATA.md §6-1).
    * ⚠️ `job.status`만 보면 안 된다. 상세 페이지는 프리렌더라 거기서 오늘 날짜를 만들 수 없어
@@ -105,13 +124,26 @@ export interface JobDetail {
   isPubliclyOpen: boolean;
 }
 
-// 공고 카드 표시용 projection (job + church 조인 결과)
+/**
+ * 공고가 가리키는 교회 — **`churches` 조인 결과가 아니다.**
+ * `church_id`가 null인 공고(크롤링·미claim)가 있어 이름·지역은 `jobs`가 직접 들고 있고,
+ * 교단은 claim된 교회에서만 온다(DATA §3). **없는 값을 지어내지 않는다** — null은 null로 내려보낸다.
+ */
+export interface JobChurchRef {
+  id: string | null; // claim된 교회만 — 교회 상세로 링크할 수 있는지의 판정
+  name: string; // jobs.church_name (항상 있다)
+  denomination: Denomination | null;
+  region: Region | null;
+  city: string | null;
+}
+
+// 공고 카드 표시용 projection (공고 + 교회 참조)
 export interface JobCard {
   id: string;
   /** 공개 목록에 뜨는가 (DATA §6-1) — 저장한 공고 목록은 만료된 것도 보여주되 마감으로 표시한다 */
   isPubliclyOpen: boolean;
   title: string;
-  church: Pick<Church, "name" | "denomination" | "region" | "city">;
+  church: Omit<JobChurchRef, "id">; // 카드는 교회로 링크하지 않는다
   position: Position[];
   department: Department | null;
   employmentType: EmploymentType;
@@ -136,7 +168,7 @@ export interface AdminJob {
   hiddenReason: HiddenReason;
   id: string;
   title: string;
-  church: Pick<Church, "id" | "name" | "denomination" | "region">;
+  church: Pick<JobChurchRef, "name" | "denomination" | "region">; // 운영자 테이블이 실제로 쓰는 것만
   position: Position[];
   department: Department | null;
   employmentType: EmploymentType;
@@ -165,6 +197,8 @@ export interface ChurchVerification {
     email: string;
     phone: string;
   };
+  // 담당자가 신청서에 **직접 적은** 교회 정보 — `Church`와 달리 교단·지역이 필수다
+  // (사람이 채우는 입력 폼이라 미상이 없다. 승인 시 이 값으로 churches 행을 만들거나 대조한다)
   church: {
     id: string | null; // 기존 교회 매칭 — null = 신규 교회 생성 신청
     name: string;

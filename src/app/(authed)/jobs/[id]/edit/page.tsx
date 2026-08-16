@@ -34,7 +34,9 @@ async function EditContent({ params }: Params) {
   // 보여주므로 여기서 열어주면 화면과 어긋난다(수정해도 source가 OPERATOR로 남아 "가져오세요"가 계속 뜬다).
   const job = await getEditableJob(id, user.churchId);
   if (!job) notFound(); // 남의 교회 공고·미클레임 공고 — 존재 노출 최소화
-  const church = await getChurch(job.churchId);
+  // 게이트를 통과했으니 `job.churchId === user.churchId`다. nullable인 공고 쪽 대신
+  // 게이트가 보장한 값을 쓴다(`job.churchId`는 미claim 공고에서 null일 수 있는 타입).
+  const church = await getChurch(user.churchId);
 
   return (
     <>

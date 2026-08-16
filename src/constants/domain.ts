@@ -13,6 +13,30 @@ export const DENOMINATIONS = {
   SUNBOK: "순복음",
   ETC: "기타",
 } as const;
+
+/**
+ * 교회명 앞에 붙는 교단 표기 — 같은 교회가 공고마다 넣었다 뺐다 해서 이름이 갈린다.
+ * 교회 동일성 판정에서 벗겨낸다(`lib/job-church.ts`의 `normalizeChurchName`).
+ *
+ * ⚠️ **교회 이름의 일부가 될 수 없는 표기만** 넣는다. `순복음`·`감리교`·`침례교`·`성결교`는
+ *    실제 교회명 앞머리로 쓰이고("순복음중앙교회"), **`기장`은 부산 기장군이라는 지명**이다
+ *    ("기장제일교회" → "제일교회"가 되어 그 지역 다른 제일교회와 **합쳐진다**).
+ *    갈라지는 오차(한 교회가 둘로)보다 합쳐지는 오차가 나쁘다 — 애매하면 넣지 않는다.
+ */
+export const CHURCH_NAME_DENOMINATION_PREFIXES = [
+  "대한예수교장로회",
+  "한국기독교장로회", // 축약 "기장"은 지명과 겹쳐 제외 — 정식 명칭만 지운다
+  "기독교대한감리회",
+  "기독교한국침례회",
+  "기독교대한성결교회",
+  "기독교대한하나님의성회",
+  "예수교대한성결교회",
+  "대한성공회",
+  // "예장합동"처럼 갈래까지 붙은 축약형 — 라벨 맵에서 끌어와 교단이 늘어도 자동으로 따라온다.
+  // 갈래 없는 "예장"은 따로 두어 둘 다 잡는다("예장 ○○교회" 형태).
+  ...Object.values(DENOMINATIONS).filter((label) => label.startsWith("예장")),
+  "예장",
+];
 export type Denomination = keyof typeof DENOMINATIONS;
 
 export const REGIONS = {

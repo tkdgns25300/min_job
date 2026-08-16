@@ -29,12 +29,14 @@ const EMPTY_DRAFT: ChurchDraft = {
 
 // 재등록 교회 — 저장된 교회 정보 요약 카드 (SPEC.md /jobs/new §2)
 export function ChurchSummaryCard({ church }: { church: Church }) {
+  // 교단·지역이 전부 미상이면 ""라 빈 <p>가 여백만 차지한다
+  const meta = churchMetaLine(church);
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-muted/30 p-4">
       {/* 교회 로고/아바타 데이터 없음 — 이니셜 플레이스홀더 대신 이름·메타만 표시 */}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold">{church.name}</p>
-        <p className="mt-0.5 truncate text-xs text-muted-foreground">{churchMetaLine(church)}</p>
+        {meta && <p className="mt-0.5 truncate text-xs text-muted-foreground">{meta}</p>}
       </div>
       {/* 교회 정보 수정 화면은 스코프 밖(별도 /admin/churches 안 만듦) — 당분간 문의로 */}
       <a

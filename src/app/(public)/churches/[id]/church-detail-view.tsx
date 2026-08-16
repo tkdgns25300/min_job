@@ -52,11 +52,16 @@ export function ChurchDetailView({
   openJobs: JobCardData[];
   pastJobs: PastJob[];
 }) {
-  const meta = church.foundedYear
-    ? `${churchMetaLine(church)} · ${church.foundedYear}년 설립`
-    : churchMetaLine(church);
+  // 교단·지역이 전부 미상이면 churchMetaLine이 ""라 " · 1985년 설립"처럼 점이 앞에 매달린다
+  const meta = [churchMetaLine(church), church.foundedYear && `${church.foundedYear}년 설립`]
+    .filter(Boolean)
+    .join(" · ");
   const location = churchLocation(church);
-  const mapUrl = `https://map.naver.com/p/search/${encodeURIComponent(`${church.name} ${location}`)}`;
+  // 지역·시가 둘 다 미상이면 지도를 걸지 않는다 — 교회명만으로 검색하면 동명 교회를 짚는다
+  // (공고 상세도 같은 규칙, job-detail-view.tsx)
+  const mapUrl = location
+    ? `https://map.naver.com/p/search/${encodeURIComponent(`${church.name} ${location}`)}`
+    : null;
 
   // 지난 공고(마감) — 자리 라벨을 붙여 표시
   const pastPostings = pastJobs.map((p) => ({ ...p, role: roleLabel(p) }));
@@ -138,19 +143,21 @@ export function ChurchDetailView({
       </section>
 
       {/* 위치 — 공고 아래 supporting info */}
-      <section className="space-y-3">
-        <h2 className="text-base font-bold">위치</h2>
-        <p className="text-sm">{location}</p>
-        {/* 지도 자리(placeholder) — 클릭 시 네이버 지도. 임베드는 Phase 2(주소 필드+API 키) */}
-        <a
-          href={mapUrl}
-          {...externalAttrs}
-          className="flex h-40 flex-col items-center justify-center gap-1.5 rounded-xl border bg-muted/40 text-center transition-colors hover:bg-muted/60"
-        >
-          <span className="text-sm font-medium text-foreground">지도에서 위치 보기</span>
-          <span className="text-xs text-muted-foreground">네이버 지도에서 열기</span>
-        </a>
-      </section>
+      {mapUrl && (
+        <section className="space-y-3">
+          <h2 className="text-base font-bold">위치</h2>
+          <p className="text-sm">{location}</p>
+          {/* 지도 자리(placeholder) — 클릭 시 네이버 지도. 임베드는 Phase 2(주소 필드+API 키) */}
+          <a
+            href={mapUrl}
+            {...externalAttrs}
+            className="flex h-40 flex-col items-center justify-center gap-1.5 rounded-xl border bg-muted/40 text-center transition-colors hover:bg-muted/60"
+          >
+            <span className="text-sm font-medium text-foreground">지도에서 위치 보기</span>
+            <span className="text-xs text-muted-foreground">네이버 지도에서 열기</span>
+          </a>
+        </section>
+      )}
     </div>
   );
 }

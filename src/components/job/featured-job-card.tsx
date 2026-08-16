@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { MapPin } from "lucide-react";
-import { DENOMINATIONS } from "@/constants/domain";
 import type { JobCard } from "@/types/domain";
-import { churchLocation, formatPay, jobRoleLine } from "@/lib/format";
+import { churchLocation, denominationLabel, formatPay, jobRoleLine } from "@/lib/format";
 import { RelativeTime } from "@/components/relative-time";
 import { BookmarkButton } from "./bookmark-button";
 import { cn } from "@/lib/utils";
@@ -10,6 +9,7 @@ import { cn } from "@/lib/utils";
 // 대표광고(HERO) 전용 카드 — 홈 "추천 청빙" 슬롯. 리스트 로우보다 크고 초록 테두리로 도드라지게.
 export function FeaturedJobCard({ job }: { job: JobCard }) {
   const role = jobRoleLine(job);
+  const denomination = denominationLabel(job.church.denomination);
   const location = churchLocation(job.church);
   const hasPay = job.payMin !== null || job.payMax !== null;
 
@@ -27,12 +27,20 @@ export function FeaturedJobCard({ job }: { job: JobCard }) {
       <h3 className="text-[17px] leading-snug font-extrabold tracking-tight">{job.title}</h3>
 
       <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <MapPin className="size-3.5 shrink-0 text-primary" />
-        <span className="font-medium text-foreground">{location}</span>
-        <span className="text-border">·</span>
+        {location && (
+          <>
+            <MapPin className="size-3.5 shrink-0 text-primary" />
+            <span className="font-medium text-foreground">{location}</span>
+            <span className="text-border">·</span>
+          </>
+        )}
         {job.church.name}
-        <span className="text-border">·</span>
-        {DENOMINATIONS[job.church.denomination]}
+        {denomination && (
+          <>
+            <span className="text-border">·</span>
+            {denomination}
+          </>
+        )}
       </p>
       <p className="truncate text-sm text-muted-foreground">{role}</p>
 

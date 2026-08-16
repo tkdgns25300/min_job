@@ -13,6 +13,7 @@ import type {
   PastJob,
 } from "@/types/domain";
 import { addDays, hiddenReason, isPubliclyOpen } from "@/lib/job-visibility";
+import { churchIdentityKey, jobChurchRef } from "@/lib/job-church";
 import {
   DENOMINATIONS,
   DEPARTMENTS,
@@ -29,17 +30,22 @@ const verifications = verificationsData as unknown as ChurchVerification[];
 
 const churchById = new Map(churches.map((c) => [c.id, c]));
 
+/** 공고의 소속 교회 — 미claim(`churchId === null`)이면 없는 게 정상이다(DATA §3) */
+function churchOf(job: Pick<Job, "churchId">): Church | null {
+  return job.churchId ? (churchById.get(job.churchId) ?? null) : null;
+}
+
 function toCard(job: Job, today: string): JobCard {
-  const church = churchById.get(job.churchId);
+  const church = jobChurchRef(job, churchOf(job));
   return {
     id: job.id,
     isPubliclyOpen: isPubliclyOpen(job, today),
     title: job.title,
     church: {
-      name: church?.name ?? "알 수 없는 교회",
-      denomination: church?.denomination ?? "ETC",
-      region: church?.region ?? "SEOUL",
-      city: church?.city ?? null,
+      name: church.name,
+      denomination: church.denomination,
+      region: church.region,
+      city: church.city,
     },
     position: job.position,
     department: job.department,
@@ -95,13 +101,21 @@ export function getSavedJobCards(today: string): JobCard[] {
   return jobs.filter((j) => j.status !== "PENDING").map((j) => toCard(j, today));
 }
 
-/** 공고 상세 — 공고 + 소속 교회 (없으면 null → notFound) */
+/**
+ * 공고 상세 — 공고 + 소속 교회. **공고가 없을 때만** null(→ notFound)이다.
+ * ⚠️ 교회가 없다고 404를 내면 안 된다 — 미claim 공고는 교회가 없는 게 정상이라
+ *    크롤로 들어온 공고가 통째로 열리지 않게 된다. 교회 프로필 섹션만 빠진다.
+ */
 export function getJobDetail(id: string, today: string): JobDetail | null {
   const job = jobs.find((j) => j.id === id);
   if (!job) return null;
-  const church = churchById.get(job.churchId);
-  if (!church) return null;
-  return { job, church, isPubliclyOpen: isPubliclyOpen(job, today) };
+  const church = churchOf(job);
+  return {
+    job,
+    church,
+    churchRef: jobChurchRef(job, church),
+    isPubliclyOpen: isPubliclyOpen(job, today),
+  };
 }
 
 /** 교회 단건 (없으면 null → notFound) */
@@ -141,21 +155,31 @@ export function getChurchPastJobs(churchId: string, today: string): PastJob[] {
     .sort((a, b) => b.postedAt.localeCompare(a.postedAt));
 }
 
-/** 비슷한 공고 — 같은 부서 우선·같은 지역 보충 (현재 공고·같은 교회 제외) */
+/**
+ * 비슷한 공고 — 같은 부서 + 같은 지역 (현재 공고·같은 교회 제외). 둘 다 0건일 때만 직분으로 폴백.
+ * ⚠️ 같은 교회 판정에 `churchId` 비교를 쓰면 안 된다 — 미claim 공고끼리는 둘 다 null이라
+ *    서로 무관한 교회의 공고가 "같은 교회"로 묶여 통째로 걸러진다.
+ * 지역 매칭은 `jobs.region`으로 한다 — 조인 없이 도는 값이라(§1 예외) DB 전환 후에도 그대로다.
+ */
 export function getSimilarJobs(id: string, today: string, limit = 4): JobCard[] {
   const base = jobs.find((j) => j.id === id);
   if (!base) return [];
-  const baseChurch = churchById.get(base.churchId);
-  const pool = openJobsOn(today).filter((j) => j.id !== id && j.churchId !== base.churchId);
+  const baseKey = churchIdentityKey(base);
+  const pool = openJobsOn(today).filter((j) => j.id !== id && churchIdentityKey(j) !== baseKey);
 
   const byDept = pool.filter((j) => base.department !== null && j.department === base.department);
   const byRegion = pool.filter(
-    (j) =>
-      !byDept.includes(j) &&
-      baseChurch != null &&
-      churchById.get(j.churchId)?.region === baseChurch.region,
+    (j) => !byDept.includes(j) && base.region !== null && j.region === base.region,
   );
-  return [...byDept, ...byRegion].slice(0, limit).map((j) => toCard(j, today));
+  // 부서·지역이 둘 다 미상이면 위 두 단계가 통째로 비어 **"비슷한 공고"가 0건**이 된다
+  // (하단 섹션과 마감 배너의 "비슷한 공고 보기"가 사라진 막다른 페이지). 그때만 직분으로 받쳐준다.
+  // ⚠️ 일반 패딩으로 쓰면 안 된다 — 부서·지역이 다 다르고 직분만 겹치는 공고가 "비슷한 공고"의
+  //    빈자리를 채워 추천 품질이 떨어진다(실측: 그렇게 채워진 13건이 전부 무관한 지역·부서였다).
+  const byRelevance =
+    byDept.length + byRegion.length > 0
+      ? [...byDept, ...byRegion]
+      : pool.filter((j) => j.position.some((p) => base.position.includes(p)));
+  return byRelevance.slice(0, limit).map((j) => toCard(j, today));
 }
 
 // --- 마이페이지 데이터 조회(mock) — 세션·계정은 Supabase Auth(lib/queries/users.ts). ---
@@ -218,18 +242,13 @@ export function getEditableJob(id: string, churchId: string): Job | null {
 
 // 운영자 관리 행 projection — 전체 상태·출처 + 교회 조인(공개 카드와 달리 CLOSED·PENDING 포함)
 function toAdminRow(job: Job, today: string): AdminJob {
-  const church = churchById.get(job.churchId);
+  const church = jobChurchRef(job, churchOf(job));
   return {
     isPubliclyOpen: isPubliclyOpen(job, today),
     hiddenReason: hiddenReason(job, today),
     id: job.id,
     title: job.title,
-    church: {
-      id: church?.id ?? job.churchId,
-      name: church?.name ?? "알 수 없는 교회",
-      denomination: church?.denomination ?? "ETC",
-      region: church?.region ?? "SEOUL",
-    },
+    church: { name: church.name, denomination: church.denomination, region: church.region },
     position: job.position,
     department: job.department,
     employmentType: job.employmentType,
@@ -285,15 +304,32 @@ export function getSearchSuggestions(today: string): string[] {
     if (!term || term === "기타") return;
     counts.set(term, (counts.get(term) ?? 0) + 1);
   };
+  // 교회명은 미claim 공고끼리 표기가 갈려("새길교회" / "대한예수교장로회(합동) 새길교회")
+  // 같은 교회가 후보에 두 줄로 뜬다. 동일성 키로 묶고 **가장 짧은 표기**를 대표로 쓴다.
+  // 최단 표기가 그룹 전원을 걸리게 하는 이유: 공백·접두어는 글자를 늘리기만 하므로 최단은 곧
+  // 정규화형이고, 검색 인덱스(filter-jobs)가 각 공고의 정규화형도 함께 담는다. 둘은 한 쌍이다.
+  const churchNames = new Map<string, { term: string; count: number }>();
   for (const j of openJobsOn(today)) {
-    const church = churchById.get(j.churchId);
-    if (church) {
-      bump(church.name);
-      bump(REGIONS[church.region]);
-      bump(DENOMINATIONS[church.denomination]);
+    // 교회명·지역·교단은 seam이 정한 규칙(jobChurchRef)으로 읽는다 — 여기서 따로 조합하면
+    // 자동완성이 제안한 말이 실제 카드에 안 적혀 있는 상황이 생긴다.
+    const church = jobChurchRef(j, churchOf(j));
+    const key = churchIdentityKey(j);
+    const entry = churchNames.get(key);
+    if (!entry) churchNames.set(key, { term: church.name, count: 1 });
+    else {
+      entry.count += 1;
+      if (church.name.length < entry.term.length) entry.term = church.name;
     }
+    if (church.region) bump(REGIONS[church.region]);
+    if (church.denomination) bump(DENOMINATIONS[church.denomination]);
     for (const p of j.position) bump(POSITIONS[p]);
     if (j.department) bump(DEPARTMENTS[j.department]);
+  }
+  for (const { term, count } of churchNames.values()) {
+    // bump()를 우회하므로 빈 값 가드를 여기서 다시 건다 — `church_name`은 NOT NULL이지만 ""를
+    // 막지 않고, ingest 구조화가 교회명을 못 뽑으면 ""를 넣는다(lib/ingest/structure.ts)
+    if (!term) continue;
+    counts.set(term, (counts.get(term) ?? 0) + count);
   }
   return [...counts.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ko"))
@@ -301,8 +337,9 @@ export function getSearchSuggestions(today: string): string[] {
 }
 
 /**
- * 홈 스탯 — 지금 모집 중 / 이번 주 새 공고 / 함께하는 교회(누적 참여).
- * 함께하는 교회 = 공고를 올린 적 있는 교회 수(누적) — "청빙 중 교회"와 다른 개념.
+ * 홈 스탯 — 지금 모집 중 / 이번 주 새 공고 / 청빙 중인 교회. 셋 다 **현재 시점** 기준으로 맞춘다.
+ * ⚠️ 교회 수를 `churchId`로 세면 안 된다 — 미claim 공고는 전부 null이라 수백 곳이 **한 곳으로
+ *    접힌다**. 집계 키는 `churchIdentityKey`(claim된 곳은 id, 나머지는 정규화 이름+지역).
  */
 export function getJobStats(today: string): {
   openCount: number;
@@ -310,7 +347,7 @@ export function getJobStats(today: string): {
   churchCount: number;
 } {
   const open = openJobsOn(today);
-  const churchCount = new Set(jobs.map((j) => j.churchId)).size;
+  const churchCount = new Set(open.map(churchIdentityKey)).size;
   // "이번 주" = 오늘 기준 7일 내. (구: 최신 공고 등록일을 오늘 대신 쓰던 우회 — today가 생겨 제거)
   const weekAgo = addDays(today, -RECENT_WINDOW_DAYS);
   const newThisWeek = open.filter((j) => j.postedAt >= weekAgo).length;
@@ -318,7 +355,12 @@ export function getJobStats(today: string): {
 }
 
 /**
- * about 커버리지 스탯 — 모집 중 공고 / 등록 교회 / 지역·교단 폭. 실 데이터 집계라 항상 정확.
+ * about·pricing 커버리지 스탯 — 모집 중 공고 / **등록 교회**(`churches` 행) / 지역·교단 폭.
+ *
+ * ⚠️ `churchCount`가 홈의 "청빙 중인 교회"(`getJobStats`)와 **다른 값인 게 정상이다.**
+ * 여긴 우리가 프로필까지 아는 **등록 교회 수**이고, 홈은 지금 청빙 중인 교회 수(미claim 포함)다.
+ * 라벨도 "현재 등록 현황"이라 거짓이 아니다. 다만 크롤 데이터가 들어오면 이 수치가 서비스 규모를
+ * 크게 밑돌게 되므로, **실데이터 유입 후 라벨·출처를 다시 본다**(지금 맞추면 오히려 거짓이 된다).
  */
 export function getCoverageStats(today: string): {
   openCount: number;
@@ -326,10 +368,11 @@ export function getCoverageStats(today: string): {
   regionCount: number;
   denominationCount: number;
 } {
+  // 미상(null)은 지역·교단 하나로 세지 않는다 — 그대로 두면 "교단 10개"처럼 조용히 +1 된다
   return {
     openCount: openJobsOn(today).length,
     churchCount: churches.length,
-    regionCount: new Set(churches.map((c) => c.region)).size,
-    denominationCount: new Set(churches.map((c) => c.denomination)).size,
+    regionCount: new Set(churches.map((c) => c.region).filter(Boolean)).size,
+    denominationCount: new Set(churches.map((c) => c.denomination).filter(Boolean)).size,
   };
 }

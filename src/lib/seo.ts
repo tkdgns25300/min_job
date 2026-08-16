@@ -15,14 +15,17 @@ const KRW_PER_MAN = 10000; // 만원 → 원
 
 // 공고 한 줄 요약 (메타 description 폴백) — 표시 포맷은 format.ts가 단일 소스.
 // 직접 조립하지 말 것: 직분 표기가 바뀌면(배열·축약) 여기까지 따라와야 한다.
+// 교단·지역이 비면 그 조각만 빠진다(미claim 공고) — 교회명은 항상 있다.
 export function jobRoleSummary(detail: JobDetail): string {
-  const { job, church } = detail;
-  return `${church.name} · ${churchMetaLine(church)} · ${jobRoleLine(job)}`;
+  const { churchRef } = detail;
+  return [churchRef.name, churchMetaLine(churchRef), jobRoleLine(detail.job)]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 // schema.org JobPosting JSON-LD — 검색엔진 구조화 노출 (SEO 성장 엔진)
 export function jobPostingJsonLd(detail: JobDetail) {
-  const { job, church } = detail;
+  const { job, churchRef: church } = detail;
 
   const baseSalary =
     job.payMin !== null
@@ -48,14 +51,16 @@ export function jobPostingJsonLd(detail: JobDetail) {
     employmentType: SCHEMA_EMPLOYMENT[job.employmentType],
     hiringOrganization: {
       "@type": "Organization",
-      name: church.name,
-      sameAs: church.links.find((l) => l.type === "HOMEPAGE")?.url ?? undefined,
+      name: church.name, // jobs.church_name — 미claim 공고도 항상 채용 주체를 밝힌다
+      sameAs: detail.church?.links.find((l) => l.type === "HOMEPAGE")?.url ?? undefined,
     },
+    // jobLocation은 JobPosting 필수 — 아는 만큼만 채운다(지역 미상이면 국가만 남는다).
+    // 없는 지역을 임의로 넣으면 구글이 잘못된 위치로 색인해 지역 검색에서 엉뚱하게 잡힌다.
     jobLocation: {
       "@type": "Place",
       address: {
         "@type": "PostalAddress",
-        addressRegion: REGIONS[church.region],
+        addressRegion: church.region ? REGIONS[church.region] : undefined,
         addressLocality: church.city ?? undefined,
         addressCountry: "KR",
       },

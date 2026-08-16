@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { ChurchJobList } from "@/components/job/church-job-list";
 import { cn } from "@/lib/utils";
-import { DENOMINATIONS, REGIONS } from "@/constants/domain";
+import { churchMetaLine } from "@/lib/format";
 import type { CurrentUser } from "@/types/domain";
 import type { ChurchDashboard } from "@/lib/queries/users";
 
@@ -55,8 +55,9 @@ function ChurchDashboardView({
   dashboard: ChurchDashboard;
 }) {
   const { church, managed, claimableCount } = dashboard;
+  // 교단·지역은 미상일 수 있다 — 표기 규칙은 churchMetaLine이 단일 소스(아는 조각만 잇는다)
   const churchLine = church
-    ? [church.name, DENOMINATIONS[church.denomination], REGIONS[church.region]].join(" · ")
+    ? [church.name, churchMetaLine(church)].filter(Boolean).join(" · ")
     : (user.churchName ?? "");
 
   return (

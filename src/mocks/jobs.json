@@ -2,6 +2,8 @@
   {
     "id": "job-001",
     "churchId": "ch-seongeun",
+    "churchName": "성은교회",
+    "region": "JEONNAM",
     "title": "교구 담당 부목사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -32,7 +34,9 @@
   },
   {
     "id": "job-002",
-    "churchId": "ch-dongsan",
+    "churchId": null,
+    "churchName": "점촌제일교회",
+    "region": "SEOUL",
     "title": "담임목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["SENIOR_PASTOR"],
@@ -63,6 +67,8 @@
   {
     "id": "job-003",
     "churchId": "ch-mideumdongsan",
+    "churchName": "믿음의동산교회",
+    "region": "DAEGU",
     "title": "청년부 전도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -93,6 +99,8 @@
   {
     "id": "job-004",
     "churchId": "ch-saebyeok",
+    "churchName": "새벽빛교회",
+    "region": "GYEONGGI",
     "title": "찬양·예배 사역 파트 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -119,7 +127,9 @@
   },
   {
     "id": "job-005",
-    "churchId": "ch-sionseong",
+    "churchId": null,
+    "churchName": "새길교회",
+    "region": "GWANGJU",
     "title": "교육부 간사 모집",
     "jobKind": ["MINISTRY"],
     "position": ["ETC"],
@@ -147,6 +157,8 @@
   {
     "id": "job-006",
     "churchId": "ch-dongsan",
+    "churchName": "동산교회",
+    "region": "SEOUL",
     "title": "교구 담당 부목사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -178,6 +190,8 @@
   {
     "id": "job-007",
     "churchId": "ch-hanbit",
+    "churchName": "한빛교회",
+    "region": "GYEONGGI",
     "title": "교육 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -209,6 +223,8 @@
   {
     "id": "job-008",
     "churchId": "ch-onsaemi",
+    "churchName": "온새미교회",
+    "region": "ULSAN",
     "title": "영유아부 사역을 함께할 파트 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -239,7 +255,9 @@
   },
   {
     "id": "job-009",
-    "churchId": "ch-daegwang",
+    "churchId": null,
+    "churchName": "성문교회",
+    "region": "GYEONGBUK",
     "title": "청년부 전도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -271,7 +289,9 @@
   },
   {
     "id": "job-010",
-    "churchId": "ch-saesomang",
+    "churchId": null,
+    "churchName": "온누리사랑교회",
+    "region": "GYEONGGI",
     "title": "다음세대를 함께 세워갈 유초등부 전도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -303,6 +323,8 @@
   {
     "id": "job-011",
     "churchId": "ch-banseok",
+    "churchName": "반석교회",
+    "region": "DAEGU",
     "title": "영유아부 전도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -334,7 +356,9 @@
   },
   {
     "id": "job-012",
-    "churchId": "ch-galilee",
+    "churchId": null,
+    "churchName": "갈보리교회",
+    "region": "JEONBUK",
     "title": "청년부 전도사 청빙 (상시)",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -361,7 +385,9 @@
   },
   {
     "id": "job-013",
-    "churchId": "ch-emmaus",
+    "churchId": null,
+    "churchName": "산성교회",
+    "region": "BUSAN",
     "title": "유초등부를 섬길 파트 전도사를 찾습니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -391,6 +417,8 @@
   {
     "id": "job-014",
     "churchId": "ch-saebyeok",
+    "churchName": "새벽빛교회",
+    "region": "GYEONGGI",
     "title": "청년부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -417,7 +445,9 @@
   },
   {
     "id": "job-015",
-    "churchId": "ch-eunhyero",
+    "churchId": null,
+    "churchName": "열린문교회",
+    "region": "SEOUL",
     "title": "청년부 사역을 함께할 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -449,7 +479,9 @@
   },
   {
     "id": "job-016",
-    "churchId": "ch-immanuel",
+    "churchId": null,
+    "churchName": "예닮교회",
+    "region": "SEOUL",
     "title": "담임목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["SENIOR_PASTOR"],
@@ -481,6 +513,8 @@
   {
     "id": "job-017",
     "churchId": "ch-pureunchojang",
+    "churchName": "푸른초장교회",
+    "region": "INCHEON",
     "title": "유초등부 전도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -510,7 +544,9 @@
   },
   {
     "id": "job-018",
-    "churchId": "ch-pyeonggang",
+    "churchId": null,
+    "churchName": "제자들교회",
+    "region": "DAEJEON",
     "title": "교구 담당 부목사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -541,7 +577,9 @@
   },
   {
     "id": "job-019",
-    "churchId": "ch-tamna",
+    "churchId": null,
+    "churchName": "복된교회",
+    "region": null,
     "title": "강도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["LICENSED_MINISTER"],
@@ -568,6 +606,8 @@
   {
     "id": "job-020",
     "churchId": "ch-jeonwon",
+    "churchName": "전원교회",
+    "region": "GYEONGGI",
     "title": "청년부 사역을 함께할 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -598,7 +638,9 @@
   },
   {
     "id": "job-021",
-    "churchId": "ch-bitsogeum",
+    "churchId": null,
+    "churchName": "새언약교회",
+    "region": null,
     "title": "행정 사역을 맡을 부목사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -630,7 +672,9 @@
   },
   {
     "id": "job-022",
-    "churchId": "ch-gwangya",
+    "churchId": null,
+    "churchName": "생명나무교회",
+    "region": null,
     "title": "사무 간사 채용 공고",
     "jobKind": ["MINISTRY"],
     "position": ["ETC"],
@@ -657,6 +701,8 @@
   {
     "id": "job-023",
     "churchId": "ch-hanbit",
+    "churchName": "한빛교회",
+    "region": "GYEONGGI",
     "title": "찬양·예배를 섬길 전도사를 찾습니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -686,6 +732,8 @@
   {
     "id": "job-024",
     "churchId": "ch-emmaus",
+    "churchName": "엠마오교회",
+    "region": "BUSAN",
     "title": "찬양·예배 사역을 맡을 부목사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -712,7 +760,9 @@
   },
   {
     "id": "job-025",
-    "churchId": "ch-sarangbit",
+    "churchId": null,
+    "churchName": "새길교회",
+    "region": "GWANGJU",
     "title": "교구 강도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["LICENSED_MINISTER"],
@@ -739,7 +789,9 @@
   },
   {
     "id": "job-026",
-    "churchId": "ch-somangsaem",
+    "churchId": null,
+    "churchName": "대한예수교장로회(합동) 새길교회",
+    "region": "GWANGJU",
     "title": "중고등부 강도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["LICENSED_MINISTER"],
@@ -767,6 +819,8 @@
   {
     "id": "job-027",
     "churchId": "ch-banseok",
+    "churchName": "반석교회",
+    "region": "DAEGU",
     "title": "중고등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -794,6 +848,8 @@
   {
     "id": "job-028",
     "churchId": "ch-hanmaum",
+    "churchName": "한마음교회",
+    "region": "CHUNGBUK",
     "title": "전도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -825,6 +881,8 @@
   {
     "id": "job-029",
     "churchId": "ch-yeolmae",
+    "churchName": "열매교회",
+    "region": "SEOUL",
     "title": "담임(위임)목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["SENIOR_PASTOR"],
@@ -856,6 +914,8 @@
   {
     "id": "job-030",
     "churchId": "ch-hangang",
+    "churchName": "한강중앙교회",
+    "region": "SEOUL",
     "title": "담임목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["SENIOR_PASTOR"],
@@ -887,6 +947,8 @@
   {
     "id": "job-031",
     "churchId": "ch-neulpureun",
+    "churchName": "늘푸른교회",
+    "region": "GYEONGGI",
     "title": "강도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["LICENSED_MINISTER"],
@@ -913,6 +975,8 @@
   {
     "id": "job-032",
     "churchId": "ch-yeolmae",
+    "churchName": "열매교회",
+    "region": "SEOUL",
     "title": "중고등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -944,6 +1008,8 @@
   {
     "id": "job-033",
     "churchId": "ch-juane",
+    "churchName": "주안에교회",
+    "region": "INCHEON",
     "title": "청년부 파트 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -974,6 +1040,8 @@
   {
     "id": "job-034",
     "churchId": "ch-neulpureun",
+    "churchName": "늘푸른교회",
+    "region": "GYEONGGI",
     "title": "찬양·예배 사역을 함께할 파트 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1003,6 +1071,8 @@
   {
     "id": "job-035",
     "churchId": "ch-saemmul",
+    "churchName": "샘물교회",
+    "region": "GYEONGGI",
     "title": "청년부 사역을 함께할 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1033,6 +1103,8 @@
   {
     "id": "job-036",
     "churchId": "ch-gwangya",
+    "churchName": "광야교회",
+    "region": "GANGWON",
     "title": "행정 간사 겸 파트 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1064,6 +1136,8 @@
   {
     "id": "job-037",
     "churchId": "ch-seongeun",
+    "churchName": "성은교회",
+    "region": "JEONNAM",
     "title": "찬양·예배 전도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1094,6 +1168,8 @@
   {
     "id": "job-038",
     "churchId": "ch-bitsogeum",
+    "churchName": "빛과소금교회",
+    "region": "BUSAN",
     "title": "중고등부 전도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1125,6 +1201,8 @@
   {
     "id": "job-039",
     "churchId": "ch-chambit",
+    "churchName": "참빛교회",
+    "region": "GYEONGNAM",
     "title": "교구 사역 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1156,6 +1234,8 @@
   {
     "id": "job-040",
     "churchId": "ch-pyeonggang",
+    "churchName": "평강교회",
+    "region": "DAEJEON",
     "title": "중고등부 담당 부목사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -1183,6 +1263,8 @@
   {
     "id": "job-041",
     "churchId": "ch-hanmaum",
+    "churchName": "한마음교회",
+    "region": "CHUNGBUK",
     "title": "교구 목회를 함께할 부목사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -1215,6 +1297,8 @@
   {
     "id": "job-042",
     "churchId": "ch-somangsaem",
+    "churchName": "소망샘교회",
+    "region": "CHUNGNAM",
     "title": "다음세대를 세워갈 중고등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1247,6 +1331,8 @@
   {
     "id": "job-043",
     "churchId": "ch-keunnamu",
+    "churchName": "큰나무교회",
+    "region": null,
     "title": "찬양·예배 사역을 맡을 부목사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -1278,6 +1364,8 @@
   {
     "id": "job-044",
     "churchId": "ch-saemmul",
+    "churchName": "샘물교회",
+    "region": "GYEONGGI",
     "title": "찬양·예배를 섬길 전도사를 찾습니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1308,6 +1396,8 @@
   {
     "id": "job-045",
     "churchId": "ch-somangsaem",
+    "churchName": "소망샘교회",
+    "region": "CHUNGNAM",
     "title": "담임목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["SENIOR_PASTOR"],
@@ -1339,6 +1429,8 @@
   {
     "id": "job-046",
     "churchId": "ch-keunnamu",
+    "churchName": "큰나무교회",
+    "region": null,
     "title": "협동 전도사 모집",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1370,6 +1462,8 @@
   {
     "id": "job-047",
     "churchId": "ch-nanum",
+    "churchName": "나눔교회",
+    "region": "SEOUL",
     "title": "청년부 사역을 함께할 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1401,6 +1495,8 @@
   {
     "id": "job-048",
     "churchId": "ch-onsaemi",
+    "churchName": "온새미교회",
+    "region": "ULSAN",
     "title": "중고등부 파트 전도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1432,6 +1528,8 @@
   {
     "id": "job-049",
     "churchId": "ch-gwangya",
+    "churchName": "광야교회",
+    "region": "GANGWON",
     "title": "강도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["LICENSED_MINISTER"],
@@ -1459,6 +1557,8 @@
   {
     "id": "job-050",
     "churchId": "ch-hyanggi",
+    "churchName": "향기나는교회",
+    "region": "SEJONG",
     "title": "다음세대를 세워갈 영유아부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1490,6 +1590,8 @@
   {
     "id": "job-051",
     "churchId": "ch-dongsan",
+    "churchName": "동산교회",
+    "region": "SEOUL",
     "title": "부목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -1522,6 +1624,8 @@
   {
     "id": "job-052",
     "churchId": "ch-hangang",
+    "churchName": "한강중앙교회",
+    "region": "SEOUL",
     "title": "다음세대를 세워갈 중고등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1552,6 +1656,8 @@
   {
     "id": "job-053",
     "churchId": "ch-immanuel",
+    "churchName": "임마누엘교회",
+    "region": "SEOUL",
     "title": "행정 담당 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1584,6 +1690,8 @@
   {
     "id": "job-054",
     "churchId": "ch-saesomang",
+    "churchName": "새소망교회",
+    "region": null,
     "title": "유초등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1615,6 +1723,8 @@
   {
     "id": "job-055",
     "churchId": "ch-hangang",
+    "churchName": "한강중앙교회",
+    "region": "SEOUL",
     "title": "교구 담당 부목사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -1646,6 +1756,8 @@
   {
     "id": "job-056",
     "churchId": "ch-joeunssiat",
+    "churchName": "좋은씨앗교회",
+    "region": "GYEONGGI",
     "title": "교구 목회를 함께할 부목사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -1677,6 +1789,8 @@
   {
     "id": "job-057",
     "churchId": "ch-joeunssiat",
+    "churchName": "좋은씨앗교회",
+    "region": "GYEONGGI",
     "title": "청년부 담당 부목사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -1708,6 +1822,8 @@
   {
     "id": "job-058",
     "churchId": "ch-nanum",
+    "churchName": "나눔교회",
+    "region": "SEOUL",
     "title": "교구 담당 부목사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -1734,6 +1850,8 @@
   {
     "id": "job-059",
     "churchId": "ch-saemmul",
+    "churchName": "샘물교회",
+    "region": "GYEONGGI",
     "title": "중고등부 담당 부목사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -1765,6 +1883,8 @@
   {
     "id": "job-060",
     "churchId": "ch-galilee",
+    "churchName": "갈릴리교회",
+    "region": "JEONBUK",
     "title": "청년부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1792,6 +1912,8 @@
   {
     "id": "job-061",
     "churchId": "ch-neulpureun",
+    "churchName": "늘푸른교회",
+    "region": "GYEONGGI",
     "title": "유초등부 전도사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1822,6 +1944,8 @@
   {
     "id": "job-062",
     "churchId": "ch-chambit",
+    "churchName": "참빛교회",
+    "region": "GYEONGNAM",
     "title": "찬양 사역자(간사) 모집",
     "jobKind": ["MINISTRY"],
     "position": ["ETC"],
@@ -1849,6 +1973,8 @@
   {
     "id": "job-063",
     "churchId": "ch-sionseong",
+    "churchName": "시온성교회",
+    "region": "GWANGJU",
     "title": "중고등부 사역을 함께할 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1880,6 +2006,8 @@
   {
     "id": "job-064",
     "churchId": "ch-bitgoeul",
+    "churchName": "빛고을교회",
+    "region": "GWANGJU",
     "title": "유초등부 담당 부목사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -1910,6 +2038,8 @@
   {
     "id": "job-065",
     "churchId": "ch-yeolmae",
+    "churchName": "열매교회",
+    "region": "SEOUL",
     "title": "교육 사역을 함께할 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1940,6 +2070,8 @@
   {
     "id": "job-066",
     "churchId": "ch-sarangbit",
+    "churchName": "사랑의빛교회",
+    "region": "SEOUL",
     "title": "다음세대를 세워갈 유초등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -1971,6 +2103,8 @@
   {
     "id": "job-067",
     "churchId": "ch-eunhyero",
+    "churchName": "은혜로교회",
+    "region": "SEOUL",
     "title": "찬양 사역자(간사) 모집",
     "jobKind": ["MINISTRY"],
     "position": ["ETC"],
@@ -1998,6 +2132,8 @@
   {
     "id": "job-068",
     "churchId": "ch-tamna",
+    "churchName": "탐라중앙교회",
+    "region": "JEJU",
     "title": "중고등부 사역을 함께할 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2029,6 +2165,8 @@
   {
     "id": "job-069",
     "churchId": "ch-chambit",
+    "churchName": "참빛교회",
+    "region": "GYEONGNAM",
     "title": "다음세대를 세워갈 중고등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2061,6 +2199,8 @@
   {
     "id": "job-070",
     "churchId": "ch-tamna",
+    "churchName": "탐라중앙교회",
+    "region": "JEJU",
     "title": "담임(위임)목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["SENIOR_PASTOR"],
@@ -2092,6 +2232,8 @@
   {
     "id": "job-071",
     "churchId": "ch-bitgoeul",
+    "churchName": "빛고을교회",
+    "region": "GWANGJU",
     "title": "청년부를 섬길 전도사를 찾습니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2122,6 +2264,8 @@
   {
     "id": "job-072",
     "churchId": "ch-keunnamu",
+    "churchName": "큰나무교회",
+    "region": null,
     "title": "부목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -2149,6 +2293,8 @@
   {
     "id": "job-073",
     "churchId": "ch-mideumdongsan",
+    "churchName": "믿음의동산교회",
+    "region": "DAEGU",
     "title": "담임목사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["SENIOR_PASTOR"],
@@ -2180,6 +2326,8 @@
   {
     "id": "job-074",
     "churchId": "ch-joeunssiat",
+    "churchName": "좋은씨앗교회",
+    "region": "GYEONGGI",
     "title": "다음세대를 세워갈 유초등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2210,6 +2358,8 @@
   {
     "id": "job-075",
     "churchId": "ch-nanum",
+    "churchName": "나눔교회",
+    "region": "SEOUL",
     "title": "유초등부 사역을 함께할 전도사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2240,6 +2390,8 @@
   {
     "id": "job-076",
     "churchId": "ch-sarangbit",
+    "churchName": "사랑의빛교회",
+    "region": "SEOUL",
     "title": "담임(위임)목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["SENIOR_PASTOR"],
@@ -2271,6 +2423,8 @@
   {
     "id": "job-077",
     "churchId": "ch-daegwang",
+    "churchName": "대광교회",
+    "region": "GYEONGBUK",
     "title": "영유아부를 섬길 파트 전도사를 찾습니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2301,6 +2455,8 @@
   {
     "id": "job-078",
     "churchId": "ch-hanbit",
+    "churchName": "한빛교회",
+    "region": "GYEONGGI",
     "title": "청년부 담당 부목사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -2328,6 +2484,8 @@
   {
     "id": "job-079",
     "churchId": "ch-haneulmun",
+    "churchName": "하늘문교회",
+    "region": "GYEONGGI",
     "title": "사무 간사 채용 공고",
     "jobKind": ["MINISTRY"],
     "position": ["ETC"],
@@ -2354,6 +2512,8 @@
   {
     "id": "job-080",
     "churchId": "ch-saebyeok",
+    "churchName": "새벽빛교회",
+    "region": "GYEONGGI",
     "title": "중고등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2381,6 +2541,8 @@
   {
     "id": "job-081",
     "churchId": "ch-immanuel",
+    "churchName": "임마누엘교회",
+    "region": "SEOUL",
     "title": "중고등부 담당 부목사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -2412,6 +2574,8 @@
   {
     "id": "job-082",
     "churchId": "ch-pureunchojang",
+    "churchName": "푸른초장교회",
+    "region": "INCHEON",
     "title": "강도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["LICENSED_MINISTER"],
@@ -2439,6 +2603,8 @@
   {
     "id": "job-083",
     "churchId": "ch-banseok",
+    "churchName": "반석교회",
+    "region": "DAEGU",
     "title": "중고등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2466,6 +2632,8 @@
   {
     "id": "job-084",
     "churchId": "ch-bitgoeul",
+    "churchName": "빛고을교회",
+    "region": "GWANGJU",
     "title": "유초등부를 섬길 전도사를 찾습니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2495,6 +2663,8 @@
   {
     "id": "job-085",
     "churchId": "ch-eunhyero",
+    "churchName": "은혜로교회",
+    "region": "SEOUL",
     "title": "유초등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2527,6 +2697,8 @@
   {
     "id": "job-086",
     "churchId": "ch-hyanggi",
+    "churchName": "향기나는교회",
+    "region": "SEJONG",
     "title": "다음세대 교육 전도사를 찾습니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2557,6 +2729,8 @@
   {
     "id": "job-087",
     "churchId": "ch-haneulmun",
+    "churchName": "하늘문교회",
+    "region": "GYEONGGI",
     "title": "찬양·예배 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2588,6 +2762,8 @@
   {
     "id": "job-088",
     "churchId": "ch-onsaemi",
+    "churchName": "온새미교회",
+    "region": "ULSAN",
     "title": "담임목사를 청빙합니다",
     "jobKind": ["MINISTRY"],
     "position": ["SENIOR_PASTOR"],
@@ -2619,6 +2795,8 @@
   {
     "id": "job-089",
     "churchId": "ch-sionseong",
+    "churchName": "시온성교회",
+    "region": "GWANGJU",
     "title": "청년부 담당 부목사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -2649,6 +2827,8 @@
   {
     "id": "job-090",
     "churchId": "ch-bitsogeum",
+    "churchName": "빛과소금교회",
+    "region": "BUSAN",
     "title": "교구 담당 부목사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -2676,6 +2856,8 @@
   {
     "id": "job-091",
     "churchId": "ch-juane",
+    "churchName": "주안에교회",
+    "region": "INCHEON",
     "title": "부목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -2703,6 +2885,8 @@
   {
     "id": "job-092",
     "churchId": "ch-pyeonggang",
+    "churchName": "평강교회",
+    "region": "DAEJEON",
     "title": "교구 담당 부목사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -2734,6 +2918,8 @@
   {
     "id": "job-093",
     "churchId": "ch-seongeun",
+    "churchName": "성은교회",
+    "region": "JEONNAM",
     "title": "중고등부를 섬길 파트 전도사를 찾습니다",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2763,6 +2949,8 @@
   {
     "id": "job-094",
     "churchId": "ch-emmaus",
+    "churchName": "엠마오교회",
+    "region": "BUSAN",
     "title": "교구 심방 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2794,6 +2982,8 @@
   {
     "id": "job-095",
     "churchId": "ch-galilee",
+    "churchName": "갈릴리교회",
+    "region": "JEONBUK",
     "title": "청년부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2821,6 +3011,8 @@
   {
     "id": "job-096",
     "churchId": "ch-hyanggi",
+    "churchName": "향기나는교회",
+    "region": "SEJONG",
     "title": "청년부 담당 부목사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -2848,6 +3040,8 @@
   {
     "id": "job-097",
     "churchId": "ch-jeonwon",
+    "churchName": "전원교회",
+    "region": "GYEONGGI",
     "title": "청년부 간사 모집",
     "jobKind": ["MINISTRY"],
     "position": ["ETC"],
@@ -2875,6 +3069,8 @@
   {
     "id": "job-098",
     "churchId": "ch-saesomang",
+    "churchName": "새소망교회",
+    "region": null,
     "title": "유초등부 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],
@@ -2906,6 +3102,8 @@
   {
     "id": "job-099",
     "churchId": "ch-daegwang",
+    "churchName": "대광교회",
+    "region": "GYEONGBUK",
     "title": "교구 담당 부목사를 모십니다",
     "jobKind": ["MINISTRY"],
     "position": ["ASSOCIATE_PASTOR"],
@@ -2937,6 +3135,8 @@
   {
     "id": "job-100",
     "churchId": "ch-hanmaum",
+    "churchName": "한마음교회",
+    "region": "CHUNGBUK",
     "title": "담임목사 청빙 공고",
     "jobKind": ["MINISTRY"],
     "position": ["SENIOR_PASTOR"],
@@ -2967,6 +3167,8 @@
   {
     "id": "job-101",
     "churchId": "ch-saebyeok",
+    "churchName": "새벽빛교회",
+    "region": "GYEONGGI",
     "title": "유초등부 교육 전도사 청빙",
     "jobKind": ["MINISTRY"],
     "position": ["EVANGELIST"],

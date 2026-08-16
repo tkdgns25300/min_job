@@ -4,9 +4,10 @@ import {
   EMPLOYMENT_TYPES,
   POSITIONS,
   REGIONS,
+  type Denomination,
   type Position,
 } from "@/constants/domain";
-import type { Church, JobCard } from "@/types/domain";
+import type { JobCard, JobChurchRef } from "@/types/domain";
 
 // 도메인 값 표시 포매터
 
@@ -18,9 +19,10 @@ export function formatPay(min: number | null, max: number | null, note: string |
   return "협의";
 }
 
-// 교회 위치: 지역(+시)
-export function churchLocation(church: Pick<Church, "region" | "city">): string {
-  return `${REGIONS[church.region]}${church.city ? ` ${church.city}` : ""}`;
+// 교회 위치: 지역(+시). 모르는 조각은 **생략**한다 — 방문자에게 "미상"은 정보가 아니라 잡음이고,
+// 크롤 공고는 지역이 비어 있는 경우가 흔하다(DATA §3). 둘 다 없으면 "" → 호출부가 줄째로 걷어낸다.
+export function churchLocation(church: Pick<JobChurchRef, "region" | "city">): string {
+  return [church.region ? REGIONS[church.region] : null, church.city].filter(Boolean).join(" ");
 }
 
 // 직분 라벨 — 한 공고가 여러 직분을 담을 수 있다(DATA §3 판정 규칙).
@@ -46,7 +48,17 @@ export function jobRoleLine(
     .join(" · ");
 }
 
-// 교회 요약 한 줄: 교단 · 지역
-export function churchMetaLine(church: Pick<Church, "denomination" | "region" | "city">): string {
-  return `${DENOMINATIONS[church.denomination]} · ${churchLocation(church)}`;
+// 교단 라벨 — 미상이면 null이라 호출부의 `filter(Boolean)`·조건부 렌더가 조각째 걷어낸다.
+// (공개 화면 규칙. "미상"을 쓰는 곳은 운영자 화면 한 곳뿐이라 거기서 인라인 처리한다)
+export function denominationLabel(denomination: Denomination | null): string | null {
+  return denomination ? DENOMINATIONS[denomination] : null;
+}
+
+// 교회 요약 한 줄: 교단 · 지역. 아는 조각만 잇는다 — 전부 모르면 ""(호출부가 걷어낸다)
+export function churchMetaLine(
+  church: Pick<JobChurchRef, "denomination" | "region" | "city">,
+): string {
+  return [denominationLabel(church.denomination), churchLocation(church)]
+    .filter(Boolean)
+    .join(" · ");
 }

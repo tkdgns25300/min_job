@@ -3,8 +3,8 @@
     "id": "ch-saesomang",
     "name": "새소망교회",
     "denomination": "HAPDONG",
-    "region": "GYEONGGI",
-    "city": "성남",
+    "region": null,
+    "city": null,
     "foundedYear": 2005,
     "photos": [
       "/mock/church/exterior.svg",
@@ -162,7 +162,7 @@
   {
     "id": "ch-neulpureun",
     "name": "늘푸른교회",
-    "denomination": "TONGHAP",
+    "denomination": null,
     "region": "GYEONGGI",
     "city": "고양",
     "foundedYear": 1992,
@@ -177,7 +177,7 @@
     "id": "ch-keunnamu",
     "name": "큰나무교회",
     "denomination": "HAPDONG",
-    "region": "SEOUL",
+    "region": null,
     "city": "마포",
     "foundedYear": 2003,
     "links": [
@@ -194,7 +194,7 @@
   {
     "id": "ch-chambit",
     "name": "참빛교회",
-    "denomination": "GOSIN",
+    "denomination": null,
     "region": "GYEONGNAM",
     "city": "창원",
     "foundedYear": 1985,

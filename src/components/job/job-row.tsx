@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { MapPin } from "lucide-react";
-import { DENOMINATIONS } from "@/constants/domain";
 import type { JobCard } from "@/types/domain";
-import { churchLocation, formatPay, jobRoleLine } from "@/lib/format";
+import { churchLocation, denominationLabel, formatPay, jobRoleLine } from "@/lib/format";
 import { RelativeTime } from "@/components/relative-time";
 import { BookmarkButton } from "./bookmark-button";
 
@@ -12,6 +11,7 @@ import { BookmarkButton } from "./bookmark-button";
 // 전체 행 클릭 = 상세로(stretched Link), 책갈피만 별도 클릭(z-10).
 export function JobRow({ job }: { job: JobCard }) {
   const role = jobRoleLine(job);
+  const denomination = denominationLabel(job.church.denomination);
   const location = churchLocation(job.church);
   const isAd = job.featuredTier === "HERO" || job.featuredTier === "PREMIUM";
   const hasPay = job.payMin !== null || job.payMax !== null;
@@ -30,12 +30,20 @@ export function JobRow({ job }: { job: JobCard }) {
           )}
         </div>
         <p className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
-          <MapPin className="size-3.5 shrink-0 text-primary" />
-          <span className="font-medium text-foreground">{location}</span>
-          <span className="text-border">·</span>
+          {location && (
+            <>
+              <MapPin className="size-3.5 shrink-0 text-primary" />
+              <span className="font-medium text-foreground">{location}</span>
+              <span className="text-border">·</span>
+            </>
+          )}
           {job.church.name}
-          <span className="text-border">·</span>
-          {DENOMINATIONS[job.church.denomination]}
+          {denomination && (
+            <>
+              <span className="text-border">·</span>
+              {denomination}
+            </>
+          )}
         </p>
         <p className="mt-1 truncate text-sm text-muted-foreground">{role}</p>
       </div>

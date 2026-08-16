@@ -16,7 +16,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!church) return { title: "교회를 찾을 수 없습니다 | 민잡" };
 
   const openCount = (await getChurchOpenJobs(id)).length;
-  const description = `${church.name} (${churchMetaLine(church)}) 교역자 청빙${
+  // 교단·지역이 모두 미상이면 괄호를 통째로 뺀다 — "○○교회 () 교역자 청빙"이 검색결과에 나간다
+  const meta = churchMetaLine(church);
+  const description = `${church.name}${meta ? ` (${meta})` : ""} 교역자 청빙${
     openCount > 0 ? ` · 현재 ${openCount}건 모집 중` : ""
   }. 교회 정보·채널·지난 공고를 민잡에서 확인하세요.`;
   return {

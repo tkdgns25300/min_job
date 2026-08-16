@@ -134,8 +134,9 @@ function SavedRow({ job, onUnsave }: { job: JobCard; onUnsave: (id: string) => v
             </span>
           )}
         </div>
+        {/* 지역 미상이면 churchLocation이 ""라 " · 교회명"으로 점이 앞에 매달린다 */}
         <p className="mt-1 truncate text-xs text-muted-foreground">
-          {churchLocation(job.church)} · {job.church.name}
+          {[churchLocation(job.church), job.church.name].filter(Boolean).join(" · ")}
         </p>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">{jobRoleLine(job)}</p>
       </div>

@@ -65,7 +65,7 @@ export function ChurchInfoForm({ church }: { church: Church }) {
           <div>
             <p className="text-sm font-bold">{church.name}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {DENOMINATIONS[church.denomination]} · 인증 완료
+              {church.denomination && `${DENOMINATIONS[church.denomination]} · `}인증 완료
             </p>
           </div>
           <a
@@ -77,7 +77,9 @@ export function ChurchInfoForm({ church }: { church: Church }) {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Field label="지역">
-            <NativeSelect className="h-10" defaultValue={church.region} aria-label="지역">
+            <NativeSelect className="h-10" defaultValue={church.region ?? ""} aria-label="지역">
+              {/* 지역 미상이면 첫 항목(서울)이 조용히 선택돼 틀린 지역으로 굳는다 — 빈 칸을 남긴다 */}
+              {church.region === null && <option value="">지역을 선택해 주세요</option>}
               {Object.entries(REGIONS).map(([key, label]) => (
                 <option key={key} value={key}>
                   {label}

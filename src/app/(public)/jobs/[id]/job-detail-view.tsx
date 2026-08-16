@@ -14,7 +14,7 @@ import {
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { EMPLOYMENT_TYPES, JOB_SOURCES, type JobSource } from "@/constants/domain";
-import type { Church, Job, JobCard as JobCardData, JobDetail } from "@/types/domain";
+import type { Church, Job, JobCard as JobCardData, JobChurchRef, JobDetail } from "@/types/domain";
 
 const externalLinkAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
 
@@ -25,9 +25,14 @@ interface ApplyTarget {
 
 // 지원 동선 — 원문(수집 공고) 우선, 없으면 교회 홈페이지.
 // 만료 공고는 사실확인용 원문 보기만 — 지원을 유도하면 안 된다(마감일 경과·상시모집 90일 초과 포함).
-function getApplyTarget(job: Job, church: Church, isPubliclyOpen: boolean): ApplyTarget | null {
+function getApplyTarget(
+  job: Job,
+  church: Church | null,
+  isPubliclyOpen: boolean,
+): ApplyTarget | null {
   if (job.sourceUrl) return { url: job.sourceUrl, label: "원문 공고 보기" };
-  const homepage = church.links.find((l) => l.type === "HOMEPAGE")?.url ?? null;
+  // 미claim 공고는 교회 채널을 모른다 — 수집 공고라 위의 원문 링크가 동선을 맡는다
+  const homepage = church?.links.find((l) => l.type === "HOMEPAGE")?.url ?? null;
   if (isPubliclyOpen && homepage) {
     return { url: homepage, label: "교회 홈페이지에서 지원 안내 확인" };
   }
@@ -77,16 +82,22 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
 }
 
 // 상단 헤더 (풀폭) — 교회 정체성 + 제목
-function PostHeader({ job, church }: { job: Job; church: Church }) {
+function PostHeader({ job, church }: { job: Job; church: JobChurchRef }) {
+  const meta = churchMetaLine(church);
   return (
     <div>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm">
-            <Link href={`/churches/${church.id}`} className="font-semibold hover:underline">
-              {church.name}
-            </Link>
-            <span className="text-muted-foreground"> · {churchMetaLine(church)}</span>
+            {/* 교회명은 공고의 정체성이라 항상 쓴다. 다만 미claim이면 걸 상세 페이지가 없다 */}
+            {church.id ? (
+              <Link href={`/churches/${church.id}`} className="font-semibold hover:underline">
+                {church.name}
+              </Link>
+            ) : (
+              <span className="font-semibold">{church.name}</span>
+            )}
+            {meta && <span className="text-muted-foreground"> · {meta}</span>}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">{job.postedAt} 등록</p>
         </div>
@@ -105,16 +116,21 @@ function PostHeader({ job, church }: { job: Job; church: Church }) {
 function MainContent({
   job,
   church,
+  churchRef,
   churchJobs,
   apply,
 }: {
   job: Job;
-  church: Church;
+  church: Church | null;
+  churchRef: JobChurchRef;
   churchJobs: JobCardData[];
   apply: ApplyTarget | null;
 }) {
-  const location = churchLocation(church);
-  const mapUrl = `https://map.naver.com/p/search/${encodeURIComponent(`${church.name} ${location}`)}`;
+  const location = churchLocation(churchRef);
+  // 지역을 모르면 지도를 걸지 않는다 — 교회명만으로 검색하면 동명 교회의 엉뚱한 위치를 짚는다
+  const mapUrl = location
+    ? `https://map.naver.com/p/search/${encodeURIComponent(`${churchRef.name} ${location}`)}`
+    : null;
 
   return (
     <div>
@@ -159,18 +175,20 @@ function MainContent({
         </Section>
       )}
 
-      <Section title="위치">
-        <p className="mt-3 text-sm">{location}</p>
-        {/* 지도 자리(플레이스홀더) — 클릭 시 네이버 지도. 실제 임베드는 Phase 2(API 키+주소 필드) */}
-        <a
-          href={mapUrl}
-          {...externalLinkAttrs}
-          className="mt-3 flex h-40 flex-col items-center justify-center gap-1.5 rounded-xl border bg-muted/40 text-center transition-colors hover:bg-muted/60"
-        >
-          <span className="text-sm font-medium text-foreground">지도에서 위치 보기</span>
-          <span className="text-xs text-muted-foreground">네이버 지도에서 열기</span>
-        </a>
-      </Section>
+      {mapUrl && (
+        <Section title="위치">
+          <p className="mt-3 text-sm">{location}</p>
+          {/* 지도 자리(플레이스홀더) — 클릭 시 네이버 지도. 실제 임베드는 Phase 2(API 키+주소 필드) */}
+          <a
+            href={mapUrl}
+            {...externalLinkAttrs}
+            className="mt-3 flex h-40 flex-col items-center justify-center gap-1.5 rounded-xl border bg-muted/40 text-center transition-colors hover:bg-muted/60"
+          >
+            <span className="text-sm font-medium text-foreground">지도에서 위치 보기</span>
+            <span className="text-xs text-muted-foreground">네이버 지도에서 열기</span>
+          </a>
+        </Section>
+      )}
 
       <Section title="지원 방법">
         <p className="mt-3 text-sm leading-relaxed text-foreground/90">
@@ -189,79 +207,101 @@ function MainContent({
         )}
       </Section>
 
-      <Section title={church.name}>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {churchMetaLine(church)}
-          {church.foundedYear ? ` · ${church.foundedYear}년 설립` : ""}
-        </p>
-        <Link
-          href={`/churches/${church.id}`}
-          className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4"
-        >
-          교회 상세 보기 →
-        </Link>
-        {church.links.length > 0 && (
-          <div className="mt-4">
-            <ChurchChannels links={church.links} />
-          </div>
-        )}
-        {churchJobs.length > 0 && (
-          <div className="mt-6">
-            <p className="text-xs font-bold text-muted-foreground">이 교회의 다른 모집</p>
-            <ul className="mt-2 divide-y divide-border">
-              {churchJobs.map((cj) => {
-                const hasPay = cj.payMin !== null || cj.payMax !== null;
-                return (
-                  <li key={cj.id}>
-                    <Link
-                      href={`/jobs/${cj.id}`}
-                      className="group flex items-baseline justify-between gap-3 py-2.5 text-sm"
-                    >
-                      <span className="min-w-0 flex-1 truncate group-hover:underline">
-                        {cj.title}
-                        <span className="text-muted-foreground">
-                          {" "}
-                          · {positionLabel(cj.position)}
-                        </span>
-                      </span>
-                      <span
-                        className={cn(
-                          "shrink-0 font-semibold",
-                          hasPay ? "text-primary" : "text-muted-foreground",
-                        )}
+      {/* 교회 프로필 — 미claim 공고는 `churches` 행 자체가 없어 설립연도·채널·상세가 전부 없다.
+          빈 껍데기를 그리거나 내부 데이터 사정을 설명하는 대신 섹션을 통째로 생략한다. */}
+      {church && (
+        // 제목도 churchRef를 쓴다 — 여기만 `church.name`을 읽으면 헤더와 이름이 갈릴 수 있다
+        <Section title={churchRef.name}>
+          {/* 교단·지역이 전부 미상이면 churchMetaLine이 ""라 점이 앞에 매달린다 */}
+          <p className="mt-1 text-sm text-muted-foreground">
+            {[churchMetaLine(churchRef), church.foundedYear && `${church.foundedYear}년 설립`]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+          <Link
+            href={`/churches/${church.id}`}
+            className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4"
+          >
+            교회 상세 보기 →
+          </Link>
+          {church.links.length > 0 && (
+            <div className="mt-4">
+              <ChurchChannels links={church.links} />
+            </div>
+          )}
+          {churchJobs.length > 0 && (
+            <div className="mt-6">
+              <p className="text-xs font-bold text-muted-foreground">이 교회의 다른 모집</p>
+              <ul className="mt-2 divide-y divide-border">
+                {churchJobs.map((cj) => {
+                  const hasPay = cj.payMin !== null || cj.payMax !== null;
+                  return (
+                    <li key={cj.id}>
+                      <Link
+                        href={`/jobs/${cj.id}`}
+                        className="group flex items-baseline justify-between gap-3 py-2.5 text-sm"
                       >
-                        {formatPay(cj.payMin, cj.payMax, cj.payNote)}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
-      </Section>
+                        <span className="min-w-0 flex-1 truncate group-hover:underline">
+                          {cj.title}
+                          <span className="text-muted-foreground">
+                            {" "}
+                            · {positionLabel(cj.position)}
+                          </span>
+                        </span>
+                        <span
+                          className={cn(
+                            "shrink-0 font-semibold",
+                            hasPay ? "text-primary" : "text-muted-foreground",
+                          )}
+                        >
+                          {formatPay(cj.payMin, cj.payMax, cj.payNote)}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+        </Section>
+      )}
     </div>
   );
 }
 
 // 우측 카드 (B) — 사례비·마감·고용형태 + 지원. 데스크톱 sticky, 모바일 제목 아래.
-function SummaryAside({ job, apply }: { job: Job; apply: ApplyTarget | null }) {
+function SummaryAside({
+  job,
+  apply,
+  isPubliclyOpen,
+}: {
+  job: Job;
+  apply: ApplyTarget | null;
+  isPubliclyOpen: boolean;
+}) {
   const hasPay = job.payMin !== null || job.payMax !== null;
 
   return (
     <Card className="order-first gap-0 overflow-hidden p-0 lg:sticky lg:top-20 lg:order-none">
       <div className="p-5">
+        {/* 만료 공고에 "지원하기"를 띄우면 바로 위 마감 배너와 모순되고 헛걸음을 시킨다.
+            링크 자체는 남긴다 — 사실확인용 원문 보기(getApplyTarget의 라벨이 그 문구를 들고 있다). */}
         {apply && (
           <a
             href={apply.url}
             {...externalLinkAttrs}
-            className={cn(buttonVariants({ size: "lg" }), "w-full")}
+            className={cn(
+              buttonVariants({ size: "lg", variant: isPubliclyOpen ? "default" : "outline" }),
+              "w-full",
+            )}
           >
-            지원하기
+            {isPubliclyOpen ? "지원하기" : apply.label}
           </a>
         )}
         <p className={cn("text-xs leading-relaxed text-muted-foreground", apply && "mt-3")}>
-          민잡은 지원서를 직접 받지 않아요. 지원은 교회로 직접 해주세요.
+          {isPubliclyOpen
+            ? "민잡은 지원서를 직접 받지 않아요. 지원은 교회로 직접 해주세요."
+            : "모집이 끝난 공고예요. 내용 확인용으로만 남겨둡니다."}
         </p>
       </div>
       <dl className="space-y-3 border-t p-5">
@@ -342,7 +382,7 @@ export function JobDetailView({
   churchJobs: JobCardData[];
   similar: JobCardData[];
 }) {
-  const { job, church } = detail;
+  const { job, church, churchRef } = detail;
   const apply = getApplyTarget(job, church, detail.isPubliclyOpen);
   // "더 보기" — 넓은 탐색은 /jobs로 (부서 우선, 없으면 직분으로 미리 필터).
   // ⚠️ 직분은 배열이라 **반복 파라미터**로 넘긴다(`?position=A&position=B`) — jobs-url-state가
@@ -365,11 +405,17 @@ export function JobDetailView({
         <ClosedBanner job={job} hasSimilar={similar.length > 0} />
       )}
 
-      <PostHeader job={job} church={church} />
+      <PostHeader job={job} church={churchRef} />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-        <MainContent job={job} church={church} churchJobs={churchJobs} apply={apply} />
-        <SummaryAside job={job} apply={apply} />
+        <MainContent
+          job={job}
+          church={church}
+          churchRef={churchRef}
+          churchJobs={churchJobs}
+          apply={apply}
+        />
+        <SummaryAside job={job} apply={apply} isPubliclyOpen={detail.isPubliclyOpen} />
       </div>
 
       {similar.length > 0 && <SimilarJobsSection jobs={similar} moreHref={moreHref} />}
