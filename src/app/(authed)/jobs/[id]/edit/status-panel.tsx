@@ -17,7 +17,7 @@ export function JobStatusPanel({ job }: { job: Job }) {
         </p>
         {job.status === "PENDING" ? (
           <p className="mt-4 text-sm text-muted-foreground">
-            검수가 끝나면 여기서 마감·재모집을 관리할 수 있어요.
+            검수가 끝나면 여기에서 마감·재모집을 관리할 수 있어요.
           </p>
         ) : (
           <div className="mt-4">

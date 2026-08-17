@@ -43,7 +43,7 @@ export default async function HomePage() {
             </p>
             <h1 className="text-4xl leading-[1.22] font-extrabold tracking-[-0.03em] break-keep text-balance sm:text-5xl">
               다음 사역지,
-              <br className="hidden sm:block" /> 여기서 찾으세요
+              <br className="hidden sm:block" /> 여기에서 찾으세요
             </h1>
             <p className="mx-auto mt-5 max-w-lg text-[17px] leading-relaxed break-keep text-white/70">
               여러 신학교·교단 게시판을 돌아다닐 필요 없이,

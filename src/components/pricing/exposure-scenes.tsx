@@ -298,7 +298,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
             <div
               className={`mt-1.5 font-extrabold leading-tight ${isPc ? "text-[26px]" : "text-[17px]"}`}
             >
-              다음 사역지, 여기서 찾으세요
+              다음 사역지, 여기에서 찾으세요
             </div>
             <div
               className={`mx-auto mt-3 rounded-full bg-white px-3 py-2 text-left text-[10.5px] text-muted-foreground ${isPc ? "max-w-[440px]" : ""}`}
