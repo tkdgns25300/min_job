@@ -85,10 +85,7 @@
   - 해소된 드리프트: **`Church.denomination`·`Church.region` nullable** · **`Job.churchName`·`Job.region` 추가** · **`Job.churchId` nullable**
   - 새로 생긴 것: `types/domain.ts`의 `JobChurchRef`(조인 결과가 아닌 "공고가 가리키는 교회") · `lib/job-church.ts`(`jobChurchRef`·`normalizeChurchName`·`churchIdentityKey`)
   - 표시 규칙은 SPEC(공고 상세 §미claim 축소 표시)에 확정 — 공개는 조각 생략, 운영자만 "미상" 명시
-- [ ] ⬜ **`/admin/jobs`에서 "지역·교단 미상" 공고를 찾을 수 없다** (위 작업이 드러낸 공백 — 기능 작업이라 분리)
-  - 테이블이 교회명만 렌더하고 교단·지역 열이 없다. 게다가 교단·지역 **필터를 고르면 미상 공고가 아무 표시 없이 사라진다**(값이 없으니 어떤 선택에도 안 걸린다).
-  - DATA §3은 지역 NULL을 *"검수에서 교단보다 먼저 채울 값"*이라고 못 박는데, 정작 **검수 큐에서 그 대상을 못 찾는다.** 크롤 실데이터가 들어오면 바로 아픈 지점(실측 원문 지역 명시 81%).
-  - 필요한 것: 교단·지역 열 추가(미상은 "미상" 표기) + 필터에 "미상" 선택지. `AdminOverview.hiddenCount`처럼 **"미상 N건" 카운터**도 후보.
+> ⛔ **`/admin/jobs`에 "미상" 필터·카운터를 만들지 않는다 (2026-08-17 판단 철회)** — DATA §3의 *"검수에서 채울 값"*을 `/admin/jobs`로 잘못 읽고 한때 할 일로 올렸다. 그 검수는 **승격 전** 브릿지(`/admin/ingest` → `review_data` 보정 후 `jobs`로 INSERT)를 말한다. `/admin/jobs`는 **이미 공개된 공고**를 관리하는 화면이라 애초에 그 일을 하는 자리가 아니고, 미상 공고도 기본(전체) 목록에는 그대로 조회된다. 사후 수정이 필요하면 제목·교회 검색으로 찾는다.
 - [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합 (나머지 15곳)** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.**
   - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` — nullable로 풀어야 함. (`postedAt`은 NOT NULL 복귀로, `Church.denomination`·`Church.region`은 위 항목으로 **해소**)
   - **TS가 DB보다 느슨**(폼이 NULL을 보내면 DB가 거부): `description: string | null` → **`string`**. ⚠️ 실제 모순이라 이 상태로 등록 Server Action을 붙이면 런타임 에러
