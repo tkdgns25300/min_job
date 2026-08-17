@@ -34,7 +34,8 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
 
       {/* 별도 회원가입 절차 없음 — 첫 로그인이 곧 가입이라 동의 고지를 여기 둔다 */}
       <p className="mt-5 text-xs leading-relaxed break-keep text-muted-foreground">
-        처음 로그인하면 자동으로 가입되며,{" "}
+        처음 로그인하면 자동으로 가입되며,
+        <br />
         <Link href="/terms" className="underline hover:text-foreground">
           이용약관
         </Link>
