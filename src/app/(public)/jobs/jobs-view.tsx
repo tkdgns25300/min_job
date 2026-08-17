@@ -13,7 +13,7 @@ import { Pagination } from "@/components/job/pagination";
 import { RecentlyViewed } from "@/components/job/recently-viewed";
 import { ChurchCtaCard } from "@/components/job/church-cta-card";
 import { cn } from "@/lib/utils";
-import type { JobCard as JobCardData, SortKey } from "@/types/domain";
+import type { JobCard as JobCardData } from "@/types/domain";
 import { filterAndSortJobs } from "./filter-jobs";
 import {
   buildJobsQuery,
@@ -22,14 +22,6 @@ import {
   PAGE_SIZE_OPTIONS,
   parseJobsUrlState,
 } from "./jobs-url-state";
-
-// TODO(design): ❓ 정렬 축 재검토 — 사례비순은 "세상적"(인터뷰), 마감임박은 교회 마감 개념이 모호.
-// 최신순 단일 + 마감 "표기만"으로 축소하는 안 vs 현행 3축 유지 — 사람 결정 필요 (SPEC.md #1)
-const SORTS: { key: SortKey; label: string }[] = [
-  { key: "recent", label: "최신순" },
-  { key: "pay", label: "사례비순" },
-  { key: "deadline", label: "마감임박순" },
-];
 
 export function JobsView({ jobs }: { jobs: JobCardData[] }) {
   const sp = useSearchParams();
@@ -44,7 +36,6 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
   const [payMax, setPayMax] = useState(seed.payMax);
   const [includeNego, setIncludeNego] = useState(seed.includeNego);
   const [housingOnly, setHousingOnly] = useState(seed.housingOnly);
-  const [sort, setSort] = useState<SortKey>(seed.sort);
   const [page, setPage] = useState(seed.page);
   const [pageSize, setPageSize] = useState<number>(seed.pageSize);
 
@@ -96,9 +87,8 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
         payMax: payMax ? Number(payMax) : null,
         includeNego,
         housingOnly,
-        sort,
       }),
-    [jobs, q, selected, payMin, payMax, includeNego, housingOnly, sort],
+    [jobs, q, selected, payMin, payMax, includeNego, housingOnly],
   );
 
   const total = filtered.length;
@@ -122,7 +112,6 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
     payMax,
     includeNego,
     housingOnly,
-    sort,
     page: currentPage,
     pageSize,
   });
@@ -181,24 +170,6 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
                 총 <b className="text-foreground">{total}</b>건
               </p>
               <div className="flex items-center gap-3 text-sm">
-                <div className="flex gap-3">
-                  {SORTS.map((s) => (
-                    <button
-                      key={s.key}
-                      type="button"
-                      onClick={() => {
-                        setSort(s.key);
-                        setPage(1);
-                      }}
-                      className={cn(
-                        "text-muted-foreground hover:text-foreground",
-                        sort === s.key && "font-bold text-foreground",
-                      )}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
                 <select
                   value={pageSize}
                   onChange={(e) => {

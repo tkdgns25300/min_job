@@ -7,13 +7,12 @@ import {
   REGIONS,
 } from "@/constants/domain";
 import { normalizeChurchName } from "@/lib/job-church";
-import type { FilterDim, JobCard, SortKey } from "@/types/domain";
+import type { FilterDim, JobCard } from "@/types/domain";
 
 // mock 단계 클라이언트 필터/정렬 (순수 함수).
 // 실제 데이터 연동 시 이 로직은 lib/queries의 서버 쿼리로 이전한다.
 
 const TIER_RANK = { HERO: 0, PREMIUM: 1, NONE: 2 } as const;
-const FAR_FUTURE = "9999-12-31"; // 마감 없는 공고를 마감임박 정렬 맨 뒤로
 
 export interface JobFilterCriteria {
   q: string;
@@ -22,7 +21,6 @@ export interface JobFilterCriteria {
   payMax: number | null;
   includeNego: boolean;
   housingOnly: boolean;
-  sort: SortKey;
 }
 
 export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCard[] {
@@ -74,17 +72,11 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
     return true;
   });
 
-  // 대표광고 → 프리미엄 → 일반 순 고정 후 선택 정렬
+  // 노출 등급(대표광고 → 프리미엄 → 일반) 먼저, 그 안에서 최신순.
+  // 등급은 정렬 옵션이 아니라 **유료 상품의 근거**라 사용자가 바꿀 수 없다(SPEC 정렬·필터 규칙).
   result.sort((a, b) => {
     const tier = TIER_RANK[a.featuredTier] - TIER_RANK[b.featuredTier];
-    if (tier !== 0) return tier;
-    if (c.sort === "pay") {
-      return (b.payMax ?? b.payMin ?? -1) - (a.payMax ?? a.payMin ?? -1);
-    }
-    if (c.sort === "deadline") {
-      return (a.deadline ?? FAR_FUTURE).localeCompare(b.deadline ?? FAR_FUTURE);
-    }
-    return b.postedAt.localeCompare(a.postedAt);
+    return tier !== 0 ? tier : b.postedAt.localeCompare(a.postedAt);
   });
   return result;
 }

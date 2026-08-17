@@ -18,10 +18,10 @@ import type {
 // 상태 enum은 constants(라벨 맵)로 이동 — 기존 import 경로 호환을 위해 재노출
 export type { JobStatus };
 
-// 목록 필터/정렬 (다중선택 필터 축 · 정렬 키)
+// 목록 다중선택 필터 축. 정렬은 최신순 고정이라 키가 없다 —
+// 사용자가 고르는 정렬축은 두지 않는다(사례비순 "세상적"·마감임박 개념 모호, INTERVIEWS).
 export type FilterDim =
   "denomination" | "region" | "position" | "department" | "employmentType" | "qualification";
-export type SortKey = "recent" | "pay" | "deadline";
 
 // 교회 채널 링크 (홈페이지·SNS)
 export interface ChurchLink {

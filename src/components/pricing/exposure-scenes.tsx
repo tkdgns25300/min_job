@@ -99,10 +99,12 @@ function SearchPill({ text }: { text: string }) {
     </div>
   );
 }
-function Toolbar({ sort }: { sort: string }) {
+// 실제 /jobs 툴바를 축소 재현 — 정렬 선택은 없다(최신순 고정, SPEC 정렬·필터 규칙).
+// 여기서 없는 UI를 그리면 교회가 보는 미리보기와 실제 화면이 어긋난다.
+function Toolbar({ total }: { total: number }) {
   return (
     <div className="flex items-center justify-between px-3.5 py-2 text-[10.5px] text-muted-foreground">
-      <span>정렬 · {sort} ▾</span>
+      <span>총 {total}건</span>
       <span>20개씩 ▾</span>
     </div>
   );
@@ -195,7 +197,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
             <SearchPill text="지역·교단·직분으로 검색" />
           </Band>
           <Chips items={FILTERS} />
-          <Toolbar sort="최신순" />
+          <Toolbar total={61} />
           <div className={`grid gap-2 px-3.5 ${grid}`}>
             {premiumAd}
             {normalCards}
@@ -213,7 +215,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
             <div className="mt-2 text-[11px] font-bold text-primary">검색결과 3건</div>
           </Band>
           <Chips items={["경기 수원 ✕", "전도사 ✕"]} />
-          <Toolbar sort="관련순" />
+          <Toolbar total={7} />
           <div className={`grid gap-2 px-3.5 pb-4 ${grid}`}>
             {premiumAd}
             <Card
@@ -356,7 +358,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
             <SearchPill text="지역·교단·직분으로 검색" />
           </Band>
           <Chips items={FILTERS} />
-          <Toolbar sort="최신순" />
+          <Toolbar total={61} />
           <div className="px-3.5">
             <Card
               church="새벽빛교회 · 예장백석 · 경기 수원"

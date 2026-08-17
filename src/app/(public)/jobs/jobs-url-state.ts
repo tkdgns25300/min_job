@@ -1,7 +1,8 @@
 import type { ReadonlyURLSearchParams } from "next/navigation";
-import type { FilterDim, SortKey } from "@/types/domain";
+import type { FilterDim } from "@/types/domain";
 
-// /jobs 목록의 검색·필터·정렬·페이지 상태 ↔ URL 쿼리 동기화 (공유·뒤로가기·딥링크·SEO).
+// /jobs 목록의 검색·필터·페이지 상태 ↔ URL 쿼리 동기화 (공유·뒤로가기·딥링크·SEO).
+// 정렬은 최신순 고정이라 URL에 싣지 않는다.
 // URL은 "초기 시드 + 상태 반영" 대상이지 단일 소스는 아니다(상태 → URL 단방향).
 // URL을 단일 소스로 승격하는 건 DB 전환과 함께 별건으로 다룬다(ROADMAP).
 
@@ -17,8 +18,6 @@ export const MULTI_DIMS: FilterDim[] = [
 
 export const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 export const DEFAULT_PAGE_SIZE = 20;
-export const DEFAULT_SORT: SortKey = "recent";
-const SORT_KEYS: readonly SortKey[] = ["recent", "pay", "deadline"];
 
 export interface JobsUrlState {
   q: string;
@@ -27,7 +26,6 @@ export interface JobsUrlState {
   payMax: string;
   includeNego: boolean;
   housingOnly: boolean;
-  sort: SortKey;
   page: number;
   pageSize: number;
 }
@@ -49,9 +47,6 @@ export function parseJobsUrlState(sp: ReadonlyURLSearchParams | URLSearchParams)
   const selected = emptySelected();
   for (const dim of MULTI_DIMS) selected[dim] = new Set(sp.getAll(dim));
 
-  const sortRaw = sp.get("sort");
-  const sort = SORT_KEYS.find((k) => k === sortRaw) ?? DEFAULT_SORT;
-
   const pageRaw = Number(sp.get("page"));
   const page = Number.isInteger(pageRaw) && pageRaw > 1 ? pageRaw : 1;
 
@@ -67,7 +62,6 @@ export function parseJobsUrlState(sp: ReadonlyURLSearchParams | URLSearchParams)
     payMax: parseNumericField(sp.get("payMax")),
     includeNego: sp.get("includeNego") !== "0", // 기본 포함(true) — includeNego=0 일 때만 제외
     housingOnly: sp.get("housingOnly") === "1",
-    sort,
     page,
     pageSize,
   };
@@ -88,7 +82,6 @@ export function buildJobsQuery(state: JobsUrlState): string {
   if (state.payMax) params.set("payMax", state.payMax);
   if (!state.includeNego) params.set("includeNego", "0");
   if (state.housingOnly) params.set("housingOnly", "1");
-  if (state.sort !== DEFAULT_SORT) params.set("sort", state.sort);
   if (state.page > 1) params.set("page", String(state.page));
   if (state.pageSize !== DEFAULT_PAGE_SIZE) params.set("pageSize", String(state.pageSize));
 
