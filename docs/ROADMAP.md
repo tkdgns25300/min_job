@@ -106,7 +106,7 @@
 > 선행: Phase 0의 DB 스키마(=DATA.md) 완료. 동작 명세는 SPEC.md. 여기는 작업 단위.
 
 > **▶ mock→실 DB 전환 = 서로 독립인 2트랙 (2026-07-29 정리, 되돌리지 말 것):**
-> **① 인증(로그인) — ✅ 완료(2026-07-29)**: `mock-auth` 삭제 → Supabase Auth **Google OAuth 단독**. Server Action(`login/actions.ts`) → `auth/callback/route.ts`(PKCE code 교환) → `getCurrentUser`(Supabase `getUser`, `React.cache`) → 세션 refresh·1차 차단은 `proxy.ts`. 이메일 로그인·test 계정 제거, 로그아웃은 Server Action(`signOut`, scope local). ⚠️ **`users` 테이블은 "로그인용으로는" 불필요했다** — 로그인·세션·이름/이메일은 `auth.users`가 다 준다(그래서 지금 테이블 0개로 로그인이 동작한다). **하지만 프로필 테이블 자체는 여전히 필요하다**: `church_id`·`church_verification_status` 등 교회 멤버십을 담을 곳이 없어서 지금 교회 기능이 전부 닫혀 있다(DATA §3 `users` 명세 유효). 즉 **"불필요"가 아니라 "로그인 단계에선 미뤄도 됐다"**. 카카오는 **오픈 전 추가**(provider 켜고 버튼 하나 — 타겟층엔 카카오가 더 친숙), 네이버는 Supabase 기본 미지원 → 보류.
+> **① 인증(로그인) — ✅ 완료(2026-07-29)**: `mock-auth` 삭제 → Supabase Auth **Google OAuth 단독**. Server Action(`login/actions.ts`) → `auth/callback/route.ts`(PKCE code 교환) → `getCurrentUser`(Supabase `getUser`, `React.cache`) → 세션 refresh·1차 차단은 `proxy.ts`. 이메일 로그인·test 계정 제거, 로그아웃은 Server Action(`signOut`, scope local). ⚠️ **`users` 테이블은 "로그인용으로는" 불필요했다** — 로그인·세션·이름/이메일은 `auth.users`가 다 준다(그래서 지금 테이블 0개로 로그인이 동작한다). **하지만 프로필 테이블 자체는 여전히 필요하다**: `church_id`·`church_verification_status` 등 교회 멤버십을 담을 곳이 없어서 지금 교회 기능이 전부 닫혀 있다(DATA §3 `users` 명세 유효). 즉 **"불필요"가 아니라 "로그인 단계에선 미뤄도 됐다"**. **카카오·네이버는 오픈 범위 밖**(2026-08-17 확정 — 구글만으로 간다). 네이버는 Supabase 기본 미지원 → 보류.
 > **남은 인증 작업 1개**(admin 운영자 게이트는 2026-07-29 완료): **교회 멤버십** — `getCurrentUser`가 `churchId`/인증상태를 항상 `null`로 주므로 교회 기능 전체가 닫혀 있다(②트랙에서 교회 테이블과 함께).
 > **② 데이터(공고·교회)** — JSON → Supabase 테이블. ⚠️ **핵심은 seam 전환(쉬움 — `lib/queries` 본문만)이 아니라 "데이터 유입"**: (a)크롤러 승격=검수브릿지(크롤러 스키마 확정 후) (b)교회 등록 mutation (c)seed(임시). **DB가 비면 read 전환해도 빈 화면** → 유입이 먼저. read+write는 도메인별로 함께. **실데이터는 크롤러 검수브릿지 준비 후**라, ①(로그인)을 먼저 한다.
 
@@ -129,7 +129,7 @@
 - [ ] "주인 없는 공고" 등록 ('운영자 등록', 소유자 없음)
 
 ### 1-4. 인증 + 마이페이지 + 교회 등록 (단일 계정 모델 — DATA §3, SPEC 사용자 모델)
-- [x] 로그인 (`/login`) — **Google OAuth 실동작(2026-07-29)**. 폼은 서버 렌더(JS 없이도 제출), `?next=` 복귀 + open-redirect 방어(`safeInternalPath`), 실패 시 `?error=oauth`로 안내하고 `next` 유지. 세션 쿠키 `httpOnly`+`secure`(`lib/supabase/cookie-options.ts`). 첫 로그인=가입이라 약관·개인정보 동의 고지 링크 표시. 카카오는 오픈 전 추가, 네이버 보류. **단일 계정 = 기본 사용자**(로그인=일반 성도, 교회 담당자는 인증 문서로 승격 — 가입 시 역할 선택 없음)
+- [x] 로그인 (`/login`) — **Google OAuth 실동작(2026-07-29)**. 폼은 서버 렌더(JS 없이도 제출), `?next=` 복귀 + open-redirect 방어(`safeInternalPath`), 실패 시 `?error=oauth`로 안내하고 `next` 유지. 세션 쿠키 `httpOnly`+`secure`(`lib/supabase/cookie-options.ts`). 첫 로그인=가입이라 약관·개인정보 동의 고지 링크 표시. **카카오·네이버는 오픈 범위 밖**(2026-08-17). **단일 계정 = 기본 사용자**(로그인=일반 성도, 교회 담당자는 인증 문서로 승격 — 가입 시 역할 선택 없음)
 - [x] 로그아웃 — Server Action(`mypage/actions.ts` `signOut`, scope local). 회원탈퇴 자동 처리는 미구현이라 운영자 문의 경로로 안내(약관·개인정보처리방침이 보장한 권리를 실제로 행사 가능하게)
 - [~] 마이페이지 (`/mypage` · `/mypage/church` · `/mypage/church/info` · `/mypage/church/promote`) — **mock UI 완료**: 사역자 view(최근 본 + **북마크** + 하단 교회 CTA·계정) + 교회 대시보드(상태 탭·노출광고 사이드바·공고 행 수정/⋯마감·삭제/재등록) + 교회 정보 관리 페이지(소개·연락처·채널·사진) + **노출 결제 페이지**(PortOne V2 실결제 동작·서버 금액 검증, 1-8·4). 헤더 아바타=마이페이지 직행 + "교회 공고 등록" 상시 링크(`hasChurchAccess` 분기). 서버 배선·mutation·실 노출 적용 Phase 1
 - [ ] **북마크** (`bookmarks` 테이블) + 공고 카드·상세 저장 버튼 — 단일 계정이라 **Phase 1로 이동**(원래 Phase 2). 지금은 localStorage로 동작
