@@ -12,7 +12,12 @@
 
 - **DB는 저장 전용.** trigger·custom function·복잡한 default expression 만들지 않는다. ID 발급·timestamp·집계 등 로직은 전부 Server Action / query 함수. 내장 기능만 사용(`gen_random_uuid()`, `CHECK`, `FK`, array/`jsonb`).
 - **정규화 유지 (JOIN).** 교단 필터는 `churches`를 JOIN해서 건다. 비정규화(공고에 교회 속성 복사) 안 함 — 우리 규모(초기 수백~수천)에선 JOIN + `'use cache'` 캐시로 충분. (대규모 인덱스 최적화 필요 시 나중에 재검토)
-  - ⚠️ **명시적 예외 3개** — 앞의 둘은 "캐시된 쿼리가 JOIN·`now()` 없이 필터·정렬해야 한다"는 같은 이유다: **`jobs.region`**(`church_id`가 NULL일 수 있어 JOIN이 성립 안 함 — §3) · **`jobs.featured_tier`·`featured_until`**(원장은 `job_promotions`, 이건 현재 유효 노출 캐시 — §7). 세 번째는 근거가 다르다: **`jobs.church_name`**(2026-08-06) — `church_id`가 NULL이면 조인 상대가 없어 교회명을 보여줄 다른 출처가 없다(§3). 예외를 늘릴 때는 이 세 사례와 같은 근거가 있는지 확인할 것.
+  - ⚠️ **명시적 예외 3개**
+    1. **`jobs.region`** — 캐시된 쿼리가 JOIN 없이 필터·정렬해야 한다. `church_id`가 NULL일 수 있어 JOIN이 성립 안 함(§3)
+    2. **`jobs.featured_tier`·`featured_until`** — 원장은 `job_promotions`, 이건 `now()` 없이 읽는 현재 유효 노출 캐시(§7)
+    3. **`jobs.church_name`·`city`·`address`**(2026-08-06·08-17) — `church_id`가 NULL이면 **조인 상대가 없어 보여줄 출처가 없다**. 필터축이 아니라 표시·지도용이다(§3)
+
+    예외를 늘릴 때는 이 세 근거 중 하나에 해당하는지 확인할 것.
 - **enum = 영어 대문자 key + 한글 라벨.** key는 DB에 저장(값)·URL params에 사용, 표시는 `constants/domain.ts`의 한글 라벨 맵. DB에서는 `CHECK` 제약으로 허용값 강제(별도 enum 타입 대신 `text + CHECK`로 확장 용이하게).
 - **컬럼명 = `snake_case`** (DB), 앱(TS)은 `camelCase`. Supabase 생성 타입이 매핑.
 - **가드레일 준수**: 공고에 작성자 컬럼 없음(권한=교회 인증 관리자) · **지원용 공개 연락처(`contact_email`·`contact_tel`·`contact_link`·`contact_post`)만 저장·공개**(지원과 무관한 제3자 개인정보 X — 가드레일 #3 갱신 2026-07-28) · source로 출처 구분 · **수집 = 크롤러(공개 공식 게시판) + 사람 붙여넣기 → AI 구조화 → 운영자 검수·승격**("자동 크롤러 없음" 재정의, 가드레일 #1 갱신 · 법률 검토 완료).
@@ -55,6 +60,7 @@
 | `denomination` | text **NULL** (CHECK) | 교단. **NULL = 미상 또는 무소속·독립교회.** `ETC`와 구분할 것 — `ETC`는 "소속은 있고 우리 9키에 없는 교단"(기장 등)이라 미상을 섞으면 필터·거점 판정이 오염된다 |
 | `region` | text **NULL** (CHECK) | 광역 (필터). **NULL = 미상** (실측 원문 명시 81%). ⚠️ NULL이면 **지역 필터에서 무조건 탈락**해 사실상 안 보이는 공고가 된다 — 검수에서 교단보다 먼저 채울 값 |
 | `city` | text NULL | 시·군·구 (표시용 자유 텍스트) |
+| `address` | text NULL | 주소 **원문 그대로** — 도로명/지번을 나누지 않는다(지도 검색은 둘 다 되고, 나누면 어느 체계인지 판별하는 일이 늘고 오분류가 생긴다). 교회 상세 지도가 쓴다 |
 | `founded_year` | int NULL | 창립 연도 |
 | `created_at` | timestamptz DEFAULT now() | |
 
@@ -86,6 +92,8 @@
 | `church_id` | uuid **NULL** FK→churches | 소속 교회. **NULL = 아직 어느 교회인지 확정 못 함**(크롤링 공고 기본값). 교회가 가입·인증 후 **claim하면 채워진다** → 그때 교회 상세가 켜진다. ⚠️ 자동 매칭 금지. **NULL은 `source='OPERATOR'`일 때만 가능** — 교회 직접 등록(`CHURCH`)은 인증 관리자만 할 수 있어 `church_id`가 반드시 있다 → `CHECK (source = 'OPERATOR' OR church_id IS NOT NULL)` |
 | `church_name` | text **NOT NULL** | **공고가 말한 교회명 그대로**(§1 예외). `church_id`가 NULL이어도 화면에 교회를 표시할 수 있게 하는 값. 교회 직접 등록 시엔 교회 프로필에서 복사 |
 | `region` | text NULL (CHECK) | **공고 시점에 파악한 광역** — ⚠️ **의도적 비정규화**(§1 예외). `church_id`가 NULL이면 `churches`를 JOIN할 수 없어 지역 필터가 통째로 죽는다. 필터·정렬은 이 컬럼을 쓴다 |
+| `city` | text NULL | 시·군·구 (표시용 자유 텍스트). ⚠️ **의도적 비정규화**(§1 예외 3) — `church_id`가 NULL이면 보여줄 출처가 없다 |
+| `address` | text NULL | 주소 **원문 그대로**(도로명/지번 안 나눔). ⚠️ **의도적 비정규화**(§1 예외 3). 지도가 쓴다. ⚠️ **`contact_post`와 다른 값이다** — 이건 **교회 위치**, 그건 **접수처**(교회는 부산인데 접수처가 노회 사무실일 수 있다). 섞으면 지도가 접수처를 짚는다 |
 | `title` | text NOT NULL | |
 | `job_kind` | **text[]** NOT NULL (CHECK) | MINISTRY(사역직)/GENERAL(일반직). **배열** — 혼합 공고 표현용(§ 여러 자리 판정 규칙) |
 | `position` | **text[]** NULL (CHECK) | 직분. **배열 — 자리 수·자격 범위를 전부 담는다**(§ 여러 자리 판정 규칙). `job_kind`에 MINISTRY가 있으면 비어 있을 수 없다(CHECK ①) |
@@ -108,7 +116,7 @@
 | `contact_email` | text NULL | **지원용 공개 연락처** — 이메일 |
 | `contact_tel` | text NULL | 〃 전화 |
 | `contact_link` | text NULL | 〃 홈페이지·지원 양식 링크 |
-| `contact_post` | text NULL | 〃 우편·방문 접수처(주소) |
+| `contact_post` | text NULL | 〃 우편·방문 **접수처** 주소. ⚠️ 교회 위치(`address`)와 다를 수 있다 — 지도는 `address`를 쓴다 |
 | `work_days` | text NULL | 출근 요일·시간(자유 텍스트) |
 | `requirements` | text[] DEFAULT '{}' | 자격요건 항목 |
 | `preferred` | text[] DEFAULT '{}' | 우대사항 항목 |
@@ -461,7 +469,7 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 
 - **RLS = 운영자 전용**(min_job admin이 대시보드·검수에 read), 크롤러는 service-role로 write. **public 노출 없음.**
 - **승격 흐름**: admin 검수 UI가 `review_data`(PENDING)를 읽어 → 운영자 승인 시 **요약 + `source_url`·연락처 4컬럼 + `source=OPERATOR`**로 `churches`/`jobs`에 INSERT(§10). 검수 메타는 넘기지 않음. **교단은 미상이면 `NULL`로 그대로 승격**(2026-08-05 — 과거 "승격 전 10키로 해소" 규칙은 철회). **지역이 미상이면 NULL로 승격**(2026-08-05 실데이터 검증). 게시일은 **필수**라 없으면 검수에서 입력(2026-08-14). 승격 가능 여부는 §3 "최소 조건 — 필수 5 + CHECK 2"가 판정한다.
-- **`review_data` 주요 컬럼**(검수 브릿지가 읽는 것): `job_kind`·`role`·`title`·`position`·`department`·`employment_type`·`stipend_*` · `denomination`(+`denomination_source`·`denomination_evidence`·`raw_denomination` · **미상 가능**) · `contact` · `confidence` · `dedup_key` · `review_status`(PENDING/APPROVED/REJECTED) · `matched_church_id` FK→churches · `published_job_id` FK→jobs · `heresy_flag` 등. **전체 스키마·판정 정본은 min_job_agent SPEC §6.**
+- **`review_data` 주요 컬럼**(검수 브릿지가 읽는 것): `job_kind`·`role`·`title`·`position`·`department`·`employment_type`·`stipend_*` · **`city`·`address`**(2026-08-17 — 크롤러 반영 완료. 승격 시 `jobs.city`·`jobs.address`로 간다) · `denomination`(+`denomination_source`·`denomination_evidence`·`raw_denomination` · **미상 가능**) · `contact` · `confidence` · `dedup_key` · `review_status`(PENDING/APPROVED/REJECTED) · `matched_church_id` FK→churches · `published_job_id` FK→jobs · `heresy_flag` 등. **전체 스키마·판정 정본은 min_job_agent SPEC §6.**
 - ⚠️ **크로스 리포 동기화 필요(2026-08-05)** — 이번 스키마 확정으로 `review_data`와 어긋나는 지점 4개. `review_data`는 min_job_agent 소유라 우리가 바꾸지 않고 **승격 시 매핑**하거나 크롤러 쪽에 반영을 요청한다:
   1. `stipend_*` → **`pay_*`** 개명 (min_job은 완료)
   2. `contact` 단일 → **`contact_email`·`contact_tel`·`contact_link`·`contact_post`** 4컬럼 분해
