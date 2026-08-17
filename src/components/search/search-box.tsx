@@ -44,6 +44,9 @@ function Highlight({ text, query }: { text: string; query: string }) {
  * 홈 히어로 검색창 + 드롭다운 오버레이.
  * 빈 상태 = 최근 검색어 + 최근 본 공고(둘 다 localStorage). 타이핑 중 = 검색어 완성(suggestions 매칭).
  * 선택/제출 시 /jobs?q= 로 이동. suggestions는 서버에서 만든 후보 어휘.
+ *
+ * ⚠️ 밝은 면(검색 pill·오버레이)에는 `text-foreground`를 붙인다 — 홈 히어로가 `text-white`라
+ *    배경만 밝게 두면 흰 바탕에 흰 글씨가 된다.
  */
 export function SearchBox({ suggestions }: { suggestions: string[] }) {
   const router = useRouter();
@@ -107,13 +110,14 @@ export function SearchBox({ suggestions }: { suggestions: string[] }) {
   };
 
   return (
-    <div ref={rootRef} className="relative w-full">
+    // 열림 상태를 CSS로 노출 — 서버 컴포넌트인 홈이 이걸 보고 스탯을 감춘다(state 끌어올리기 회피)
+    <div ref={rootRef} data-search-open={open || undefined} className="relative w-full">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           go(q);
         }}
-        className="flex w-full items-center gap-1.5 rounded-2xl bg-white p-1.5 shadow-xl shadow-black/10"
+        className="flex w-full items-center gap-1.5 rounded-2xl bg-white p-1.5 text-foreground shadow-xl shadow-black/10"
       >
         <div className="flex flex-1 items-center gap-2 pl-3">
           <Search className="size-[18px] shrink-0 text-muted-foreground" />
@@ -141,7 +145,7 @@ export function SearchBox({ suggestions }: { suggestions: string[] }) {
       </form>
 
       {open && (
-        <div className="absolute inset-x-0 top-[calc(100%+6px)] z-50 overflow-hidden rounded-xl border bg-background p-1.5 text-left shadow-lg">
+        <div className="absolute inset-x-0 top-[calc(100%+6px)] z-50 overflow-hidden rounded-xl border bg-background p-1.5 text-left text-foreground shadow-lg">
           {query ? (
             <SuggestionList matches={matches} query={query} active={active} onPick={go} />
           ) : (

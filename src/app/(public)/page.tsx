@@ -35,7 +35,7 @@ export default async function HomePage() {
       {/* 히어로 — 풀블리드 딥그린 (헤더와 이어짐), 중앙 정렬 */}
       <section className="bg-hero text-white">
         <div className="mx-auto w-full max-w-6xl px-4">
-          <div className="mx-auto max-w-2xl py-20 text-center sm:py-24">
+          <div className="group/hero mx-auto max-w-2xl py-20 text-center sm:py-24">
             <p className="mb-5 flex items-center justify-center gap-2.5 text-sm font-semibold tracking-wide text-gold">
               <span className="h-px w-5 bg-gold/55" />
               한국교회 사역자 청빙 플랫폼
@@ -46,20 +46,21 @@ export default async function HomePage() {
               <br className="hidden sm:block" /> 여기서 찾으세요
             </h1>
             <p className="mx-auto mt-5 max-w-lg text-[17px] leading-relaxed break-keep text-white/70">
-              여러 신학교·교단 게시판을 돌아다닐 필요 없이, 한 곳에서 검색하고 비교하세요.
+              여러 신학교·교단 게시판을 돌아다닐 필요 없이,
+              <br className="hidden sm:block" /> 사례비·지역·부서까지 한눈에 확인하세요.
             </p>
 
             <div className="mx-auto mt-8 w-full max-w-xl">
               <SearchBox suggestions={suggestions} />
             </div>
 
-            <dl className="mt-10 flex flex-wrap items-center justify-center gap-x-7 gap-y-4">
+            {/* 검색 오버레이가 열리면 감춘다 — 안 그러면 드롭다운이 숫자를 반만 덮는다 */}
+            <dl className="mt-10 flex flex-wrap items-center justify-center gap-x-7 gap-y-4 transition-opacity group-has-[[data-search-open]]/hero:opacity-0">
               <HeroStat value={stats.openCount} unit="건" label="지금 모집 중" />
               <span className="hidden h-8 w-px bg-white/15 sm:block" />
               <HeroStat value={stats.newThisWeek} unit="건" label="이번 주 새 공고" />
               <span className="hidden h-8 w-px bg-white/15 sm:block" />
-              {/* "함께하는"은 쓸 수 없다 — 수집 공고의 교회들은 민잡과 함께하기로 한 적이 없다.
-                  "청빙 중"은 사실이고, 옆의 두 스탯과 시제(현재)도 맞는다. */}
+              {/* "함께하는"으로 되돌리지 말 것 — 수집 교회는 우리와 함께하기로 한 적이 없다(SPEC 히어로) */}
               <HeroStat value={stats.churchCount} unit="곳" label="청빙 중인 교회" />
             </dl>
           </div>
