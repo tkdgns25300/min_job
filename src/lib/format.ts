@@ -7,6 +7,7 @@ import {
   type Denomination,
   type Position,
 } from "@/constants/domain";
+import { NAVER_MAP_SEARCH_URL } from "@/constants/site";
 import type { JobCard, JobChurchRef } from "@/types/domain";
 
 // 도메인 값 표시 포매터
@@ -52,6 +53,30 @@ export function jobRoleLine(
 // (공개 화면 규칙. "미상"을 쓰는 곳은 운영자 화면 한 곳뿐이라 거기서 인라인 처리한다)
 export function denominationLabel(denomination: Denomination | null): string | null {
   return denomination ? DENOMINATIONS[denomination] : null;
+}
+
+type ChurchPlace = Pick<JobChurchRef, "name" | "region" | "city" | "address">;
+
+/**
+ * 상세 화면의 위치 한 줄 — 주소가 있으면 주소, 없으면 지역(+시). 아무것도 모르면 "".
+ * ⚠️ `??`가 아니라 falsy 검사다 — ingest 구조화는 주소를 못 뽑으면 `""`를 주는데,
+ *    `??`로 받으면 그 빈 문자열이 **알고 있는 지역·시까지 가려버린다**.
+ */
+export function churchPlaceLine(church: ChurchPlace): string {
+  return church.address || churchLocation(church);
+}
+
+/**
+ * 네이버 지도 검색 링크 — 위치 한 줄이 있으면 그걸로, 주소가 아닐 땐 교회명을 앞에 붙여 좁힌다.
+ * **아무것도 모르면 null** — 교회명만으로 검색하면 동명 교회의 엉뚱한 위치를 짚는다.
+ *
+ * 공고 상세·교회 상세가 **같은 규칙을 써야** 해서 여기 둔다(전엔 각자 조립하다 한쪽만 고친 적 있다).
+ * 실제 지도 임베드는 Phase 2(API 키) — 지금은 검색 링크까지다.
+ */
+export function naverMapUrl(church: ChurchPlace): string | null {
+  const location = churchLocation(church);
+  const query = church.address || (location && `${church.name} ${location}`);
+  return query ? `${NAVER_MAP_SEARCH_URL}${encodeURIComponent(query)}` : null;
 }
 
 // 교회 요약 한 줄: 교단 · 지역. 아는 조각만 잇는다 — 전부 모르면 ""(호출부가 걷어낸다)

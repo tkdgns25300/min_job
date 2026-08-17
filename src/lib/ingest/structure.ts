@@ -26,6 +26,8 @@ export interface IngestDraft {
   churchName: string;
   denomination: Denomination | null;
   region: Region | null;
+  city: string; // 시·군·구 — 자유 텍스트라 자동 추출하지 않는다(운영자가 채운다)
+  address: string; // 주소 원문 — 지도가 쓴다. 접수처(contact)와 다른 값이다(DATA §3)
   position: Position[]; // 배열 — 원문에 여러 직분이 나열될 수 있다(DATA §3)
   department: Department | null;
   employmentType: EmploymentType | null;
@@ -44,6 +46,8 @@ function emptyIngestDraft(): IngestDraft {
     churchName: "",
     denomination: null,
     region: null,
+    city: "",
+    address: "",
     position: [],
     department: null,
     employmentType: null,
@@ -104,6 +108,28 @@ function parsePay(text: string): Pick<IngestDraft, "payMin" | "payMax" | "payNot
   return { payMin: "", payMax: "", payNote: note ?? "" };
 }
 
+// 주소 라벨이 붙은 줄만 본다 — 불릿·기호 접두 허용. 라벨 없는 줄은 쓰지 않는다:
+// 제목("서울 동산교회 부목사 청빙")과 평문("강원 지역 미자립 교회를…")이 광역으로 시작해 걸린다.
+const ADDRESS_LINE = /^[\s\-*·•○▶]*(?:주소|소재지)[^\S\n]*[:：][^\S\n]*(.+)$/gm;
+// 접수처 신호 — 우편·방문 접수처는 교회 위치와 다를 수 있다(노회 사무실 등). 지도가 그걸 짚으면 안 된다.
+const APPLY_CONTEXT = /(접수|제출|보내|지원서|우편|등기|청빙위원)/;
+
+/**
+ * 주소 한 줄 — `주소:`·`소재지:` 라벨이 붙은 줄 중 **접수 문맥이 아닌 첫 줄**.
+ * ⚠️ mock 휴리스틱이라 완벽하지 않다. 애매하면 **빈 값**을 주고 사람이 채우게 한다 —
+ *    잘못 뽑은 주소는 지도를 엉뚱한 곳으로 보내므로, 못 뽑는 편이 낫다.
+ */
+function matchAddress(text: string): string {
+  for (const [line, value] of text.matchAll(ADDRESS_LINE)) {
+    const candidate = value.trim();
+    // 주소로 보기엔 너무 짧거나(라벨만 있는 줄) 접수 안내면 건너뛴다
+    if (candidate.length < 6) continue;
+    if (APPLY_CONTEXT.test(line)) continue;
+    return candidate;
+  }
+  return "";
+}
+
 // 마감일 — "2026-09-30 / 2026.9.30 / 2026년 9월 30일" → YYYY-MM-DD.
 // 부임 시작일과 혼동을 줄이려 '마감·접수·까지' 키워드 바로 뒤의 날짜를 우선, 없으면 문서 첫 날짜.
 function parseDeadline(text: string): string {
@@ -135,6 +161,8 @@ export function structureJobText(text: string): IngestDraft {
     churchName: src.match(/[가-힣]{2,10}교회/)?.[0] ?? "",
     denomination: matchLabel(src, DENOMINATIONS),
     region: matchLabel(src, REGIONS),
+    city: "", // 표기가 제각각(수원/수원시/영통구)이라 휴리스틱으로는 못 잡는다 — 검수에서 입력
+    address: matchAddress(src),
     position: matchPositions(src),
     department: matchLabel(src, DEPARTMENTS),
     employmentType: matchEmployment(src),

@@ -2,10 +2,11 @@ import Link from "next/link";
 import { ChurchChannels } from "@/components/church/church-channels";
 import { ChurchGallery } from "@/components/church/church-gallery";
 import {
-  churchLocation,
   churchMetaLine,
+  churchPlaceLine,
   formatPay,
   jobRoleLine,
+  naverMapUrl,
   positionLabel,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -56,12 +57,9 @@ export function ChurchDetailView({
   const meta = [churchMetaLine(church), church.foundedYear && `${church.foundedYear}년 설립`]
     .filter(Boolean)
     .join(" · ");
-  const location = churchLocation(church);
-  // 지역·시가 둘 다 미상이면 지도를 걸지 않는다 — 교회명만으로 검색하면 동명 교회를 짚는다
-  // (공고 상세도 같은 규칙, job-detail-view.tsx)
-  const mapUrl = location
-    ? `https://map.naver.com/p/search/${encodeURIComponent(`${church.name} ${location}`)}`
-    : null;
+  // 위치 표기·지도 검색 규칙은 lib/format이 단일 소스(공고 상세도 같은 함수를 쓴다)
+  const location = churchPlaceLine(church);
+  const mapUrl = naverMapUrl(church);
 
   // 지난 공고(마감) — 자리 라벨을 붙여 표시
   const pastPostings = pastJobs.map((p) => ({ ...p, role: roleLabel(p) }));

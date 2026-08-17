@@ -11,18 +11,21 @@ import type { Church, Job, JobChurchRef } from "@/types/domain";
  *  미상 지역이 서울로 둔갑해 필터·거점 판정을 오염시켰다.)
  *
  * **규칙 한 줄: `jobs`에 컬럼이 있으면 그 값이 표시 정본이고, 없는 것만 `churches`에서 온다.**
- * 이름·지역은 `jobs`(비정규화 — DATA §1 예외), 교단·시는 아직 `jobs`에 컬럼이 없어 교회에서 읽는다.
+ * 이름·위치 3종은 `jobs`(비정규화 — DATA §1 예외), 교단은 아직 `jobs`에 컬럼이 없어 교회에서 읽는다.
  *
  * ⚠️ **왜 교회를 정본으로 삼지 않는가** — 지역으로 거르는 코드가 조인 없이 돌아야 하기 때문이다.
  *    `getSimilarJobs`의 "같은 지역" 단계, 앞으로의 서버측 지역 필터·`jobs(region)` 인덱스가 전부
  *    `jobs.region`을 본다. 표시만 `churches.region`으로 바꾸면 **카드에 "서울"이라 적힌 공고가
  *    경기 공고의 "같은 지역" 슬롯에 들어가는** 어긋남이 생긴다(실제로 그렇게 만들었다가 되돌렸다).
  *
+ * ⚠️ 위치는 **셋이 같은 출처여야 한다**. 지역만 공고에서·시를 교회에서 읽으면 `"부산 고양"`처럼
+ *    서로 맞지 않는 조합이 표현 가능해진다.
+ *
  * `jobs.church_name`은 **공고가 말한 그대로**라 claim 뒤에도 `churches.name`과 다를 수 있다(DATA §3).
  * 그건 어긋남이 아니라 의도다 — 공고 화면은 공고가 말한 이름을, 교회 상세는 인증된 이름을 보여준다.
  */
 export function jobChurchRef(
-  job: Pick<Job, "churchName" | "region">,
+  job: Pick<Job, "churchName" | "region" | "city" | "address">,
   church: Church | null,
 ): JobChurchRef {
   return {
@@ -30,7 +33,8 @@ export function jobChurchRef(
     name: job.churchName,
     denomination: church?.denomination ?? null,
     region: job.region,
-    city: church?.city ?? null,
+    city: job.city,
+    address: job.address,
   };
 }
 

@@ -37,6 +37,7 @@ export interface Church {
   denomination: Denomination | null;
   region: Region | null; // 광역 (필터용). null = 미상
   city: string | null; // 시·군·구 (표시용 자유 텍스트)
+  address: string | null; // 주소 원문 그대로 (도로명/지번 안 나눔). 교회 상세 지도용
   foundedYear: number | null; // 창립 연도 (null = 미상)
   photos?: string[]; // 교회 사진(첫 장 = 커버). 없으면 기본 커버. 실 업로드는 Phase 1
   links: ChurchLink[]; // 교회 채널 — 없으면 빈 배열
@@ -68,6 +69,12 @@ export interface Job {
    *    지역 필터가 통째로 죽는다. 필터·정렬은 교회가 아니라 이 값을 쓴다.
    */
   region: Region | null;
+  city: string | null; // 시·군·구 (표시용 자유 텍스트) — 〃 같은 이유로 공고가 직접 든다
+  /**
+   * 주소 원문 그대로(도로명/지번 안 나눔) — 〃. 지도가 쓴다.
+   * ⚠️ `contact`(지원용 연락처)의 우편 접수처와 **다른 값**이다 — 이건 교회 위치다.
+   */
+  address: string | null;
   title: string;
   jobKind: JobKind[]; // 사역직/일반직 — 최상위 채용 구분. 배열: 한 글에 두 종류가 섞인 공고 표현(DATA §3 판정 규칙)
   position: Position[]; // 사역 직분 — **배열**. 자리 수·자격 범위를 전부 담는다(DATA §3 판정 규칙)
@@ -135,6 +142,7 @@ export interface JobChurchRef {
   denomination: Denomination | null;
   region: Region | null;
   city: string | null;
+  address: string | null; // 지도 전용 — 한 줄 표시(churchMetaLine)에는 안 들어간다
 }
 
 // 공고 카드 표시용 projection (공고 + 교회 참조)
@@ -143,7 +151,7 @@ export interface JobCard {
   /** 공개 목록에 뜨는가 (DATA §6-1) — 저장한 공고 목록은 만료된 것도 보여주되 마감으로 표시한다 */
   isPubliclyOpen: boolean;
   title: string;
-  church: Omit<JobChurchRef, "id">; // 카드는 교회로 링크하지 않는다
+  church: Omit<JobChurchRef, "id" | "address">; // 카드는 교회로 링크하지도, 지도를 그리지도 않는다
   position: Position[];
   department: Department | null;
   employmentType: EmploymentType;

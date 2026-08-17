@@ -175,6 +175,29 @@ function DraftPanel({
           </p>
         </Field>
 
+        {/* 지도가 쓰는 값이라 **접수처를 넣으면 안 된다**(DATA §3).
+            시·군·구는 표기가 제각각이라 구조화가 못 잡는다 — 여기서 채운다 */}
+        <div className="grid grid-cols-[1fr_2fr] gap-3">
+          <Field label="시·군·구">
+            <Input
+              aria-label="시·군·구"
+              value={draft.city}
+              onChange={(e) => patch({ city: e.target.value })}
+              placeholder="예) 수원"
+              className="h-9"
+            />
+          </Field>
+          <Field label="주소">
+            <Input
+              aria-label="주소"
+              value={draft.address}
+              onChange={(e) => patch({ address: e.target.value })}
+              placeholder="교회 위치 (접수처 아님)"
+              className="h-9"
+            />
+          </Field>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <Field label="교단">
             <EnumSelect

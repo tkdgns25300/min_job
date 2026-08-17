@@ -99,6 +99,15 @@ export function ChurchInfoForm({ church }: { church: Church }) {
             />
           </Field>
         </div>
+        {/* 주소는 길어서 전폭 한 줄. 넣으면 지도가 정확해진다 — 없으면 교회명+지역으로 검색해
+            동명 교회의 엉뚱한 위치를 짚을 수 있다 */}
+        <Field label="주소" optional hint="교회 상세 지도에 정확한 위치를 보여줘요.">
+          <Input
+            defaultValue={church.address ?? ""}
+            placeholder="예) 경기 수원시 영통구 월드컵로 123"
+            className="h-10"
+          />
+        </Field>
       </Section>
 
       <Section title="교회 소개">

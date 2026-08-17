@@ -14,6 +14,7 @@ interface ChurchDraft {
   denomination: string;
   region: string;
   city: string;
+  address: string;
   foundedYear: string;
   channels: Record<string, string>;
 }
@@ -23,6 +24,7 @@ const EMPTY_DRAFT: ChurchDraft = {
   denomination: "",
   region: "",
   city: "",
+  address: "",
   foundedYear: "",
   channels: {},
 };
@@ -116,6 +118,16 @@ export function ChurchFields() {
           />
         </Field>
       </div>
+
+      {/* 주소는 길어서 전폭 한 줄. 있으면 지도가 정확해진다 — 없으면 교회명+지역 검색이라 동명 교회를 짚는다 */}
+      <Field label="주소" optional>
+        <Input
+          value={draft.address}
+          onChange={(e) => patch({ address: e.target.value })}
+          placeholder="예) 경기 성남시 분당구 …"
+          className="h-9"
+        />
+      </Field>
 
       <Field
         label="교회 채널"

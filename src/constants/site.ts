@@ -7,6 +7,9 @@ export const SITE_DOMAIN = "minjob.co.kr";
 // ⚠️ 후행 슬래시 금지 — sitemap이 `${SITE_URL}${path}`로 조립하므로 `//`가 된다.
 export const SITE_URL = `https://www.${SITE_DOMAIN}`;
 
+// 네이버 지도 검색 — 교회 위치 링크(임베드는 Phase 2, API 키 필요). 조립은 lib/format의 naverMapUrl
+export const NAVER_MAP_SEARCH_URL = "https://map.naver.com/p/search/";
+
 // OG 이미지 버전 — 브랜드 카드를 바꾸면 이 숫자를 올린다.
 // 카카오톡·페이스북은 URL 단위로 미리보기를 캐시해서, URL이 같으면 새 이미지를 영구히 안 가져간다.
 const OG_IMAGE_VERSION = 1;

@@ -60,6 +60,7 @@ export function jobPostingJsonLd(detail: JobDetail) {
       "@type": "Place",
       address: {
         "@type": "PostalAddress",
+        streetAddress: church.address ?? undefined,
         addressRegion: church.region ? REGIONS[church.region] : undefined,
         addressLocality: church.city ?? undefined,
         addressCountry: "KR",

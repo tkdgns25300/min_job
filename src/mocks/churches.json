@@ -5,6 +5,7 @@
     "denomination": "HAPDONG",
     "region": null,
     "city": null,
+    "address": null,
     "foundedYear": 2005,
     "photos": [
       "/mock/church/exterior.svg",
@@ -34,6 +35,7 @@
     "denomination": "TONGHAP",
     "region": "SEOUL",
     "city": "강북",
+    "address": "서울 강북 은혜로 17",
     "foundedYear": 1988,
     "links": [
       {
@@ -48,6 +50,7 @@
     "denomination": "HAPDONG",
     "region": "GYEONGGI",
     "city": "용인",
+    "address": "경기 용인 소망길 24",
     "foundedYear": 2015,
     "links": [
       {
@@ -66,6 +69,7 @@
     "denomination": "TONGHAP",
     "region": "INCHEON",
     "city": "부평",
+    "address": "인천 부평 평화대로 31",
     "foundedYear": 2021,
     "links": [
       {
@@ -84,6 +88,7 @@
     "denomination": "HAPDONG",
     "region": "SEOUL",
     "city": "송파",
+    "address": null,
     "foundedYear": 1995,
     "links": [
       {
@@ -106,6 +111,7 @@
     "denomination": "BAEKSEOK",
     "region": "GYEONGGI",
     "city": "수원",
+    "address": "경기 수원 새싹로 45",
     "foundedYear": 2010,
     "links": [
       {
@@ -120,6 +126,7 @@
     "denomination": "GOSIN",
     "region": "BUSAN",
     "city": "해운대",
+    "address": "부산 해운대 동산길 52",
     "foundedYear": null,
     "links": []
   },
@@ -129,6 +136,7 @@
     "denomination": "TONGHAP",
     "region": "DAEGU",
     "city": "수성",
+    "address": "대구 수성 빛나로 59",
     "foundedYear": 2001,
     "links": [
       {
@@ -147,6 +155,7 @@
     "denomination": "HAPDONG",
     "region": "SEOUL",
     "city": "관악",
+    "address": null,
     "foundedYear": 1979,
     "links": [
       {
@@ -165,6 +174,7 @@
     "denomination": null,
     "region": "GYEONGGI",
     "city": "고양",
+    "address": "경기 고양 은혜로 73",
     "foundedYear": 1992,
     "links": [
       {
@@ -179,6 +189,7 @@
     "denomination": "HAPDONG",
     "region": null,
     "city": "마포",
+    "address": null,
     "foundedYear": 2003,
     "links": [
       {
@@ -197,6 +208,7 @@
     "denomination": null,
     "region": "GYEONGNAM",
     "city": "창원",
+    "address": "경남 창원 평화대로 87",
     "foundedYear": 1985,
     "links": [
       {
@@ -211,6 +223,7 @@
     "denomination": "HAPSIN",
     "region": "GYEONGGI",
     "city": "안양",
+    "address": null,
     "foundedYear": 1998,
     "links": [
       {
@@ -229,6 +242,7 @@
     "denomination": "TONGHAP",
     "region": "DAEJEON",
     "city": "서구",
+    "address": "대전 서구 새싹로 101",
     "foundedYear": 1975,
     "links": [
       {
@@ -247,6 +261,7 @@
     "denomination": "HAPDONG",
     "region": "CHUNGNAM",
     "city": "천안",
+    "address": "충남 천안 동산길 108",
     "foundedYear": 2008,
     "links": [
       {
@@ -261,6 +276,7 @@
     "denomination": "SUNBOK",
     "region": "SEOUL",
     "city": "영등포",
+    "address": "서울 영등포 빛나로 115",
     "foundedYear": 1983,
     "links": [
       {
@@ -283,6 +299,7 @@
     "denomination": "ETC",
     "region": "JEONBUK",
     "city": "전주",
+    "address": null,
     "foundedYear": 1969,
     "links": [
       {
@@ -297,6 +314,7 @@
     "denomination": "HAPDONG",
     "region": "GWANGJU",
     "city": "북구",
+    "address": "광주 북구 은혜로 129",
     "foundedYear": 1990,
     "links": [
       {
@@ -311,6 +329,7 @@
     "denomination": "BAPTIST",
     "region": "SEOUL",
     "city": "강동",
+    "address": "서울 강동 소망길 136",
     "foundedYear": 2012,
     "links": [
       {
@@ -329,6 +348,7 @@
     "denomination": "TONGHAP",
     "region": "INCHEON",
     "city": "연수",
+    "address": "인천 연수 평화대로 143",
     "foundedYear": 2000,
     "links": [
       {
@@ -343,6 +363,7 @@
     "denomination": "HAPDONG",
     "region": "GYEONGGI",
     "city": "화성",
+    "address": null,
     "foundedYear": 1997,
     "links": [
       {
@@ -361,6 +382,7 @@
     "denomination": "GAMLI",
     "region": "GYEONGGI",
     "city": "부천",
+    "address": "경기 부천 새싹로 157",
     "foundedYear": 2016,
     "links": [
       {
@@ -375,6 +397,7 @@
     "denomination": "HAPDONG",
     "region": "DAEGU",
     "city": "달서",
+    "address": "대구 달서 동산길 164",
     "foundedYear": 1987,
     "links": [
       {
@@ -389,6 +412,7 @@
     "denomination": "SEONGGYUL",
     "region": "SEOUL",
     "city": "성북",
+    "address": "서울 성북 빛나로 171",
     "foundedYear": 2009,
     "links": [
       {
@@ -407,6 +431,7 @@
     "denomination": "BAEKSEOK",
     "region": "ULSAN",
     "city": "남구",
+    "address": null,
     "foundedYear": null,
     "links": [
       {
@@ -421,6 +446,7 @@
     "denomination": "TONGHAP",
     "region": "GWANGJU",
     "city": "서구",
+    "address": "광주 서구 은혜로 185",
     "foundedYear": 1995,
     "links": [
       {
@@ -439,6 +465,7 @@
     "denomination": "HAPDONG",
     "region": "CHUNGBUK",
     "city": "청주",
+    "address": "충북 청주 소망길 12",
     "foundedYear": 1981,
     "links": [
       {
@@ -453,6 +480,7 @@
     "denomination": "TONGHAP",
     "region": "GYEONGBUK",
     "city": "포항",
+    "address": "경북 포항 평화대로 19",
     "foundedYear": 1972,
     "links": [
       {
@@ -467,6 +495,7 @@
     "denomination": "HAPSIN",
     "region": "JEONNAM",
     "city": "순천",
+    "address": null,
     "foundedYear": 1996,
     "links": []
   },
@@ -476,6 +505,7 @@
     "denomination": "TONGHAP",
     "region": "JEJU",
     "city": "제주",
+    "address": "제주 제주 새싹로 33",
     "foundedYear": 1978,
     "links": [
       {
@@ -490,6 +520,7 @@
     "denomination": "HAPDONG",
     "region": "SEOUL",
     "city": "용산",
+    "address": "서울 용산 동산길 40",
     "foundedYear": 1993,
     "links": [
       {
@@ -508,6 +539,7 @@
     "denomination": "GOSIN",
     "region": "BUSAN",
     "city": "사하",
+    "address": "부산 사하 빛나로 47",
     "foundedYear": 2006,
     "links": [
       {
@@ -522,6 +554,7 @@
     "denomination": "HAPDONG",
     "region": "GYEONGGI",
     "city": "남양주",
+    "address": null,
     "foundedYear": 2002,
     "links": [
       {
@@ -540,6 +573,7 @@
     "denomination": "ETC",
     "region": "GANGWON",
     "city": "춘천",
+    "address": "강원 춘천 은혜로 61",
     "foundedYear": 2011,
     "links": [
       {
@@ -558,6 +592,7 @@
     "denomination": "BAPTIST",
     "region": "SEJONG",
     "city": null,
+    "address": null,
     "foundedYear": 2018,
     "links": [
       {

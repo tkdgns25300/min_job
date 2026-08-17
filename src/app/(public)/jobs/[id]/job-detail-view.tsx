@@ -6,8 +6,9 @@ import { JobActions } from "@/components/job/job-actions";
 import { JobCard } from "@/components/job/job-card";
 import { ChurchChannels } from "@/components/church/church-channels";
 import {
-  churchLocation,
   churchMetaLine,
+  churchPlaceLine,
+  naverMapUrl,
   formatPay,
   jobRoleLine,
   positionLabel,
@@ -126,11 +127,9 @@ function MainContent({
   churchJobs: JobCardData[];
   apply: ApplyTarget | null;
 }) {
-  const location = churchLocation(churchRef);
-  // 지역을 모르면 지도를 걸지 않는다 — 교회명만으로 검색하면 동명 교회의 엉뚱한 위치를 짚는다
-  const mapUrl = location
-    ? `https://map.naver.com/p/search/${encodeURIComponent(`${churchRef.name} ${location}`)}`
-    : null;
+  // 위치 표기·지도 검색 규칙은 lib/format이 단일 소스(교회 상세도 같은 함수를 쓴다)
+  const location = churchPlaceLine(churchRef);
+  const mapUrl = naverMapUrl(churchRef);
 
   return (
     <div>
