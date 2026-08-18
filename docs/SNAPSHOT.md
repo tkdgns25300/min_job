@@ -65,7 +65,7 @@
 | `/pricing` 노출 안내 | ✅ | ✅ | ✅ | ✅ `e35fcb8`·`59c7aa6`·`a0d4cdd` | 정적(+실집계) |
 | `/login` | ✅ | ✅ | ✅ | ✅ `c517faf`·`a79692d` | **Google OAuth 실 로그인**(2026-07-29 — 서버 렌더 폼·`?next=` 복귀·`?error=oauth`) |
 | `/mypage` 사역자 view | ✅ | ✅ | ✅ | ✅ `8ded8d3`·`84d6b36` | mock(북마크·최근본 localStorage) + 하단 교회 CTA·계정(로그아웃 **실동작**·회원탈퇴 안내) |
-| `/mypage/verify` 교회 인증 폼 | ✅ | ✅ | ✅ | ✅ `8ded8d3` | mock UI(none/PENDING/APPROVED). REJECTED 화면·이메일발송 Phase 1 |
+| `/mypage/verify` 교회 인증 폼 | ✅ | ✅ | ✅ | ✅ `8ded8d3` | mock UI(미신청 폼 / PENDING 안내 / APPROVED는 `/mypage/church`로 redirect). 실 접수·결과 알림 메일 Phase 1 |
 | `/jobs/new` 공고 등록 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | **3스텝 위저드** mock + **인증 게이트**(hasChurchAccess). 저장 Phase 1 |
 | `/jobs/[id]/edit` 수정 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | 위저드 공유(소유권 체크 有)·저장 Phase 1 |
 | `/mypage/church` 교회 관리 | ✅ | ✅ | ✅ | ✅ `e89bebd` | mock — 탭·노출광고 사이드바·공고 행(수정/⋯). mutation Phase 1 |
@@ -78,7 +78,7 @@
 
 > **완료(mock) 14개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자)·/mypage/verify·/jobs/new·/jobs/[id]/edit·**/mypage/church·/mypage/church/info·/mypage/church/promote**. **단일 계정 + Google OAuth 실 로그인**(§5 인증). **`/mypage/church/promote`는 PortOne 실결제까지 동작**(데이터·실 노출 적용만 Phase 1). **남은 것 = SEO(sitemap/robots) + terms/privacy 법률검토·실값. admin 4페이지(셸·홈·공고관리·인증검수·수집) mock 구현 완료.** (약관·개인정보 초안 보강·사업자정보 반영됨.) 실 mutation·백엔드 = Phase 1.
 > ⚠️ **교회 기능은 현재 전부 닫혀 있다(2026-07-29)**: 실 로그인 전환 후 `getCurrentUser`가 `churchId`·`churchName`·`churchVerificationStatus`를 **항상 null**로 주므로(교회 테이블 없음) `hasChurchAccess`가 어떤 실 계정에서도 false다 → `/jobs/new`·`/jobs/[id]/edit`·`/mypage/church`·`/mypage/church/info`·`/mypage/church/promote`·`POST /api/payments/complete` 도달 불가. 위 행의 "mock 완료"는 **화면 스캐폴드가 있다**는 뜻이며, 실제로 보려면 교회 멤버십 배선(§7 ①)이 필요하다. 상태 미리보기용 `?preview=none|pending|rejected` 어포던스는 mock 세션과 함께 제거됐다.
-> ⚠️ **`/mypage/verify`는 유일하게 도달 가능한 교회 경로**(헤더 "교회 공고 등록"·마이페이지 CTA가 여기로 보낸다) — 하지만 **온라인 접수는 미구현**이다. 폼 제출은 아무 데이터도 보내지 않으므로, 실 로그인 전환과 함께 **정직하게 고쳤다**(2026-07-29): 폼 위에 "온라인 인증 신청은 준비 중" 안내 + 운영자 메일 경로, 제출 결과는 "입력하신 내용은 저장되지 않았어요" + 메일 경로. 내부 용어(`Phase 1`)가 사용자 화면에 노출되던 문구도 제거. **실 접수(Storage 업로드·이메일 인증·운영자 승인)는 ②트랙.**
+> ⚠️ **`/mypage/verify`는 유일하게 도달 가능한 교회 경로**(헤더 "교회 공고 등록"·마이페이지 CTA가 여기로 보낸다) — 하지만 **온라인 접수는 미구현**이다. 폼 제출은 아무 데이터도 보내지 않으므로, 실 로그인 전환과 함께 **정직하게 고쳤다**(2026-07-29): 폼 위에 "온라인 인증 신청은 준비 중" 안내 + 운영자 메일 경로, 제출 결과는 "입력하신 내용은 저장되지 않았어요" + 메일 경로. 내부 용어(`Phase 1`)가 사용자 화면에 노출되던 문구도 제거. **실 접수(Storage 업로드·운영자 승인)는 ②트랙** — 이메일 인증은 폐기했다(2026-08-18, Google OAuth로 이미 검증된 `users.email`을 쓴다).
 > **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
 
 ---
@@ -136,12 +136,12 @@ curl -sI localhost:3000/opengraph-image                 # image/png 1200x630
 ## 5. 데이터 (mock 스키마 = 확정 진행 중)
 
 ### mock 현황 (`src/mocks/`)
-- **churches.json 35개** · **jobs.json 101개**(2026-08-14 날짜 현행화 — 상대 관계 보존한 채 +37일 이동). 분포: **공개 노출 63건**(유료 8 · HERO 3 · 이번 주 새 공고 9) / 마감일 경과 12 · 상시 90일 초과 4 **← 만료 기능 시연용** / CLOSED 22 / PENDING 0(**전수 검수 결정(2026-08-05) 이후에도 mutation이 없어 아직 0** — 검수 큐 구현 시 발생) · OPERATOR·CHURCH 혼합. **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. 전 공고 `jobKind=["MINISTRY"]`.
-- **church-verifications.json 7건**(admin/verify 검수용): 검수중 4·인증완료 2·반려 1. 기존 교회 매칭 6 + 신규 교회 신청 1(id null). PII는 **전건 명백한 합성값**(@example.com·010-0000-000X) — vf-005에 남아 있던 `test1@test.com`(과거 mock 계정 잔재)은 KCP 심사 종료 후 합성값으로 교체(2026-08-05).
+- **churches.json 36개** · **jobs.json 101개**(2026-08-14 날짜 현행화 — 상대 관계 보존한 채 +37일 이동). 분포: **공개 노출 63건**(유료 8 · HERO 3 · 이번 주 새 공고 9) / 마감일 경과 12 · 상시 90일 초과 4 **← 만료 기능 시연용** / CLOSED 22 / PENDING 0(**전수 검수 결정(2026-08-05) 이후에도 mutation이 없어 아직 0** — 검수 큐 구현 시 발생) · OPERATOR·CHURCH 혼합. **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. 전 공고 `jobKind=["MINISTRY"]`.
+- **church-verifications.json 7건**(admin/verify 검수용): 검수중 4·인증완료 2·반려 1. 이미 인증된 교회에 담당자가 추가 신청 6 + 신규 교회 신청 1(`ch-lifewater` — 제출 시 `PENDING` 행이 먼저 생기므로 `church.id`는 항상 있다). PII는 **전건 명백한 합성값**(신청자 이메일 @example.com — 담당자 전화는 2026-08-18에 수집 자체를 폐기).
 - **인증(2026-07-29 실 전환)**: mock 로그인 계정(`src/lib/mock-auth.ts`)·테스트 계정(`test1@test.com`·`test2@test.com`)·세션 쿠키 `mj_session`은 **전부 삭제**됐다(코드·mock 데이터에 테스트 계정 잔재 0건 — 2026-08-05 확인). 이제 로그인 수단은 **Supabase Auth Google OAuth 단독** — 이메일/비밀번호 로그인도 없다. 세션 = Supabase 쿠키(`httpOnly` + 배포 시 `secure` + `sameSite=lax`, `lib/supabase/cookie-options.ts`). 카카오는 **오픈 전 추가**, 네이버는 Supabase 기본 미지원이라 보류. ⚠️ 로컬에서 `next start`를 http로 띄우면 `secure` 때문에 로그인이 끝까지 진행되지 않는다 — 로그인 테스트는 `npm run dev`로.
 
 ### enum (`src/constants/domain.ts`)
-DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**) · **JOB_KINDS**(사역직 MINISTRY·일반직 GENERAL) · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·PENDING[**살아있는 상태** — 전수 검수 2026-08-05, 아직 mutation 없어 미발생]) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · **VERIFICATION_DOC_TYPES**(고유번호증·사업자등록증) · HOUSING_OPTIONS · APPLY_METHODS(닫힌 4키 EMAIL·LINK·TEL·POST — ETC 없음) · **PAY_NOTE_PRESETS**(구 STIPEND_NOTE_PRESETS) · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
+DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**) · **JOB_KINDS**(사역직 MINISTRY·일반직 GENERAL) · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·PENDING[**살아있는 상태** — 전수 검수 2026-08-05, 아직 mutation 없어 미발생]) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · HOUSING_OPTIONS · APPLY_METHODS(닫힌 4키 EMAIL·LINK·TEL·POST — ETC 없음) · **PAY_NOTE_PRESETS**(구 STIPEND_NOTE_PRESETS) · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
 
 ### 스키마 확정 (2026-08-04~05) — **문서만 반영, 코드는 아직 옛 스키마**
 
@@ -234,6 +234,12 @@ mock 101건 — 미claim(church_id=NULL) 14건 · jobs.region NULL 8건
 교회 35곳 — 교단 미상 2곳 · 지역 미상 2곳(그중 1곳은 시까지 미상)
 파생 규칙 검증용 — job.region ≠ church.region 1건 · job.church_name ≠ church.name 1건
 ```
+
+**✅ 교회 인증 스키마 확정 (2026-08-18)** — `churches` +3(`verification_status`·`contact_email`·`contact_tel`) · `users` +8(증빙 Storage 경로 · 담당자 실명·직분 · **신청 사무용 전화·이메일** · 제출/검수일 · 반려사유 — `church_verification_status`는 기존 컬럼) · **CHECK +2**(APPROVED면 church_id 필수 · REJECTED면 사유 필수). **새 테이블 없이** 기존 7개 유지.
+- **`churches` 행이 생기는 경로는 둘**(DATA §3): 인증 신청에서 신규 교회로 적어내면 `PENDING`, 운영자 승격은 `APPROVED`로 명시 INSERT. 검수 전 행이 존재하므로 **공개 조회는 `APPROVED`만**이고, 그 조건은 `mocks/index.ts`의 `isPubliclyVisible`이 유일한 관문이다. ⚠️ **DB 전환 후에도 RLS는 이 경로를 못 막는다** — 공개 교회 조회는 cached read라 `service.ts`(secret 키)를 쓰고 그건 RLS를 우회한다. 조건은 쿼리 본문이 직접 걸어야 한다(DATA §9).
+- **`hasChurchAccess`는 사람·교회 양쪽을 본다** — 사람만 승인하고 교회가 미검증이면 검수 안 끝난 교회가 공고를 올린다. 호출부 8곳이 전부 `CurrentUser`만 받으므로 `churchIsVerified`를 거기 실었다.
+- **안 받기로 한 것**: 등록번호·서류 종류(서류를 열면 보이고 저장하면 보관 부담) · 담당자 개인 전화(**사칭자가 자기 번호를 적고 자기가 받으므로 검증이 성립하지 않는다**) · 교회 소개(표시 화면 없음). 검증의 축은 **사무용 연락처를 공개 게시판 공고·홈페이지와 대조**하는 것.
+- **남은 것 = Server Action 2개뿐**(화면·타입·필드는 확정 — 반려 사유도 `CurrentUser.churchRejectionReason`으로 실어 신청자 화면이 운영자가 적은 사유를 그대로 보여준다). SPEC 교회 인증 절 참조.
 
 **⏸ `001_init.sql` + `types/database.ts` — 크롤러 구조화 데이터가 실제로 들어온 뒤에 쓴다 (2026-08-16 결정)**
 구조(테이블 7개·컬럼·enum·인덱스·RLS)는 이미 확정이고, 실데이터가 바꾸는 건 **제약의 임계값**이다 — `description NOT NULL` 같은 조건이 실제 승격을 얼마나 막는지는 AI 구조화 결과를 봐야 안다. 지금 써두면 그 결과에 따라 어차피 고친다. 신규 DB라 늦게 써도 `ALTER`가 아니라 `CREATE TABLE`이므로 미루는 비용이 거의 없다. **드리프트 15곳도 이 묶음에 딸려 있다.**

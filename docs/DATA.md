@@ -40,7 +40,7 @@
 | **job_status** | `jobs.status` | OPEN(기본) · CLOSED |
 | **job_source** (출처) | `jobs.source` | OPERATOR · CHURCH |
 | **featured_tier** (노출) | `jobs.featured_tier` | NONE(기본) · PREMIUM · HERO(=대표광고) |
-| **church_verification_status** (교회 인증) | `users.church_verification_status` | PENDING · APPROVED · REJECTED · `NULL`(=미신청) |
+| **verification_status** (인증 상태) | `users.church_verification_status` · **`churches.verification_status`** | PENDING · APPROVED · REJECTED. `users`는 `NULL`(=미신청) 허용, `churches`는 NOT NULL(행을 만드는 쪽이 항상 상태를 정한다 — §3). **두 컬럼은 다른 사실이다** — `users`=이 사람이 그 교회 관리자로 인정됐나, `churches`=이 교회가 검증됐나 |
 
 > **역할 enum 없음**: 모든 계정은 기본 **사역자(MINISTER)**. 교회(CHURCH)는 저장된 role이 아니라 **인증으로 열리는 view/능력**(§3 users). MINISTER/CHURCH는 화면 라벨.
 
@@ -62,6 +62,9 @@
 | `city` | text NULL | 시·군·구 (표시용 자유 텍스트) |
 | `address` | text NULL | 주소 **원문 그대로** — 도로명/지번을 나누지 않는다(지도 검색은 둘 다 되고, 나누면 어느 체계인지 판별하는 일이 늘고 오분류가 생긴다). 교회 상세 지도가 쓴다 |
 | `founded_year` | int NULL | 창립 연도 |
+| `verification_status` | text **NOT NULL** DEFAULT 'PENDING' (CHECK) | **이 교회가 검증됐나.** 행이 생기는 경로가 둘이고 **초기값이 다르다**: ① **교회 인증 신청에서 신규 교회로 적어낸 순간** → `PENDING`(운영자 승인 시 `APPROVED`). 신청서에 적힌 교회명·교단·지역을 담을 곳이 `users`에 없으므로 **행을 먼저 만들어 `users.church_id`로 가리킨다** ② 운영자가 검수 브릿지에서 승격하며 생성(§10) → **`APPROVED`로 명시 INSERT**(운영자가 이미 봤다). ⚠️ ②에서 DEFAULT에 맡기면 승격된 교회가 전부 상세 404가 된다. DEFAULT가 `'PENDING'`인 건 그 실수를 **비공개 쪽으로 넘어뜨리기 위해서다**(fail-closed). 반려해도 행은 `PENDING`으로 남는다 — 공개되지 않고, 재신청이 같은 행을 다시 쓴다. `REJECTED`는 이미 공개된 교회를 허위 판명·opt-out으로 **내릴 때**. 공개 조회는 `APPROVED`만(§9) |
+| `contact_email` | text NULL | **사무용** 이메일. 인증 검수 때 **공개 게시판 공고(`jobs.contact_email`)·홈페이지와 대조**하는 근거. 승인 후엔 교회 대표 연락처로 그대로 남아 교회 정보 관리(`/mypage/church/info`)에서 수정한다. ⚠️ **공개 화면에는 렌더하지 않는다** — 검수 대조용으로 받은 값이라 지금은 교회 상세에 노출하지 않는다(공개하려면 수집 고지부터 다시 본다) |
+| `contact_tel` | text NULL | 〃 사무용 전화. 공고에 전화만 공개된 교회가 흔해 대조 수단이 하나뿐이면 못 맞춘다 |
 | `created_at` | timestamptz DEFAULT now() | |
 
 ### `church_links` — 교회 채널 (1 church : N links)
@@ -302,10 +305,27 @@ CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
 | `email` | text **NOT NULL** | `auth.users`에서 복제. `auth` 스키마는 PostgREST로 JOIN하기 어려워 표시·운영자 조회용으로 둔다 |
 | `church_id` | uuid FK→churches NULL | 이 계정이 관리하는 교회(인증 후 연결). NULL=일반 사역자 |
 | `church_verification_status` | text NULL (CHECK) | PENDING/APPROVED/REJECTED. NULL=미신청 |
-| `verification_doc_path` | text NULL | 증빙(고유번호증/사업자등록증) **비공개 Storage 경로**. 보관·파기 정책은 개인정보 검토와 연결(§11) |
+| `verification_doc_path` | text NULL | 증빙(고유번호증/사업자등록증) **비공개 Storage 경로**. ⚠️ 서류에 적힌 **등록번호·서류 종류는 저장하지 않는다** — 운영자가 파일을 열어 확인하면 되고, 저장하면 사업자번호 보관 부담만 진다. 보관·파기 정책은 §11 |
+| `verification_applicant_name` | text NULL | 신청자 **실명**. Google 표시명은 닉네임일 수 있어 따로 받는다 |
+| `verification_applicant_position` | text NULL (CHECK: position) | 신청자 직분 — 담임이 신청했는지가 검수 신뢰도 판단에 쓰인다 |
+| `verification_contact_tel` | text NULL | 신청자가 적어낸 **교회 사무용 전화**(신청 필수). **`churches.contact_tel`에 바로 쓰지 않는다** — 미승인 신청자가 이미 인증된 교회의 대표 연락처를 덮어쓸 수 있기 때문. 승인 시 `churches`로 옮긴다. 검수는 이 값을 공개 게시판 공고·홈페이지와 **대조**하고, 기존 교회면 `churches.contact_tel`과도 비교한다(어긋나면 반려 근거) |
+| `verification_contact_email` | text NULL | 〃 사무용 이메일(신청 선택 — 이메일 없는 작은 교회가 실재) |
+| `verification_submitted_at` | timestamptz NULL | 검수 큐 정렬(오래된 신청 우선) |
+| `verification_reviewed_at` | timestamptz NULL | 승인·반려 시각 |
+| `verification_rejection_reason` | text NULL | 반려 사유. 없으면 신청자가 **뭘 고쳐야 할지 모른다** |
 | `created_at` | timestamptz DEFAULT now() | |
 
-- **교회 view 개방 조건** = `church_id IS NOT NULL AND church_verification_status='APPROVED'` → 파생 `hasChurchAccess`.
+⚠️ **신청자 전화번호는 받지 않는다** — 신청자가 적은 번호로 확인 전화를 걸면 사칭자가 자기 번호를 적고 자기가 받으므로 **검증이 성립하지 않는다.** 검증은 `churches.contact_email`·`contact_tel`을 **공개 출처와 대조**하는 쪽으로 한다. 연락은 `users.email`(Google OAuth로 이미 검증됨)로 충분하다.
+
+- **교회 view 개방 조건** = `church_id IS NOT NULL AND users.church_verification_status='APPROVED' AND churches.verification_status='APPROVED'` → 파생 `hasChurchAccess`(`lib/auth.ts`). **양쪽을 다 본다** — 사람만 승인하고 교회가 미검증이면 미승인 교회가 공고를 올린다.
+  - 호출부가 8곳이고 전부 `CurrentUser` 하나만 받으므로, 교회 상태는 `CurrentUser.churchIsVerified`(boolean)로 **실어서 내려보낸다**. `getCurrentUser`는 `churchName` 때문에 어차피 `churches`를 조인하게 되므로(현재는 아직 조인 없이 상수 반환) 왕복이 늘지 않는다. 3상태를 싣지 않는 이유 = 호출부는 "승인됐나"만 알면 되고, 상태를 주면 8곳이 각자 해석할 여지가 생긴다.
+- **CHECK 2개**
+  ```sql
+  -- 승인은 교회가 확정돼야 한다 (교회 없이 APPROVED면 게이트가 거짓 통과)
+  CHECK (church_verification_status <> 'APPROVED' OR church_id IS NOT NULL)
+  -- 반려엔 사유가 있어야 한다
+  CHECK (church_verification_status <> 'REJECTED' OR verification_rejection_reason IS NOT NULL)
+  ```
 - **다중 담당자**: 여러 user가 같은 `church_id`(다대일) → 한 교회에 담당자 여럿. 권한은 "그 교회 인증 관리자인가"로 판정. Phase 1은 각자 독립 인증, 초대형은 Phase 2(→ `church_members` 조인 테이블로 승격).
 - **이동**: 담당자가 다른 교회로 옮기면 기존 링크 해제(공고는 `church_id`에 매여 있어 교회에 그대로 잔류 — 작성자 컬럼이 없으므로 아무것도 끊기지 않는다) → 새 교회 재인증. 인증은 **교회별**.
 - 운영자(admin)는 **DB 컬럼으로 두지 않는다** — `.env` `ADMIN_EMAILS` allowlist로 판정(2026-07-29, `lib/operator.ts`, 목록 비면 fail-closed). 남은 것 = 실 DB 전환 시 operator RLS. 개인정보 최소 수집.
@@ -354,6 +374,9 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 - `jobs(church_id)` — 교회별 공고(claim된 것만)
 - `churches(denomination)`, `churches(region)` — 교회 상세·교단 필터(JOIN 대상)
 - `church_links(church_id)`
+- `churches(verification_status)` — 공개 조회가 `APPROVED`만 거른다(RLS 정책 조건과 동일)
+- `users(church_id)` — 교회별 담당자 조회(다중 담당자)
+- `users(church_verification_status)` — 운영자 검수 큐(PENDING 목록)
 - `bookmarks(user_id)`
 
 ---
@@ -427,10 +450,12 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 | 테이블 | SELECT | INSERT/UPDATE/DELETE |
 |---|---|---|
 | `jobs` | **public (OPEN + CLOSED 모두)** ← 교회 상세의 '지난 공고'가 마감 공고를 노출 | **인증 관리자(그 공고 church_id)** + operator(전체, owner NULL 포함) |
-| `churches` · `church_links` · `church_photos` | public | operator (+ 인증 관리자가 자기 교회 row) |
+| `churches` · `church_links` · `church_photos` | **public — 단 `churches.verification_status='APPROVED'`만** (+ operator는 전체). 미승인 교회가 검수 전에 노출되면 안 된다 | operator (+ 인증 관리자가 자기 교회 row) |
 | `users` | 본인 | 본인 (`church_verification_status`는 운영자만 승인/변경) |
 | `job_promotions` | **본인 교회 공고만**(결제 이력 = 그 교회 것) + operator | **INSERT는 Server Action(service-role)만** — 결제 검증 통과 후. UPDATE/DELETE 없음(append-only 원장, 환불은 `status` 변경으로 operator만) |
 | `bookmarks` | 본인 | 본인 |
+
+> ⚠️ **`churches` 공개 조회에는 RLS가 방어선이 되지 못한다.** 공개 교회 조회는 cached read라 `service.ts`(secret 키)를 쓰는데 **그건 RLS를 우회한다**(§ Supabase 규칙). 따라서 `verification_status='APPROVED'` 조건은 **`lib/queries/churches.ts` 쿼리 본문이 직접 걸어야 하고, 그게 유일한 방어선이다.** RLS 정책은 `server.ts`(쿠키)로 도는 경로에만 걸린다 — 위 표는 그 경로의 의도다.
 
 - `lib/supabase/service.ts`(service-role)는 RLS 우회 — **공개 cached read 전용**(공개 공고/교회 조회).
 - 인증·권한 필요한 작업은 `server.ts`(anon+쿠키). Server Action에서만 mutation.
@@ -454,7 +479,7 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
 - **자동 결제 연동** (Phase 3)
 - **인재 DB**(`minister_profiles`, 계정에 1:1) — 사역자 프로필 (Phase 3, 개인정보 동의). "구직 중" opt-in 노출 + "제외 교회"(자기 교회엔 숨김)
 - **관심 교회 팔로우**(`church_follows`) + 새 공고 알림 (Phase 2, 사역자 view)
-- **교회 인증 증빙 문서 보관·파기 정책** (`users.verification_doc_path` — 개인정보 검토와 함께 확정)
+- **교회 인증 증빙 문서 보관·파기 정책** (`users.verification_doc_path` + `verification_applicant_name`·`position`). 파일은 **비공개 Storage 버킷 + operator만 읽기**. ⚠️ **공개 개인정보처리방침이 이미 "인증 처리 완료 후 지체 없이 파기"를 약속**했으므로(`/privacy`), 승인·반려 Server Action이 **처리 직후 파일을 지우고 `verification_doc_path`를 NULL로** 돌려야 한다. 보관 기간을 두려면 방침 문구부터 바꿔야 한다(법률 검토와 함께)
 
 ---
 

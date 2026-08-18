@@ -67,7 +67,7 @@
   - 교회 대시보드에 "게시 90일 경과 — 갱신하면 다시 노출" 안내
   - ⚠️ `sitemap.ts`·페이지는 **변경 없음** — seam이 걸러준다
 - [ ] **NULL 표시 UI 2개**(스키마를 푼 대가 — 안 하면 모르는 것을 아는 척한다. ~~게시일~~ 은 필수 복귀로 제외): 교단 미상(`denomination_source`가 `stated`·`registry`·`operator`일 때만 확정 표시) · 지역 미상 · 게시일 미상. **검수 우선순위는 교단보다 지역**(비면 지역 필터에서 탈락 = 사실상 안 보이는 공고)
-- [ ] ⏸ **크롤러 구조화 데이터 유입 후 착수**(2026-08-16 결정 — 구조는 확정, 실데이터가 바꾸는 건 제약 임계값뿐. 신규 DB라 미루는 비용 거의 없음) 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 4개**(①직분↔직무 ②연락처≥1 ③수집공고 source_url ④교회등록 church_id) + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**
+- [ ] ⏸ **크롤러 구조화 데이터 유입 후 착수**(2026-08-16 결정 — 구조는 확정, 실데이터가 바꾸는 건 제약 임계값뿐. 신규 DB라 미루는 비용 거의 없음) 마이그레이션 `001_init.sql` — churches·church_links·church_photos·jobs·**job_promotions**·users(+bookmarks Phase 2) + enum CHECK + **jobs CHECK 4개**(①직분↔직무 ②연락처≥1 ③수집공고 source_url ④교회등록 church_id) + **users CHECK 2개**(APPROVED면 church_id 필수 · REJECTED면 사유 필수) + 인덱스 + RLS (DATA.md §3·5·9). **신규 DB이므로 `ALTER`가 아니라 `CREATE TABLE`에 직접**. ⚠️ **증빙 서류용 비공개 Storage 버킷**(operator만 읽기)도 여기서 함께 만든다 — 테이블 목록에 없어 빠뜨리기 쉽다(`users.verification_doc_path`가 가리키는 곳)
 - [x] **결정 완료(2026-08-07) — 중복/재공고는 지금 안 한다**:
   1. **끌어올림(bump) 판정은 min_job 일이 아니다** — 크롤러(min_job_agent)가 수집 단계에서 묶고, **min_job admin 검수 화면에서 "이거 끌어올리시겠습니까?"** 로 운영자에게 확인받는다. 우리는 N일 임계값을 정하지 않는다
   2. **재공고 추적 기능 자체를 제거**(보류) — `lib/repost-tracking.ts` 삭제. 판정 키가 `church_id`에 묶여 있었는데 그게 nullable이 되면서 claim 전 공고가 전부 `null:직분:부서` 한 덩어리로 합쳐져 **거짓 숫자를 공개**하게 된다. "안 잡힌다"가 아니라 **틀린 값이 나온다**는 게 제거 이유. 되살리는 조건·후보 키는 DATA.md §6
@@ -85,6 +85,14 @@
   - 해소된 드리프트: **`Church.denomination`·`Church.region` nullable** · **`Job.churchName`·`Job.region` 추가** · **`Job.churchId` nullable**
   - 새로 생긴 것: `types/domain.ts`의 `JobChurchRef`(조인 결과가 아닌 "공고가 가리키는 교회") · `lib/job-church.ts`(`jobChurchRef`·`normalizeChurchName`·`churchIdentityKey`)
   - 표시 규칙은 SPEC(공고 상세 §미claim 축소 표시)에 확정 — 공개는 조각 생략, 운영자만 "미상" 명시
+- [x] ✅ **교회 인증 스키마 확정 (2026-08-18)** — **새 테이블 없이** 기존 7개로 해결. DATA §1·§3·§9·§11 반영:
+  - `churches` **+3** — `verification_status`(NOT NULL DEFAULT 'PENDING' — 행 생성 경로가 둘이고 **승격은 `APPROVED`를 명시**해야 한다, 안 하면 승격 교회가 전부 상세 404) · `contact_email` · `contact_tel`
+  - `users` **+8** — 증빙 Storage 경로 · 담당자 실명·직분 · **신청 사무용 전화·이메일** · 제출/검수일 · 반려 사유. **CHECK +2**(APPROVED면 `church_id` 필수 · REJECTED면 사유 필수)
+  - **신청 연락처를 `churches`에 바로 쓰지 않는다** — 미승인 신청자가 이미 인증된 교회의 대표 연락처를 덮어쓸 수 있다. `users.verification_contact_*`에 받고 **승인 시 옮긴다**
+  - **담당자 개인 전화는 수집하지 않는다** — 신청자가 적은 번호로 확인 전화를 걸면 **사칭자가 자기 번호를 적고 자기가 받아** 검증이 성립하지 않는다. 검증축은 **교회 사무용 연락처 대조**(공개 게시판 공고·홈페이지). 등록번호도 안 받는다(서류를 열면 보이고, 저장하면 보관 부담만)
+  - **`hasChurchAccess`가 사람·교회 양쪽을 본다** — 사람만 승인하고 교회가 미검증이면 검수 안 끝난 교회가 공고를 올린다. `CurrentUser`에 `churchIsVerified`·`churchRejectionReason`을 실어 호출부 8곳이 한 곳도 빠뜨리지 않게 했다
+  - **공개 조회는 `APPROVED`만**(`mocks`의 `publicChurchOf`) — ⚠️ **RLS는 이 경로를 못 막는다**(공개 교회 조회는 cached read라 `service.ts` secret 키를 쓰고 그건 RLS 우회). 조건은 쿼리 본문이 유일한 방어선이다. sitemap도 전용 조회(`getIndexableChurchIds`)로 분리 — 운영자용 목록을 재사용하면 검수 중 교회 URL이 색인돼 404가 된다
+  - ⏸ **남은 것 = Server Action 2개뿐** — 화면·타입·mock은 확정 완료. `mypage/verify/actions.ts`(제출)·`admin/verify/actions.ts`(승인·반려 + 증빙 즉시 파기) 단계별 명세는 **SPEC 교회 인증 절**이 정본. 테이블·Storage 버킷은 아래 `001_init.sql`과 한 묶음
 > ⛔ **`/admin/jobs`에 "미상" 필터·카운터를 만들지 않는다 (2026-08-17 판단 철회)** — DATA §3의 *"검수에서 채울 값"*을 `/admin/jobs`로 잘못 읽고 한때 할 일로 올렸다. 그 검수는 **승격 전** 브릿지(`/admin/ingest` → `review_data` 보정 후 `jobs`로 INSERT)를 말한다. `/admin/jobs`는 **이미 공개된 공고**를 관리하는 화면이라 애초에 그 일을 하는 자리가 아니고, 미상 공고도 기본(전체) 목록에는 그대로 조회된다. 사후 수정이 필요하면 제목·교회 검색으로 찾는다.
 - [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합 (나머지 15곳)** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.**
   - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` — nullable로 풀어야 함. (`postedAt`은 NOT NULL 복귀로, `Church.denomination`·`Church.region`은 위 항목으로 **해소**)
@@ -133,7 +141,7 @@
 - [x] 로그아웃 — Server Action(`mypage/actions.ts` `signOut`, scope local). 회원탈퇴 자동 처리는 미구현이라 운영자 문의 경로로 안내(약관·개인정보처리방침이 보장한 권리를 실제로 행사 가능하게)
 - [~] 마이페이지 (`/mypage` · `/mypage/church` · `/mypage/church/info` · `/mypage/church/promote`) — **mock UI 완료**: 사역자 view(최근 본 + **북마크** + 하단 교회 CTA·계정) + 교회 대시보드(상태 탭·노출광고 사이드바·공고 행 수정/⋯마감·삭제/재등록) + 교회 정보 관리 페이지(소개·연락처·채널·사진) + **노출 결제 페이지**(PortOne V2 실결제 동작·서버 금액 검증, 1-8·4). 헤더 아바타=마이페이지 직행 + "교회 공고 등록" 상시 링크(`hasChurchAccess` 분기). 서버 배선·mutation·실 노출 적용 Phase 1
 - [ ] **북마크** (`bookmarks` 테이블) + 공고 카드·상세 저장 버튼 — 단일 계정이라 **Phase 1로 이동**(원래 Phase 2). 지금은 localStorage로 동작
-- [~] 교회 인증 (`/mypage/verify`) — **mock UI 완료**(상태별 화면 + 4섹션 폼: 교회 선택·증빙(고유번호증/사업자등록증)·담당자(이메일 인증)·동의). 실 업로드·이메일 발송·운영자 승인 Phase 1 → 인증 교회만 게재
+- [~] 교회 인증 (`/mypage/verify`) — **mock UI 완료**(상태별 화면 + 4섹션 폼: 교회 선택·증빙(고유번호증/사업자등록증 + 사무용 연락처)·담당자(실명·직분 — 이메일은 Google OAuth로 이미 검증된 `users.email`)·동의). 실 업로드·운영자 승인 Phase 1 → 인증 교회만 게재
 - [~] 교회 공고 등록·수정 (`/jobs/new`, `/jobs/[id]/edit`) — **mock UI 완료**: 3스텝 위저드(모집 기본·처우·서류·지원·마감), 제출 서류 필수/선택·접수 방법·자격 프리셋 등(SPEC). '교회 직접 등록'. **인증 게이트 적용**(`hasChurchAccess` 아니면 `/mypage/verify`). 남은 Phase 1: Server Action·편집 권한=교회 인증 멤버십(owner 아님). **DATA 스키마 반영은 확정 완료**(2026-08-04, Phase 0 참조 — 폼 7필드 전부 컬럼 확보. 폼의 사택 "협의"는 `housing_provided=NULL` + `housing_note`로 매핑)
 - [ ] **등록 검수 — ★ 전수 검수로 되돌림(2026-08-05 결정, 사용자 확정)**
   > **뒤집힌 결정**: 2026-07-21엔 "사전 전수 검수는 절대 안 함(1인이 다 못 봄)"으로 정하고 공고 `pending`을 뺐다. **2026-08-05에 되돌린다 — 운영자가 모든 공고를 검수한다.**

@@ -80,7 +80,7 @@
   - 기존 구현(mock, 2026-07-21) 참고: 좌 원문 붙여넣기 → AI 구조화 → 우 프리필 폼 검토·보정 → '운영자 등록'(mock no-op). 교회는 **datalist 인라인 매칭**. 구조화 seam = `lib/ingest/structure.ts`(**mock 키워드 휴리스틱** — 교단·지역·**주소**·직분[**배열, 나열된 것 전부**]·부서·고용형태·사례비·마감·URL 추출. **시·군·구는 자동 추출 안 함**(표기가 제각각이라 검수에서 입력)). body는 요약(원문 통째 복제 X — 가드레일 #1). 컴포넌트 `ingest-view`, 교회옵션 = `getChurchOptions()`(`'use cache'`). **Phase 1**: 구조화를 Server Action(Claude API)으로 이동 + 실 등록. ※ 초기 정형 데이터는 bulk import(seed)로 적재.
 - **검수 브릿지 — 위 `/admin/ingest`의 메인 기능**(2026-08-11 이전에는 "붙여넣기에 더해 추가"로 적혀 있었다). 구현 = 크롤러 연동 트랙(ROADMAP 1-10). **크롤러가 채운 `review_data`(PENDING) 검수 → 승인/수정 → `churches`/`jobs` 승격**. 승격 규칙 = **`source=OPERATOR`(작성자 컬럼 없음, 가드레일 #2) · 요약 body + `source_url`(원문 링크) + 지원용 공개 `contact`(가드레일 #3)**. 검수 처리: ① **미상 교단은 승격 전 해소**(enum 미승계 방지) ② **dedup은 병합 후보만 제시, 자동 병합 X**(운영자 판단) ③ **끌어올림(bump)은 크롤러가 묶어 오고, admin 검수에서 "이거 끌어올리시겠습니까?"로 운영자가 확인**한다(2026-08-07). 교회 매칭은 현 ingest datalist(기존 후보 제시 + 신규 생성) 재사용. + **크롤 대시보드** — `crawl_run`(최근 실행·신규 N·실패 M·시각) · `source_health`(게시판별 상태) · `review_data` **PENDING 카운트**. 크롤러 staging 4테이블 정의·소유 = `min_job_agent`(min_job은 직접 만들지·바꾸지 않음). 상세 = [`DATA.md`](./DATA.md) §12 + `../min_job_agent/docs/SPEC.md` §6.
 - **공고 관리 (`/admin/jobs`)** — 구현(mock, 2026-07-21): 탭(전체·모집중·마감) · 필터(출처·교단·지역·검색) · 테이블(제목·교회·상태·노출등급·출처·게시일) · 행 액션(모집중=노출설정/수정 · 마감=재등록 + 케밥 마감/삭제) · **노출설정·수정 = Sheet**(mock, 실 저장 Phase 1). 케밥은 테이블 overflow 탈출 위해 body portal. 컴포넌트 `admin-jobs-view`·`admin-job-row`·`admin-job-sheet`·`admin-sidebar`, 목록 = `getAdminJobs()`. ⚠️ **공고 전수 검수로 되돌림(2026-08-05)** — 검수중 탭 + 승인/반려 복원 필요(ROADMAP 1-4·검수 큐 항목).
-- **교회 인증 검수 (`/admin/verify`)** — 구현(mock, 2026-07-21): **유일한 검수 게이트**. 탭(검수중[기본]·인증 완료·반려·전체) · 필터(교단·지역·검색) · 테이블(교회[신규 배지]·담당자·증빙종류·제출일·상태) · 행 [검토]/[상세] → **Sheet**(교회·담당자·증빙 확인 + 서류 열람 + 승인 / 반려[사유 입력]). 정렬 = 검수 대기 우선(오래된 신청 먼저). 컴포넌트 `admin-verify-view`·`verification-row`·`verification-sheet`, 목록 = `getVerifications()`. **dynamic**(운영자 전용 + 담당자 PII라 `'use cache'` 금지 — `<Suspense>` 안에서 `requireOperator()`가 쿠키를 읽어 dynamic, 운영자 아니면 `notFound()`; 실 승인/반려·알림은 Phase 1). 담당자 연락처는 검수 확인 목적 admin 전용 노출(공개 X, 가드레일 #3).
+- **교회 인증 검수 (`/admin/verify`)** — 구현(mock, 2026-07-21): **유일한 검수 게이트**. 탭(검수중[기본]·인증 완료·반려·전체) · 필터(교단·지역·검색) · 테이블(교회[미검증이면 **미검증** 배지]·담당자·**사무용 연락처**·제출일·상태) · 행 [검토]/[상세] → **Sheet**(교회·담당자·증빙 확인 + 서류 열람 + 승인 / 반려[사유 입력]). 정렬 = 검수 대기 우선(오래된 신청 먼저). 컴포넌트 `admin-verify-view`·`verification-row`·`verification-sheet`, 목록 = `getVerifications()`. **dynamic**(운영자 전용 + 담당자 PII라 `'use cache'` 금지 — `<Suspense>` 안에서 `requireOperator()`가 쿠키를 읽어 dynamic, 운영자 아니면 `notFound()`; 실 승인/반려·알림은 Phase 1). 담당자 실명·직분·이메일은 검수 확인 목적 admin 전용 노출(공개 X, 가드레일 #3). **담당자 개인 전화는 아예 수집하지 않는다**(2026-08-18 — 사칭자가 자기 번호를 적고 자기가 받으므로 검증이 성립하지 않는다). 대조는 교회 **사무용** 연락처로 한다.
 - → **거대 통계 대시보드·별도 교회관리 시스템은 안 만든다** (교회 생성·편집은 ingest/jobs 안에서 인라인).
 
 ## 수익화 — 광고·노출 (첫 매출 채널)
@@ -288,7 +288,7 @@
   4. **내 교회 공고 목록**(`church_id` 기준, `MyJobRow`) — 상태 배지 + 노출 등급 라벨 + 행 액션: **게재중=수정+⋯(마감·삭제) / 마감=재등록+⋯(삭제) / 검수중=수정+⋯(삭제)+검수 안내**. 삭제·마감은 ⋯ 오버플로우(오클릭 방지, 케밥 Escape·ARIA). 조회·북마크 지표는 Phase 1. 빈 상태 = 탭별 문구 + 첫 등록 CTA
   5. **노출 광고 전용 사이드바**(sticky, 메인 BM) — 딥그린 카드 + 프리미엄 주7만·대표광고 주15만 + **"노출 신청 →"(→`/mypage/church/promote`, 실 결제)**. 지원자 관리·끌올은 제외
 
-**교회 정보 관리 `/mypage/church/info`** (별도 페이지 · APPROVED 전용 게이트 · 구현(mock) 2026-07-14 — `church-info-form.tsx`): 공고 관리와 분리(사람인·잡코리아 기업정보 별도 관례). ① 기본 정보(교회명·교단 = 인증 확정, 수정 문의 / 지역·시군구·창립연도 편집) ② 한 줄+상세 소개 ③ **대표 공개 연락처**(개인 담당자 번호 배제, 가드레일 #3) ④ 교회 채널 6종(홈페이지·유튜브·인스타·페북·밴드·**기타**) ⑤ 교회 사진(커버·순서, 업로드 Phase 1). 저장 시 `/churches/[id]`에 반영. ⚠️ **공고에는 반영되지 않는다** — 공고 화면의 교회명·위치는 `jobs`의 값이 정본이다(DATA §1 예외 3). 등록 시점에 복사될 뿐 이후 따라가지 않는다. **Phase 1**: 소개·대표 연락처는 스키마 추가, 실 저장·사진 Storage.
+**교회 정보 관리 `/mypage/church/info`** (별도 페이지 · APPROVED 전용 게이트 · 구현(mock) 2026-07-14 — `church-info-form.tsx`): 공고 관리와 분리(사람인·잡코리아 기업정보 별도 관례). ① 기본 정보(교회명·교단 = 인증 확정, 수정 문의 / 지역·시군구·**주소**·창립연도 편집) ② **사무용 연락처**(전화·이메일 — 인증 검수 때 대조한 값. 개인 담당자 번호 배제, 가드레일 #3). ⛔ **소개(한 줄·상세)는 두지 않는다**(2026-08-18) — 표시하는 화면이 없어 입력만 받는 값이 된다 ③ 교회 채널 6종(홈페이지·유튜브·인스타·페북·밴드·**기타**) ④ 교회 사진(커버·순서, 업로드 Phase 1). 저장 시 `/churches/[id]`에 반영. ⚠️ **공고에는 반영되지 않는다** — 공고 화면의 교회명·위치는 `jobs`의 값이 정본이다(DATA §1 예외 3). 등록 시점에 복사될 뿐 이후 따라가지 않는다. **Phase 1**: 실 저장·사진 Storage(사무용 연락처 컬럼은 확정됨 — DATA §3).
 
 **노출 결제 `/mypage/church/promote`** (별도 페이지 · dynamic · `robots:noindex` · APPROVED 전용 게이트 · 구현 2026-07-20 — `page.tsx` + `promote-checkout.tsx`(client)). **공개 `/pricing`은 "안내+문의" 유지, 실 결제는 이 인증 교회 전용 페이지로 분리.** 진입 = `/mypage/church` 사이드바 "노출 신청 →". 화면 순서(그 이상 필드 없음 확정):
   1. **대상 공고** — 그 교회 게재 중(OPEN) 공고 select. 없으면 "공고 등록하기" 안내
@@ -303,8 +303,12 @@
 **교회 인증 `/mypage/verify`** (별도 라우트, dynamic, `robots:noindex`, `verify-form.tsx`) — 상태별:
 - **미신청(status=null)** — 그룹형 폼(단일 페이지, 4섹션):
   ① **교회 선택** — 기존 교회 검색(내 계정 연결) 또는 신규 등록(교회명 + 교단·지역 enum 드롭다운 — 자유입력 금지, 이단 1차 차단)
-  ② **교회 증빙** — 고유번호/사업자등록번호 + 서류 업로드(**고유번호증 또는 사업자등록증만**, 교회 사칭 방지; 비공개 저장)
-  ③ **담당자 정보** — 이름·직분(enum)·연락처·**이메일 인증**(인증코드; 교회당 담당자 1명). 담당자 연락처·이메일은 ④ 동의 하에 인증 확인 목적으로만 수집(공개 노출 아님 — 가드레일 #3: 공개는 지원용 공개 연락처(contact)에 한하며, 인증용 담당자 연락처는 동의 하에 수집하되 비공개)
+  ② **교회 증빙** — 서류 업로드(**고유번호증 또는 사업자등록증만**, 교회 사칭 방지; 비공개 저장) + **사무용 전화(필수)·이메일(선택)** — 이메일 없는 작은 교회가 실재해 둘 다 필수로 두면 인증이 막힌다. 컬럼이 둘 다 NULL 허용인 건 별개 이유(승격 경로는 연락처를 모를 수 있다 — DATA §3)
+     - ⚠️ **등록번호는 입력받지 않는다**(2026-08-18) — 서류에 적혀 있어 운영자가 열어 보면 되고, 저장하면 사업자번호 보관 부담만 진다
+     - **사무용 연락처가 검증의 축이다** — 운영자가 공개 게시판 공고(`jobs.contact_email`)·홈페이지와 **대조**한다
+  ③ **담당자 정보** — 이름(실명)·직분(enum). 이메일은 `users.email`(Google OAuth로 이미 검증) 사용
+     - ⚠️ **담당자 전화는 받지 않는다**(2026-08-18) — 신청자가 적은 번호로 확인 전화를 걸면 **사칭자가 자기 번호를 적고 자기가 받으므로 검증이 성립하지 않는다.** 검증은 ②의 사무용 연락처 대조로 한다
+     - 실명·직분은 ④ 동의 하에 인증 확인 목적으로만 수집(공개 노출 아님 — 가드레일 #3)
   ④ **동의** — 약관·개인정보 수집·이용(필수)
   → 제출 시 status=PENDING
 - **검수중(PENDING)** — "인증 검토 중이에요" 안내(영업일 1~2일)
@@ -312,8 +316,14 @@
 - 하단: "서류 없는 교회 → 운영자에게 공고 등록 요청"(mailto)
 
 **제외**: 지원자 관리·이력서 열람(사이트 내 지원 X) · 결제/세금계산서(Phase 2) · 인재검색·제안(Phase 2)
-**데이터**: `users.church_id`·`church_verification_status`·`verification_doc_path` (DATA §3). 목록은 `church_id`로 조회한다(작성자 컬럼 없음 — 2026-08-07 `owner_id` 제거).
-**Phase 1 백엔드**: 실 업로드(Storage)·이메일 인증 발송·운영자 승인·`updateTag` 무효화. mock 단계엔 상태별 UI만.
+**데이터**: `users`(church_id · church_verification_status · verification_doc_path · applicant_name/position · submitted/reviewed_at · rejection_reason) + `churches`(verification_status · contact_email · contact_tel) — DATA §3. 목록은 `church_id`로 조회한다(작성자 컬럼 없음 — 2026-08-07 `owner_id` 제거).
+
+> **⏸ 지금은 화면·타입까지만 확정한다 (2026-08-18)** — 신청 저장·승인은 `users`·`churches` 테이블과 Storage 버킷이 있어야 하는데, 마이그레이션은 **크롤러 구조화 데이터 유입 후**로 미뤄져 있다(ROADMAP Phase 0). 그래서 폼 위 *"온라인 접수는 준비 중"* 안내와 *"입력하신 내용은 저장되지 않았어요"* 결과 문구는 **그대로 둔다** — 지우면 거짓 안내가 된다.
+>
+> **DB가 생기면 붙일 것은 Server Action 2개뿐이다**(화면·타입·필드는 이미 확정돼 있다):
+> - `mypage/verify/actions.ts` — ① 서류를 비공개 Storage에 업로드 ② 신규 교회면 `churches` INSERT(`verification_status='PENDING'`) ③ `users` UPDATE(church_id · status=PENDING · 담당자 · doc_path · **신청 연락처** · submitted_at) ④ `updateTag`. ⚠️ **신청 연락처는 `users.verification_contact_*`에 넣고 `churches`에 바로 쓰지 않는다** — 미승인 신청자가 이미 인증된 교회의 대표 연락처를 덮어쓸 수 있다. 승인 시 옮긴다(DATA §3)
+> - `admin/verify/actions.ts` — 승인: `users`(APPROVED·reviewed_at) + `churches`(APPROVED) / **반려: `users`만 `REJECTED` + 사유** — `churches`는 건드리지 않는다(신규 신청이 만든 행은 `PENDING`인 채 비공개로 남아 재신청이 같은 행을 다시 쓴다. DATA §3). 승인·반려 모두 **증빙 파일을 지우고 `verification_doc_path`를 NULL로** 돌린다(개인정보처리방침이 즉시 파기를 약속 — DATA §11)
+> - ⚠️ **승인은 두 테이블을 함께 바꾼다.** DB 트리거 금지(CLAUDE.md DB Policy)라 코드가 순서를 보장해야 하고, 한쪽만 성공하면 `hasChurchAccess`가 양쪽을 보므로 **닫히는 쪽으로 실패**한다(안전).
 
 ### 공고 등록·수정 `/jobs/new` · `/jobs/[id]/edit` — 구현(mock) 2026-07-13
 **모드**: dynamic + 인증. **교회 인증 관리자만** — 비로그인은 `proxy.ts` 307 + 페이지 `requireUser`, 로그인했어도 `hasChurchAccess` 아니면 `/mypage/verify`로. **실 세션 판정은 2026-07-29 완료**이나, 교회 테이블이 없어 `hasChurchAccess`가 항상 false라 **지금은 아무도 이 폼에 도달하지 못한다**(위 /mypage 블록 ⚠️ 참조). 등록 **무료**. 신규·수정은 **같은 폼**(`JobForm`, `mode`로 초기값·카피만 다름). 폼 필드는 일반 채용 플랫폼 + 교단 게시판 실공고 조사 기반(조사 근거·표현 관행은 대화 기록).
