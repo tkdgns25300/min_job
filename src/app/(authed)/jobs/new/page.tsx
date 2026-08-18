@@ -28,7 +28,7 @@ export default function JobNewPage() {
 async function NewJobFormLoader() {
   const user = await requireUser();
   if (!hasChurchAccess(user)) redirect("/mypage/verify"); // 교회 인증 관리자만 등록 (SPEC B)
-  const church = user.churchId ? await getChurch(user.churchId) : null;
+  const church = await getChurch(user.churchId);
 
   return <JobForm mode="create" church={church} />;
 }

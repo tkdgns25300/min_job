@@ -4,13 +4,13 @@ import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
-import { Textarea } from "@/components/ui/textarea";
 import { CHURCH_CHANNELS, DENOMINATIONS, REGIONS } from "@/constants/domain";
 import { contactMailto } from "@/constants/business";
 import type { Church } from "@/types/domain";
 
 // 교회 정보 관리 폼 — mock. 실 저장·사진 업로드(Storage)는 Phase 1 Server Action.
-// 교회명·교단은 인증 확정값이라 여기서 못 바꿈(문의). 소개·대표 연락처는 Phase 1 스키마 추가 예정.
+// 교회명·교단은 인증 확정값이라 여기서 못 바꿈(문의).
+// 소개(한 줄·상세)는 두지 않는다 — 표시하는 화면이 없어 입력만 받는 값이 된다(2026-08-18).
 
 function Section({ title, desc, children }: { title: string; desc?: string; children: ReactNode }) {
   return (
@@ -110,29 +110,26 @@ export function ChurchInfoForm({ church }: { church: Church }) {
         </Field>
       </Section>
 
-      <Section title="교회 소개">
-        <Field label="한 줄 소개" optional hint="교회 상세·공고 상단에 크게 노출돼요.">
-          <Input placeholder="예) 다음세대를 함께 세워갈 동역자를 찾습니다." className="h-10" />
-        </Field>
-        <Field label="상세 소개" optional>
-          <Textarea
-            className="min-h-24"
-            placeholder="교회 분위기, 사역 방향, 함께하고 싶은 동역자상 등을 자유롭게 적어 주세요."
-            aria-label="상세 소개"
-          />
-        </Field>
-      </Section>
-
       <Section
-        title="대표 공개 연락처"
-        desc="교회 대표 공개 연락처만 적어 주세요. 개인 담당자 휴대폰은 넣지 마세요(개인정보 보호)."
+        title="사무용 연락처"
+        desc="교회 공식 연락처만 적어 주세요. 개인 담당자 휴대폰은 넣지 마세요(개인정보 보호). 인증 검수 때 확인한 값이라 공개 페이지에는 나오지 않아요."
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="전화" optional>
-            <Input placeholder="예) 031-000-0000" inputMode="tel" className="h-10" />
+            <Input
+              defaultValue={church.contactTel ?? ""}
+              placeholder="예) 031-000-0000"
+              inputMode="tel"
+              className="h-10"
+            />
           </Field>
           <Field label="이메일" optional>
-            <Input type="email" placeholder="예) office@church.org" className="h-10" />
+            <Input
+              defaultValue={church.contactEmail ?? ""}
+              type="email"
+              placeholder="예) office@church.org"
+              className="h-10"
+            />
           </Field>
         </div>
       </Section>
@@ -186,8 +183,9 @@ export function ChurchInfoForm({ church }: { church: Church }) {
         </p>
       )}
       <div className="mt-6 flex items-center justify-between gap-3 border-t pt-6">
+        {/* 사무용 연락처는 검수 대조용이라 공개 화면에 렌더하지 않는다 — "전부 반영된다"고 쓰면 거짓 안내 */}
         <p className="text-xs break-keep text-muted-foreground">
-          저장하면 교회 상세 페이지와 공고에 반영돼요.
+          저장하면 교회 상세 페이지에 반영돼요. 사무용 연락처는 공개되지 않아요.
         </p>
         <Button type="submit" size="lg" className="h-11 shrink-0">
           저장

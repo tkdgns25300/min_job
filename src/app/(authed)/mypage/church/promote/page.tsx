@@ -23,7 +23,7 @@ export default function PromotePage() {
 
 async function PromoteContent() {
   const user = await requireUser();
-  if (!hasChurchAccess(user) || !user.churchId) redirect("/mypage/church");
+  if (!hasChurchAccess(user)) redirect("/mypage/church");
 
   const dashboard = await getChurchDashboard(user.churchId);
   // 공개 목록에 실제로 노출되는 공고만 결제 대상 — 만료돼 숨겨진 공고를 상단 고정해도

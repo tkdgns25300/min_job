@@ -46,6 +46,19 @@ export function MypageView({ user, allCards }: { user: CurrentUser; allCards: Jo
               {user.churchName ?? "우리 교회"} 공고를 등록·관리하세요.
             </p>
           </Link>
+        ) : user.churchVerificationStatus !== null ? (
+          /* 신청은 했는데 아직 안 열린 상태(검수중·교회 미검증·반려) — 여기서 "인증하세요"라고 하면
+             이미 인증을 마친 사람에게 거짓 안내가 된다. 상태별 문구는 /mypage/church 게이트가 정본이라
+             여기서는 되풀이하지 않고 그리로 보낸다. */
+          <Link
+            href="/mypage/church"
+            className="block rounded-2xl border p-5 transition-colors hover:border-primary"
+          >
+            <p className="font-bold">교회 인증 진행 상태 →</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {user.churchName ?? "우리 교회"} 인증이 어디까지 왔는지 확인하세요.
+            </p>
+          </Link>
         ) : (
           <Link
             href="/mypage/verify"

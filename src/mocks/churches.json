@@ -6,6 +6,9 @@
     "region": null,
     "city": null,
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": null,
+    "contactTel": null,
     "foundedYear": 2005,
     "photos": [
       "/mock/church/exterior.svg",
@@ -36,6 +39,9 @@
     "region": "SEOUL",
     "city": "강북",
     "address": "서울 강북 은혜로 17",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@eunhyero.example.com",
+    "contactTel": "02-000-1262",
     "foundedYear": 1988,
     "links": [
       {
@@ -51,6 +57,9 @@
     "region": "GYEONGGI",
     "city": "용인",
     "address": "경기 용인 소망길 24",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@hanbit.example.com",
+    "contactTel": "031-000-1393",
     "foundedYear": 2015,
     "links": [
       {
@@ -70,6 +79,9 @@
     "region": "INCHEON",
     "city": "부평",
     "address": "인천 부평 평화대로 31",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@juane.example.com",
+    "contactTel": "032-000-1524",
     "foundedYear": 2021,
     "links": [
       {
@@ -89,6 +101,9 @@
     "region": "SEOUL",
     "city": "송파",
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@sarangbit.example.com",
+    "contactTel": "02-000-1655",
     "foundedYear": 1995,
     "links": [
       {
@@ -112,6 +127,9 @@
     "region": "GYEONGGI",
     "city": "수원",
     "address": "경기 수원 새싹로 45",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@saebyeok.example.com",
+    "contactTel": "031-000-1786",
     "foundedYear": 2010,
     "links": [
       {
@@ -127,6 +145,9 @@
     "region": "BUSAN",
     "city": "해운대",
     "address": "부산 해운대 동산길 52",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@bitsogeum.example.com",
+    "contactTel": "051-000-1917",
     "foundedYear": null,
     "links": []
   },
@@ -137,6 +158,9 @@
     "region": "DAEGU",
     "city": "수성",
     "address": "대구 수성 빛나로 59",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@banseok.example.com",
+    "contactTel": "053-000-2048",
     "foundedYear": 2001,
     "links": [
       {
@@ -156,6 +180,9 @@
     "region": "SEOUL",
     "city": "관악",
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@dongsan.example.com",
+    "contactTel": "02-000-2179",
     "foundedYear": 1979,
     "links": [
       {
@@ -175,6 +202,9 @@
     "region": "GYEONGGI",
     "city": "고양",
     "address": "경기 고양 은혜로 73",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@neulpureun.example.com",
+    "contactTel": "031-000-2310",
     "foundedYear": 1992,
     "links": [
       {
@@ -190,6 +220,9 @@
     "region": null,
     "city": "마포",
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@keunnamu.example.com",
+    "contactTel": "1544-0000",
     "foundedYear": 2003,
     "links": [
       {
@@ -209,6 +242,9 @@
     "region": "GYEONGNAM",
     "city": "창원",
     "address": "경남 창원 평화대로 87",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@chambit.example.com",
+    "contactTel": "055-000-2572",
     "foundedYear": 1985,
     "links": [
       {
@@ -224,6 +260,9 @@
     "region": "GYEONGGI",
     "city": "안양",
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@haneulmun.example.com",
+    "contactTel": "031-000-2703",
     "foundedYear": 1998,
     "links": [
       {
@@ -243,6 +282,9 @@
     "region": "DAEJEON",
     "city": "서구",
     "address": "대전 서구 새싹로 101",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@pyeonggang.example.com",
+    "contactTel": "042-000-2834",
     "foundedYear": 1975,
     "links": [
       {
@@ -262,6 +304,9 @@
     "region": "CHUNGNAM",
     "city": "천안",
     "address": "충남 천안 동산길 108",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@somangsaem.example.com",
+    "contactTel": "041-000-2965",
     "foundedYear": 2008,
     "links": [
       {
@@ -277,6 +322,9 @@
     "region": "SEOUL",
     "city": "영등포",
     "address": "서울 영등포 빛나로 115",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@immanuel.example.com",
+    "contactTel": "02-000-3096",
     "foundedYear": 1983,
     "links": [
       {
@@ -300,6 +348,9 @@
     "region": "JEONBUK",
     "city": "전주",
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@galilee.example.com",
+    "contactTel": "063-000-3227",
     "foundedYear": 1969,
     "links": [
       {
@@ -315,6 +366,9 @@
     "region": "GWANGJU",
     "city": "북구",
     "address": "광주 북구 은혜로 129",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@sionseong.example.com",
+    "contactTel": "062-000-3358",
     "foundedYear": 1990,
     "links": [
       {
@@ -330,6 +384,9 @@
     "region": "SEOUL",
     "city": "강동",
     "address": "서울 강동 소망길 136",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@yeolmae.example.com",
+    "contactTel": "02-000-3489",
     "foundedYear": 2012,
     "links": [
       {
@@ -349,6 +406,9 @@
     "region": "INCHEON",
     "city": "연수",
     "address": "인천 연수 평화대로 143",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@pureunchojang.example.com",
+    "contactTel": "032-000-3620",
     "foundedYear": 2000,
     "links": [
       {
@@ -364,6 +424,9 @@
     "region": "GYEONGGI",
     "city": "화성",
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@saemmul.example.com",
+    "contactTel": "031-000-3751",
     "foundedYear": 1997,
     "links": [
       {
@@ -383,6 +446,9 @@
     "region": "GYEONGGI",
     "city": "부천",
     "address": "경기 부천 새싹로 157",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@joeunssiat.example.com",
+    "contactTel": "031-000-3882",
     "foundedYear": 2016,
     "links": [
       {
@@ -398,6 +464,9 @@
     "region": "DAEGU",
     "city": "달서",
     "address": "대구 달서 동산길 164",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@mideumdongsan.example.com",
+    "contactTel": "053-000-4013",
     "foundedYear": 1987,
     "links": [
       {
@@ -413,6 +482,9 @@
     "region": "SEOUL",
     "city": "성북",
     "address": "서울 성북 빛나로 171",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@nanum.example.com",
+    "contactTel": "02-000-4144",
     "foundedYear": 2009,
     "links": [
       {
@@ -432,6 +504,9 @@
     "region": "ULSAN",
     "city": "남구",
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@onsaemi.example.com",
+    "contactTel": "052-000-4275",
     "foundedYear": null,
     "links": [
       {
@@ -447,6 +522,9 @@
     "region": "GWANGJU",
     "city": "서구",
     "address": "광주 서구 은혜로 185",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@bitgoeul.example.com",
+    "contactTel": "062-000-4406",
     "foundedYear": 1995,
     "links": [
       {
@@ -466,6 +544,9 @@
     "region": "CHUNGBUK",
     "city": "청주",
     "address": "충북 청주 소망길 12",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@hanmaum.example.com",
+    "contactTel": "043-000-4537",
     "foundedYear": 1981,
     "links": [
       {
@@ -481,6 +562,9 @@
     "region": "GYEONGBUK",
     "city": "포항",
     "address": "경북 포항 평화대로 19",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@daegwang.example.com",
+    "contactTel": "054-000-4668",
     "foundedYear": 1972,
     "links": [
       {
@@ -496,6 +580,9 @@
     "region": "JEONNAM",
     "city": "순천",
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@seongeun.example.com",
+    "contactTel": "061-000-4799",
     "foundedYear": 1996,
     "links": []
   },
@@ -506,6 +593,9 @@
     "region": "JEJU",
     "city": "제주",
     "address": "제주 제주 새싹로 33",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@tamna.example.com",
+    "contactTel": "064-000-4930",
     "foundedYear": 1978,
     "links": [
       {
@@ -521,6 +611,9 @@
     "region": "SEOUL",
     "city": "용산",
     "address": "서울 용산 동산길 40",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@hangang.example.com",
+    "contactTel": "02-000-5061",
     "foundedYear": 1993,
     "links": [
       {
@@ -540,6 +633,9 @@
     "region": "BUSAN",
     "city": "사하",
     "address": "부산 사하 빛나로 47",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@emmaus.example.com",
+    "contactTel": "051-000-5192",
     "foundedYear": 2006,
     "links": [
       {
@@ -555,6 +651,9 @@
     "region": "GYEONGGI",
     "city": "남양주",
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@jeonwon.example.com",
+    "contactTel": "031-000-5323",
     "foundedYear": 2002,
     "links": [
       {
@@ -574,6 +673,9 @@
     "region": "GANGWON",
     "city": "춘천",
     "address": "강원 춘천 은혜로 61",
+    "verificationStatus": "APPROVED",
+    "contactEmail": "office@gwangya.example.com",
+    "contactTel": "033-000-5454",
     "foundedYear": 2011,
     "links": [
       {
@@ -593,6 +695,9 @@
     "region": "SEJONG",
     "city": null,
     "address": null,
+    "verificationStatus": "APPROVED",
+    "contactEmail": null,
+    "contactTel": "044-000-5585",
     "foundedYear": 2018,
     "links": [
       {
@@ -600,5 +705,18 @@
         "url": "https://instagram.com/hyanggi"
       }
     ]
+  },
+  {
+    "id": "ch-lifewater",
+    "name": "생명수교회",
+    "denomination": "GAMLI",
+    "region": "SEOUL",
+    "city": null,
+    "address": null,
+    "verificationStatus": "PENDING",
+    "contactEmail": null,
+    "contactTel": null,
+    "foundedYear": null,
+    "links": []
   }
 ]

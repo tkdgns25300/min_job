@@ -7,7 +7,6 @@ import {
   DENOMINATIONS,
   POSITIONS,
   REGIONS,
-  VERIFICATION_DOC_TYPES,
   type ChurchVerificationStatus,
 } from "@/constants/domain";
 import type { ChurchVerification } from "@/types/domain";
@@ -29,8 +28,13 @@ export function VerificationRow({
   verification: ChurchVerification;
   onReview: () => void;
 }) {
-  const { applicant, church, document: doc, status } = verification;
-  const location = [DENOMINATIONS[church.denomination], REGIONS[church.region], church.city]
+  const { applicant, church, status } = verification;
+  // 기존 교회를 고른 신청은 교단·지역이 미상일 수 있다 — 아는 조각만 잇는다
+  const location = [
+    church.denomination && DENOMINATIONS[church.denomination],
+    church.region && REGIONS[church.region],
+    church.city,
+  ]
     .filter(Boolean)
     .join(" · ");
 
@@ -39,10 +43,11 @@ export function VerificationRow({
       <td className="px-4 py-3 align-middle">
         <div className="flex items-center gap-1.5">
           <span className="font-semibold">{church.name}</span>
-          {/* 신규 교회 생성 신청 — 기존 교회 매칭 없음(추가 확인 필요) */}
-          {church.id === null && (
+          {/* 아직 검증 안 된 교회 — 실재 여부부터 확인해야 한다.
+              "신규"라고 쓰지 않는다: 반려 뒤 재신청도 같은 PENDING 행을 다시 쓰므로 처음이 아닐 수 있다 */}
+          {church.verificationStatus !== "APPROVED" && (
             <Badge variant="secondary" className="font-medium">
-              신규
+              미검증
             </Badge>
           )}
         </div>
@@ -54,8 +59,10 @@ export function VerificationRow({
           {POSITIONS[applicant.position]}
         </span>
       </td>
+      {/* 검수의 축이라 목록에서 바로 보인다(공개 게시판 공고와 대조).
+          전화를 먼저 보여준다 — 신청 필수값이고, 공고에도 전화만 공개된 교회가 흔해 대조가 잘 된다 */}
       <td className="px-4 py-3 align-middle text-xs whitespace-nowrap text-muted-foreground">
-        {VERIFICATION_DOC_TYPES[doc.type]}
+        {church.contactTel ?? church.contactEmail ?? "—"}
       </td>
       <td className="px-4 py-3 align-middle text-xs whitespace-nowrap text-muted-foreground tabular-nums">
         {verification.submittedAt}

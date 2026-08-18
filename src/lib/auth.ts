@@ -5,10 +5,14 @@ import type { CurrentUser } from "@/types/domain";
 //    handler·서버 컴포넌트)에서 호출할 것 — 클라이언트에서 "미리 검증"하는 용도로 쓰지 않는다.
 //    서버 검증이 유일한 방어선이어야 한다(클라이언트 검증은 공격자가 건너뛸 수 있다).
 
-// 교회 view 개방 조건 — 인증된 교회 소속(church_id 연결 + 인증 완료). DATA §3 파생 규칙.
+// 교회 view 개방 조건 — DATA §3 파생 규칙. **사람과 교회 양쪽이 다 승인돼야** 한다:
+// 사람만 승인하고 교회가 미검증이면 검수 안 끝난 교회가 공고를 올린다.
 // 타입 술어라 통과 후 `user.churchId`가 `string`으로 좁혀진다 — 교회 권한 판정이 곧 churchId 보장.
+// null뿐 아니라 빈 문자열도 여기서 걸러, 호출부가 churchId를 다시 확인하지 않아도 되게 한다.
 export function hasChurchAccess(user: CurrentUser): user is CurrentUser & { churchId: string } {
-  return user.churchId !== null && user.churchVerificationStatus === "APPROVED";
+  return (
+    Boolean(user.churchId) && user.churchVerificationStatus === "APPROVED" && user.churchIsVerified
+  );
 }
 
 // 게이트가 미인증 사용자를 로그인으로 보낼 때의 URL — 원래 경로를 ?next=로 실어 로그인 후 복귀시킨다.

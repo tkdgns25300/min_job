@@ -23,7 +23,7 @@ export default function ChurchInfoPage() {
 async function ChurchInfoContent() {
   const user = await requireUser();
   // 미인증은 관리 화면(게이트)으로 — 인증 완료만 정보 편집 가능
-  if (!hasChurchAccess(user) || !user.churchId) redirect("/mypage/church");
+  if (!hasChurchAccess(user)) redirect("/mypage/church");
   const church = await getChurch(user.churchId);
   if (!church) redirect("/mypage/church");
 
@@ -38,7 +38,8 @@ async function ChurchInfoContent() {
       <header className="mt-2.5">
         <h1 className="text-2xl font-bold">교회 정보</h1>
         <p className="mt-1.5 text-sm leading-relaxed break-keep text-muted-foreground">
-          여기에서 관리한 내용이 교회 상세 페이지(공개)에 반영돼요.
+          여기에서 관리한 내용이 교회 상세 페이지(공개)에 반영돼요. 사무용 연락처만 예외로, 인증
+          검수 대조용이라 공개되지 않아요.
         </p>
       </header>
       <div className="mt-6">

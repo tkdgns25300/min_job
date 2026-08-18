@@ -21,6 +21,14 @@ export async function getChurchOptions(): Promise<ChurchOption[]> {
   return mock.getChurchOptions();
 }
 
+/** sitemap 전용 — 공개 상세가 열리는 교회 id만(검수 중 교회를 색인시키지 않는다) */
+export async function getIndexableChurchIds(): Promise<string[]> {
+  "use cache";
+  cacheTag("churches");
+  cacheLife("days");
+  return mock.getIndexableChurchIds();
+}
+
 export async function getChurchPastJobs(churchId: string): Promise<PastJob[]> {
   "use cache";
   cacheTag("jobs");

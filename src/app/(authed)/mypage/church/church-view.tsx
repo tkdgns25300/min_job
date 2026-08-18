@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ChurchJobList } from "@/components/job/church-job-list";
 import { cn } from "@/lib/utils";
 import { churchMetaLine } from "@/lib/format";
+import { contactMailto } from "@/constants/business";
 import type { CurrentUser } from "@/types/domain";
 import type { ChurchDashboard } from "@/lib/queries/users";
 
@@ -158,15 +159,41 @@ function ChurchGate({ user }: { user: CurrentUser }) {
         </GateCard>
       )}
 
+      {/* 사람은 승인됐는데 교회가 아직 검수 중인 상태 — `hasChurchAccess`가 양쪽을 보므로 여기로 온다.
+          세 분기(null·PENDING·REJECTED) 어디에도 안 걸려 **빈 화면**이 되던 자리다.
+          승인이 두 테이블을 함께 바꾸다 한쪽만 성공해도 이 상태가 된다(SPEC 교회 인증). */}
+      {status === "APPROVED" && (
+        <GateCard>
+          <Badge variant="outline" className="mb-3">
+            교회 검수중
+          </Badge>
+          <h2 className="text-lg font-bold">교회 확인이 끝나면 열려요</h2>
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+            {user.churchName ? `${user.churchName} · ` : ""}담당자 인증은 완료됐고, 교회 정보를
+            확인하고 있어요.
+          </p>
+          {/* 이 카드에는 진행할 곳이 없다 — 문의 수단까지 빼면 사용자가 갇힌다 */}
+          <a
+            href={contactMailto("교회 검수 진행 문의")}
+            className={cn(buttonVariants({ variant: "outline" }), "mt-4")}
+          >
+            문의하기
+          </a>
+        </GateCard>
+      )}
+
       {status === "REJECTED" && (
         <GateCard>
           <Badge variant="secondary" className="mb-3 text-destructive">
             반려
           </Badge>
           <h2 className="text-lg font-bold">인증이 반려됐어요</h2>
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-            제출하신 서류를 확인하기 어려웠어요. 고유번호증 사본을 다시 올려 주세요. 궁금한 점은
-            문의해 주세요.
+          {/* 사유는 운영자가 적은 것을 그대로 보여준다 — 여기서 사유를 특정하면 실제 반려 근거와
+              어긋난다(서류 문제라고 안내했는데 연락처 문제인 식). 아래 폴백은 타입상 안전망일 뿐
+              도달하지 않는다 — REJECTED면 사유가 반드시 있다(DATA §3 CHECK) */}
+          <p className="mt-2 max-w-md text-sm leading-relaxed break-keep text-muted-foreground">
+            {user.churchRejectionReason ??
+              "제출하신 내용을 확인하기 어려웠어요. 다시 신청해 주세요."}
           </p>
           <Link href="/mypage/verify" className={cn(buttonVariants(), "mt-4")}>
             다시 신청하기

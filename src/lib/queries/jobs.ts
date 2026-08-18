@@ -12,23 +12,27 @@ import type { AdminJob, AdminOverview, JobCard, JobDetail } from "@/types/domain
 // 만료가 최대 하루 늦게 반영되지만, 공고 목록 자체가 하루 캐시라 무해하다.
 // 인자로 받으려면 호출부에 `await connection()`이 필요하고 `◐ PPR` → `ƒ` 로 떨어진다.
 
+// ⚠️ 교회를 조인하는 쿼리는 `cacheTag("jobs", "churches")`를 함께 단다 — 카드·상세에 교회명·교단이
+//    실리고 **검수 상태(APPROVED)로 교회 노출 여부가 갈리므로**(mocks의 publicChurchOf), 교회가 승인되면
+//    공고 캐시도 함께 무효화돼야 한다. 교회를 안 읽는 집계(getJobStats·getAdminOverview)는 "jobs"만 단다.
+
 export async function getAdJobs(): Promise<JobCard[]> {
   "use cache";
-  cacheTag("jobs");
+  cacheTag("jobs", "churches");
   cacheLife("days");
   return mock.getAdJobs(todayInSeoul());
 }
 
 export async function getListJobs(limit = 8): Promise<JobCard[]> {
   "use cache";
-  cacheTag("jobs");
+  cacheTag("jobs", "churches");
   cacheLife("days");
   return mock.getListJobs(todayInSeoul(), limit);
 }
 
 export async function getAllJobCards(): Promise<JobCard[]> {
   "use cache";
-  cacheTag("jobs");
+  cacheTag("jobs", "churches");
   cacheLife("days");
   return mock.getAllJobCards(todayInSeoul());
 }
@@ -36,7 +40,7 @@ export async function getAllJobCards(): Promise<JobCard[]> {
 /** 저장한 공고 해석용 — 만료·마감분 포함(북마크가 조용히 사라지지 않게). 마이페이지 전용 */
 export async function getSavedJobCards(): Promise<JobCard[]> {
   "use cache";
-  cacheTag("jobs");
+  cacheTag("jobs", "churches");
   cacheLife("days");
   return mock.getSavedJobCards(todayInSeoul());
 }
@@ -44,7 +48,7 @@ export async function getSavedJobCards(): Promise<JobCard[]> {
 /** 운영자 공고 관리 — 전체 공고(모든 상태·출처). admin/jobs 전용. 탭·필터는 클라이언트 */
 export async function getAdminJobs(): Promise<AdminJob[]> {
   "use cache";
-  cacheTag("jobs");
+  cacheTag("jobs", "churches");
   cacheLife("days");
   return mock.getAdminJobs(todayInSeoul());
 }
@@ -82,28 +86,28 @@ export async function getCoverageStats(): Promise<{
 
 export async function getJobDetail(id: string): Promise<JobDetail | null> {
   "use cache";
-  cacheTag("jobs", `job-${id}`);
+  cacheTag("jobs", "churches", `job-${id}`);
   cacheLife("days");
   return mock.getJobDetail(id, todayInSeoul());
 }
 
 export async function getSimilarJobs(id: string, limit = 4): Promise<JobCard[]> {
   "use cache";
-  cacheTag("jobs");
+  cacheTag("jobs", "churches");
   cacheLife("days");
   return mock.getSimilarJobs(id, todayInSeoul(), limit);
 }
 
 export async function getChurchOpenJobs(churchId: string, excludeId?: string): Promise<JobCard[]> {
   "use cache";
-  cacheTag("jobs");
+  cacheTag("jobs", "churches");
   cacheLife("days");
   return mock.getChurchOpenJobs(churchId, todayInSeoul(), excludeId);
 }
 
 export async function getSearchSuggestions(): Promise<string[]> {
   "use cache";
-  cacheTag("jobs");
+  cacheTag("jobs", "churches");
   cacheLife("days");
   return mock.getSearchSuggestions(todayInSeoul());
 }

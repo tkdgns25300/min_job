@@ -30,13 +30,35 @@ const verifications = verificationsData as unknown as ChurchVerification[];
 
 const churchById = new Map(churches.map((c) => [c.id, c]));
 
-/** 공고의 소속 교회 — 미claim(`churchId === null`)이면 없는 게 정상이다(DATA §3) */
+/**
+ * 공개에 내보낼 교회인가 — **검수 통과분만**(DATA §3·§9).
+ * 인증 신청에서 **신규 교회로 적어낸 행은 검수 전 `PENDING`**이다(DATA §3 경로 ①). 그대로 내보내면
+ * 운영자가 보기 전에 노출된다. `REJECTED`(허위 판명·opt-out으로 내린 교회)도 같은 문으로 막힌다.
+ *
+ * ⚠️ **운영자 화면에는 걸지 않는다** — 검수 브릿지가 검수 중인 교회를 골라야 한다(§9 "+ operator는 전체").
+ * ⚠️ DB 전환 후에도 **이 조건은 쿼리 본문이 직접 걸어야 한다.** 공개 조회는 cached read라
+ *    `service.ts`(secret 키)를 쓰고 그건 **RLS를 우회한다** — RLS는 이 경로를 막지 못한다(§9 주석).
+ */
+function isPubliclyVisible(church: Church): boolean {
+  return church.verificationStatus === "APPROVED";
+}
+
+/** 공고의 소속 교회 — 검수 상태를 안 본다. 운영자 화면 전용(공개 경로는 `publicChurchOf`) */
 function churchOf(job: Pick<Job, "churchId">): Church | null {
   return job.churchId ? (churchById.get(job.churchId) ?? null) : null;
 }
 
+/**
+ * 공개 화면용 소속 교회 — 미claim(`churchId === null`)이면 없는 게 정상이다(DATA §3).
+ * 미승인 교회도 조인 실패와 같게 다룬다 → 공고는 열리고 교회 프로필만 빠진다(SPEC 미claim 축소 표시).
+ */
+function publicChurchOf(job: Pick<Job, "churchId">): Church | null {
+  const church = churchOf(job);
+  return church && isPubliclyVisible(church) ? church : null;
+}
+
 function toCard(job: Job, today: string): JobCard {
-  const church = jobChurchRef(job, churchOf(job));
+  const church = jobChurchRef(job, publicChurchOf(job));
   return {
     id: job.id,
     isPubliclyOpen: isPubliclyOpen(job, today),
@@ -109,7 +131,7 @@ export function getSavedJobCards(today: string): JobCard[] {
 export function getJobDetail(id: string, today: string): JobDetail | null {
   const job = jobs.find((j) => j.id === id);
   if (!job) return null;
-  const church = churchOf(job);
+  const church = publicChurchOf(job);
   return {
     job,
     church,
@@ -120,10 +142,25 @@ export function getJobDetail(id: string, today: string): JobDetail | null {
 
 /** 교회 단건 (없으면 null → notFound) */
 export function getChurch(id: string): Church | null {
-  return churchById.get(id) ?? null;
+  const church = churchById.get(id);
+  return church && isPubliclyVisible(church) ? church : null;
 }
 
-/** 교회 선택 옵션 — 이름·교단·지역만, 가나다순. 공고 등록 시 인라인 매칭·자동완성(admin/ingest) */
+/**
+ * 색인 대상 교회 id — **공개 상세가 실제로 열리는 교회만**(`getChurch`와 같은 조건).
+ * sitemap 전용으로 따로 둔다: 운영자용 `getChurchOptions`를 재사용하면 검수 중 교회 URL이
+ * sitemap에 실려 검색엔진이 404를 긁는다.
+ */
+export function getIndexableChurchIds(): string[] {
+  return churches.filter(isPubliclyVisible).map((c) => c.id);
+}
+
+/**
+ * 교회 선택 옵션 — 이름·교단·지역만, 가나다순. 공고 등록 시 인라인 매칭·자동완성(admin/ingest).
+ * ⚠️ **운영자 도구라 검수 중 교회도 포함한다**(§9 "+ operator는 전체") — 거르면 검수 브릿지가
+ *    검수 중인 교회에 공고를 붙일 수 없다. 공개 화면은 `getChurch`가 따로 막고,
+ *    sitemap은 `getIndexableChurchIds`를 쓴다(이 함수를 공개 경로에 재사용하지 말 것).
+ */
 export function getChurchOptions(): ChurchOption[] {
   return churches
     .map((c) => ({ id: c.id, name: c.name, denomination: c.denomination, region: c.region }))
@@ -140,7 +177,7 @@ export function getChurchOpenJobs(churchId: string, today: string, excludeId?: s
 /**
  * 교회의 지난 공고 — 최신순. 검수 중(PENDING)은 공개 전이라 제외.
  * ⚠️ `status === "CLOSED"`만 보면 **만료된 OPEN 공고가 현재 목록에도 지난 공고에도 안 뜬다**
- *    (실측 35개 교회 중 8곳이 통째로 빈 페이지가 됐다). 공개에서 내려간 것은 전부 여기로 모은다.
+ *    (실측 당시 교회 8곳이 통째로 빈 페이지가 됐다). 공개에서 내려간 것은 전부 여기로 모은다.
  */
 export function getChurchPastJobs(churchId: string, today: string): PastJob[] {
   return jobs
@@ -312,7 +349,7 @@ export function getSearchSuggestions(today: string): string[] {
   for (const j of openJobsOn(today)) {
     // 교회명·지역·교단은 seam이 정한 규칙(jobChurchRef)으로 읽는다 — 여기서 따로 조합하면
     // 자동완성이 제안한 말이 실제 카드에 안 적혀 있는 상황이 생긴다.
-    const church = jobChurchRef(j, churchOf(j));
+    const church = jobChurchRef(j, publicChurchOf(j));
     const key = churchIdentityKey(j);
     const entry = churchNames.get(key);
     if (!entry) churchNames.set(key, { term: church.name, count: 1 });
@@ -368,11 +405,13 @@ export function getCoverageStats(today: string): {
   regionCount: number;
   denominationCount: number;
 } {
-  // 미상(null)은 지역·교단 하나로 세지 않는다 — 그대로 두면 "교단 10개"처럼 조용히 +1 된다
+  // 미상(null)은 지역·교단 하나로 세지 않는다 — 그대로 두면 "교단 10개"처럼 조용히 +1 된다.
+  // 검수 전 교회도 빼야 한다 — 공개 지표에 아직 승인 안 난 교회가 섞이면 안 된다.
+  const visible = churches.filter(isPubliclyVisible);
   return {
     openCount: openJobsOn(today).length,
-    churchCount: churches.length,
-    regionCount: new Set(churches.map((c) => c.region).filter(Boolean)).size,
-    denominationCount: new Set(churches.map((c) => c.denomination).filter(Boolean)).size,
+    churchCount: visible.length,
+    regionCount: new Set(visible.map((c) => c.region).filter(Boolean)).size,
+    denominationCount: new Set(visible.map((c) => c.denomination).filter(Boolean)).size,
   };
 }

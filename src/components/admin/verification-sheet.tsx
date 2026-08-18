@@ -19,7 +19,6 @@ import {
   DENOMINATIONS,
   POSITIONS,
   REGIONS,
-  VERIFICATION_DOC_TYPES,
 } from "@/constants/domain";
 import type { ChurchVerification } from "@/types/domain";
 
@@ -44,7 +43,7 @@ function ReviewBody({
   verification: ChurchVerification;
   onClose: () => void;
 }) {
-  const { applicant, church, document: doc, status } = verification;
+  const { applicant, church, status } = verification;
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
   const isPending = status === "PENDING";
@@ -63,32 +62,45 @@ function ReviewBody({
 
       <div className="flex flex-col gap-5 px-4">
         <Section title="교회 정보">
-          <InfoRow label="교단">{DENOMINATIONS[church.denomination]}</InfoRow>
-          <InfoRow label="지역">
-            {[REGIONS[church.region], church.city].filter(Boolean).join(" ")}
+          <InfoRow label="교단">
+            {church.denomination ? DENOMINATIONS[church.denomination] : "미상"}
           </InfoRow>
-          <InfoRow label="매칭">{church.id ? "기존 교회" : "신규 교회 생성 신청"}</InfoRow>
+          <InfoRow label="지역">
+            {[church.region && REGIONS[church.region], church.city].filter(Boolean).join(" ") ||
+              "미상"}
+          </InfoRow>
+          <InfoRow label="교회 검증">
+            {church.verificationStatus === "APPROVED" ? "인증 완료" : "미검증 — 실재 확인 필요"}
+          </InfoRow>
+          {/* 검수의 축 — 공개 게시판 공고(jobs.contact_*)·홈페이지와 대조한다(DATA §3) */}
+          <InfoRow label="사무용 이메일">{church.contactEmail ?? "—"}</InfoRow>
+          <InfoRow label="사무용 전화">{church.contactTel ?? "—"}</InfoRow>
         </Section>
 
         <Section title="담당자">
           <InfoRow label="이름">{applicant.name}</InfoRow>
           <InfoRow label="직분">{POSITIONS[applicant.position]}</InfoRow>
           <InfoRow label="이메일">{applicant.email}</InfoRow>
-          <InfoRow label="연락처">{applicant.phone}</InfoRow>
         </Section>
 
         <Section title="증빙 서류">
-          <InfoRow label="종류">{VERIFICATION_DOC_TYPES[doc.type]}</InfoRow>
-          <InfoRow label="등록번호">{doc.registrationNumber}</InfoRow>
-          {/* 서류 열람 — mock. 실구현은 비공개 Storage signed URL(DATA §3) */}
-          <button
-            type="button"
-            className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-left text-sm transition-colors hover:border-primary/40"
-          >
-            <FileText className="size-4 shrink-0 text-muted-foreground" />
-            <span className="min-w-0 flex-1 truncate">{doc.fileName}</span>
-            <span className="shrink-0 text-xs font-medium text-primary">서류 보기</span>
-          </button>
+          {/* 서류 열람 — mock. 실구현은 비공개 Storage signed URL(DATA §3).
+              종류·등록번호는 저장하지 않는다 — 서류를 열면 보이고, 저장하면 보관 부담만 진다.
+              처리가 끝나면 파기하므로(개인정보처리방침) 열 서류가 남아 있지 않다 */}
+          {verification.docFileName ? (
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-left text-sm transition-colors hover:border-primary/40"
+            >
+              <FileText className="size-4 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1 truncate">{verification.docFileName}</span>
+              <span className="shrink-0 text-xs font-medium text-primary">서류 보기</span>
+            </button>
+          ) : (
+            <p className="rounded-lg bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              검수 완료 후 파기됐어요.
+            </p>
+          )}
         </Section>
 
         {!isPending && (

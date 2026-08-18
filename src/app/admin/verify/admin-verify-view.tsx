@@ -135,7 +135,7 @@ export function AdminVerifyView({ verifications }: { verifications: ChurchVerifi
               <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
                 <th className="px-4 py-2.5 font-medium">교회</th>
                 <th className="px-4 py-2.5 font-medium">담당자</th>
-                <th className="px-4 py-2.5 font-medium">증빙</th>
+                <th className="px-4 py-2.5 font-medium">사무용 연락처</th>
                 <th className="px-4 py-2.5 font-medium whitespace-nowrap">제출일</th>
                 <th className="px-4 py-2.5 font-medium">상태</th>
                 <th className="px-4 py-2.5 text-right font-medium">검수</th>

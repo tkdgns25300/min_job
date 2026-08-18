@@ -23,7 +23,7 @@ async function ChurchContent() {
   const user = await requireUser();
 
   let dashboard: ChurchDashboard | null = null;
-  if (hasChurchAccess(user) && user.churchId) {
+  if (hasChurchAccess(user)) {
     dashboard = await getChurchDashboard(user.churchId);
   }
 

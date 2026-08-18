@@ -6,7 +6,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { DENOMINATIONS, REGIONS, POSITIONS } from "@/constants/domain";
 import { contactMailto } from "@/constants/business";
 
-// 교회 인증 신청 폼(단일·그룹형). mock — 실 제출·업로드·이메일 발송은 Phase 1 Server Actions.
+// 교회 인증 신청 폼(단일·그룹형). mock — 실 제출·업로드·결과 알림 메일은 Phase 1 Server Actions.
 // ⚠️ 제출은 아무 데이터도 보내지 않는다. 실 로그인 전환(2026-07-29) 이후 누구나 이 화면에 올 수 있으므로
 //    "접수됐어요"라고 하면 거짓 안내가 된다 → 폼 앞에서 미리 알리고, 제출 후에도 저장되지 않았음을 밝힌다.
 const VERIFY_REQUEST_MAILTO = contactMailto("[민잡] 교회 인증 요청");
@@ -41,10 +41,12 @@ function Section({
 function Field({
   label,
   required,
+  optional,
   children,
 }: {
   label: string;
   required?: boolean;
+  optional?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -52,6 +54,8 @@ function Field({
       <span className="mb-1.5 block text-xs font-semibold">
         {label}
         {required && <span className="text-destructive"> *</span>}
+        {/* 필수가 기본인 폼이라, 선택 항목은 표시하지 않으면 필수로 읽힌다 */}
+        {optional && <span className="ml-1 font-normal text-muted-foreground">선택</span>}
       </span>
       {children}
     </label>
@@ -78,8 +82,6 @@ export function VerifyForm({
   defaultEmail: string;
 }) {
   const [showNew, setShowNew] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
@@ -154,11 +156,8 @@ export function VerifyForm({
         <Section
           num={2}
           title="교회 증빙"
-          hint="고유번호증 또는 사업자등록증만 인정합니다(교회 사칭 방지)."
+          hint="고유번호증 또는 사업자등록증만 인정합니다(교회 사칭 방지). 사무용 연락처는 교회 공식 정보와 대조해요."
         >
-          <Field label="고유번호 / 사업자등록번호" required>
-            <Input placeholder="000-82-00000" inputMode="numeric" />
-          </Field>
           <Field label="증빙 서류" required>
             <label className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-dashed bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground transition-colors hover:bg-muted/50">
               <span>
@@ -174,10 +173,24 @@ export function VerifyForm({
               />
             </label>
           </Field>
+          {/* 사무용 연락처 = 검수의 축 — 운영자가 공개 게시판 공고·홈페이지와 대조한다(DATA §3).
+              이메일만 선택인 이유: 사무용 이메일이 없는 작은 교회가 실재해, 필수로 두면 못 들어온다 */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <Field label="사무용 전화" required>
+              <Input placeholder="02-000-0000" inputMode="tel" />
+            </Field>
+            <Field label="사무용 이메일" optional>
+              <Input type="email" placeholder="office@church.or.kr" />
+            </Field>
+          </div>
         </Section>
 
         {/* 3. 담당자 */}
-        <Section num={3} title="담당자 정보" hint="이 교회 공고를 관리할 담당자예요(교회당 1명).">
+        <Section
+          num={3}
+          title="담당자 정보"
+          hint="이 교회 공고를 관리할 담당자예요. 담당자는 여러 명일 수 있고 각자 인증합니다."
+        >
           <div className="grid grid-cols-2 gap-2.5">
             <Field label="이름" required>
               <Input defaultValue={defaultName} />
@@ -186,43 +199,10 @@ export function VerifyForm({
               <Select options={POSITIONS} />
             </Field>
           </div>
-          <Field label="연락처" required>
-            <Input placeholder="010-0000-0000" inputMode="tel" />
-          </Field>
-          <Field label="이메일" required>
-            <div className="flex gap-2">
-              <Input
-                defaultValue={defaultEmail}
-                type="email"
-                autoComplete="email"
-                disabled={emailVerified}
-                className="flex-1"
-              />
-              {!emailVerified && (
-                <button
-                  type="button"
-                  onClick={() => setEmailSent(true)}
-                  className="shrink-0 rounded-lg border border-primary/40 px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
-                >
-                  인증코드 받기
-                </button>
-              )}
-            </div>
-            {emailSent && !emailVerified && (
-              <div className="mt-2 flex gap-2">
-                <Input placeholder="인증코드 6자리" inputMode="numeric" className="flex-1" />
-                <button
-                  type="button"
-                  onClick={() => setEmailVerified(true)}
-                  className="shrink-0 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground"
-                >
-                  확인
-                </button>
-              </div>
-            )}
-            {emailVerified && (
-              <p className="mt-1.5 text-xs font-semibold text-primary">✓ 이메일 인증 완료</p>
-            )}
+          {/* 이메일은 로그인 계정을 그대로 쓴다 — Google OAuth로 이미 검증된 값이라 재인증이 없다.
+              담당자 개인 전화는 받지 않는다: 사칭자가 자기 번호를 적고 자기가 받으므로 검증이 안 된다 */}
+          <Field label="이메일">
+            <Input defaultValue={defaultEmail} type="email" disabled />
           </Field>
         </Section>
 
@@ -243,7 +223,7 @@ export function VerifyForm({
               <a href="/privacy" className="underline">
                 개인정보 수집·이용
               </a>
-              에 동의합니다. 제출 서류·연락처는 인증 확인 목적으로만 사용합니다.
+              에 동의합니다. 제출 서류·담당자 정보는 인증 확인 목적으로만 사용합니다.
             </span>
           </label>
         </Section>

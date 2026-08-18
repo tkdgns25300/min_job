@@ -12,7 +12,6 @@ import type {
   JobStatus,
   ChurchChannel,
   ChurchVerificationStatus,
-  VerificationDocType,
 } from "@/constants/domain";
 
 // 상태 enum은 constants(라벨 맵)로 이동 — 기존 import 경로 호환을 위해 재노출
@@ -38,6 +37,14 @@ export interface Church {
   region: Region | null; // 광역 (필터용). null = 미상
   city: string | null; // 시·군·구 (표시용 자유 텍스트)
   address: string | null; // 주소 원문 그대로 (도로명/지번 안 나눔). 교회 상세 지도용
+  /**
+   * 이 교회가 검증됐나 — 행이 생기는 경로가 둘이고 초기값이 다르다(DATA §3):
+   * 인증 신청에서 신규 교회로 적어내면 `PENDING`, 운영자가 검수 브릿지에서 승격하면 `APPROVED`.
+   * ⚠️ 공개 조회는 `APPROVED`만 내려보낸다. 미승인 교회가 검수 전에 노출되면 안 된다.
+   */
+  verificationStatus: ChurchVerificationStatus;
+  contactEmail: string | null; // 사무용 — 인증 검수 때 공개 출처와 대조하는 근거
+  contactTel: string | null; // 〃
   foundedYear: number | null; // 창립 연도 (null = 미상)
   photos?: string[]; // 교회 사진(첫 장 = 커버). 없으면 기본 커버. 실 업로드는 Phase 1
   links: ChurchLink[]; // 교회 채널 — 없으면 빈 배열
@@ -110,7 +117,18 @@ export interface CurrentUser {
   name: string | null; // 담당자 표시명 (헤더·드롭다운)
   churchId: string | null; // 관리하는 교회 (인증 신청/완료 시). null = 일반 사역자
   churchName: string | null; // 표시용 (게이트·헤더) — 실구현은 join
-  churchVerificationStatus: ChurchVerificationStatus | null; // null = 미신청
+  churchVerificationStatus: ChurchVerificationStatus | null; // 이 **사람**의 인증 상태. null = 미신청
+  /**
+   * 그 **교회**가 검증됐나 — `hasChurchAccess`가 사람·교회 양쪽을 봐야 해서 함께 싣는다.
+   * 호출부 8곳이 전부 `CurrentUser` 하나만 받으므로 여기 실어야 한 곳도 빠뜨리지 않는다.
+   * boolean인 이유: 호출부는 "승인됐나"만 알면 되고, 3상태를 주면 각자 해석할 여지가 생긴다.
+   */
+  churchIsVerified: boolean;
+  /**
+   * 반려 사유(`users.verification_rejection_reason`) — REJECTED일 때만 채워진다.
+   * 이걸 싣지 않으면 신청자는 **뭘 고쳐야 할지 모른다**(반려 화면이 문구를 지어내게 된다).
+   */
+  churchRejectionReason: string | null;
 }
 
 // 공고 상세 페이지용 — 공고 + 소속 교회 전체
@@ -200,25 +218,41 @@ export interface AdminOverview {
 export interface ChurchVerification {
   id: string;
   applicant: {
-    name: string; // 담당자 이름
-    position: Position; // 담당자 직분 (enum)
-    email: string;
-    phone: string;
+    name: string; // 실명 — Google 표시명은 닉네임일 수 있어 따로 받는다
+    position: Position; // 직분 — 담임이 신청했는지가 검수 신뢰도 판단에 쓰인다
+    email: string; // users.email (Google OAuth로 이미 검증됨) — 연락 수단
   };
-  // 담당자가 신청서에 **직접 적은** 교회 정보 — `Church`와 달리 교단·지역이 필수다
-  // (사람이 채우는 입력 폼이라 미상이 없다. 승인 시 이 값으로 churches 행을 만들거나 대조한다)
+  // 신청 대상 교회 — 운영자가 이 값을 공개 출처와 대조한다.
   church: {
-    id: string | null; // 기존 교회 매칭 — null = 신규 교회 생성 신청
+    /**
+     * **항상 있다** — 신규 교회로 적어냈어도 제출 시 `PENDING` 행이 먼저 생기기 때문이다
+     * (DATA §3 경로 ①: 신청서에 적힌 교회명·교단·지역을 담을 컬럼이 `users`에 없다).
+     */
+    id: string;
+    /** 그 교회 행의 검수 상태(조인) — `APPROVED`가 아니면 실재 여부부터 확인해야 할 교회다 */
+    verificationStatus: ChurchVerificationStatus;
     name: string;
-    denomination: Denomination;
-    region: Region;
+    // 신규 등록 분기에서만 입력받는다(`verify-form`) — 기존 교회를 골랐으면 조인해 온
+    // `churches` 값이고 그건 미상일 수 있다. 그래서 `Church`와 같이 nullable이다.
+    denomination: Denomination | null;
+    region: Region | null;
     city: string | null;
+    /**
+     * 사무용 연락처 — **검증의 축**. 운영자가 공개 게시판 공고(`jobs.contact_*`)·홈페이지와 대조한다.
+     * ⚠️ 신청자 개인 전화는 받지 않는다 — 사칭자가 자기 번호를 적고 자기가 받으므로 검증이 안 된다.
+     * ⚠️ **`churches`에서 조인한 값이 아니라 신청자가 적어낸 값**이다(`users.verification_contact_*`).
+     *    기존 교회 신청이면 `churches`의 값과 다를 수 있고, 그 차이가 곧 반려 근거다.
+     */
+    contactEmail: string | null;
+    contactTel: string | null;
   };
-  document: {
-    type: VerificationDocType; // 고유번호증 / 사업자등록증
-    registrationNumber: string; // 고유번호 / 사업자등록번호
-    fileName: string; // 업로드 파일명 — 실구현은 비공개 Storage 경로(DATA §3)
-  };
+  /**
+   * 증빙 서류 — 등록번호·서류 종류는 **저장하지 않는다**(서류를 열면 보이고, 저장하면 보관 부담만).
+   * 실구현은 비공개 Storage 경로(DATA §3 `users.verification_doc_path`).
+   * ⚠️ `null` = **파기 완료**. 개인정보처리방침이 "인증 처리 완료 후 지체 없이 파기"를 약속하므로
+   * 승인·반려 처리가 파일을 지우고 경로를 NULL로 돌린다 — 처리된 신청은 서류를 다시 열 수 없다.
+   */
+  docFileName: string | null;
   status: ChurchVerificationStatus; // PENDING / APPROVED / REJECTED
   submittedAt: string; // "YYYY-MM-DD"
   reviewedAt: string | null; // 검수 완료일 (승인·반려 시)

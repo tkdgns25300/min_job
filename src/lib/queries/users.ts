@@ -64,9 +64,12 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       email: data.user.email,
       name: displayName(data.user.user_metadata),
       // 교회 소속·인증 상태는 교회 테이블 도입 후 join — 그때까지 모든 계정은 미신청 상태.
+      // churchIsVerified는 `churches.verification_status`에서 온다(같은 join으로 함께 읽는다).
       churchId: null,
       churchName: null,
       churchVerificationStatus: null,
+      churchIsVerified: false,
+      churchRejectionReason: null,
     };
   } catch (thrown) {
     // ⚠️ Next 내부 제어 신호(프리렌더 중단·dynamic bailout·redirect)는 반드시 되던진다.
