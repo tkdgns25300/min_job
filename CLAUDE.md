@@ -108,6 +108,9 @@ src/
 │   ├── ui/                        shadcn 원본 (button·card·input·textarea·native-select·sheet·badge)
 │   ├── layout/                    헤더(계정 영역 포함)·푸터·모바일 네비·법률문서 셸
 │   ├── job/ church/ admin/ home/ pricing/ search/   각 도메인 표시 컴포넌트
+│   ├── field.tsx                  폼 입력 한 칸(라벨·선택·필수·힌트·에러) — 5개 폼 파일 48곳 공용
+│   ├── tab-bar.tsx                상태 탭 + 건수 배지 — 공고·검수 목록 3곳 공용(제네릭 key)
+│   ├── enum-filter-select.tsx     "○○ 전체" + 도메인 라벨 맵 필터 select — admin 6곳 공용
 │   └── relative-time.tsx          시간 표시(클라이언트 계산)
 ├── constants/                     domain.ts(도메인 enum) · business.ts(사업자정보) ·
 │                                  storage.ts(localStorage 키) · site.ts(SITE_URL·SITE_OPEN_GRAPH)

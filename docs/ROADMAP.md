@@ -183,7 +183,7 @@
 > 근거·발언 전문: [`INTERVIEWS.md`](./INTERVIEWS.md). 데이터 모델 변경은 확정 시 DATA.md로.
 
 **도메인·데이터 (디자인보다 선행 — 카드/상세 레이아웃에 직접 영향)**
-- [ ] 담당부서 재설계 — 세분화(영아·유치·유년·초등·중등·고등…) + **심방** 추가 + **공고당 복수선택** + **교단별 별칭**(감리=아동부, 통합=소년부 등; 검색·완성·표시에서 동의어 처리)
+- [ ] 담당부서 재설계 — 세분화(영아·유치·유년·초등·중등·고등…) + **심방** 추가 + **교단별 별칭**(감리=아동부, 통합=소년부 등; 검색·완성·표시에서 동의어 처리). ⛔ ~~공고당 복수선택~~ 은 **철회됐다**(2026-08-07, 위 배열화 항목) — `department`는 단일 유지로 확정했다(다중 케이스 69건·2%대, 배열화 비용이 실익보다 크다). 이 줄에 남아 있어 한동안 확정 결정과 충돌했다(2026-08-19 정리)
 - [x] 교회 규모(대/중/소) **제거** (2026-07-02) — 기준 모호·신뢰 저하·"세상적". domain·카드·필터·상세·DATA·mock에서 삭제 완료. 규모 감(感)은 지도·건물사진으로 대체
 - [x] 직분에 **담임목사 추가** (2026-07-02 결정) — 실수요 반영. 대외 포지셔닝을 **"사역자 청빙"으로 통일**(SPEC 스코프·전 카피 정리 완료), enum `SENIOR_PASTOR` 추가. 주력은 여전히 부교역자. ★ **범위 확장(2026-07-28)**: "사역자 청빙" → **개교회 채용**(사역직 MINISTRY + 일반직 GENERAL) — 1-10 참조
 - [~] 사례비 — "교회 내규에 따름/면접 후 협의" UX. **등록 쪽 완료**: 폼이 프리셋 칩 + 자유 입력을 숫자(min·max)와 **동급 경로**로 두고(`job-form.tsx` `PayFields`), 표시도 `formatPay`가 `note`를 1급으로 처리한다. 남은 것은 **표시 쪽 "전면 강조 지양"**(카드·상세에서 사례비 비중 조정)
@@ -286,7 +286,14 @@
 
 - [x] ✅ **가격 단일 소스화 완료 (2026-08-19)** — `EXPOSURE_PRODUCTS`(원 단위)가 유일한 출처가 됐다. 요금 페이지 6곳·교회 대시보드 2곳의 한글 가격 문자열을 제거하고, 표시는 `formatExposurePrice`(`lib/format.ts`) 하나로 모았다(결제 화면의 인라인 `/10000` 나눗셈도 같은 함수로 교체). 대시보드 사이드바는 상품명까지 상수를 순회해 읽는다. ⚠️ 이게 결함이었던 이유: **금액을 계산하는 쪽**(결제 화면·서버 금액 검증 `exposurePrice()`)은 이미 상수를 읽는데 **표시하는 쪽만 문자열이었다** — 상수를 고치면 계산값과 광고 문구가 갈린다. (채널은 실연동이라 청구가 실제로 되지만, 교회 멤버십 미배선으로 결제 경로에 도달조차 못 해 아직 드러나지 않았다.) 상수를 임시로 바꿔 프리렌더 HTML까지 전파되는지 확인했다
 - [ ] **폼 원시 요소 → `components/ui` 사용.** `pricing/page.tsx` 문의 폼 5개(`<input>`/`<select>`/`<textarea>`)가 `Input`/`NativeSelect`/`Textarea`를 재구현. `verify-form.tsx` 버튼 3개도 `Button` 대신 손으로 조립. `pricing/` 폴더만 `cn()` 대신 템플릿 리터럴 사용(다른 파일은 전부 `cn()`)
-- [ ] **반복 UI 3종 추출** — 탭바(카운트 배지) 3곳 · enum→`<option>` 9곳(+`EnumSelect`/`Select` 경쟁 구현 2개) · `Field`/`Section` 래퍼가 **4벌씩** 따로 존재. `form-section.tsx`의 `Field`가 가장 풍부하니 그걸 `components/ui`로 승격
+- [x] ✅ **반복 UI 3종 추출 완료 (2026-08-19)** — 셋 다 했다:
+  - `Field` **4벌 → `components/field.tsx` 1벌**(사용처 48곳). `form-section.tsx`는 `Field`만 남아 이름이 이미 거짓이라 삭제
+  - 탭바 **3벌 → `components/tab-bar.tsx` 1벌**(key 타입이 화면마다 달라 제네릭)
+  - 필터 select **6벌 → `components/enum-filter-select.tsx` 1벌**(`"○○ 전체"` + 라벨 맵 전개). 호출부마다 있던 `as` 캐스트도 컴포넌트 한 곳으로 모았다. 노출 필터의 `"유료노출만"`처럼 enum 밖 선택지는 `extraOptions`로 받는다
+  - **`Field`는 컨트롤이 하나면 `<label>`로 감싸고**(호출부 40곳이 id 없이 이름을 얻는다), 여럿이면 `group` prop으로 `role="group"`+`aria-labelledby`가 된다(8곳 — 사례비 min·max, 칩 셀렉트, 자체 `<label>`을 가진 파일 업로드). 처음엔 전부 `<div role="group">`으로 갔다가 **단일 컨트롤 13곳이 접근성 이름을 잃는 걸** 검수에서 잡아 되돌렸다 — 그룹 라벨은 개별 컨트롤의 이름이 되지 못한다. 덤으로 `verify-form`의 **중첩 `<label>`**(잘못된 HTML)이 해소됐다.
+  - ⚠️ 시각 변화: `verify-form` 라벨 12→14px · `ingest-view` 라벨 muted→foreground(대비 향상) · 운영자 탭 패딩 `px-3 py-2`→`px-3.5 py-2.5`. `ingest-view`는 옛 래퍼의 `flex gap-1.5`·`text-sm`이 사라져 간격 2곳·`~` 글자 크기가 틀어졌던 것을 명시 클래스로 되살렸다.
+  - ⚠️ `components/ui`가 아니라 `components/` 루트다 — CLAUDE.md가 `ui/`를 **shadcn 원본 전용**으로 못박아 뒀다(`relative-time.tsx` 선례).
+  - ⛔ **제외**: 폼 `Section` 2벌(번호 스텝 vs 제목 그룹으로 **의미가 다르다**) · `EnumSelect`/`Select` 2벌(controlled/uncontrolled 차이라 병합이 동작 변경이 된다). 둘 다 CLAUDE.md "추상화는 3번째에" 기준 미달. 표시 전용 `Section`·`InfoRow`(`job-detail-view`·`verification-sheet`)는 애초에 입력 폼과 다른 개념이라 대상이 아니다
 - [ ] **`mocks/index.ts`의 `as unknown as`** — 이중 캐스트가 필드 누락을 숨긴다(`qualification`이 101건 중 19건 없음). `as Job[]`만 남기면 검사가 살아난다. **mock→DB 전환 때 함께**
 - [ ] **타입 경계 정리** — env `!` 6개(`requireEnv()` 헬퍼) · 결제 경로의 `as ExposureProduct`(타입 가드로) · admin view의 `as` 11개(`parseEnumParam` 하나로) · `types/domain.ts`의 `?`와 `| null` 혼용 통일
 - [ ] **UI 문체 규칙 확정 후 일괄** — 제품 화면=해요체 / 약관·개인정보=합니다체로 정하고 혼용 정리(`pricing/page.tsx`는 한 답변 안에서 두 문체가 섞여 있다)
