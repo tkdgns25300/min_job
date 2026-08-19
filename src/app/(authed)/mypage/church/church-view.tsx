@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { ChurchJobList } from "@/components/job/church-job-list";
 import { cn } from "@/lib/utils";
-import { churchMetaLine } from "@/lib/format";
+import { churchMetaLine, formatExposurePrice } from "@/lib/format";
+import { EXPOSURE_PRODUCTS } from "@/constants/domain";
 import { contactMailto } from "@/constants/business";
 import type { CurrentUser } from "@/types/domain";
 import type { ChurchDashboard } from "@/lib/queries/users";
@@ -21,15 +22,17 @@ function ExposurePromo() {
         <p className="mt-1.5 text-sm leading-relaxed text-white/75">
           검색·목록 상단에 고정 노출해 더 많은 교역자에게 닿아요.
         </p>
+        {/* 상품명·가격 모두 도메인 상수에서 읽는다 — 여기 적으면 요금 페이지·실제 청구액과 갈린다 */}
         <div className="mt-3 space-y-1.5">
-          <div className="flex items-center justify-between rounded-lg bg-white/10 px-3 py-2 text-sm">
-            <span className="font-semibold">프리미엄</span>
-            <span className="font-bold text-gold">주 7만원</span>
-          </div>
-          <div className="flex items-center justify-between rounded-lg bg-white/10 px-3 py-2 text-sm">
-            <span className="font-semibold">대표광고</span>
-            <span className="font-bold text-gold">주 15만원</span>
-          </div>
+          {Object.entries(EXPOSURE_PRODUCTS).map(([tier, product]) => (
+            <div
+              key={tier}
+              className="flex items-center justify-between rounded-lg bg-white/10 px-3 py-2 text-sm"
+            >
+              <span className="font-semibold">{product.label}</span>
+              <span className="font-bold text-gold">주 {formatExposurePrice(product.weekly)}</span>
+            </div>
+          ))}
         </div>
         <Link
           href="/mypage/church/promote"

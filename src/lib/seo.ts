@@ -74,7 +74,8 @@ export function jobPostingJsonLd(detail: JobDetail) {
 }
 
 /**
- * Organization JSON-LD — 사이트 운영 주체(민잡). root layout에서 전 페이지 공통 출력.
+ * Organization JSON-LD — 사이트 운영 주체(민잡). `(public)/layout.tsx`에서 공개 페이지 공통 출력
+ * (root가 아니다 — 인증·운영자 영역은 noindex라 낼 이유가 없다).
  * 공고의 `hiringOrganization`(교회)과 다르다 — 이건 **서비스 자신**을 설명한다.
  * ⚠️ 로고는 정사각 파일이 생기면 `logo`를 추가한다(없어도 유효).
  */

@@ -3,6 +3,12 @@ import Link from "next/link";
 import { getCoverageStats } from "@/lib/queries/jobs";
 import { PreviewButton } from "@/components/pricing/exposure-preview";
 import { BUSINESS_INFO, contactMailto } from "@/constants/business";
+import { EXPOSURE_PRODUCTS, type ExposureProduct } from "@/constants/domain";
+import { formatExposurePrice } from "@/lib/format";
+
+// 가격은 `EXPOSURE_PRODUCTS`(원 단위)에서만 읽는다 — 여기 숫자를 적으면 결제 금액과 갈린다
+const weekly = (tier: ExposureProduct) => formatExposurePrice(EXPOSURE_PRODUCTS[tier].weekly);
+const bundle4 = (tier: ExposureProduct) => formatExposurePrice(EXPOSURE_PRODUCTS[tier].bundle4);
 
 export const metadata: Metadata = {
   title: "공고 노출 안내 | 민잡",
@@ -11,7 +17,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/pricing" },
 };
 
-// 상품 카드 데이터 — 화면 문구(도메인 값 아님)
+// 상품 카드 데이터 — 화면 문구. 단 **가격은 도메인 상수에서 파생**한다(위 weekly·bundle4)
 const PLANS = [
   {
     name: "기본 공고",
@@ -24,14 +30,14 @@ const PLANS = [
   },
   {
     name: "프리미엄",
-    price: "7만원",
+    price: weekly("PREMIUM"),
     unit: "/ 주",
     aud: "노출을 넓히고 싶은 교회 — 어디서 찾든 위에",
     features: [
       "목록 상단 고정",
       "검색·필터 결과 상단",
       "비슷한 공고 슬롯 노출",
-      "“광고” 표시 · 4주 24만원",
+      `“광고” 표시 · 4주 ${bundle4("PREMIUM")}`,
     ],
     cta: { label: "문의하기", href: "#contact", primary: true },
     highlight: true,
@@ -40,14 +46,14 @@ const PLANS = [
   },
   {
     name: "대표광고",
-    price: "15만원",
+    price: weekly("HERO"),
     unit: "/ 주",
     aud: "가장 크게 알리고 싶을 때 — 소수 구좌만",
     features: [
       "홈 배너 + 목록 최상단",
       "프리미엄 노출 전부 포함",
       "구좌 한정(매진제)",
-      "4주 묶음 50만원",
+      `4주 묶음 ${bundle4("HERO")}`,
     ],
     cta: { label: "문의하기", href: "#contact", primary: true },
     highlight: false,
@@ -246,8 +252,8 @@ export default async function PricingPage() {
                 <tr className="font-bold [&_td]:text-foreground">
                   <td>가격</td>
                   <td>0원</td>
-                  <td>7만원/주</td>
-                  <td>15만원/주</td>
+                  <td>{weekly("PREMIUM")}/주</td>
+                  <td>{weekly("HERO")}/주</td>
                 </tr>
               </tbody>
             </table>

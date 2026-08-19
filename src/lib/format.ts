@@ -12,12 +12,26 @@ import type { JobCard, JobChurchRef } from "@/types/domain";
 
 // 도메인 값 표시 포매터
 
+const KRW_PER_MAN = 10000; // 원 → 만원
+
 // 월 사례비 표시: 범위/단일/비정형(내규 등)/없음 순
 export function formatPay(min: number | null, max: number | null, note: string | null): string {
   if (min !== null && max !== null && min !== max) return `${min}~${max}만원`;
   if (min !== null) return `${min}만원`;
   if (note) return note;
   return "협의";
+}
+
+/**
+ * 노출 상품 금액 표시 — `EXPOSURE_PRODUCTS`는 원 단위로 저장하고(결제·서버 검증이 쓴다)
+ * 화면은 만원으로 읽는다. 요금 페이지·교회 대시보드·결제 화면이 **이 함수만** 쓰게 해서,
+ * 가격을 상수 한 곳에서 바꾸면 광고 문구와 실제 청구액이 갈리지 않게 한다.
+ * (사례비 `formatPay`와 달리 입력이 원 단위다 — 사례비는 애초에 만원으로 저장한다)
+ * ⚠️ 만원 단위가 아닌 값을 넣으면 소수가 나온다(75000 → "7.5만원"). 현재 4개 상품가는 전부
+ *    만원 배수라 문제없지만, 그런 가격을 쓰기로 하면 표기 단위부터 다시 정해야 한다.
+ */
+export function formatExposurePrice(won: number): string {
+  return `${(won / KRW_PER_MAN).toLocaleString("ko-KR")}만원`;
 }
 
 // 교회 위치: 지역(+시). 모르는 조각은 **생략**한다 — 방문자에게 "미상"은 정보가 아니라 잡음이고,

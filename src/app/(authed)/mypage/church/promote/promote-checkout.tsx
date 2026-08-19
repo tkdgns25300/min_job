@@ -6,6 +6,7 @@ import * as PortOne from "@portone/browser-sdk/v2";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
+import { formatExposurePrice } from "@/lib/format";
 import {
   EXPOSURE_PRODUCTS,
   EXPOSURE_WEEKS,
@@ -154,7 +155,7 @@ export function PromoteCheckout({ jobs }: { jobs: JobOption[] }) {
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="text-[15px] font-bold">{p.label}</span>
                     <span className="text-[15px] font-bold text-gold-ink">
-                      주 {(p.weekly / 10000).toLocaleString("ko-KR")}만원
+                      주 {formatExposurePrice(p.weekly)}
                     </span>
                   </span>
                   <span className="mt-0.5 block text-xs break-keep text-muted-foreground">
