@@ -53,7 +53,8 @@ async function PromoteContent() {
           공고를 목록·검색 상단에 노출해 더 많은 교역자에게 닿아요.
         </p>
       </header>
-      <PromoteCheckout jobs={openJobs} />
+      {/* 결제자 이메일을 넘긴다 — PortOne 레코드에 실려야 운영자가 수동 처리 시 연락할 수 있다 */}
+      <PromoteCheckout jobs={openJobs} payerEmail={user.email} />
     </>
   );
 }
