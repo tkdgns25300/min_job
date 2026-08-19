@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
-import { cn } from "@/lib/utils";
 import { VerificationRow } from "@/components/admin/verification-row";
 import { VerificationSheet, type SheetState } from "@/components/admin/verification-sheet";
+import { TabBar } from "@/components/tab-bar";
+import { EnumFilterSelect } from "@/components/enum-filter-select";
 import {
   CHURCH_VERIFICATION_STATUSES,
   DENOMINATIONS,
@@ -58,62 +58,12 @@ export function AdminVerifyView({ verifications }: { verifications: ChurchVerifi
   return (
     <div>
       {/* 탭 (상태별) */}
-      <div className="flex gap-1 overflow-x-auto border-b">
-        {TABS.map(({ key, label }) => {
-          const on = tab === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className={cn(
-                "relative -mb-px flex items-center gap-1.5 px-3 py-2 text-sm font-bold whitespace-nowrap",
-                on ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {label}
-              <span
-                className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[11px] tabular-nums",
-                  on ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
-                )}
-              >
-                {counts[key]}
-              </span>
-              {on && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />}
-            </button>
-          );
-        })}
-      </div>
+      <TabBar tabs={TABS} active={tab} counts={counts} onChange={setTab} />
 
       {/* 필터 */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <NativeSelect
-          aria-label="교단 필터"
-          className="w-auto"
-          value={denom}
-          onChange={(e) => setDenom(e.target.value as "all" | Denomination)}
-        >
-          <option value="all">교단 전체</option>
-          {Object.entries(DENOMINATIONS).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </NativeSelect>
-        <NativeSelect
-          aria-label="지역 필터"
-          className="w-auto"
-          value={region}
-          onChange={(e) => setRegion(e.target.value as "all" | Region)}
-        >
-          <option value="all">지역 전체</option>
-          {Object.entries(REGIONS).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </NativeSelect>
+        <EnumFilterSelect label="교단" labels={DENOMINATIONS} value={denom} onChange={setDenom} />
+        <EnumFilterSelect label="지역" labels={REGIONS} value={region} onChange={setRegion} />
         <Input
           className="h-9 min-w-40 flex-1"
           placeholder="교회·담당자 검색"

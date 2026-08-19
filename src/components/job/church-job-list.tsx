@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MyJobRow } from "./my-job-row";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { TabBar } from "@/components/tab-bar";
 import type { MyJob } from "@/lib/queries/users";
 
 // "내려감" = status는 OPEN인데 공개 목록에서 빠진 것(마감일 경과·상시모집 90일 초과, DATA §6-1).
@@ -51,33 +52,7 @@ export function ChurchJobList({ jobs }: { jobs: MyJob[] }) {
 
   return (
     <div>
-      <div className="flex gap-1 border-b">
-        {TABS.map((t) => {
-          const active = tab === t.key;
-          return (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setTab(t.key)}
-              className={cn(
-                "relative -mb-px flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold transition-colors",
-                active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t.label}
-              <span
-                className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[11px] tabular-nums",
-                  active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
-                )}
-              >
-                {counts[t.key]}
-              </span>
-              {active && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />}
-            </button>
-          );
-        })}
-      </div>
+      <TabBar tabs={TABS} active={tab} counts={counts} onChange={setTab} />
 
       {filtered.length > 0 ? (
         <div className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border bg-card">

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { ChipMultiSelect } from "@/components/job/chip-select";
+import { Field } from "@/components/field";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,8 +160,9 @@ function DraftPanel({
             placeholder="교회명 입력·검색"
             aria-label="교회명"
           />
-          {/* 운영자 화면이라 미상을 숨기지 않는다 — 검수에서 채워야 할 값이다(DATA §3) */}
-          <p className="text-xs text-muted-foreground">
+          {/* 운영자 화면이라 미상을 숨기지 않는다 — 검수에서 채워야 할 값이다(DATA §3).
+              mt-1.5: 옛 로컬 Field가 flex gap으로 주던 간격을 명시로 되살린다 */}
+          <p className="mt-1.5 text-xs text-muted-foreground">
             {matched ? (
               <span className="text-primary">
                 기존 교회 연결 ·{" "}
@@ -215,7 +217,7 @@ function DraftPanel({
               placeholder="지역 선택"
             />
           </Field>
-          <Field label="직분">
+          <Field label="직분" group>
             <ChipMultiSelect
               options={POSITIONS}
               value={draft.position}
@@ -241,7 +243,7 @@ function DraftPanel({
           />
         </Field>
 
-        <Field label="월 사례비 (만원)">
+        <Field label="월 사례비 (만원)" group>
           <div className="flex items-center gap-2">
             <Input
               className="h-9"
@@ -251,7 +253,7 @@ function DraftPanel({
               onChange={(e) => patch({ payMin: e.target.value, payNote: "" })}
               aria-label="사례비 최소"
             />
-            <span className="text-muted-foreground">~</span>
+            <span className="text-sm text-muted-foreground">~</span>
             <Input
               className="h-9"
               inputMode="numeric"
@@ -262,7 +264,7 @@ function DraftPanel({
             />
           </div>
           <Input
-            className="mt-2 h-9"
+            className="mt-3.5 h-9"
             placeholder="또는 비정형 (예: 교회 내규에 따름)"
             value={draft.payNote}
             onChange={(e) => patch({ payNote: e.target.value, payMin: "", payMax: "" })}
@@ -321,15 +323,6 @@ function DraftPanel({
         ))}
       </datalist>
     </section>
-  );
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5 text-sm">
-      <span className="font-medium text-muted-foreground">{label}</span>
-      {children}
-    </div>
   );
 }
 

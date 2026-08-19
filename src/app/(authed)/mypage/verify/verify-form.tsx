@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { DENOMINATIONS, REGIONS, POSITIONS } from "@/constants/domain";
 import { contactMailto } from "@/constants/business";
+import { Field } from "@/components/field";
 
 // 교회 인증 신청 폼(단일·그룹형). mock — 실 제출·업로드·결과 알림 메일은 Phase 1 Server Actions.
 // ⚠️ 제출은 아무 데이터도 보내지 않는다. 실 로그인 전환(2026-07-29) 이후 누구나 이 화면에 올 수 있으므로
@@ -35,30 +36,6 @@ function Section({
       )}
       <div className="mt-3 space-y-3">{children}</div>
     </section>
-  );
-}
-
-function Field({
-  label,
-  required,
-  optional,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  optional?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold">
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-        {/* 필수가 기본인 폼이라, 선택 항목은 표시하지 않으면 필수로 읽힌다 */}
-        {optional && <span className="ml-1 font-normal text-muted-foreground">선택</span>}
-      </span>
-      {children}
-    </label>
   );
 }
 
@@ -158,7 +135,7 @@ export function VerifyForm({
           title="교회 증빙"
           hint="고유번호증 또는 사업자등록증만 인정합니다(교회 사칭 방지). 사무용 연락처는 교회 공식 정보와 대조해요."
         >
-          <Field label="증빙 서류" required>
+          <Field label="증빙 서류" required group>
             <label className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-dashed bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground transition-colors hover:bg-muted/50">
               <span>
                 📄 <b className="text-primary">고유번호증</b> 또는{" "}

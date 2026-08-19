@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
-import { Field } from "./form-section";
+import { Field } from "@/components/field";
 import { churchMetaLine } from "@/lib/format";
 import { CHURCH_CHANNELS, DENOMINATIONS, REGIONS } from "@/constants/domain";
 import { contactMailto } from "@/constants/business";

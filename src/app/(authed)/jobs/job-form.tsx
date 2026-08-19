@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Field } from "./form-section";
+import { Field } from "@/components/field";
 import { ChipMultiSelect, ChipSelect } from "@/components/job/chip-select";
 import { ListField } from "./list-field";
 import { CheckList, type CheckItem } from "./check-list";
@@ -140,13 +140,14 @@ function PayFields({ draft, patch }: SectionProps) {
     ? draft.payNote
     : null;
   return (
-    <Field label="월 사례비 (만원)">
+    <Field label="월 사례비 (만원)" group>
       <div className="flex items-center gap-2">
         <Input
           inputMode="numeric"
           value={draft.payMin}
           onChange={(e) => patch({ payMin: e.target.value, payNote: "" })}
           placeholder="최소"
+          aria-label="사례비 최소"
           className="h-9"
         />
         <span className="text-muted-foreground">~</span>
@@ -155,6 +156,7 @@ function PayFields({ draft, patch }: SectionProps) {
           value={draft.payMax}
           onChange={(e) => patch({ payMax: e.target.value, payNote: "" })}
           placeholder="최대"
+          aria-label="사례비 최대"
           className="h-9"
         />
       </div>
@@ -168,6 +170,7 @@ function PayFields({ draft, patch }: SectionProps) {
           value={presetValue ? "" : draft.payNote}
           onChange={(e) => patch({ payNote: e.target.value, payMin: "", payMax: "" })}
           placeholder="직접 입력 (예: 사역 경력에 따라 협의)"
+          aria-label="사례비 비정형 표현"
           className="h-9"
         />
       </div>
@@ -307,7 +310,7 @@ function stepSections(
                 className="h-9"
               />
             </Field>
-            <Field label="직분" required error={errorOf("position")}>
+            <Field label="직분" required error={errorOf("position")} group>
               <ChipMultiSelect
                 options={POSITIONS}
                 value={draft.position}
@@ -320,7 +323,7 @@ function stepSections(
                 label="직분"
               />
             </Field>
-            <Field label="담당 부서" optional>
+            <Field label="담당 부서" optional group>
               <ChipSelect
                 options={DEPARTMENTS}
                 value={draft.department}
@@ -333,7 +336,7 @@ function stepSections(
                 label="부서"
               />
             </Field>
-            <Field label="고용형태" required error={errorOf("employmentType")}>
+            <Field label="고용형태" required error={errorOf("employmentType")} group>
               <ChipSelect
                 options={EMPLOYMENT_TYPES}
                 value={draft.employmentType}
@@ -409,7 +412,7 @@ function stepSections(
         content: (
           <>
             <PayFields draft={draft} patch={patch} />
-            <Field label="사택 제공">
+            <Field label="사택 제공" group>
               <ChipSelect
                 options={HOUSING_OPTIONS}
                 value={draft.housing}

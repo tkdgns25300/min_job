@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
-import { cn } from "@/lib/utils";
+import { TabBar } from "@/components/tab-bar";
+import { EnumFilterSelect } from "@/components/enum-filter-select";
 import { AdminJobRow } from "@/components/admin/admin-job-row";
 import { AdminJobSheet, type SheetState } from "@/components/admin/admin-job-sheet";
 import {
@@ -97,89 +97,20 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
   return (
     <div>
       {/* 탭 (상태별) */}
-      <div className="flex gap-1 overflow-x-auto border-b">
-        {TABS.map(({ key, label }) => {
-          const on = tab === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className={cn(
-                "relative -mb-px flex items-center gap-1.5 px-3 py-2 text-sm font-bold whitespace-nowrap",
-                on ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {label}
-              <span
-                className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[11px] tabular-nums",
-                  on ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
-                )}
-              >
-                {counts[key]}
-              </span>
-              {on && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />}
-            </button>
-          );
-        })}
-      </div>
+      <TabBar tabs={TABS} active={tab} counts={counts} onChange={setTab} />
 
       {/* 필터 */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <NativeSelect
-          aria-label="출처 필터"
-          className="w-auto"
-          value={source}
-          onChange={(e) => setSource(e.target.value as "all" | JobSource)}
-        >
-          <option value="all">출처 전체</option>
-          {Object.entries(JOB_SOURCES).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </NativeSelect>
-        <NativeSelect
-          aria-label="교단 필터"
-          className="w-auto"
-          value={denom}
-          onChange={(e) => setDenom(e.target.value as "all" | Denomination)}
-        >
-          <option value="all">교단 전체</option>
-          {Object.entries(DENOMINATIONS).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </NativeSelect>
-        <NativeSelect
-          aria-label="지역 필터"
-          className="w-auto"
-          value={region}
-          onChange={(e) => setRegion(e.target.value as "all" | Region)}
-        >
-          <option value="all">지역 전체</option>
-          {Object.entries(REGIONS).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </NativeSelect>
-        <NativeSelect
-          aria-label="노출 필터"
-          className="w-auto"
+        <EnumFilterSelect label="출처" labels={JOB_SOURCES} value={source} onChange={setSource} />
+        <EnumFilterSelect label="교단" labels={DENOMINATIONS} value={denom} onChange={setDenom} />
+        <EnumFilterSelect label="지역" labels={REGIONS} value={region} onChange={setRegion} />
+        <EnumFilterSelect
+          label="노출"
+          labels={FEATURED_TIERS}
           value={featured}
-          onChange={(e) => setFeatured(e.target.value as FeaturedFilter)}
-        >
-          <option value="all">노출 전체</option>
-          <option value="paid">유료노출만</option>
-          {Object.entries(FEATURED_TIERS).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </NativeSelect>
+          onChange={setFeatured}
+          extraOptions={<option value="paid">유료노출만</option>}
+        />
         <Input
           className="h-9 min-w-40 flex-1"
           placeholder="제목·교회 검색"

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { CHURCH_CHANNELS, DENOMINATIONS, REGIONS } from "@/constants/domain";
 import { contactMailto } from "@/constants/business";
+import { Field } from "@/components/field";
 import type { Church } from "@/types/domain";
 
 // 교회 정보 관리 폼 — mock. 실 저장·사진 업로드(Storage)는 Phase 1 Server Action.
@@ -21,29 +22,6 @@ function Section({ title, desc, children }: { title: string; desc?: string; chil
       )}
       <div className="mt-4 space-y-4">{children}</div>
     </section>
-  );
-}
-
-function Field({
-  label,
-  optional,
-  hint,
-  children,
-}: {
-  label: string;
-  optional?: boolean;
-  hint?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-medium">
-        {label}
-        {optional && <span className="ml-1.5 text-xs font-normal text-muted-foreground">선택</span>}
-      </span>
-      {children}
-      {hint && <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{hint}</p>}
-    </label>
   );
 }
 
