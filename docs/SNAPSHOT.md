@@ -24,7 +24,7 @@
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**(→ **개교회 채용**으로 범위 확장: 사역직+일반직, 2026-07-28)를 모아 구조화·비교로 차별화하는 채용 플랫폼(재공고 추적은 2026-08-07 보류). **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + Supabase Auth Google OAuth 실 로그인 동작**(2026-07-29 — mock 세션·test 계정 폐기), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃(Server Action)·회원탈퇴 안내는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP 테스트 결제 성공, 서버 금액 검증 포함).** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** **✅ SEO 마감(2026-08-05)**: sitemap·robots·canonical·OG 이미지. 남은 것: terms/privacy 법률검토 + **교회 멤버십**(admin 4페이지 mock 완료 · 운영자 게이트는 2026-07-29 완료). **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 가맹 심사 + 카드사 등록 둘 다 통과 → 실카드결제 활성(2026-08-05, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **Phase 1 — 교회 멤버십 배선**(결제 경로의 유일한 블로커) + 데이터 유입(§7). **인증(로그인)만 실배선 완료**(2026-07-29), 나머지 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용은 Phase 1.
+흩어진 교회 **사역자 청빙 공고**(→ **개교회 채용**으로 범위 확장: 사역직+일반직, 2026-07-28)를 모아 구조화·비교로 차별화하는 채용 플랫폼(재공고 추적은 2026-08-07 보류). **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + Supabase Auth Google OAuth 실 로그인 동작**(2026-07-29 — mock 세션·test 계정 폐기), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃(Server Action)·회원탈퇴 안내는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP, 서버 금액 검증 포함) — 2026-07-20 테스트 결제로 검증했고 2026-08-05부터 실카드 청구다.** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** **✅ SEO 마감(2026-08-05)**: sitemap·robots·canonical·OG 이미지. 남은 것: terms/privacy 법률검토 + **교회 멤버십**(admin 4페이지 mock 완료 · 운영자 게이트는 2026-07-29 완료). **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 가맹 심사 + 카드사 등록 둘 다 통과 → 실카드결제 활성(2026-08-05, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **Phase 1 — 교회 멤버십 배선**(결제 경로의 유일한 블로커) + 데이터 유입(§7). **인증(로그인)만 실배선 완료**(2026-07-29), 나머지 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용은 Phase 1.
 
 > **▶ 방향 전환(2026-07-28, 법률 검토 완료)**: 자매 프로젝트 **min_job_agent 크롤러 도입 확정** — 데이터 수집을 사람 수집에서 **공개 공식 게시판 자동 수집 → AI 구조화 → 검수 큐(`review_data`) → 운영자 승격**으로 전환. 제품 범위도 **개교회 채용(사역직 MINISTRY + 일반직 GENERAL)**으로 확장. 가드레일 #1·#3 재정의. min_job 쪽 싱크(문서·코드·검수 브릿지)는 Phase로 진행(ROADMAP 1-10). 정본 = **`../min_job_agent/docs/`**(CRAWLER_HANDOFF.md는 흡수 후 삭제, 2026-08-05).
 
@@ -70,7 +70,7 @@
 | `/jobs/[id]/edit` 수정 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | 위저드 공유(소유권 체크 有)·저장 Phase 1 |
 | `/mypage/church` 교회 관리 | ✅ | ✅ | ✅ | ✅ `e89bebd` | mock — 탭·노출광고 사이드바·공고 행(수정/⋯). mutation Phase 1 |
 | `/mypage/church/info` 교회 정보 | ✅ | ✅ | ✅ | ✅ `e89bebd` | mock — 소개·연락처·채널6·사진. 실 저장 Phase 1 |
-| `/mypage/church/promote` 노출 결제 | ✅ | ✅ | ✅ | ✅ `5764fdc` | **PortOne V2 실결제 동작**(KCP 테스트 성공·서버 금액 검증). 실 노출 적용·모바일 redirect 복귀 Phase 1 |
+| `/mypage/church/promote` 노출 결제 | ✅ | ✅ | ✅ | ✅ `5764fdc` | **PortOne V2 · 실카드 청구**(2026-08-05 활성, 서버 금액 검증). 화면이 실청구·수동 적용·환불 기준을 밝힌다. 주문 저장·실 노출 적용·모바일 redirect 복귀 Phase 1 |
 | `/terms`·`/privacy` | 🟡 초안 보강 | — | ✅ | ✅ `150aa99` | 법률검토·`[ ]`실값 대기 |
 | `/admin` 셸·홈·`/admin/jobs` | ✅ | ✅ | ✅ | ✅ `bcb9e77`+ | mock — 셸(딥그린 사이드바·noindex·**운영자 게이트 적용**: proxy `/admin/**` + `.env ADMIN_EMAILS`, 2026-07-29)·홈(요약 카드+빠른 작업)·공고 관리(탭[전체·모집중·마감]·필터·테이블·노출/수정 Sheet). ⚠️ **공고 전수 검수로 되돌림(2026-08-05)** — 검수중 탭·승인/반려 복원 필요(ROADMAP 1-4). mutation Phase 1 |
 | `/admin/verify` 교회 인증 검수 | ✅ | ✅ | ✅ | ✅ `a4599c9` | mock — **유일 검수 게이트**. 탭[검수중·완료·반려·전체]·필터·테이블·승인/반려 Sheet(서류확인+반려사유). **dynamic**(운영자+PII라 `'use cache'` 금지 — `<Suspense>` 안 `requireOperator()`가 쿠키를 읽어 dynamic). 정렬=대기 우선. 승인/반려 mutation·알림 Phase 1 |
@@ -442,7 +442,7 @@ mock 기준 **79건 → 21건**. 크게 줄지만 나머지 58건은 지금 거�
 - **PortOne V2(KCP CARD)** 결제창 → **서버(`/api/payments/complete`)가 금액 재계산·PortOne 실결제 조회로 검증**(위변조 방지). 가격 단일 소스 = `EXPOSURE_PRODUCTS`.
 - **채널(2026-07-21)**: PortOne 실연동 "MinJob NHN KCP"(`kcp_v2`·사이트코드 IP94F·PG-API 인증서/개인키). 채널 키 = `NEXT_PUBLIC_PORTONE_CHANNEL_KEY`(로컬·Vercel). STORE_ID·`PORTONE_API_SECRET`은 상점 단위라 채널 바꿔도 불변.
 - **KCP 한도(심사 안내)**: 건당 100만원 · 월 정산 150만원(상향요청 시 보증보험료) · 정산 월 4회 · 할부 3개월. 상품 최대 50만원이라 건당 여유, 월 150만은 매출 증가 시 상향.
-- **✅ 실카드결제 활성(2026-08-05)** — 가맹 심사 + 카드사 등록 둘 다 통과. 실 노출 적용(featured 세팅)·주문 저장·모바일 redirect 복귀 = Phase 1. **결제 경로 도달은 교회 멤버십 배선에 막혀 있다**(`churchVerificationStatus` 하드코딩 `null`).
+- **✅ 실카드결제 활성(2026-08-05)** — 가맹 심사 + 카드사 등록 둘 다 통과. 실 노출 적용(featured 세팅)·주문 저장·모바일 redirect 복귀 = Phase 1. 🔴 **화면은 2026-08-19까지 "테스트 모드 — 실제 청구는 없어요"라고 거짓 안내**하고 있었다(심사 시절 문구 잔존). 잠그지 않고 사실을 말하게 고쳤다(결제 경로가 교회 인증 미구현으로 **구조적 도달 불가**라 피해 없음) — 카드 실청구 + 노출 적용은 **운영자 수동** + 결제번호·환불 기준·모바일 복귀 안내 + 문의 링크. 수동 처리가 성립하려면 **무엇을 누구에게**가 필요해 `customData`(jobId)·`customer`(email)를 PortOne 레코드에 싣고 서버가 감사 로그를 남긴다. **청구 후 검증 실패는 `charged` 상태로 분리** — 이중 청구 방지. 결제를 제대로 파는 데 필요한 3가지는 ROADMAP 1-8. **결제 경로 도달은 교회 멤버십 배선에 막혀 있다**(`churchVerificationStatus` 하드코딩 `null`).
 
 ---
 

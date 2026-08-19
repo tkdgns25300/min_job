@@ -127,7 +127,7 @@
 | `optional_docs` | text[] DEFAULT '{}' | 제출 서류 — **선택**. 배열 2개로 분리(jsonb `{name,required}`보다 쿼리·표시 단순) |
 | `process_steps` | text[] DEFAULT '{}' | 전형 절차(서류→면접→설교…). `requirements`와 동일 패턴 |
 | `description` | text **NOT NULL** | 본문(운영자 요약 or 교회 작성 — 원문 통째 복제 X). **요약이 없으면 출처 링크만 있는 빈 껍데기**가 되어 가드레일 #1("요약 + 출처 링크")과 제품의 존재 이유를 부정한다 |
-| `featured_tier` | text NOT NULL DEFAULT 'NONE' (CHECK) | 노출 등급 — **현재 유효 노출의 비정규화 캐시**(원장은 `job_promotions`). 결제 완료 Server Action이 쓴다 |
+| `featured_tier` | text NOT NULL DEFAULT 'NONE' (CHECK) | 노출 등급 — **현재 유효 노출의 비정규화 캐시**(원장은 `job_promotions`). 결제 완료 시 **route handler `/api/payments/complete`**가 쓴다(Server Action이 아니다 — 결제 검증은 CLAUDE.md가 허용한 REST 예외 ②). 아직 미구현 |
 | `featured_until` | date NULL | 노출 만료일 — 〃. 만료 판정은 §6-1과 같은 경로(seam이 `todayInSeoul()` 생성) |
 | `posted_at` | date **NOT NULL** | 게시일. **필수 복귀(2026-08-14)** — 8/5에 nullable로 풀었다가 되돌렸다(크롤러도 필수로 확정). `fetched_at`으로 대체 금지(틀린 날짜 공개) — 게시판이 날짜를 안 주는 공고(PCKWORLD 60건)는 **검수에서 운영자가 입력**한다(포스터에 대개 적혀 있다). **상시모집 만료 판정의 기준일**이기도 하다(§공개 노출 규칙) |
 | `deadline` | date NULL | 마감(NULL=상시모집) |
@@ -432,7 +432,7 @@ users ──▶ bookmarks ◀── jobs     (Phase 2)
   - **대표광고**(HERO) = 홈·목록 최상단 추천(AD) 슬롯, 더 크게. **구좌 한정** → 특정 주가 찼는지는 `job_promotions`의 기간 행으로 판정(캐시 컬럼으로는 미래 판매 불가)
 - **만료 자동 강등 = cached scope 계산.** ⚠️ `'use cache'` 안에서 `new Date()`는 **엔트리가 만들어질 때 한 번** 평가되고 그동안 고정된다(CLAUDE.md 제약 #2). 호출부(`/jobs`·홈·`sitemap.xml`)가 전부 프리렌더 스코프라 **거기서 만들면 빌드 시각이 굳으므로**, `lib/queries/*`가 `todayInSeoul()`로 만들어 mock/DB에 넘긴다. `cacheLife("days")`와 함께 하루마다 갱신되어 만료가 최대 하루 늦게 반영된다(목록 자체가 하루 캐시라 무해). 인자로 받으려면 `await connection()`이 필요하고 `◐ PPR` → `ƒ`. **`deadline` 만료(§6-1)와 같은 코드 경로.**
 - **정렬 반영**: 노출 등급 우선 → 최신순(`posted_at`). (끌어올리기/bump 없음 — 저볼륨이라 제외)
-- **가격은 확정**(`EXPOSURE_PRODUCTS` 단일 소스: PREMIUM 주 7만/4주 24만 · HERO 주 15만/4주 50만, VAT 포함). 결제·서버 검증 구현 완료. `/pricing`은 아직 "문의" — 교회 멤버십 미배선으로 결제 경로에 도달 불가(ROADMAP 1-8·8). ⚠️ **결제 활성 상태가 문서와 코드에서 엇갈린다**(2026-08-19 확인): 여기엔 "실카드결제 활성(2026-08-05)"이라 적혀 있는데 코드는 **테스트 채널**(`promote-checkout.tsx` 주석)이고 화면도 "테스트 모드 — 실제 청구는 없어요"라고 안내한다. **실제 PortOne 설정을 확인해 한쪽으로 정리할 것** — 라이브인데 테스트라고 안내하면 청구 분쟁이 되고, 반대면 결제가 안 되는 걸 된다고 기록한 셈이다.
+- **가격은 확정**(`EXPOSURE_PRODUCTS` 단일 소스: PREMIUM 주 7만/4주 24만 · HERO 주 15만/4주 50만, VAT 포함). 결제·서버 검증 구현 완료, **실카드결제 활성(2026-08-05)** — 실연동 채널이라 카드가 실제로 청구된다. `/pricing`은 아직 "문의" — 교회 멤버십 미배선으로 결제 경로에 도달 불가(ROADMAP 1-8·8). ⚠️ **노출 적용·취소는 아직 수동**이다(주문 저장·`featured` 세팅이 없다) — 운영자가 PortOne 콘솔을 보고 처리하고 이메일로 안내한다. 결제 화면이 그 사실을 밝힌다(2026-08-19 — 그전까지 "테스트 모드 — 실제 청구는 없어요"라고 **거짓 안내**하고 있었다).
 - 기독 B2B 배너 광고 = 별도 광고주·ad ops → Phase 2+ 옵션(레일 슬롯만).
 
 ---

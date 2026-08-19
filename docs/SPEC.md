@@ -298,7 +298,8 @@
   5. **약관 동의**(필수) → **결제하기**
   - **결제**: PortOne V2 `requestPayment`(KCP CARD) 결제창 → 성공 시 `POST /api/payments/complete`가 **금액을 서버가 tier·weeks로 재계산 + PortOne API 실결제 조회로 `status===PAID`·금액 대조**(클라 불신, 위변조 방지). 가격 단일 소스 = `constants/domain.ts`의 `EXPOSURE_PRODUCTS`/`exposurePrice`. paymentId 38자(KCP 40자 제한).
   - env: `NEXT_PUBLIC_PORTONE_STORE_ID`·`_CHANNEL_KEY`(공개) · `PORTONE_API_SECRET`(서버). 키 미설정 시 결제 시도하면 안내만.
-  - **Phase 1**: 결제 성공 시 주문 저장 + 실 노출 적용(`featured_tier`·`featured_until`) · **모바일 redirect 복귀 처리**(현재 데스크톱 팝업 Promise만) · KCP 승인 + 일반결제 계약 후 실결제 전환.
+  - ⚠️ **실연동 채널이라 카드가 실제로 청구된다**(2026-08-05 활성). 노출 적용·취소는 **아직 운영자 수동**이므로 화면이 그 사실을 밝힌다 — "카드가 실제로 청구돼요" + 운영자 확인 후 이메일 안내 + 취소·환불 문의 링크, 성공 화면에 **결제번호**(수동 처리 시 결제를 특정할 근거) + **환불 기준**(약관 제10조가 기준을 결제 화면에 위임하므로 여기 없으면 동의가 빈 규정을 가리킨다) + **모바일은 복귀하지 않을 수 있다는 안내**. 대상 공고·결제자 이메일은 `customData`·`customer`로 PortOne 레코드에 실어 둔다(주문 테이블이 없어 콘솔이 유일한 원장) + 서버가 성공 시 감사 로그를 남긴다. **청구 후 검증 실패는 `charged` 상태로 갈라** 재결제 버튼을 주지 않고 결제번호·문의로 보낸다(실연동 채널이라 재시도가 이중 청구다). 2026-08-19까지 "테스트 모드 — 실제 청구는 없어요"라고 **거짓 안내**하고 있었다. 결제 경로는 교회 인증 미구현으로 **도달 불가**라 사용자 피해는 없었다.
+  - **Phase 1**: 결제 성공 시 주문 저장 + 실 노출 적용(`featured_tier`·`featured_until`) · **모바일 redirect 복귀 처리**(현재 데스크톱 팝업 Promise만 — 모바일은 검증이 아예 안 돌아 화면이 그 사실을 안내한다). ~~KCP 승인 후 실결제 전환~~ 은 **완료**(2026-08-05 실카드결제 활성).
 
 **교회 인증 `/mypage/verify`** (별도 라우트, dynamic, `robots:noindex`, `verify-form.tsx`) — 상태별:
 - **미신청(status=null)** — 그룹형 폼(단일 페이지, 4섹션):
