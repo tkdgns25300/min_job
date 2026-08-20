@@ -256,6 +256,7 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 
 **Styling**
 - Tailwind 인라인. 별도 CSS 파일 X (`globals.css` 제외).
+- ⚠️ **Tailwind v4는 `button`에 `cursor: pointer`를 주지 않는다**(v3 preflight는 줬다). `globals.css`의 `@layer base`가 되돌려 놓았으니 버튼마다 `cursor-pointer`를 붙이지 않는다 — 붙이기 시작하면 새 버튼마다 기억해야 하고, 그래서 한때 54개가 전부 빠져 있었다.
 - shadcn/ui 우선. **모바일 퍼스트** (`base` → `sm` → `md` → `lg`) — 구직 교역자가 폰으로 공고를 본다. (디자인 방향은 SPEC.)
 
 **Imports**

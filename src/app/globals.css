@@ -76,6 +76,16 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* 버튼 커서 — ⚠️ 지우지 말 것. Tailwind v3 preflight는 button에 cursor:pointer를 넣었지만
+     v4는 빼서 브라우저 기본값(default)이 그대로 나온다. 우리 화면엔 칩·탭·케밥처럼
+     버튼처럼 안 생긴 버튼이 많아 커서가 유일한 클릭 단서인 곳이 있다.
+     base 레이어라 개별 컴포넌트가 `cursor-*` 유틸리티로 덮어쓸 수 있다. */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
 }
 
 /* 히어로 딥그린 표면 — 은은한 라디얼로 깊이 */
