@@ -135,7 +135,7 @@
 | `created_at` | timestamptz DEFAULT now() | |
 | `updated_at` | timestamptz DEFAULT now() | Server Action에서 갱신 |
 
-#### `jobs` 테이블 CHECK 제약 (2개)
+#### `jobs` 테이블 CHECK 제약 (**4개**)
 
 ```sql
 -- ① job_kind ↔ position/role 상호 일치 (biconditional)
@@ -157,7 +157,17 @@ CHECK (
 --    ⚠️ source_url은 세지 않는다 (아래 근거)
 CHECK ( contact_email IS NOT NULL OR contact_tel  IS NOT NULL
      OR contact_link  IS NOT NULL OR contact_post IS NOT NULL )
+
+-- ③ 수집 공고엔 원문 링크가 반드시 있다 — 가드레일 #1이 "요약 + 출처 링크"를 요구한다.
+--    교회 직접 등록(CHURCH)은 원문이 없으므로 면제.
+CHECK ( source = 'CHURCH' OR source_url IS NOT NULL )
+
+-- ④ 교회가 직접 올린 공고엔 교회 행이 반드시 있다 — 인증 관리자만 등록할 수 있으므로.
+--    수집 공고(OPERATOR)는 church_id가 NULL이다(교회 행을 만들지 않는다 · §10).
+CHECK ( source = 'OPERATOR' OR church_id IS NOT NULL )
 ```
+
+> ⚠️ **③④는 한때 컬럼 설명 안에만 흩어져 있었다**(2026-08-20 여기로 모음) — 헤더가 "2개"라 적혀 있어 마이그레이션이 둘을 빠뜨릴 자리였다. 승격 게이트로는 세지 않는다(크롤 데이터에선 항상 참): §3 "최소 조건" 절 참조.
 
 **②에서 `source_url`을 뺀 이유(2026-08-05 확정)**: 세면 크롤링 공고는 `source_url`이 항상 있어 **CHECK가 항상 참 = 장식**이 된다. 빼면 제약이 두 경로에서 각각 일한다 — 크롤링은 연락처를 못 뽑으면 승격이 막혀 **운영자가 원문·포스터를 열어 입력**하게 되고(데이터 품질 상승), 교회 직접 등록은 `source_url`이 NULL이라 자동으로 연락처가 필수다. 연락처를 별도 테이블로 쪼개지 않은 덕에 이 제약이 CHECK 하나로 가능하다(행 간 제약이면 trigger가 필요하고 DB Policy가 금지).
 
