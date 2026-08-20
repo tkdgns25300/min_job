@@ -18,7 +18,7 @@
     },
     "docFileName": "사업자등록증_은혜로교회.pdf",
     "status": "PENDING",
-    "submittedAt": "2026-08-12",
+    "submittedAt": "2026-08-12T10:24:11+09:00",
     "reviewedAt": null,
     "rejectionReason": null
   },
@@ -41,7 +41,7 @@
     },
     "docFileName": "고유번호증_한빛교회.jpg",
     "status": "PENDING",
-    "submittedAt": "2026-08-11",
+    "submittedAt": "2026-08-11T16:03:48+09:00",
     "reviewedAt": null,
     "rejectionReason": null
   },
@@ -64,7 +64,7 @@
     },
     "docFileName": "고유번호증_생명수교회.pdf",
     "status": "PENDING",
-    "submittedAt": "2026-08-10",
+    "submittedAt": "2026-08-10T09:41:02+09:00",
     "reviewedAt": null,
     "rejectionReason": null
   },
@@ -87,7 +87,7 @@
     },
     "docFileName": "사업자등록증_주안에교회.png",
     "status": "PENDING",
-    "submittedAt": "2026-08-08",
+    "submittedAt": "2026-08-08T21:12:35+09:00",
     "reviewedAt": null,
     "rejectionReason": null
   },
@@ -110,8 +110,8 @@
     },
     "docFileName": null,
     "status": "APPROVED",
-    "submittedAt": "2026-08-02",
-    "reviewedAt": "2026-08-03",
+    "submittedAt": "2026-08-02T14:55:20+09:00",
+    "reviewedAt": "2026-08-03T11:07:09+09:00",
     "rejectionReason": null
   },
   {
@@ -133,8 +133,8 @@
     },
     "docFileName": null,
     "status": "APPROVED",
-    "submittedAt": "2026-07-31",
-    "reviewedAt": "2026-08-01",
+    "submittedAt": "2026-07-31T08:19:44+09:00",
+    "reviewedAt": "2026-08-01T10:32:51+09:00",
     "rejectionReason": null
   },
   {
@@ -156,8 +156,8 @@
     },
     "docFileName": null,
     "status": "REJECTED",
-    "submittedAt": "2026-07-29",
-    "reviewedAt": "2026-07-30",
+    "submittedAt": "2026-07-29T00:38:06+09:00",
+    "reviewedAt": "2026-07-30T15:44:12+09:00",
     "rejectionReason": "신청서에 적은 사무용 연락처가 교회 홈페이지·공고에 공개된 번호와 달라 확인이 어려워요. 교회 대표 연락처로 다시 신청해 주세요."
   }
 ]

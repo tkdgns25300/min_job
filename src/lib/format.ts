@@ -34,6 +34,24 @@ export function formatExposurePrice(won: number): string {
   return `${(won / KRW_PER_MAN).toLocaleString("ko-KR")}만원`;
 }
 
+/**
+ * `timestamptz` 값을 **KST 날짜**로 — 검수 큐의 제출일·검수일 표시용.
+ *
+ * DB는 `timestamptz`에 **절대 시점**을 담는다(`+09:00`과 `Z`는 같은 순간이고 저장값이 동일하다).
+ * 시간대는 **읽을 때 정해지므로** 그대로 그리면 UTC가 나온다 — 한국 자정~오전 9시 사이에
+ * 만들어진 값은 **날짜가 하루 어긋난다.**
+ *
+ * `date` 컬럼(`postedAt`·`deadline`)에는 쓰지 않는다 — 시간대가 없어 변환할 것이 없다.
+ * 그쪽의 KST 문제는 "오늘이 며칠인가"이고 `todayInSeoul()`(job-visibility)이 맡는다.
+ */
+export function formatKstDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return null; // 깨진 값에 "Invalid Date"를 그리지 않는다
+  // en-CA가 YYYY-MM-DD를 준다 — 수동 조립보다 짧고 자릿수 패딩 실수가 없다(todayInSeoul과 같은 관용구)
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(at);
+}
+
 // 교회 위치: 지역(+시). 모르는 조각은 **생략**한다 — 방문자에게 "미상"은 정보가 아니라 잡음이고,
 // 크롤 공고는 지역이 비어 있는 경우가 흔하다(DATA §3). 둘 다 없으면 "" → 호출부가 줄째로 걷어낸다.
 export function churchLocation(church: Pick<JobChurchRef, "region" | "city">): string {

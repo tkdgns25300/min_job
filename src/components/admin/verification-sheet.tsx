@@ -20,6 +20,7 @@ import {
   POSITIONS,
   REGIONS,
 } from "@/constants/domain";
+import { formatKstDate } from "@/lib/format";
 import type { ChurchVerification } from "@/types/domain";
 
 export type SheetState = ChurchVerification | null;
@@ -57,7 +58,7 @@ function ReviewBody({
             {CHURCH_VERIFICATION_STATUSES[status]}
           </Badge>
         </SheetTitle>
-        <SheetDescription>제출일 {verification.submittedAt}</SheetDescription>
+        <SheetDescription>제출일 {formatKstDate(verification.submittedAt)}</SheetDescription>
       </SheetHeader>
 
       <div className="flex flex-col gap-5 px-4">
@@ -105,7 +106,7 @@ function ReviewBody({
 
         {!isPending && (
           <Section title="검수 결과">
-            <InfoRow label="검수일">{verification.reviewedAt ?? "—"}</InfoRow>
+            <InfoRow label="검수일">{formatKstDate(verification.reviewedAt) ?? "—"}</InfoRow>
             {verification.rejectionReason && (
               <p className="rounded-lg bg-destructive/5 px-3 py-2 text-sm break-keep text-destructive">
                 {verification.rejectionReason}

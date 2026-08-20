@@ -254,7 +254,13 @@ export interface ChurchVerification {
    */
   docFileName: string | null;
   status: ChurchVerificationStatus; // PENDING / APPROVED / REJECTED
-  submittedAt: string; // "YYYY-MM-DD"
-  reviewedAt: string | null; // 검수 완료일 (승인·반려 시)
+  /**
+   * 제출 시각 — **오프셋 있는 ISO8601**(`users.verification_submitted_at`은 `timestamptz`).
+   * ⚠️ 날짜 문자열이 아니다. 화면에 그대로 그리면 UTC가 나와 **날짜가 하루 어긋난다** —
+   * 표시는 `formatKstDate`(lib/format)를 거친다.
+   */
+  submittedAt: string;
+  /** 검수 시각(승인·반려 시) — 위와 같다. `null` = 아직 검수 전 */
+  reviewedAt: string | null;
   rejectionReason: string | null; // 반려 사유 (REJECTED만)
 }

@@ -316,6 +316,11 @@ export function getAdminOverview(today: string): AdminOverview {
   return { featuredCount, weekCount, hiddenCount, totalCount: all.length };
 }
 
+/** 오프셋 있는 ISO8601 → 정렬용 시점(ms). 없으면 0(맨 뒤로 밀린다) */
+function at(iso: string | null): number {
+  return iso ? new Date(iso).getTime() : 0;
+}
+
 /**
  * 교회 인증 신청 — 운영자 검수 목록(유일한 검수 게이트). 작업 큐 정렬:
  * 검수 대기(PENDING) 먼저(오래된 신청 우선), 처리 완료는 최근 처리 순.
@@ -325,8 +330,11 @@ export function getVerifications(): ChurchVerification[] {
     const aPending = a.status === "PENDING";
     const bPending = b.status === "PENDING";
     if (aPending !== bPending) return aPending ? -1 : 1;
-    if (aPending) return a.submittedAt.localeCompare(b.submittedAt); // 대기: 오래된 것 먼저
-    return (b.reviewedAt ?? "").localeCompare(a.reviewedAt ?? ""); // 완료: 최근 처리 먼저
+    // ⚠️ 시각은 **시점으로** 비교한다 — ISO 문자열 비교는 오프셋 표기가 섞이면 틀린다
+    // (`2026-07-29T00:00+09:00`은 `2026-07-28T23:00Z`보다 이른데 문자열로는 뒤로 간다).
+    // 한 소스에서 오는 값은 표기가 일정해 지금은 우연히 맞지만, 그 전제에 기대지 않는다.
+    if (aPending) return at(a.submittedAt) - at(b.submittedAt); // 대기: 오래된 것 먼저
+    return at(b.reviewedAt) - at(a.reviewedAt); // 완료: 최근 처리 먼저
   });
 }
 

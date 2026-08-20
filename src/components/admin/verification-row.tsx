@@ -9,6 +9,7 @@ import {
   REGIONS,
   type ChurchVerificationStatus,
 } from "@/constants/domain";
+import { formatKstDate } from "@/lib/format";
 import type { ChurchVerification } from "@/types/domain";
 
 // 인증 상태 → Badge variant. sheet와 공유(단일 정의) — 표시 로직이라 도메인 enum과 분리.
@@ -65,7 +66,7 @@ export function VerificationRow({
         {church.contactTel ?? church.contactEmail ?? "—"}
       </td>
       <td className="px-4 py-3 align-middle text-xs whitespace-nowrap text-muted-foreground tabular-nums">
-        {verification.submittedAt}
+        {formatKstDate(verification.submittedAt)}
       </td>
       <td className="px-4 py-3 align-middle">
         <Badge variant={VERIFICATION_STATUS_VARIANT[status]}>
