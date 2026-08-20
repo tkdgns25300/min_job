@@ -3,7 +3,10 @@
 > **DB 스키마·enum·인덱스·RLS·구조화 정책·설계 결정**. 비즈니스 동작은 [`SPEC.md`](./SPEC.md), 아키텍처·컨벤션은 [`../CLAUDE.md`](../CLAUDE.md), 작업은 [`ROADMAP.md`](./ROADMAP.md).
 >
 > 이 문서는 **스키마 정본**이다. 마이그레이션·DB 타입 생성은 이 문서를 따른다.
-> 초기 마이그레이션 = `supabase/migrations/20260820231650_init.sql`(테이블 7개 + 제약 + 인덱스 · 2026-08-20). **RLS 정책·GRANT·Storage 버킷은 들어 있지 않다** — 다음 마이그레이션이다. 로컬 Postgres 15에 적용해 제약 25케이스를 검증했고(CHECK ① 배열 상호일치 9케이스 포함) 원격에는 아직 적용하지 않았다. (mock: `src/mocks/*.json`, 타입: `src/types/domain.ts`, enum: `src/constants/domain.ts`)
+> 마이그레이션은 `supabase/migrations/`(Supabase CLI 관례 `YYYYMMDDHHmmss_name.sql`). **적용된 파일은 고치지 않는다 — 변경은 항상 새 파일이다**(고치면 파일과 실제 DB가 어긋나 재현이 깨진다).
+> · `20260820231650_init.sql` — 테이블 7개 + 제약 + 인덱스
+> · `20260820234934_source_url_not_blank.sql` — CHECK ⑤
+> 둘 다 **원격 적용 완료**(2026-08-20 · MCP로 테이블 7·컬럼 88·CHECK 25·FK 8·인덱스 30 확인). ⬜ **RLS 정책·GRANT·Storage 버킷은 아직 없다** — 다음 마이그레이션이다. (mock: `src/mocks/*.json`, 타입: `src/types/domain.ts`, enum: `src/constants/domain.ts`)
 >
 > ⚠️ **살아있는 문서.** 페이지 디자인·기능을 고도화하며 필드가 늘면 이 문서·mock 스키마를 **함께 확장**한다. 데이터는 `lib/queries/*`(seam)로만 접근해 mock↔DB 전환 시 페이지 불변.
 
@@ -136,7 +139,7 @@
 | `created_at` | timestamptz DEFAULT now() | |
 | `updated_at` | timestamptz DEFAULT now() | Server Action에서 갱신 |
 
-#### `jobs` 테이블 CHECK 제약 (**4개**)
+#### `jobs` 테이블 CHECK 제약 (**5개**)
 
 ```sql
 -- ① job_kind ↔ position/role 상호 일치 (biconditional)
@@ -166,6 +169,14 @@ CHECK ( source = 'CHURCH' OR source_url IS NOT NULL )
 -- ④ 교회가 직접 올린 공고엔 교회 행이 반드시 있다 — 인증 관리자만 등록할 수 있으므로.
 --    수집 공고(OPERATOR)는 church_id가 NULL이다(교회 행을 만들지 않는다 · §10).
 CHECK ( source = 'OPERATOR' OR church_id IS NOT NULL )
+
+-- ⑤ source_url이 **빈 문자열이면 거부**한다(2026-08-20 추가).
+--    ③은 NULL만 막는다 — 빈 문자열은 NULL이 아니라 통과했고, 그러면 수집 공고가
+--    **출처 없이 공개된다**(가드레일 #1의 "요약 + 출처 링크"가 무너진다).
+--    화면도 끊긴다: `getApplyTarget`이 `if (job.sourceUrl)`로 판정하는데 빈 문자열은
+--    JS falsy라 지나가고, 크롤 공고는 church_id가 NULL이라 홈페이지 폴백도 없다
+--    → **지원 동선이 사라진 공고**가 조용히 공개된다.
+CHECK ( source_url IS NULL OR length(btrim(source_url)) > 0 )
 ```
 
 > ⚠️ **③④는 한때 컬럼 설명 안에만 흩어져 있었다**(2026-08-20 여기로 모음) — 헤더가 "2개"라 적혀 있어 마이그레이션이 둘을 빠뜨릴 자리였다. 승격 게이트로는 세지 않는다(크롤 데이터에선 항상 참): §3 "최소 조건" 절 참조.
