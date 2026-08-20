@@ -324,7 +324,7 @@ CHECK ( source_url IS NULL OR length(btrim(source_url)) > 0 )
 
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
-| `id` | uuid PK, FK→`auth.users.id` ON DELETE CASCADE | |
+| `id` | uuid PK, FK→`auth.users.id` ON DELETE CASCADE | ⚠️ **행은 로그인할 때 `auth/callback`이 만든다**(2026-08-21 · upsert). DB trigger 금지(§1)라 Supabase 표준인 `on auth.user created` 트리거를 쓰지 않는다. 세션을 발급하는 곳이 콜백 한 곳뿐이라 **세션이 있으면 이 행도 있다** — 단 upsert가 실패하면 콜백이 **세션을 폐기**해 그 불변식을 지킨다(행 없이 로그인된 상태가 굳으면 나중에 인증 신청이 갱신할 행을 못 찾는다) |
 | `email` | text **NOT NULL** | `auth.users`에서 복제. `auth` 스키마는 PostgREST로 JOIN하기 어려워 표시·운영자 조회용으로 둔다 |
 | `church_id` | uuid FK→churches NULL | 이 계정이 관리하는 교회(인증 후 연결). NULL=일반 사역자 |
 | `church_verification_status` | text NULL (CHECK) | PENDING/APPROVED/REJECTED. NULL=미신청 |
@@ -525,6 +525,7 @@ users ──▶ bookmarks ──▶ jobs     (Phase 1)
 | `crawl_run` | 실행별 요약 (1실행 1행, 누적) — started/finished·mode·성공/실패 소스·신규 집계 |
 
 - **RLS = 운영자 전용**(min_job admin이 대시보드·검수에 read), 크롤러는 service-role로 write. **public 노출 없음.**
+- ⚠️⚠️ **`users`에 "본인 행 INSERT" 정책이 반드시 있어야 한다** — 없으면 `auth/callback`의 프로필 upsert가 막혀 **아무도 로그인하지 못한다**(콜백이 실패 시 세션을 폐기하므로). RLS를 켜는 마이그레이션에서 같이 넣을 것.
 - ⚠️⚠️ **`jobs`에 대한 크롤러 권한은 컬럼 단위로 조인다**(정본 = min_job_agent SPEC §8 · 마이그레이션에 반드시 넣을 것):
   ```sql
   GRANT SELECT, INSERT ON jobs TO crawler;
