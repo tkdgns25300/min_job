@@ -2,7 +2,8 @@
 
 > **DB 스키마·enum·인덱스·RLS·구조화 정책·설계 결정**. 비즈니스 동작은 [`SPEC.md`](./SPEC.md), 아키텍처·컨벤션은 [`../CLAUDE.md`](../CLAUDE.md), 작업은 [`ROADMAP.md`](./ROADMAP.md).
 >
-> 이 문서는 **mock 단계에서 확정된 스키마**를 정본으로 옮긴 것. 실제 마이그레이션(`supabase/migrations`)·DB 타입 생성은 이 문서를 따른다. (mock: `src/mocks/*.json`, 타입: `src/types/domain.ts`, enum: `src/constants/domain.ts`)
+> 이 문서는 **스키마 정본**이다. 마이그레이션·DB 타입 생성은 이 문서를 따른다.
+> 초기 마이그레이션 = `supabase/migrations/20260820231650_init.sql`(테이블 7개 + 제약 + 인덱스 · 2026-08-20). **RLS 정책·GRANT·Storage 버킷은 들어 있지 않다** — 다음 마이그레이션이다. 로컬 Postgres 15에 적용해 제약 25케이스를 검증했고(CHECK ① 배열 상호일치 9케이스 포함) 원격에는 아직 적용하지 않았다. (mock: `src/mocks/*.json`, 타입: `src/types/domain.ts`, enum: `src/constants/domain.ts`)
 >
 > ⚠️ **살아있는 문서.** 페이지 디자인·기능을 고도화하며 필드가 늘면 이 문서·mock 스키마를 **함께 확장**한다. 데이터는 `lib/queries/*`(seam)로만 접근해 mock↔DB 전환 시 페이지 불변.
 
