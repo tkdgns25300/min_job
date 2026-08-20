@@ -1,6 +1,7 @@
 -- MinJob 초기 스키마 — 정본은 docs/DATA.md.
 --
--- 범위: CREATE TABLE + 제약 + 인덱스만. **RLS 정책·GRANT·Storage 버킷은 다음 마이그레이션**이다.
+-- 범위: CREATE TABLE + 제약 + 인덱스만. **RLS 정책·Storage 버킷은 다음 마이그레이션**이다
+--       (RLS는 2026-08-21 결정으로 당분간 유예 · GRANT는 크롤러가 service role이라 쓰지 않는다 — DATA §9).
 --       RLS를 여기서 `ENABLE`하지 않는 이유: 정책 없이 켜면 anon·authenticated 접근이 전부 막혀,
 --       그 사이 코드를 붙이면 원인을 찾기 어려운 실패가 난다. 켜는 것과 정책을 한 파일에 둔다.
 --

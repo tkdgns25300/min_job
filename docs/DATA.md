@@ -6,7 +6,7 @@
 > 마이그레이션은 `supabase/migrations/`(Supabase CLI 관례 `YYYYMMDDHHmmss_name.sql`). **적용된 파일은 고치지 않는다 — 변경은 항상 새 파일이다**(고치면 파일과 실제 DB가 어긋나 재현이 깨진다).
 > · `20260820231650_init.sql` — 테이블 7개 + 제약 + 인덱스
 > · `20260820234934_source_url_not_blank.sql` — CHECK ⑤
-> 둘 다 **원격 적용 완료**(2026-08-20 · MCP로 테이블 7·컬럼 88·CHECK 25·FK 8·인덱스 30 확인). ⬜ **RLS 정책·GRANT·Storage 버킷은 아직 없다** — 다음 마이그레이션이다. (mock: `src/mocks/*.json`, 타입: `src/types/domain.ts`, enum: `src/constants/domain.ts`)
+> 둘 다 **원격 적용 완료**(2026-08-20 · MCP로 테이블 7·컬럼 88·CHECK 25·FK 8·인덱스 30 확인). ⬜ **RLS 정책·Storage 버킷은 아직 없다** — 다음 마이그레이션이다(RLS는 당분간 유예 — §9). **GRANT는 쓰지 않는다** — 크롤러가 service role로 붙어 우회한다(§9). (mock: `src/mocks/*.json`, 타입: `src/types/domain.ts`, enum: `src/constants/domain.ts`)
 >
 > ⚠️ **살아있는 문서.** 페이지 디자인·기능을 고도화하며 필드가 늘면 이 문서·mock 스키마를 **함께 확장**한다. 데이터는 `lib/queries/*`(seam)로만 접근해 mock↔DB 전환 시 페이지 불변.
 
@@ -544,14 +544,11 @@ users ──▶ bookmarks ──▶ jobs     (Phase 1)
 | `crawl_run` | 실행별 요약 (1실행 1행, 누적) — started/finished·mode·성공/실패 소스·신규 집계 |
 
 - **RLS = 운영자 전용**(min_job admin이 대시보드·검수에 read), 크롤러는 service-role로 write. **public 노출 없음.**
+- ⏸ **당분간 RLS를 켜지 않는다**(2026-08-21 결정). 표는 **켤 때의 의도**이고, 지금은 11개 테이블 전부 꺼져 있다 — 실 데이터가 없어 잃을 것이 없고, 정책 없이 켜면 코드가 전면 차단된다. ⚠️ **크롤러가 실 공고를 적재하기 전**에는 켜야 한다(그 뒤엔 anon 키로 전량 읽기·삭제가 가능해진다).
 - ⚠️⚠️ **`users`에 "본인 행 INSERT" 정책이 반드시 있어야 한다** — 없으면 `auth/callback`의 프로필 upsert가 막혀 **아무도 로그인하지 못한다**(콜백이 실패 시 세션을 폐기하므로). RLS를 켜는 마이그레이션에서 같이 넣을 것.
-- ⚠️⚠️ **`jobs`에 대한 크롤러 권한은 컬럼 단위로 조인다**(정본 = min_job_agent SPEC §8 · 마이그레이션에 반드시 넣을 것):
-  ```sql
-  GRANT SELECT, INSERT ON jobs TO crawler;
-  GRANT UPDATE (posted_at) ON jobs TO crawler;
-  -- DELETE 없음 · 다른 컬럼 UPDATE 없음 · churches 권한 없음
-  ```
-  **UPDATE를 `posted_at` 하나로 묶는 것이 핵심이다** — 크롤러 버그가 운영자가 검수에서 고친 제목·연락처·마감일을 덮는 길을 **코드 규율이 아니라 DB가** 막는다. `posted_at` 갱신이 필요한 이유는 끌어올림(교회가 계속 올리는 자리를 갱신하지 않으면 아직 뽑는데 목록에서 사라진다)이고, 조건도 좁다 — `WHERE id = ? AND church_id IS NULL`. **교회가 claim하면 소유권이 넘어가고 크롤러는 손을 뗀다.**
+- ⛔ **크롤러는 service role로 붙는다**(2026-08-21 확정). 그래서 **컬럼 단위 GRANT는 쓰지 않는다** — service key는 RLS와 GRANT를 **모두 우회**하므로 `GRANT UPDATE (posted_at)` 같은 제한이 아무것도 막지 못한다(별도 DB 롤을 만들어 그 롤로 접속해야 의미가 생기는데, 그 길로 가지 않기로 했다).
+  - **대신 규율은 크롤러 코드가 지킨다**(정본 = min_job_agent SPEC §8): 크롤러가 건드리는 `jobs` 행은 **`review_data.published_job_id`로 이어졌고 `church_id IS NULL`인 것만**이고, 갱신하는 컬럼은 `posted_at` 하나다(끌어올림 — 교회가 계속 올리는 자리를 갱신하지 않으면 아직 뽑는데 목록에서 사라진다). 조건은 `WHERE id = ? AND church_id IS NULL`. **교회가 claim하면 소유권이 넘어가고 크롤러는 손을 뗀다.**
+  - ⚠️ **그래서 "운영자가 검수에서 고친 값을 크롤러 버그가 덮는" 경로는 DB가 막아주지 않는다.** 코드 규율이 유일한 방어선이다.
 - **공개 흐름(2026-08-20 개정)**: **크롤러가 `jobs`에 직접 INSERT**한다 — `review_status=APPROVED`인 행을 **요약 + `source_url` + 연락처 4컬럼 + `source=OPERATOR` + `church_id=NULL`**로. `churches`에는 쓰지 않는다. 검수 메타는 넘기지 않고, 결과를 `review_data.published_job_id`에 적는다. min_job admin은 `PENDING`만 검수한다. **교단은 미상이면 `NULL`로 그대로 승격**(2026-08-05 — 과거 "승격 전 10키로 해소" 규칙은 철회). **지역이 미상이면 NULL로 승격**(2026-08-05 실데이터 검증). 게시일은 **필수**라 없으면 검수에서 입력(2026-08-14). 승격 가능 여부는 §3 "최소 조건 — 필수 5 + CHECK 2"가 판정한다.
 - **`review_data` 주요 컬럼**(검수 브릿지가 읽는 것): `job_kind`**[]**·`role`·`title`·`position`**[]**·`department`·`employment_type`·**`pay_min`·`pay_max`·`pay_note`·`pay_period`** · **`city`·`address`**(2026-08-17 — 승격 시 `jobs.city`·`jobs.address`로 간다) · `denomination`(+`denomination_source`·`denomination_evidence`·`raw_denomination` · **미상 가능**) · **`contact_email`·`contact_tel`·`contact_link`·`contact_post`** · `confidence` · `dedup_key`·`dedup_state` · `review_status`(PENDING/APPROVED/REJECTED) + **`reject_reason`**(DUPLICATE/HERESY/CLOSED/OPERATOR) · `published_job_id` FK→jobs · `heresy_flag`·`heresy_evidence` · `reviewed_by`·`reviewed_at` 등. **전체 스키마·판정 정본은 min_job_agent SPEC §6.**
   - ⛔ **`matched_church_id`는 읽지 않는다** — 크롤러가 교회 행을 만들지 않기로 해(2026-08-06) **항상 NULL**이다. 컬럼만 남아 있다.

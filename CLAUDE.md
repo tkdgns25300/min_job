@@ -134,7 +134,7 @@ src/
 └── proxy.ts                       Next 16 Proxy — 세션 refresh + 접근 1차 판정(진짜 307)
 
 supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관례 = `YYYYMMDDHHmmss_name.sql`)
-└── 20260820231650_init.sql   테이블 7개 + 제약 + 인덱스. ⬜ RLS·GRANT·Storage는 다음 파일
+└── 20260820231650_init.sql   테이블 7개 + 제약 + 인덱스. ⬜ RLS(유예)·Storage는 다음 파일
 ```
 
 > **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
