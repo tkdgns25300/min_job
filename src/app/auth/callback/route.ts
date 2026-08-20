@@ -25,10 +25,30 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) {
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error || !data.user.email) {
     // 만료·재사용된 code나 PKCE 검증 실패 — 화면엔 안 드러나므로 진단 로그가 유일한 단서.
     console.error("[auth/callback] 코드 교환 실패", error);
+    return redirectTo(loginErrorPath(next));
+  }
+
+  // 프로필 행 만들기 — **세션이 있으면 `public.users` 행도 있다**를 여기서 보장한다.
+  //
+  // 왜 여기인가: 세션을 발급하는 곳이 이 한 줄(`exchangeCodeForSession`)뿐이라, 콜백을 지나지
+  // 않고 로그인된 상태가 되는 경로가 없다. `proxy.ts`의 세션 갱신은 콜백을 타지 않으므로
+  // 여기서 놓치면 그 계정은 **영구히** 행 없이 남는다.
+  //
+  // ⚠️ 실패하면 **세션을 폐기**한다. 위에서 쿠키가 이미 발급됐으므로 그냥 넘기면
+  //    "로그인은 됐는데 프로필 행이 없는" 상태가 굳어, 나중에 교회 인증 신청이
+  //    갱신할 행을 못 찾아 터진다(그때는 원인이 로그인 시점이라는 걸 알기 어렵다).
+  //    로그인이 막히는 건 눈에 보이고 재시도로 풀린다 — 조용히 꼬이는 쪽이 나쁘다.
+  // ⚠️ `upsert`라 재시도가 안전하다. 재로그인마다 이메일이 최신으로 맞춰지는 효과도 있다.
+  const { error: profileError } = await supabase
+    .from("users")
+    .upsert({ id: data.user.id, email: data.user.email }, { onConflict: "id" });
+  if (profileError) {
+    console.error("[auth/callback] 프로필 행 생성 실패 — 세션 폐기", profileError);
+    await supabase.auth.signOut();
     return redirectTo(loginErrorPath(next));
   }
 

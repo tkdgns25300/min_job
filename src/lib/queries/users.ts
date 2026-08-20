@@ -59,17 +59,35 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       return null;
     }
 
+    // 신원(누구인가)은 `auth.users`, 소속·권한(무엇을 할 수 있나)은 `public.users` + `churches`.
+    // `auth` 스키마는 PostgREST로 JOIN할 수 없어 프로필을 `public.users`에 복제해 둔다(DATA §3).
+    // 행은 로그인 시 `auth/callback`이 만든다 — 세션이 있으면 이 행도 있다.
+    const { data: profile, error: profileError } = await supabase
+      .from("users")
+      .select(
+        "church_id, church_verification_status, verification_rejection_reason, churches(name, verification_status)",
+      )
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      // 프로필을 못 읽으면 교회 권한을 **닫는 쪽**으로 강등한다(fail-closed) — 신원은 살아 있으니
+      // 로그인 상태는 유지하고, 교회 기능만 잠긴다. 열어두면 미인증 교회가 공고를 올릴 수 있다.
+      console.error("[auth] 프로필 조회 실패 — 교회 권한 없이 진행", profileError);
+    }
+    // `churches`는 1:1 조인이라 객체지만, PostgREST 타입이 배열로 넓게 잡힐 수 있어 둘 다 받는다.
+    const church = Array.isArray(profile?.churches) ? profile?.churches[0] : profile?.churches;
+
     return {
       id: data.user.id,
       email: data.user.email,
       name: displayName(data.user.user_metadata),
-      // 교회 소속·인증 상태는 교회 테이블 도입 후 join — 그때까지 모든 계정은 미신청 상태.
-      // churchIsVerified는 `churches.verification_status`에서 온다(같은 join으로 함께 읽는다).
-      churchId: null,
-      churchName: null,
-      churchVerificationStatus: null,
-      churchIsVerified: false,
-      churchRejectionReason: null,
+      churchId: profile?.church_id ?? null,
+      churchName: church?.name ?? null,
+      churchVerificationStatus: profile?.church_verification_status ?? null,
+      // 사람과 교회 양쪽이 승인돼야 교회 기능이 열린다(`hasChurchAccess`) — 여기선 교회 쪽만 담는다.
+      churchIsVerified: church?.verification_status === "APPROVED",
+      churchRejectionReason: profile?.verification_rejection_reason ?? null,
     };
   } catch (thrown) {
     // ⚠️ Next 내부 제어 신호(프리렌더 중단·dynamic bailout·redirect)는 반드시 되던진다.
