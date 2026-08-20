@@ -417,6 +417,25 @@ users ──▶ bookmarks ──▶ jobs     (Phase 1)
 
 ---
 
+## 6-2. 시간 취급 — 저장 / 판정 / 표시 3층 (2026-08-21 확정)
+
+시간은 **두 종류**이고 컬럼 타입이 그 차이를 담는다. 섞으면 하루씩 어긋난다.
+
+| | 컬럼 | 무엇인가 |
+|---|---|---|
+| **`timestamptz`** (8개) | `churches.created_at` · `users.verification_submitted_at`·`_reviewed_at`·`created_at` · `jobs.created_at`·`updated_at` · `job_promotions.created_at` · `bookmarks.created_at` | **사건이 일어난 순간.** 하나의 진실 — 어디서 읽어도 같다 |
+| **`date`** (5개) | `jobs.posted_at`·`deadline`·`featured_until` · `job_promotions.starts_at`·`ends_at` | **사람이 정한 날짜.** "한국의 8월 31일"이라는 라벨. 시간대를 붙이면 오히려 틀린다 |
+
+**① 저장** — 그대로 둔다. `timestamptz`는 입력을 받는 순간 **절대 시점으로 정규화**하므로 `+09:00`으로 넣든 `Z`로 넣든 저장값이 같다. **"KST로 저장"은 불가능하고 필요도 없다** — 시간대는 읽을 때 정해진다. ⚠️ 유일한 위험은 **오프셋을 뺀 naive 입력**(서버 시간대=UTC로 해석돼 9시간 어긋난다) — 크롤러가 `ensure_kst`로 거부한다(min_job_agent `clock.py`).
+
+**② 판정** — `date`를 비교할 때 "오늘이 며칠인가"는 **`todayInSeoul()`**(`lib/job-visibility`)만 정한다. Vercel 서버가 UTC라 `new Date()`를 직접 쓰면 한국 00:00~09:00 사이에 **어제**가 나온다. `lib/queries/jobs.ts`의 쿼리 전부가 이걸 쓴다. `date`에 KST 기준이 아닌 날짜가 섞이면 복구 불가이므로, **`posted_at`은 게시판이 준 날짜를 변환 없이** 받는다(크롤러 `clock.py` — 변환하면 하루 밀린다).
+
+**③ 표시** — `timestamptz`를 화면에 그릴 때는 **`formatKstDate()`**(`lib/format`)를 거친다. 그대로 그리면 UTC가 나와 날짜가 하루 어긋난다(Supabase 대시보드가 UTC로 보여주는 것과 같은 현상). `date` 컬럼은 변환 대상이 아니다 — 시간 표시는 `RelativeTime`이 클라이언트에서 계산한다.
+
+⚠️ **시각 정렬은 문자열이 아니라 시점으로 비교한다.** ISO 문자열 비교는 오프셋 표기가 섞이면 틀린다(`2026-07-29T00:00+09:00`이 `2026-07-28T23:00Z`보다 이른데 문자열로는 뒤로 간다). 한 소스에서 오는 값은 표기가 일정해 우연히 맞지만 그 전제에 기대지 않는다. DB 전환 후에는 SQL `order by`가 시점으로 정렬한다.
+
+---
+
 ## 6-1. 공개 노출 규칙 — 만료 (2026-08-14 확정)
 
 > **크롤러는 이 규칙을 몰라도 된다**(2026-08-20 확정). 크롤러는 수집·공개만 하고, 무엇을 언제까지 보여줄지는 min_job이 판정한다(`lib/job-visibility.ts`). 끌어올림은 크롤러가 **자기 기준(원문 게시일 3개월 창)**으로 이미 구현했다 — 두 규칙은 목적이 달라 공유할 필요가 없다.
