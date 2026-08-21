@@ -6,7 +6,7 @@
 > 마이그레이션은 `supabase/migrations/`(Supabase CLI 관례 `YYYYMMDDHHmmss_name.sql`). **적용된 파일은 고치지 않는다 — 변경은 항상 새 파일이다**(고치면 파일과 실제 DB가 어긋나 재현이 깨진다).
 > · `20260820231650_init.sql` — 테이블 7개 + 제약 + 인덱스
 > · `20260820234934_source_url_not_blank.sql` — CHECK ⑤
-> 둘 다 **원격 적용 완료**(2026-08-20 · MCP로 테이블 7·컬럼 88·CHECK 25·FK 8·인덱스 30 확인). ⬜ **RLS 정책·Storage 버킷은 아직 없다** — 다음 마이그레이션이다(RLS는 당분간 유예 — §9). **GRANT는 쓰지 않는다** — 크롤러가 service role로 붙어 우회한다(§9). (mock: `src/mocks/*.json`, 타입: `src/types/domain.ts`, enum: `src/constants/domain.ts`)
+> 둘 다 **원격 적용 완료**(2026-08-20 · MCP로 테이블 7·컬럼 88·CHECK 25·FK 8·인덱스 30 확인). ⬜ **RLS 정책·Storage 버킷은 아직 없다** — 다음 마이그레이션이다(RLS는 당분간 유예 — §9). **GRANT는 쓰지 않는다** — 크롤러가 service role로 붙어 우회한다(§9). (mock: `src/mocks/*.json`, 타입: `src/types/domain.ts`(화면이 쓰는 모양)·`src/types/database.ts`(**DB 행의 모양** — 자동 생성, 2026-08-21), enum: `src/constants/domain.ts`)
 >
 > ⚠️ **살아있는 문서.** 페이지 디자인·기능을 고도화하며 필드가 늘면 이 문서·mock 스키마를 **함께 확장**한다. 데이터는 `lib/queries/*`(seam)로만 접근해 mock↔DB 전환 시 페이지 불변.
 
@@ -15,7 +15,7 @@
 ## 1. 설계 원칙
 
 - **DB는 저장 전용.** trigger·custom function·복잡한 default expression 만들지 않는다. ID 발급·timestamp·집계 등 로직은 전부 Server Action / query 함수. 내장 기능만 사용(`gen_random_uuid()`, `CHECK`, `FK`, array/`jsonb`).
-- **정규화 유지 (JOIN).** 교단 필터는 `churches`를 JOIN해서 건다. 비정규화(공고에 교회 속성 복사) 안 함 — 우리 규모(초기 수백~수천)에선 JOIN + `'use cache'` 캐시로 충분. (대규모 인덱스 최적화 필요 시 나중에 재검토)
+- **정규화 유지 (JOIN).** 교회 속성은 `churches`에 두고 필요할 때 JOIN한다. 비정규화(공고에 교회 속성 복사) 안 함 — 우리 규모(초기 수백~수천)에선 JOIN + `'use cache'` 캐시로 충분. (대규모 인덱스 최적화 필요 시 나중에 재검토)
   - ⚠️ **명시적 예외 3개**
     1. **`jobs.region`·`jobs.denomination`** — 캐시된 쿼리가 JOIN 없이 **필터**해야 한다. `church_id`가 NULL일 수 있어 JOIN이 성립 안 함(§3). 교단은 2026-08-20 추가 — 없으면 크롤 공고가 교단 필터에서 전부 탈락한다
     2. **`jobs.featured_tier`·`featured_until`** — 원장은 `job_promotions`, 이건 `now()` 없이 읽는 현재 유효 노출 캐시(§7)
@@ -283,8 +283,7 @@ CHECK ( source_url IS NULL OR length(btrim(source_url)) > 0 )
 > **받아들인 대가 4개**:
 > 1. **재공고 추적은 아예 보류했다**(§6) — 판정 키가 `church_id`에 묶여 있어 claim 전에는 거짓 숫자가 나온다. 끌어올림 판정은 크롤러 + admin 검수 확인으로 넘겼다
 > 2. **`/churches/[id]`는 claim된 교회만** 존재한다
-> 3. **`jobs.region` 비정규화** — §1 "공고에 교회 속성 복사 안 함"의 **명시적 예외**. `featured_tier`와 같은 취급(캐시된 쿼리가 JOIN 없이 필터·정렬해야 함)
-> 4. **교단 필터는 claim 전까지 안 걸린다** — 다만 교단 명시가 2.8%뿐이라 실질 영향은 작다
+> 3. **`jobs.region`·`jobs.denomination` 비정규화** — §1 "공고에 교회 속성 복사 안 함"의 **명시적 예외**. `featured_tier`와 같은 취급(캐시된 쿼리가 JOIN 없이 필터·정렬해야 함). 교단은 2026-08-20 추가 — 그전까지는 "교단 필터가 claim 전까지 안 걸린다"가 대가였다
 
 > ✅ **확정 설계(크롤러 피벗 2026-07-28)**: `job_kind` · `role` · `position` NULL 허용은 개교회 채용 확장(사역직 MINISTRY + 일반직 GENERAL) + 크롤러 `review_data` 정합을 위한 확정 설계다. 마이그레이션 SQL은 별도 작업(deferred).
 
@@ -309,7 +308,7 @@ CHECK ( source_url IS NULL OR length(btrim(source_url)) > 0 )
 | `payment_id` | text NOT NULL **UNIQUE** | PortOne paymentId(38자 — KCP 40자 제한). **UNIQUE가 멱등성**: `/api/payments/complete`가 재시도돼도 노출이 두 번 적립되지 않는다 |
 | `starts_at` | date NOT NULL | 노출 시작 |
 | `ends_at` | date NOT NULL | 노출 종료 — `weeks`에서 계산 가능하지만 **저장한다**(정산·구좌 조회에 필요, 계산은 Server Action이 1회) |
-| `status` | text NOT NULL CHECK | PAID/REFUNDED/CANCELLED |
+| `status` | text NOT NULL CHECK | PAID/REFUNDED/CANCELLED — `PROMOTION_STATUSES`와 일치. ⚠️ **REFUNDED와 CANCELLED의 경계는 미정** — 값만 정해졌다. 주문 저장(ROADMAP 1-8 ①)에서 정한다 |
 | `created_at` | timestamptz DEFAULT now() | |
 
 > **왜 `jobs.featured_tier`와 둘 다 두는가.** 역할이 다르다 — 이 테이블은 **영수증 뭉치**(지우지 않음), `jobs`의 두 컬럼은 **"지금 이 공고는 HERO다"라는 비정규화 캐시**다. 원장만 두면 목록 한 페이지(공고 100개)를 그릴 때마다 "각 공고에 오늘 유효한 영수증이 있나"를 계산해야 하는데, `featured_tier`는 `filter-jobs.ts`의 **정렬 1차 키**로 최다 조회 경로다. 게다가 **`'use cache'` 안에서는 `new Date()`가 금지**라 캐시된 쿼리가 "오늘"을 알 수 없다. 그래서 결제 완료 Server Action이 캐시 컬럼을 미리 써준다(CLAUDE.md "집계·판정은 Server Action/query에서").
@@ -396,7 +395,7 @@ users ──▶ bookmarks ──▶ jobs     (Phase 1)
 - `jobs(region)` — **지역 필터(최다 사용)**. `church_id`가 NULL일 수 있어 JOIN이 아니라 이 컬럼으로 건다
 - `jobs(denomination)` — 교단 필터. 같은 이유로 JOIN이 아니라 이 컬럼(2026-08-20)
 - `jobs(church_id)` — 교회별 공고(claim된 것만)
-- `churches(denomination)`, `churches(region)` — 교회 상세·교단 필터(JOIN 대상)
+- `churches(denomination)`, `churches(region)` — **교회 상세 전용**. 목록의 교단·지역 필터는 위 `jobs` 컬럼이 담당한다(§1 예외 1)
 - `church_links(church_id)`
 - `churches(verification_status)` — 공개 조회가 `APPROVED`만 거른다(RLS 정책 조건과 동일)
 - `users(church_id)` — 교회별 담당자 조회(다중 담당자)

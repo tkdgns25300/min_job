@@ -80,7 +80,9 @@
   > 승격 게이트도 함께 전달: **필수 5**(`church_name`·`title`·`job_kind`·`description`·`posted_at`) **+ CHECK 2**(job_kind↔position/role 상호 일치 · 연락처 ≥1, `source_url`은 안 셈). 크롤러가 맞출 6개 = 교회 매칭 · 제목 · job_kind · 직분 또는 직무 · 요약 · 연락처 1개. **교단·지역·게시일은 비어도 승격 가능.**
   > ⚠️ **CHECK에 `array_length` 쓰지 말 것** — 빈 배열에 NULL을 반환하고 Postgres CHECK는 **NULL을 통과**시켜, "직분 없는 사역직 공고"가 들어온다. `COALESCE(cardinality(...), 0)` 형태(DATA.md §3). 실 Postgres 8케이스 검증 완료
 - [x] 📮 **전달 완료(2026-08-11) — `review_data.published_job_id`가 단수다.** Phase 2에서 한 글의 여러 자리를 `jobs` N건으로 나누려면 **어느 것을 기록할지 정할 수 없고** 다음 크롤에서 재등장 방지가 깨진다. 그때 배열(`published_job_ids`)이나 조인 테이블이 필요하다 — min_job_agent 소관이라 **미리 알려두기만** 한다
-- [ ] DB 타입 생성 — `types/database.ts`
+- [x] ✅ **DB 타입 생성 — `types/database.ts` (2026-08-21)** — Supabase 자동 생성(11테이블·180컬럼 = 우리 7 + 크롤러 4). `lib/supabase/{server,service,session}.ts` 전부 `<Database>`. 검증은 파일을 역파싱해 컬럼·nullability·Insert optional 지문(md5)을 만들고 DB에서 같은 지문을 계산해 대조했다(일치). FK 12개 — DB의 13번째 `users_id_fkey`는 `auth.users`를 가리키는 cross-schema라 생성기가 제외한다.
+  > **enum 컬럼은 `string`으로 온다** — DB가 `text + CHECK`라 Postgres enum 타입이 없다(§1의 의도적 선택). 좁히기는 **seam의 일**이다: `getCurrentUser`가 `church_verification_status`를 `CHURCH_VERIFICATION_STATUSES` 대조로 좁히고 모르는 값은 `null`(fail-closed)로 본다. **아래 정합 항목의 enum 컬럼마다 같은 처리가 필요하다.** 세 번째 호출부가 나오면 헬퍼로 뽑는다(추상화는 3번째에).
+  > `churches(...)` 조인은 **객체**로 추론된다(배열 아님) — `getCurrentUser`의 `Array.isArray` 방어는 근거가 없었고 삭제했다.
 - [x] ✅ **교회 조인 경로 정합 (2026-08-16 — 드리프트 5곳 선행 해소)** — claim 결정(2026-08-06)이 DATA.md에만 반영돼 있어 코드가 **없는 값을 지어내고 있었다**: 조인 실패 시 교단을 `ETC`, 지역을 `SEOUL`로 메우고(→ 미상이 기타교단·서울로 둔갑해 필터 오염), 공고 상세는 교회가 없으면 **404**를 냈다(→ 크롤 공고가 통째로 안 열림). 함께 고친 것: `getSimilarJobs`의 `churchId` 비교(둘 다 NULL이면 무관한 교회가 "같은 교회"로 묶임) · `getSearchSuggestions`(크롤 교회명 누락) · `getJobStats`(NULL이 한 덩어리로 접힘) · `getCoverageStats`(NULL을 교단·지역 하나로 셈).
   - 해소된 드리프트: **`Church.denomination`·`Church.region` nullable** · **`Job.churchName`·`Job.region` 추가** · **`Job.churchId` nullable**
   - 새로 생긴 것: `types/domain.ts`의 `JobChurchRef`(조인 결과가 아닌 "공고가 가리키는 교회") · `lib/job-church.ts`(`jobChurchRef`·`normalizeChurchName`·`churchIdentityKey`)
@@ -94,13 +96,51 @@
   - **공개 조회는 `APPROVED`만**(`mocks`의 `publicChurchOf`) — ⚠️ **RLS는 이 경로를 못 막는다**(공개 교회 조회는 cached read라 `service.ts` secret 키를 쓰고 그건 RLS 우회). 조건은 쿼리 본문이 유일한 방어선이다. sitemap도 전용 조회(`getIndexableChurchIds`)로 분리 — 운영자용 목록을 재사용하면 검수 중 교회 URL이 색인돼 404가 된다
   - ⏸ **남은 것 = Server Action 2개뿐** — 화면·타입·mock은 확정 완료. `mypage/verify/actions.ts`(제출)·`admin/verify/actions.ts`(승인·반려 + 증빙 즉시 파기) 단계별 명세는 **SPEC 교회 인증 절**이 정본. 테이블·Storage 버킷은 아래 `001_init.sql`과 한 묶음
 > ⛔ **`/admin/jobs`에 "미상" 필터·카운터를 만들지 않는다 (2026-08-17 판단 철회)** — DATA §3의 *"검수에서 채울 값"*을 `/admin/jobs`로 잘못 읽고 한때 할 일로 올렸다. 그 검수는 **승격 전** 브릿지(`/admin/ingest` → `review_data` 보정 후 `jobs`로 INSERT)를 말한다. `/admin/jobs`는 **이미 공개된 공고**를 관리하는 화면이라 애초에 그 일을 하는 자리가 아니고, 미상 공고도 기본(전체) 목록에는 그대로 조회된다. 사후 수정이 필요하면 제목·교회 검색으로 찾는다.
-- [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합 (나머지 15곳)** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.**
-  - **TS가 DB보다 엄격**(DB가 NULL을 주면 타입이 거짓말 → 런타임 오류): `position` · `employmentType` — nullable로 풀어야 함. (`postedAt`은 NOT NULL 복귀로, `Church.denomination`·`Church.region`은 위 항목으로 **해소**)
-  - **TS가 DB보다 느슨**(폼이 NULL을 보내면 DB가 거부): `description: string | null` → **`string`**. ⚠️ 실제 모순이라 이 상태로 등록 Server Action을 붙이면 런타임 에러
-  - **타입에 아예 없는 필드 12개**: `contactEmail`·`contactTel`·`contactLink`·`contactPost`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod`
-  - 함께 필요한 것: mock JSON 101건에 신규 필드 채우기
-  > **타이밍 = 마이그레이션과 한 묶음.** 지금 손으로 맞추면 `types/database.ts` 생성 때 같은 일을 두 번 한다. 순서: 초기 마이그레이션 → `database.ts` 생성 → `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체. **이 항목이 마이그레이션 작업의 전제조건이다.**
-  > ⚠️ 원래 "18곳"이라 적었으나 실제 열거는 20곳이었다(`postedAt` 해소 후 개수를 다시 세지 않은 탓). 위 5곳을 뺀 **15곳**이 남은 정확한 수다.
+- [x] ✅ **`pay_period` 정합 (2026-08-21 — 드리프트 1곳 해소)** — 스키마엔 `jobs.pay_period`(MONTH/YEAR)가 있는데 코드는 사례비를 **전부 월로 하드코딩**하고 있었다(`formatPay` 주석 "월 사례비", `Job.payMin` 주석 "월 사례비"). **판정과 표시를 갈라서** 닫았다 — 시간을 3층으로 다루는 규칙(DATA §6-2)과 같은 모양이다.
+  - **표시는 원문 단위 그대로** — `formatPay`가 `"월 280만원"`·`"연 4,140~4,440만원"`. 월로 환산해 보여주지 **않는다**: 연봉에 상여가 섞이면 ÷12가 실제 월 지급액이 아니어서 **우리가 없는 숫자를 만든다**(DATA §3 "DEFAULT로 값을 지어내지 않는다"와 같은 이유, 가드레일 #1의 "요약 + 출처 링크" 포지셔닝). 값이 단위를 드는 이유는 **카드에 라벨이 없어서** — 없으면 `4,140만원`이 월인지 연인지 알 수 없다. 공고 상세 라벨은 `"월 사례비"` → **`"사례비"`**(라벨이 "월"을 주장하면 연 공고에서 거짓말)
+  - **필터는 월로 환산해 비교** — 안 하면 연 4,140만원 공고가 "월 300 이상"에 걸린다(4140 ≥ 300). 환산 규칙을 **필터 힌트 + 활성 칩**("월 사례비 …")에 드러냈다 — 안 밝히면 결과가 버그로 보인다
+  - **JSON-LD `unitText` 하드코딩 제거** — `"MONTH"` 고정이라 연 금액을 월급으로 신고해 **구글에 12배로** 노출됐다(연 4,140만원 → `41400000` + `YEAR` 확인)
+  - `formatPay`가 인자 3개 → **공고 객체 하나**를 받는다(`jobRoleLine`과 같은 모양) — 인자 순서 실수가 사라지고 필드가 늘어도 시그니처가 안 흔들린다. 호출부 9곳
+  - 입력 3경로도 함께: `/jobs/new` 폼·`/admin/ingest`에 월/연 칩 + `structureJobText`가 "연봉/연 사례비" 표기를 감지(천 단위 구분 제거 — `"4,200만원"`이 연 금액의 일반 표기인데 기존 숫자 패턴이 못 잡았다)
+  - mock 101건에 `payPeriod` + **담임목사 연 사례비 3건을 반례로 심었다** — 전부 MONTH로 채우면 2026-08-16 교회 조인 때처럼 반례가 없어 버그가 잠복한다. mock은 `as unknown as Job[]` 캐스팅이라 **타입 검사가 이 누락을 막아주지 못한다**
+  - `PAY_PERIODS` 상수가 생겨 **DB enum 컬럼 15개 전부** `constants/domain.ts`의 상수 맵과 짝이 됐다
+  > ⏭ 여기서 미뤘던 사례비/급여 라벨 분기와 `role` 미표시는 **아래 일반직 항목에서 해소**했다(2026-08-21). 연 사례비 반례를 담임목사 공고로 심은 것은 그 시점에 mock에 일반직이 0건이었기 때문이다.
+
+- [x] ✅ **`jobs.denomination` 배선 (2026-08-21 — 드리프트 1곳 해소)** — 컬럼은 2026-08-20에 만들었는데 **`types/domain.ts`에 넣지 않아** `jobChurchRef`가 계속 `church?.denomination`만 봤다. 결과: 크롤러가 교단을 판정해 보내도(`review_data.denomination` + 출처·증거) 미claim 공고는 **화면·필터에서 영구 미상**이었다 — 2026-08-16에 지역·시·주소를 공고 쪽으로 옮긴 그 작업의 마지막 조각이 빠져 있던 것이다.
+  - `Job.denomination` 추가 → `jobChurchRef`가 `job.denomination`을 쓴다. `region`과 같은 규칙이고, DATA §3이 정한 *"claim 후에도 이 값을 쓴다"* 를 그대로 따른다
+  - 이제 **표시값은 전부 `jobs`에서** 온다 → `jobChurchRef`의 두 번째 인자는 `Pick<Church, "id">`로 좁혔다(claim 여부·링크 대상만 교회에서 온다). 규칙 한 줄이 주석에 있다
+  - mock: 미claim 14건 중 9건에 교단을 채우고 **5건은 미상으로 남겼다** — 전부 채우면 "미상 표시" 경로에 반례가 사라진다(claim된 6건도 교회 교단이 미상이라 합계 11건)
+  - 검증: 미claim 공고가 교단 필터(HAPDONG 23건)·자유검색("예장합동")·상세·`getCoverageStats`에 모두 걸린다. 미상 공고는 메타줄에서 조각만 빠진다("전북 전주")
+
+- [x] ✅ **일반직(GENERAL) 표시·검색 경로 (2026-08-21)** — DB는 `job_kind`로 사역직·일반직을 나누고 일반직 직무를 `jobs.role`(자유 텍스트)에 담는데, **그 값이 화면·검색 어디에도 쓰이지 않았다.** mock에 일반직이 0건이라 잠복해 있었다.
+  - `jobRoleLine`이 **직분과 직무를 같은 자리**에 놓는다 — 사역직은 `position`, 일반직은 `role`, 혼합 공고는 둘 다("전도사 · 관리집사 · 유초등부 · 전임"). `JobCard`·`AdminJob`·`MyJob`·`PastJob`에 `role` 추가
+  - **`admin-job-row`·`my-job-row`가 `jobRoleLine`을 인라인 복제**하고 있어 합쳤다 — 그대로 두면 직무가 운영자·교회 화면에만 계속 안 보였다. 세 번째 복제가 나왔으니 합칠 시점이었다(추상화는 3번째에)
+  - 자유검색 haystack에 `role` 추가 — 안 넣으면 "행정간사"로 검색해도 그 공고가 안 나온다. **검색어 제안에는 넣지 않았다**(자유 텍스트라 표기가 제각각이어서 후보로 부적합)
+  - `payLabel(jobKind)` — 사역직 "사례비" / 일반직 "급여"(DATA §3 `pay_min`). 혼합은 "사례비"(주력이 사역직, 둘 다 붙이면 길어진다)
+  - mock에 **일반직 2건 + 혼합 1건**(job-102·103·104). CHECK ①(MINISTRY↔position · GENERAL↔role)을 데이터 생성 시 직접 검증했다. 하나는 연봉으로 뒀다 — 연 표기가 실제로 나오는 자리가 일반직이다
+  - 검증: 카드 자리 한 줄 · 급여/사례비 라벨 · 직무 검색 3건 · 직분 필터에서 순수 일반직 탈락·혼합 포함 · 운영자 테이블 · 연봉 일반직의 월 환산 필터
+
+- [ ] ⏸ **`/jobs` 사역직/일반직 필터축이 없다 (2026-08-21 발견 · 보류 결정)** — SPEC은 **"기본뷰=사역직(`job_kind @> ARRAY['MINISTRY']`), 일반직은 필터 전환, 혼합 공고는 양쪽에 다 뜬다"** 로 확정했는데(2026-07-28 운영자 확정 · SPEC §목록·§필터표) **코드에 그 축이 없다** — `FilterDim`에 `jobKind`가 없고 `JobCard`에 `jobKind`도 없다. mock에 일반직이 0건이라 안 보였고, 위 항목에서 반례를 심자 **기본 목록에 순수 일반직 2건이 그대로 섞였다.**
+  > `FilterDim`(선택 없으면 전체)이 아니라 **기본값 있는 토글**이라 `includeNego`·`housingOnly`처럼 별도 필드가 맞다. 범위: `JobCard.jobKind` → mock projection → `JobFilterCriteria` → `filter-jobs` 판정 → `jobs-url-state` → `job-filter` UI → `active-filter-chips` → `jobs-view` 상태(약 7파일).
+  > **언제 해야 하나**: mock엔 일반직이 2건뿐이라 지금은 티가 안 난다. **크롤러가 일반직을 보내기 시작하면 기본 목록이 오염된다** — 실데이터 유입이 마감선이다. SPEC 필터표·사이드바에 ⬜로 표시해 두었다(명세는 확정, 구현만 보류).
+
+- [x] ✅ **정합 A·B — nullable 4개 + `description` (2026-08-21 · 5곳 해소 → 남은 11곳)**
+  - **`employmentType`: `EmploymentType | null`** (원문 언급률 51%). 소비자 5곳 — `jobRoleLine` 조각 생략 · 필터 탈락(`region`과 같은 규칙) · 자유검색 · 공고 상세 `"정보 없음"`(같은 `<dl>`의 `마감일 ?? "상시모집"` 패턴 + DATA §3) · **JSON-LD는 필드를 뺀다**(구글에 빈 값·추측값을 넣지 않는다)
+  - **`qualification`: `?` → `| null`** — 표시하는 화면이 없고 필터 전용이다. ⚠️ mock **19건에 키가 아예 없었다**(`?`였으니 맞았다) → 명시적 `null`로 채웠다. 캐스팅(`as unknown as Job[]`) 때문에 tsc가 못 잡는 자리다
+  - **`housingProvided`: `?` → `| null`** — 🔴 **버그를 고쳤다.** 상세가 `!== undefined`로 검사해서 **`null`이 통과해 "미제공"으로 표시**됐다. DATA §3은 `null=정보 없음/협의 · false=명시적 미제공`으로 셋을 구분한다 → `!== null`로 바꿔 미상이면 줄을 뺀다
+  - **`description`: `string | null` → `string`**(DB `NOT NULL`). ⚠️ 폴백을 지우지 않고 **`??` → `||`** 로 바꿨다 — null은 안 와도 **빈 문자열은 온다**(DB에 공백 CHECK 없음). `??`면 빈 설명이 메타태그·JSON-LD로 나간다. 덕분에 `jobRoleSummary`도 죽은 코드가 되지 않았다
+  - **`position`은 타입을 바꾸지 않았다 — seam 정규화로 닫는다.** DB는 `text[] NULL`이지만 CHECK ①이 `coalesce(cardinality(...), 0)`이라 **NULL과 빈 배열이 같은 뜻**이고, 소비자도 구분하지 않는다(필터 `.some()` · `positionLabel([]) === ""`). `Position[] | null`로 열면 호출부가 전부 빈 상태를 두 번 검사해야 한다 → **5단계(`lib/queries` DB 전환)에서 `null → []`로 정규화**한다
+  - mock 반례: 고용형태 미상 12건 · 사택 정보없음 4건(전엔 1건). ⚠️ **실측 비율(고용형태 51%)보다 낮게 잡았다** — 경로를 보이게 하는 게 목적이고 51%로 채우면 다른 검수가 시끄러워진다
+  - 검증: 자리줄 조각 생략 · 고용형태·자격 필터에서 미상 탈락 · 자유검색 · JSON-LD 필드 유무 · 사택 3상태 · 빈 description 폴백
+
+- [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합 (나머지 11곳)** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.**
+  - ✅ **nullable 4개·`description`은 위 A·B 항목에서 해소**(2026-08-21). `position`은 seam 정규화로 닫기로 결정 — 타입 변경 대상이 아니다
+  - **남은 것 = 타입에 아예 없는 필드 11개**: `contactEmail`·`contactTel`·`contactLink`·`contactPost`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil`  (`payPeriod`는 위 항목으로 **해소**)
+  - 함께 필요한 것: mock JSON 104건에 신규 필드 채우기
+  > **타이밍 = 마이그레이션과 한 묶음.** 초기 마이그레이션 적용·`database.ts` 생성은 **완료(2026-08-21)** → 남은 순서: `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체. **공고 등록·수정 mutation을 붙이는 시점이 이 항목의 마감선이다**(그때 `description` 모순이 런타임 에러로 터진다).
+  > ⚠️ **개수는 실측으로 다시 셌다(2026-08-21)** — `Job`과 DB `jobs`(43컬럼)를 필드 단위로 대조하니 **목록에 3개가 빠져 있었다**: `qualification`·`housingProvided`(TS `?` ↔ DB NULL)·`denomination`(아예 없음). 대신 `contact`를 4개로 세어 합계만 우연히 맞아 있었다.
+  > **셈 규칙**: `contact` 1개가 `contact_*` 4컬럼으로 쪼개지는 것은 **4로 센다**(그게 실제 작업량). 남은 것은 **없는 필드 11곳**뿐이다(엄격 4 + 느슨 1은 2026-08-21 해소).
+  > ⚠️ 한때 여기 "13곳"이라 적혀 있었다 — 빠진 3개를 목록에 더하면서 헤더 총계를 고치지 않은 탓이다(2026-08-21 정정). **목록을 고치면 헤더를 다시 세라.**
 
 **병행 트랙 (Phase 0~1 내내)**
 - [x] 도메인 확보 — **minjob.co.kr**(hosting.kr 등록). (.com은 일본 서비스 선점)
@@ -119,7 +159,7 @@
 > **② 데이터(공고·교회)** — JSON → Supabase 테이블. ⚠️ **핵심은 seam 전환(쉬움 — `lib/queries` 본문만)이 아니라 "데이터 유입"**: (a)크롤러 승격=검수브릿지(크롤러 스키마 확정 후) (b)교회 등록 mutation (c)seed(임시). **DB가 비면 read 전환해도 빈 화면** → 유입이 먼저. read+write는 도메인별로 함께. **실데이터는 크롤러 검수브릿지 준비 후**라, ①(로그인)을 먼저 한다.
 
 ### 1-1. 공통 골격
-- [~] 도메인 타입 (`types/domain.ts`) — Job·Church·User·CurrentUser 등 **작성 완료**. ⚠️ **DATA와 어긋난 15곳이 남아 있다**(아래 별도 항목) — 그게 닫혀야 [x]
+- [~] 도메인 타입 (`types/domain.ts`) — Job·Church·User·CurrentUser 등 **작성 완료**. ⚠️ **DATA와 어긋난 11곳이 남아 있다**(아래 별도 항목) — 그게 닫혀야 [x]
 - [x] 도메인 상수·enum (`constants/`) — 교단·지역·직분·부서·고용형태 (영어 key + 한글 라벨)
 - [x] 레이아웃 (헤더·푸터·모바일 네비), globals.css, 디자인 토큰
 
@@ -236,7 +276,7 @@
    >   - 대상 공고·결제자 이메일을 `customData`·`customer`로 **PortOne 레코드에 실어 둔다** — 주문 테이블이 없어 콘솔이 유일한 원장이고, 없으면 운영자가 *무엇을 누구에게* 적용할지 알 수 없어 수동 처리가 성립하지 않는다(+ 서버가 성공 시 감사 로그)
    >   - **청구 후 검증 실패를 `charged` 상태로 분리** — `error`와 묶으면 "결제 안 됨"으로 읽히고 버튼이 다시 열려 **실연동 채널에서 이중 청구**가 된다. 재결제 버튼 없이 결제번호·문의로 보낸다
    >
-   > ⚠️ **결제를 "제대로 파는 상태"로 만들려면 3가지가 함께 가야 한다**(하나라도 빠지면 돈만 받고 못 준다): ① 주문 저장(`job_promotions` INSERT — 테이블이 아직 없다) ② 노출 실적용(`featured_tier`·`featured_until`) ③ **모바일 redirect 복귀** — 지금 모바일은 `/api/payments/complete`가 **호출조차 안 된다**(복귀 파라미터를 읽는 코드 없음) → 청구만 되고 검증·화면 반영이 없다. ①②는 DB 마이그레이션과 한 묶음.
+   > ⚠️ **결제를 "제대로 파는 상태"로 만들려면 3가지가 함께 가야 한다**(하나라도 빠지면 돈만 받고 못 준다): ① 주문 저장(`job_promotions` INSERT — 테이블은 2026-08-20 생성 완료, 쓰는 코드가 없다. 여기서 **REFUNDED↔CANCELLED 경계를 정한다** — 스키마 확정 때 세 값만 정해졌고 경계는 미정이다. HERO 구좌 판정이 취소된 행을 세는지가 이 정의에 달렸다) ② 노출 실적용(`featured_tier`·`featured_until`) ③ **모바일 redirect 복귀** — 지금 모바일은 `/api/payments/complete`가 **호출조차 안 된다**(복귀 파라미터를 읽는 코드 없음) → 청구만 되고 검증·화면 반영이 없다. ①②는 DB 마이그레이션과 한 묶음.
    >
    > 📌 **`/pricing`의 "온라인 결제는 준비 중 — 지금은 문의로 진행해요"는 그대로 둔다**(page.tsx 63·159·256행 + CTA "문의하기"). 결제 인프라는 열렸지만 위 게이트 때문에 **실제로 아무도 온라인 결제를 할 수 없어 카피가 아직 사실이다.** 교회 멤버십이 붙어 `/mypage/church/promote`에 도달 가능해지는 시점에 이 4곳을 "바로 결제" 카피 + `/mypage/church/promote` 링크로 함께 전환할 것 — **멤버십 배선의 완료 조건에 포함**.
 9. [ ] **실 데이터 + Supabase 백엔드 + 기능 상세 다듬기** → Phase 1 본체(1-1~1-7)와 합류. **심사가 끝나 더 이상 "승인 후" 대기 조건이 아니다** — 이제 여기가 주 트랙

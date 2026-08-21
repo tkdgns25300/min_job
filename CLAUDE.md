@@ -130,7 +130,8 @@ src/
 │   └── seo.ts · format.ts · utils.ts
 ├── mocks/                         **현재 데이터 소스**(jobs·churches·church-verifications JSON + index.ts)
 │                                  — lib/queries만 접근. DB 전환 시 이 폴더가 사라진다
-├── types/domain.ts                공유 도메인 타입 (⬜ database.ts = Supabase 생성, 아직 없음)
+├── types/                         domain.ts(공유 도메인 타입 = 화면이 쓰는 모양) ·
+│                                  database.ts(**자동 생성** — DB 행의 모양. 손으로 고치지 않는다)
 └── proxy.ts                       Next 16 Proxy — 세션 refresh + 접근 1차 판정(진짜 307)
 
 supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관례 = `YYYYMMDDHHmmss_name.sql`)

@@ -40,7 +40,7 @@
 | 인프라/배포 | ~90% | Vercel·도메인·SSL·Supabase 연결 완료 |
 | 수익화/결제 | ~70% | ✅ **KCP 가맹·카드사 심사 둘 다 통과 → 실카드결제 활성(2026-08-05)**. 남은 것 = 주문 저장(`job_promotions` INSERT)·실 노출 적용(featured)·모바일 redirect 복귀. ⚠️ **결제 경로 자체가 교회 멤버십에 막혀 도달 불가** |
 | 프론트 로직 디테일(1-9) | ~85% | URL동기화·404/error·위저드검증·모바일네비·?next·admin deep-link 완료(2026-07-29). pagination 잔여 |
-| 백엔드(Supabase 실사용) | ~20% | **Auth(Google OAuth)·운영자 게이트 완료(2026-07-29)**. **스키마 설계 확정(2026-08-05, 테이블 7개·승격 게이트 필수 5+CHECK 2)** — 단 문서만이고 `supabase/` 폴더·SQL은 0줄, 타입·mock은 15곳 어긋남. mutation·`lib/queries` mock→DB + **교회 멤버십** 잔여 (Phase 1, **최대 덩어리**) |
+| 백엔드(Supabase 실사용) | ~20% | **Auth(Google OAuth)·운영자 게이트 완료(2026-07-29)**. **스키마 설계 확정(2026-08-05, 테이블 7개·승격 게이트 필수 5+CHECK 2)** **초기 마이그레이션 적용 + `types/database.ts` 생성 완료(2026-08-20~21)**. `types/domain.ts`·mock은 아직 어긋남(개수·목록은 ROADMAP Phase 0). mutation·`lib/queries` mock→DB + **교회 멤버십** 잔여 (Phase 1, **최대 덩어리**) |
 | 데이터(실 공고·구조화) | ~5% | 실 공고 0·Claude 구조화 미연동 (다른 세션) |
 | 크롤러 연동(min_job_agent) | ~10% | **크롤러는 수집 가동 중**(백업 3,181건 — 이 데이터로 우리 필수값을 검증했다). min_job 쪽은 스키마 정합만 끝났고 **검수 브릿지 미착수**. ⚠️ `review_data`와 4곳 어긋남(ROADMAP Phase 0). 정본 = `../min_job_agent/docs/` (CRAWLER_HANDOFF.md는 흡수 후 삭제) |
 | SEO | ~80% (기술 마감 O, **유입 설계 X**) | **기술 요소 완료(2026-08-05)**: sitemap·robots·canonical·metadataBase·OG(이미지 포함)·JobPosting. 남은 것 = **지역·직분 랜딩 라우트**(노리는 키워드 `"OO지역 전도사 청빙"`를 받을 URL이 아직 없다 — §7 미해결 3) · 실데이터 후 Search Console 등록 · 공고별 OG 이미지(한글 폰트 선행) · 유입 측정 |
@@ -189,7 +189,7 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 
 **교단은 native PG ENUM이 아니라 `text + CHECK`** — native ENUM은 값 삭제·순서 변경이 불가능한데 교단 목록은 아직 유동적이다(기장을 ETC에 넣어둔 상태). `constants/domain.ts`가 이미 단일 소스라 native ENUM의 실익이 없다.
 
-### 타입 (`src/types/domain.ts`) — ⚠️ **위 스키마와 15곳 어긋남**(§7 상단 참조)
+### 타입 (`src/types/domain.ts`) — ⚠️ **위 스키마와 어긋남 있음** (목록·개수 = ROADMAP Phase 0)
 - `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)**. (`ownerId`는 2026-08-07 제거)
 - `CurrentUser` = `{id, email, name|null, churchId|null, churchName|null, churchVerificationStatus|null}` — **배타적 role 없음**(단일 계정). 권한 파생 `hasChurchAccess` = `lib/auth.ts`. `FilterDim`에 `qualification`.
 - `PastJob` = `{ id, position, department, postedAt, deadline }` — 교회 상세의 '지난 공고' 평면 목록(2026-08-07, 구 `RoleHistory` 대체).
@@ -226,11 +226,11 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 
 ### ▶▶ 지금 바로 다음 (2026-08-16 기준) — 여기부터 읽으면 된다
 
-**상태 한 줄**: 결제·인증·SEO는 끝. 만료 규칙·교회 조인 경로 정합도 끝났다. 남은 실작업은 **DB를 실제로 만드는 것**(+ 남은 드리프트 15곳)과 **교회 멤버십 배선** 둘뿐이며, 전자는 **크롤러 구조화 결과 대기**다.
+**상태 한 줄**: 결제·인증·SEO는 끝. 만료 규칙·교회 조인 경로 정합도 끝났다. 남은 실작업은 **`lib/queries`를 DB로 돌리는 것**(+ 남은 `types/domain.ts` 드리프트)과 **교회 멤버십 배선** 둘뿐이며, 전자는 **크롤러 구조화 결과 대기**다.
 
 ```
-빌드·tsc·lint 통과 · supabase/ 폴더 없음(마이그레이션 0줄)
-mock 101건 — 미claim(church_id=NULL) 14건 · jobs.region NULL 8건
+빌드·tsc·lint 통과 · 마이그레이션 2개 원격 적용 완료 · `types/database.ts` 생성
+mock 104건 — 일반직 2건·혼합 1건 · 미claim(church_id=NULL) 15건 · jobs.region NULL 8건 · jobs.denomination NULL 11건 · payPeriod YEAR 3건
 교회 35곳 — 교단 미상 2곳 · 지역 미상 2곳(그중 1곳은 시까지 미상)
 파생 규칙 검증용 — job.region ≠ church.region 1건 · job.church_name ≠ church.name 1건
 ```
@@ -241,8 +241,9 @@ mock 101건 — 미claim(church_id=NULL) 14건 · jobs.region NULL 8건
 - **안 받기로 한 것**: 등록번호·서류 종류(서류를 열면 보이고 저장하면 보관 부담) · 담당자 개인 전화(**사칭자가 자기 번호를 적고 자기가 받으므로 검증이 성립하지 않는다**) · 교회 소개(표시 화면 없음). 검증의 축은 **사무용 연락처를 공개 게시판 공고·홈페이지와 대조**하는 것.
 - **남은 것 = Server Action 2개뿐**(화면·타입·필드는 확정 — 반려 사유도 `CurrentUser.churchRejectionReason`으로 실어 신청자 화면이 운영자가 적은 사유를 그대로 보여준다). SPEC 교회 인증 절 참조.
 
-**✅ 초기 마이그레이션 작성 완료 (2026-08-20)** — `supabase/migrations/20260820231650_init.sql`. 테이블 7개 + 제약 + 인덱스. **아직 적용하지 않았다**(원격 DB는 비어 있다). ⬜ RLS(2026-08-21 결정으로 당분간 유예)·Storage 버킷은 다음 마이그레이션 · GRANT는 크롤러 service role이라 쓰지 않는다 · ⬜ `types/database.ts`는 적용 후 생성
-구조(테이블 7개·컬럼·enum·인덱스·RLS)는 이미 확정이고, 실데이터가 바꾸는 건 **제약의 임계값**이다 — `description NOT NULL` 같은 조건이 실제 승격을 얼마나 막는지는 AI 구조화 결과를 봐야 안다. 지금 써두면 그 결과에 따라 어차피 고친다. 신규 DB라 늦게 써도 `ALTER`가 아니라 `CREATE TABLE`이므로 미루는 비용이 거의 없다. **드리프트 15곳도 이 묶음에 딸려 있다.**
+**✅ 초기 마이그레이션 적용 완료 (2026-08-20~21)** — `supabase/migrations/20260820231650_init.sql`(테이블 7개 + 제약 + 인덱스) + `20260820234934_source_url_not_blank.sql`. **원격 DB에 적용됨** — 크롤러 4테이블까지 합쳐 `public`에 11테이블이 산다. ⬜ RLS(2026-08-21 결정으로 당분간 유예)·Storage 버킷은 다음 마이그레이션 · GRANT는 크롤러 service role이라 쓰지 않는다.
+**✅ `types/database.ts` 생성 + 클라이언트 3개에 배선 (2026-08-21)** — Supabase 자동 생성(11테이블·180컬럼). `server.ts`·`service.ts`·`session.ts` 모두 `<Database>`. 붙이자마자 드러난 것 2개: ① **enum 컬럼이 `string`으로 온다** — DB가 `text + CHECK`라 Postgres enum이 없다 → 좁히기는 seam(`lib/queries/*`)의 일이고, 남은 정합 항목의 enum 컬럼마다 같은 일이 필요하다. ② `churches(...)` 조인은 **객체**로 추론된다 — `getCurrentUser`에 있던 `Array.isArray` 방어는 근거 없는 코드였고 삭제했다.
+구조(테이블 7개·컬럼·enum·인덱스·RLS)는 이미 확정이고, 실데이터가 바꾸는 건 **제약의 임계값**이다 — `description NOT NULL` 같은 조건이 실제 승격을 얼마나 막는지는 AI 구조화 결과를 봐야 안다. 지금 써두면 그 결과에 따라 어차피 고친다. 신규 DB라 늦게 써도 `ALTER`가 아니라 `CREATE TABLE`이므로 미루는 비용이 거의 없다. **`types/domain.ts` 드리프트도 이 묶음에 딸려 있다**(ROADMAP Phase 0).
 
 **✅ 완료 — 위치 3컬럼 (Step 2, 2026-08-17)**
 `jobs.city`·`jobs.address`·`churches.address` 추가. 네이버 지도의 실제 블로커는 비용·난이도가 아니라 **주소 데이터 부재**였다. 지도 검색어 규칙은 **주소 우선 → 교회명+지역 → 둘 다 없으면 섹션 생략**이고 `lib/format.ts`의 `naverMapUrl` 하나가 공고 상세·교회 상세를 모두 담당한다 — 전에는 두 파일이 각자 조립하다 한쪽만 고쳐 가드가 빠질 뻔했다. `jobChurchRef`의 `city`도 교회 조인에서 **공고 값**으로 옮겼다(위치 3종이 같은 출처여야 `"부산 고양"` 같은 조합이 안 생긴다). §1 비정규화 예외는 개수가 늘지 않았다 — 예외 ①을 "`jobs`의 위치 3종"으로 넓혔다(이유가 하나라서). 주소는 **원문 그대로 한 컬럼**(도로명/지번 안 나눔)이고 `contact_post`(접수처)와 **다른 값**이다.
@@ -289,18 +290,12 @@ mock 기준 **79건 → 21건**. 크게 줄지만 나머지 58건은 지금 거�
 
 | | 작업 | 왜 / 막는 것 |
 |---|---|---|
-| **1️⃣ 추천** | **초기 마이그레이션 적용 + 타입·mock 정합 (한 묶음)** | 결정이 다 끝나 바로 쓸 수 있다. **아래 ⚠️ 15곳 드리프트가 여기서만 해소**된다(교회 조인 5곳은 2026-08-16에 선행 해소). 순서: `001_init.sql` → `types/database.ts` 생성 → `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체 |
+| **1️⃣ 추천** | **초기 마이그레이션 적용 + 타입·mock 정합 (한 묶음)** | 마이그레이션 적용·`types/database.ts` 생성은 **완료(2026-08-21)**. 남은 것 = `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체. **남은 `types/domain.ts` 드리프트가 여기서 해소**된다(목록·개수는 ROADMAP Phase 0) |
 | 2️⃣ | **교회 멤버십 배선** | **매출을 여는 단일 스위치**(결제 인프라는 이미 완성). `getCurrentUser`가 `churchId`·`churchVerificationStatus`를 항상 `null`로 줘서 교회 기능 전체가 닫혀 있다. 단 `users`·`churches` 테이블이 필요하므로 **사실상 1️⃣이 선행** |
 | ~~3️⃣~~ | ~~**NULL 표시 UI 2개**(교단·지역 미상)~~ | ✅ **완료(2026-08-16)** — 공개 화면은 조각 생략, 운영자 화면만 "미상" 명시. 표기 단일 소스 = `lib/format.ts`의 `churchMetaLine`·`churchLocation`. 규칙은 SPEC 공고 상세 §미claim 축소 표시 |
 
-> ⚠️ **1️⃣ 착수 전 반드시 알아야 할 것 — 코드가 아직 옛 스키마다.** 2026-08-05 스키마 확정은 **문서(DATA.md)에만** 반영됐고 `types/domain.ts`·mock은 대체로 그대로다. 남은 **15곳**(전체 목록 = ROADMAP Phase 0):
-> - **TS가 DB보다 엄격** → DB가 NULL을 주면 타입이 거짓말(런타임 오류): `position` · `employmentType`
-> - **TS가 DB보다 느슨** → **실제 모순**: `description: string | null` 인데 스키마는 `NOT NULL`. **이 상태로 공고 등록 Server Action을 붙이면 런타임 에러**
-> - **타입에 없는 필드 12개**: `contactEmail/Tel/Link/Post`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil` · `payPeriod`
-> - 함께: mock JSON 101건에 신규 필드 채우기
-> - ✅ **해소됨(2026-08-16, 교회 조인 경로 정합)**: `Job.churchId` nullable · `Job.churchName`·`Job.region` 추가 · `Church.denomination`·`Church.region` nullable. (`postedAt`은 NOT NULL 복귀로 해소)
->   - 이 5곳은 **버그였기 때문에** 마이그레이션을 기다리지 않고 앞당겼다: 조인 실패 시 교단을 `ETC`·지역을 `SEOUL`로 **지어내고** 있었고(미상이 기타교단·서울로 둔갑 → 필터·거점 판정 오염), 공고 상세는 교회가 없으면 **404**였다(크롤 공고가 통째로 안 열림). 주소 컬럼 작업이 같은 파일들을 건드리므로 **먼저 토대를 세우는 편이 두 번 여는 것보다 싸다**는 판단.
->   - 도입된 것: `JobChurchRef` 타입(조인 결과가 아니라 "공고가 가리키는 교회") · `lib/job-church.ts`(`jobChurchRef` · `normalizeChurchName` · `churchIdentityKey`)
+> ⚠️ **1️⃣ 착수 전 반드시 알아야 할 것 — `types/domain.ts`가 아직 옛 스키마다.** 남은 곳의 **목록·개수는 ROADMAP Phase 0이 정본**이다(여기 복제해 두었더니 양쪽 숫자가 갈렸다 — 2026-08-21 제거).
+> 하나만 여기 적어 둔다: **`description`이 TS에선 nullable인데 DB는 `NOT NULL`이다.** 다른 항목은 화면이 조금 비는 정도지만 이건 **공고 등록 Server Action을 붙이는 순간 런타임 에러**다.
 
 **▶ 배포 확인 — ✅ 완료(2026-08-11)**. prod에서 구글 로그인·`/admin` 접근 실동작 확인. 아래는 그때 정리된 설정 정본이다:
 1. **Google Cloud 승인된 리디렉션 URI = Supabase 콜백 하나뿐**(`https://<ref>.supabase.co/auth/v1/callback`). ⚠️ **우리 도메인을 여기 넣지 않는다** — 구글은 Supabase까지만 알면 되고, Supabase가 우리 앱으로 다시 보낸다. (한 번 잘못 안내했던 지점)
@@ -371,7 +366,7 @@ mock 기준 **79건 → 21건**. 크게 줄지만 나머지 58건은 지금 거�
 - **실 인증(2026-07-29)**: Supabase Auth **Google OAuth 단독**. 흐름 = 서버 렌더 `<form action={signInWithGoogle}>`(JS 없이도 동작) → Server Action이 **Origin 헤더로 `redirectTo` 구성** → Supabase → 구글 → `app/auth/callback/route.ts`가 PKCE code를 세션으로 교환 → `next`로 **상대 경로 303**. `?next=`는 왕복 내내 유지되고 `safeInternalPath`가 오픈 리다이렉트를 막으며, 실패는 `?error=oauth`(+`next` 보존)로 돌린다. 세션 쿠키 = `httpOnly`+`secure`(배포)+`sameSite=lax`. 서버는 `getCurrentUser`(Supabase `getUser`) 사용 · 헤더 계정 영역은 **`<Suspense>` 안의 서버 컴포넌트**(`HeaderAccount`+`HeaderAccountFallback`) — 쿠키가 httpOnly라 client island로는 못 읽는다. 권한 파생 = `lib/auth.hasChurchAccess`(교회 테이블 전까지 항상 false).
 - **인증 2단 방어**: `proxy.ts`가 ① 세션 refresh ② `/mypage/**`·`/jobs/new`·`/jobs/[id]/edit`·**`/admin/**`** 비로그인 **1차 307 차단** ③ `/admin/**`은 로그인해도 운영자(`.env ADMIN_EMAILS`)가 아니면 `/`로 리다이렉트. 최종 권한 판단은 각 페이지의 `requireUser()`·`requireOperator()`(`lib/auth-guard.ts`, **인자 없음** — 복귀 경로는 proxy가 `x-pathname` 요청 헤더로 넘긴다)가 한다. 이유: cacheComponents에선 uncached read(쿠키)가 `<Suspense>` 안이어야 해서 페이지 안 redirect가 진짜 307이 아니라 **스트림 데이터(HTTP 200 + 스켈레톤)**로 나간다. ⚠️ `/admin`·`/admin/jobs`·`/admin/ingest`는 `○ Static` 유지 목적상 **페이지 게이트가 없어 proxy 판정에만 의존** → proxy는 Auth 장애 시에도 admin만은 fail-closed로 막는다.
 - **SEO(2026-08-05)**: `app/sitemap.ts`가 **`lib/queries` seam에서 URL을 읽는다** → mock→DB 전환 시 파일 무수정(빌드 매니페스트로 확인: sitemap prerender 엔트리에 `jobs`·`churches` 태그가 전파돼 `updateTag("jobs")`가 sitemap도 갱신한다. 태그가 실패해도 `1d` revalidate가 안전망). 모집중 공고만 실음(구글 권장). `app/robots.ts`는 공개 허용 + 인증·운영자·API·공고등록/수정 차단. canonical = 전 공개 페이지(홈·`/jobs`·정적 4개·상세 2종). OG = `constants/site.ts` `SITE_OPEN_GRAPH`(siteName·locale·이미지 url/type/width/height/alt + `?v=` 캐시버스터) — ⚠️ **Next는 `openGraph`를 통째로 교체**하므로 openGraph를 재정의하는 페이지는 이 상수를 반드시 펼쳐 써야 한다. OG 이미지는 `app/opengraph-image.tsx`(브랜드 카드, **한글 미사용** — satori가 woff2·가변폰트 불가 + 번들 500KB 제한).
-- ⚠️ `lib/supabase/*`·`proxy.ts`(+`lib/supabase/cookie-options.ts`·`lib/auth-guard.ts`·`lib/operator.ts`·`login/actions.ts`·`mypage/actions.ts`·`app/sitemap.ts`·`app/robots.ts`·`app/opengraph-image.tsx`·`constants/site.ts`)는 **존재**한다. 아직 없는 것 = `types/database.ts`·공고/교회 mutation `actions.ts`. `lib/ingest/structure.ts`는 **mock 휴리스틱으로 존재**(Phase 1엔 Claude API Server Action).
+- ⚠️ `lib/supabase/*`·`proxy.ts`(+`lib/supabase/cookie-options.ts`·`lib/auth-guard.ts`·`lib/operator.ts`·`login/actions.ts`·`mypage/actions.ts`·`app/sitemap.ts`·`app/robots.ts`·`app/opengraph-image.tsx`·`constants/site.ts`)는 **존재**한다. 아직 없는 것 = 공고/교회 mutation `actions.ts`. `types/database.ts`는 **2026-08-21 생성**(클라이언트 3개에 `<Database>` 배선). `lib/ingest/structure.ts`는 **mock 휴리스틱으로 존재**(Phase 1엔 Claude API Server Action).
 
 ---
 
