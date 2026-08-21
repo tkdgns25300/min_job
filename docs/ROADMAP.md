@@ -81,7 +81,7 @@
   > ⚠️ **CHECK에 `array_length` 쓰지 말 것** — 빈 배열에 NULL을 반환하고 Postgres CHECK는 **NULL을 통과**시켜, "직분 없는 사역직 공고"가 들어온다. `COALESCE(cardinality(...), 0)` 형태(DATA.md §3). 실 Postgres 8케이스 검증 완료
 - [x] 📮 **전달 완료(2026-08-11) — `review_data.published_job_id`가 단수다.** Phase 2에서 한 글의 여러 자리를 `jobs` N건으로 나누려면 **어느 것을 기록할지 정할 수 없고** 다음 크롤에서 재등장 방지가 깨진다. 그때 배열(`published_job_ids`)이나 조인 테이블이 필요하다 — min_job_agent 소관이라 **미리 알려두기만** 한다
 - [x] ✅ **DB 타입 생성 — `types/database.ts` (2026-08-21)** — Supabase 자동 생성(11테이블·180컬럼 = 우리 7 + 크롤러 4). `lib/supabase/{server,service,session}.ts` 전부 `<Database>`. 검증은 파일을 역파싱해 컬럼·nullability·Insert optional 지문(md5)을 만들고 DB에서 같은 지문을 계산해 대조했다(일치). FK 12개 — DB의 13번째 `users_id_fkey`는 `auth.users`를 가리키는 cross-schema라 생성기가 제외한다.
-  > **enum 컬럼은 `string`으로 온다** — DB가 `text + CHECK`라 Postgres enum 타입이 없다(§1의 의도적 선택). 좁히기는 **seam의 일**이다: `getCurrentUser`가 `church_verification_status`를 `CHURCH_VERIFICATION_STATUSES` 대조로 좁히고 모르는 값은 `null`(fail-closed)로 본다. **아래 정합 항목의 enum 컬럼마다 같은 처리가 필요하다.** 세 번째 호출부가 나오면 헬퍼로 뽑는다(추상화는 3번째에).
+  > **enum 컬럼은 `string`으로 온다** — DB가 `text + CHECK`라 Postgres enum 타입이 없다(§1의 의도적 선택). 좁히기는 **seam의 일**이다: `getCurrentUser`가 `church_verification_status`를 `CHURCH_VERIFICATION_STATUSES` 대조로 좁히고 모르는 값은 `null`(fail-closed)로 본다. **정합에서 만난 enum 컬럼마다 같은 처리가 필요했다.** 세 번째 호출부가 나오면 헬퍼로 뽑는다(추상화는 3번째에).
   > `churches(...)` 조인은 **객체**로 추론된다(배열 아님) — `getCurrentUser`의 `Array.isArray` 방어는 근거가 없었고 삭제했다.
 - [x] ✅ **교회 조인 경로 정합 (2026-08-16 — 드리프트 5곳 선행 해소)** — claim 결정(2026-08-06)이 DATA.md에만 반영돼 있어 코드가 **없는 값을 지어내고 있었다**: 조인 실패 시 교단을 `ETC`, 지역을 `SEOUL`로 메우고(→ 미상이 기타교단·서울로 둔갑해 필터 오염), 공고 상세는 교회가 없으면 **404**를 냈다(→ 크롤 공고가 통째로 안 열림). 함께 고친 것: `getSimilarJobs`의 `churchId` 비교(둘 다 NULL이면 무관한 교회가 "같은 교회"로 묶임) · `getSearchSuggestions`(크롤 교회명 누락) · `getJobStats`(NULL이 한 덩어리로 접힘) · `getCoverageStats`(NULL을 교단·지역 하나로 셈).
   - 해소된 드리프트: **`Church.denomination`·`Church.region` nullable** · **`Job.churchName`·`Job.region` 추가** · **`Job.churchId` nullable**
@@ -140,10 +140,18 @@
   > ⏭ **C-2(화면) 결정 완료** — 있는 방법을 **전부** 보여주고 **우선순위로 정렬**(링크 > 이메일 > 우편 > 전화 — 앞셋은 서류 내는 경로, 전화는 대개 문의용). **클릭 동작은 만들지 않는다**(텍스트 표시). 원문 링크는 **보조**로 격하 — 사이드 카드의 `[지원하기]` 버튼을 **"원문 공고 보기"** 로 바꾸고 연락처 목록을 그 카드에 둔다.
   > ⏭ **`/admin/ingest`에 연락처 입력칸이 없다** — `IngestDraft`에 4칸이 없어 **수집 도구로는 CHECK ②를 통과하는 초안을 만들 수 없다.** `job_kind` 입력이 없는 것과 같은 뿌리이고, 같은 묶음(공고 등록 mutation)에서 닫는다.
 
-- [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합 (나머지 7곳)** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.**
-  - ✅ **nullable 4개·`description`은 위 A·B 항목에서 해소**(2026-08-21). `position`은 seam 정규화로 닫기로 결정 — 타입 변경 대상이 아니다
-  - **남은 것 = 타입에 아예 없는 필드 7개**: `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil`  (연락처 4칸·`payPeriod`·`denomination`은 위 항목들로 **해소**)
-  - 함께 필요한 것: mock JSON 104건에 신규 필드 채우기
+- [x] ✅ **정합 D — 남은 7컬럼 (2026-08-21) → `types/domain.ts` ↔ `jobs` 어긋남 0** — `headcount`·`startTiming`·`housingNote`·`benefitNote`·`optionalDocs`·`processSteps`·`featuredUntil`. 셋으로 갈렸다.
+  - **폼에 입력칸은 있는데 저장할 곳이 없던 5개**(`headcount`·`startTiming`·`benefitNote`·`processSteps`·`optionalDocs`) — 교회가 입력하면 버려지고 있었다(폼 주석이 그 사실을 적어뒀다). `toDraft`가 저장값을 읽는다. 제출 서류는 DB에선 배열 2개, 폼에선 항목당 `required` 플래그 하나라 옮겨 담는다
+  - **표시는 있는 자리에 붙였다** — `모집 조건` dl이 **모집 인원 · 부임 시기 · 출근 · 사택 · 복리후생 · 제출 서류** 순이 됐다(몇 명을 언제부터 → 언제 일하고 무엇을 받고 → 무엇을 내야 하나). 값이 없는 줄은 사라진다 — 크롤 공고는 원문에 없는 항목이 많다
+  - **사택 표기를 `housingLabel`(format.ts)로 단일화** — `null`(정보 없음/협의)·`true`·`false`가 서로 다른 값이고 비정형 표현과 합쳐 한 문장이 된다("제공 · 보증금 지원"·"사택 협의"). 둘 다 비면 `null`을 돌려 줄째 사라진다. `payNote`가 `payMin`의 짝인 것과 같은 관계다
+  - **제출 서류는 필수/선택 무게를 다르게** — 선택을 같은 굵기로 쓰면 다 내야 하는 것으로 읽힌다. 필수는 본문 무게, 선택은 아래 줄 muted
+  - **전형 절차는 번호 목록**(`StepList`) — 순서가 뜻을 가지므로 자격·우대의 대시 불릿과 다르다. 값 없으면 섹션째 생략, **만료 공고에도 남긴다**(행동을 유도하지 않는 정보라 지원 방법과 다르다)
+  - **`featuredUntil`은 타입에만 두고 그리지 않는다** — `featuredTier`와 한 짝인 유료 노출 판정 캐시다(원장은 `job_promotions`). SPEC의 "이 페이지가 쓰는 필드" 목록에 ⬜로 명시했다
+  - mock 104건에 채웠다 — 값 있음/없음을 섞고(모집인원 64/40 · 전형절차 25/79 등) 교회 등록 공고에 더 자주 넣었다. `housingProvided=null`인 4건 중 **1건은 `housingNote`도 비워** 줄이 사라지는 경로를 남겼다
+  > ⬜ **`housingNote` 입력칸이 폼에 없다** — 사택은 제공/미제공 칩만 받는다. 크롤 공고엔 "사택 협의" 같은 원문 표현이 들어오는데 교회가 직접 등록할 때는 그 표현을 쓸 수 없다. 폼 draft 주석에 남겼다
+
+- [x] ✅ **`types/domain.ts`·mock ↔ DATA.md 정합 — 완료(2026-08-21)** — 스키마 확정(2026-08-05~06)이 문서에만 반영돼 있던 상태를 닫았다. `Job`(38필드) ↔ `jobs`(43컬럼) 실측 어긋남 **0**(차이는 `id`·`created_at`·`updated_at` 3개로, 앱이 쓰지 않는다).
+  - ✅ 해소 경로: nullable 4개·`description`(A·B) · 연락처 4칸(C-1) · `payPeriod` · `denomination` · 남은 7컬럼(D). `position`은 **seam 정규화**로 닫았다(타입 변경 대상 아님 — DB CHECK ①이 NULL과 빈 배열을 같게 본다)
   > **타이밍 = 마이그레이션과 한 묶음.** 초기 마이그레이션 적용·`database.ts` 생성은 **완료(2026-08-21)** → 남은 순서: `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체. **공고 등록·수정 mutation을 붙이는 시점이 이 항목의 마감선이다**(그때 `description` 모순이 런타임 에러로 터진다).
   > ⚠️ **개수는 실측으로 다시 셌다(2026-08-21)** — `Job`과 DB `jobs`(43컬럼)를 필드 단위로 대조하니 **목록에 3개가 빠져 있었다**: `qualification`·`housingProvided`(TS `?` ↔ DB NULL)·`denomination`(아예 없음). 대신 `contact`를 4개로 세어 합계만 우연히 맞아 있었다.
   > **셈 규칙**: `contact` 1개가 `contact_*` 4컬럼으로 쪼개지는 것은 **4로 센다**(그게 실제 작업량). 남은 것은 **없는 필드 7곳**뿐이다 — 엄격 4·느슨 1·연락처 4는 2026-08-21 해소.
@@ -166,7 +174,7 @@
 > **② 데이터(공고·교회)** — JSON → Supabase 테이블. ⚠️ **핵심은 seam 전환(쉬움 — `lib/queries` 본문만)이 아니라 "데이터 유입"**: (a)크롤러 승격=검수브릿지(크롤러 스키마 확정 후) (b)교회 등록 mutation (c)seed(임시). **DB가 비면 read 전환해도 빈 화면** → 유입이 먼저. read+write는 도메인별로 함께. **실데이터는 크롤러 검수브릿지 준비 후**라, ①(로그인)을 먼저 한다.
 
 ### 1-1. 공통 골격
-- [~] 도메인 타입 (`types/domain.ts`) — Job·Church·User·CurrentUser 등 **작성 완료**. ⚠️ **DATA와 어긋난 7곳이 남아 있다**(아래 별도 항목) — 그게 닫혀야 [x]
+- [~] 도메인 타입 (`types/domain.ts`) — Job·Church·User·CurrentUser 등 **작성 완료**. ✅ **DATA와 정합 완료(2026-08-21)** — 실측 어긋남 0
 - [x] 도메인 상수·enum (`constants/`) — 교단·지역·직분·부서·고용형태 (영어 key + 한글 라벨)
 - [x] 레이아웃 (헤더·푸터·모바일 네비), globals.css, 디자인 토큰
 
