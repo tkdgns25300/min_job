@@ -101,7 +101,7 @@
   - **필터는 월로 환산해 비교** — 안 하면 연 4,140만원 공고가 "월 300 이상"에 걸린다(4140 ≥ 300). 환산 규칙을 **필터 힌트 + 활성 칩**("월 사례비 …")에 드러냈다 — 안 밝히면 결과가 버그로 보인다
   - **JSON-LD `unitText` 하드코딩 제거** — `"MONTH"` 고정이라 연 금액을 월급으로 신고해 **구글에 12배로** 노출됐다(연 4,140만원 → `41400000` + `YEAR` 확인)
   - `formatPay`가 인자 3개 → **공고 객체 하나**를 받는다(`jobRoleLine`과 같은 모양) — 인자 순서 실수가 사라지고 필드가 늘어도 시그니처가 안 흔들린다. 호출부 9곳
-  - 입력 3경로도 함께: `/jobs/new` 폼·`/admin/ingest`에 월/연 칩 + `structureJobText`가 "연봉/연 사례비" 표기를 감지(천 단위 구분 제거 — `"4,200만원"`이 연 금액의 일반 표기인데 기존 숫자 패턴이 못 잡았다)
+  - 입력 경로도 함께: `/jobs/new` 폼에 월/연 칩. (수집 쪽 주기 판정은 크롤러가 한다 — `/admin/ingest`와 `structureJobText`는 삭제됐다)
   - mock 101건에 `payPeriod` + **담임목사 연 사례비 3건을 반례로 심었다** — 전부 MONTH로 채우면 2026-08-16 교회 조인 때처럼 반례가 없어 버그가 잠복한다. mock은 `as unknown as Job[]` 캐스팅이라 **타입 검사가 이 누락을 막아주지 못한다**
   - `PAY_PERIODS` 상수가 생겨 **DB enum 컬럼 15개 전부** `constants/domain.ts`의 상수 맵과 짝이 됐다
   > ⏭ 여기서 미뤘던 사례비/급여 라벨 분기와 `role` 미표시는 **아래 일반직 항목에서 해소**했다(2026-08-21). 연 사례비 반례를 담임목사 공고로 심은 것은 그 시점에 mock에 일반직이 0건이었기 때문이다.
@@ -194,8 +194,8 @@
 - [~] 교회 상세 (`/churches/[id]`) — **mock UI 완료**. 교회 정보 + 현재/지난 공고 + 갤러리 + 지도 링크. 공개는 `verification_status='APPROVED'`만(DATA §9). 교회 목록 browse는 두지 않음 — SPEC 참조
 
 ### 1-3. 운영자 도구 (admin) — manual seeding의 핵심
-- [x] ⛔ ~~admin 수집 등록 도구 (`/admin/ingest`)~~ — **삭제(2026-08-21)**. 붙여넣기 UI + `lib/ingest/structure.ts`(mock AI 휴리스틱 200줄)를 함께 지우고 `/admin/review`(검수 브릿지)로 대체한다. 수집원이 크롤러와 교회 직접 등록 둘뿐이 되어 운영자가 직접 넣을 일이 없어졌다(가드레일 #1 개정)
-- [~] AI 구조화 파이프라인 (`lib/ingest/`) — **키워드 휴리스틱으로 동작 중**(`structure.ts`). Claude API 호출로 교체는 Phase 1 Server Action
+- [x] ⛔ ~~admin 수집 등록 도구 (`/admin/ingest`)~~ — **삭제 완료(2026-08-22)**. 붙여넣기 UI + `lib/ingest/structure.ts`(mock AI 휴리스틱 200줄) + 그 유일한 소비자였던 `getChurchOptions`/`ChurchOption`까지 지우고 `/admin/review`로 대체했다. 수집원이 크롤러와 교회 직접 등록 둘뿐이 되어 운영자가 직접 넣을 일이 없어졌다(가드레일 #1 개정)
+- [x] ⛔ ~~AI 구조화 파이프라인 (`lib/ingest/`)~~ — **삭제 완료(2026-08-22)**. 구조화는 크롤러(min_job_agent)가 한다 — 우리 쪽에 같은 일을 하는 코드를 두지 않는다
 - [~] admin 공고 관리 (`/admin/jobs`) — **mock UI 완료**(탭·필터·테이블·행 액션·Sheet). 실 저장과 **검수중 탭 복원**은 아래 검수 큐 항목
 - [~] "주인 없는 공고" 등록 — **모델 확정**: `source=OPERATOR` + **작성자 컬럼 없음**(가드레일 #2, `owner_id`는 2026-08-07 제거), 편집 권한 = 그 교회 인증 관리자. mock 89건 반영. ⏸ 실 등록(Server Action)은 크롤러 승격 트랙과 한 묶음
 
@@ -330,7 +330,10 @@
 - [~] jobs 신규 필드 반영 — `jobKind`(MINISTRY/GENERAL)·`role`·`contact` = `types/domain.ts`+mock 반영 **완료(2026-07-29)**. `position` NULL 허용·폼 seam·일반직 UI는 크롤러 실데이터 시(deferred), 마이그레이션 SQL 보류
 
 **(c) admin 검수 브릿지**
-- [ ] `review_data` 검수 UI — **`/admin/review`**(화면 3개). ⚠️ `churches`·`jobs`에 쓰지 않는다 — `review_status`만 바꾸고 공개는 크롤러 다음 실행이 한다. 명세 = SPEC 수집 검수 절
+- [x] `review_data` 검수 UI — **`/admin/review`**(화면 3개, 2026-08-22 완료 · **실 DB 직결**). 큐 목록(`page`+`review-queue-view`) · 단건 검수(`[id]`: 원문 열 + 편집 열 + 승격 게이트 + 판정) · 묶음 판정(`[id]/group`). seam = `lib/queries/review.ts`(캐시 안 함·snake_case 유지), 판정 = `admin/review/actions.ts`(승인·거절·저장만·되돌리기), 순수 규칙 = `lib/review-flags.ts`·`lib/review-edits.ts`. ⚠️ `churches`·`jobs`에 쓰지 않는다 — `review_status`만 바꾸고 공개는 크롤러 다음 실행이 한다
+  - 남은 것: 키보드 단축키·일괄 거절(둘 다 실제 큐가 쌓이는 것을 보고 판단) · 배열 칸은 읽기 전용으로 확정(SPEC)
+  - ⚠️ **RLS 유예의 사정거리를 확인했다(2026-08-22)**: `public` 전 테이블에 RLS가 꺼져 있고 `anon`/`authenticated`에 전 권한이 있다 → **publishable 키만 있으면 누구나 `jobs`·`review_data`를 읽고 쓸 수 있다.** 검수 화면이 첫 실 DB 쓰기 경로가 됐으니 RLS는 실 데이터 공개 전에 반드시 닫는다(1-9)
+  - ⚠️ `storage.objects`는 RLS가 항상 켜져 있고 `postings` 버킷엔 정책이 없다 → 포스터 signed URL만 `service.ts`로 만든다(CLAUDE.md Supabase 규칙의 예외 1개)
 - [ ] **크롤 대시보드** — 수집 현황·큐 상태 admin 노출
 
 **▶ 중복 판정: 교회 직접 등록 ↔ 크롤링 (2026-08-05 식별 · 2026-08-07 판정 주체 확정 — 구현 미착수)**

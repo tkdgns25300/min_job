@@ -35,7 +35,7 @@
 |---|---|---|
 | `/`, `/jobs`, `/jobs/[id]`, `/churches/[id]` | `'use cache'` 데이터 + **◐ PPR** | 공고 데이터는 캐시·모든 방문자 동일 뷰. 단 **헤더 계정 영역이 세션 의존 dynamic hole**이라 문서 응답은 `no-store`(셸은 계속 prerender·엣지 스트리밍) |
 | `/jobs`의 검색·필터·정렬·페이지 | **서버는 관여 안 함** | 필터는 **100% 클라이언트 상태**(URL은 시드·반영만). 쿼리가 달라도 서버 HTML이 같아서 `/jobs`는 캐시된 전체 카드만 내려준다 → canonical도 `/jobs` 하나. ⚠️ 서버 필터링(지역·직분 랜딩 라우트)을 만들면 이 전제와 canonical을 함께 재검토 |
-| `/admin`, `/admin/jobs` | `'use cache'` (non-PII read) | 운영자 도구지만 공개·비개인 데이터(공고·교회옵션) — 모든 운영자 동일 뷰. 공개 헤더를 안 써서 ○ Static 유지. **접근 판정은 proxy가 담당** |
+| `/admin`, `/admin/jobs` | `'use cache'` (non-PII read) | 운영자 도구지만 공개·비개인 데이터(공고 집계·목록) — 모든 운영자 동일 뷰. 공개 헤더를 안 써서 ○ Static 유지. **접근 판정은 proxy가 담당** |
 | `/admin/review/**` | dynamic (`<Suspense>` + `requireOperator`) | **미검수 크롤 데이터**(`review_data`) — 캐시 금지(판정하는 순간 바뀐다). 포스터는 Storage signed URL이라 만료가 있어 요청마다 만든다 |
 | `/admin/verify` | dynamic (`<Suspense>` + `requireOperator`) | 인증 신청 PII(담당자 실명·직분·이메일 + 증빙 서류) — 캐시 금지 + 페이지에서도 운영자 재확인 |
 | `/login` | dynamic (`<Suspense>`) | `?next=`·`?error=` 의존. 폼은 **서버 렌더**(JS 없이도 제출 동작) |
@@ -47,7 +47,7 @@
 
 공고 데이터는 **"크롤러(공개 공식 게시판) → AI가 구조화 → 리뷰 큐 → 크롤러가 공개(APPROVED) / 운영자가 검수(PENDING)"** 와 **"인증 교회가 직접 등록"** 두 경로로 채운다.
 
-⚠️ **수집원은 둘이다(개정 2026-08-21)** — ~~사람이 공개 게시판 글을 붙여넣는 경로(`/admin/ingest`)~~ 는 **없앴다**. 운영자가 직접 넣을 일이 없어졌고, 그 도구의 AI 구조화(`lib/ingest/structure.ts`)는 크롤러가 대신한다.
+⚠️ **수집원은 둘이다(개정 2026-08-21)** — ~~사람이 공개 게시판 글을 붙여넣는 경로(`/admin/ingest`)~~ 는 **없앴다**. 운영자가 직접 넣을 일이 없어졌고, 그 도구의 AI 구조화(`lib/ingest/structure.ts`)는 크롤러가 대신한다. (코드 삭제 2026-08-22)
 
 ```
 ① 크롤 경로
@@ -102,8 +102,11 @@ src/
 │   │   │   └── verify/            교회 인증 신청 (온라인 접수 미구현 — 안내 + 운영자 메일)
 │   │   └── jobs/                  job-form·job-wizard 등 등록/수정 공용 + new/ · [id]/edit/
 │   ├── admin/                     운영자 전용 — 접근 판정은 proxy(.env ADMIN_EMAILS)
-│   │   ├── layout.tsx             admin shell (noindex) — 하위 3개는 ○ Static
-│   │   └── page.tsx · jobs/ · ingest/ · verify/(PII — 페이지에서도 requireOperator)
+│   │   ├── layout.tsx             admin shell (noindex) — page.tsx·jobs/만 ○ Static
+│   │   ├── page.tsx · jobs/ · verify/(PII — 페이지에서도 requireOperator)
+│   │   └── review/                수집 검수 — page(큐) · review-queue-view · actions.ts(공용) ·
+│   │                              [id]/(단건: review-form·review-fields·source-pane·passthrough-values) ·
+│   │                              [id]/group/(묶음: group-view·group-diff)
 │   ├── login/                     Google OAuth — layout(전용 미니멀 셸) · page ·
 │   │                              login-form(서버) · submit-button(client) · actions.ts
 │   ├── auth/callback/route.ts     OAuth 콜백(code→세션) — "REST 라우트 금지" 예외 ①
@@ -128,8 +131,9 @@ src/
 │   ├── auth.ts                    순수 인증 헬퍼(hasChurchAccess·safeInternalPath·로그인 URL·PATHNAME_HEADER)
 │   ├── auth-guard.ts              requireUser·requireOperator — 서버 전용 게이트(redirect 수행)
 │   ├── operator.ts                운영자 판정(.env ADMIN_EMAILS) — 서버 전용
-│   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications (도메인 1파일)
-│   ├── ingest/structure.ts        AI 구조화 파이프라인 (현재 키워드 휴리스틱)
+│   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications·review (도메인 1파일)
+│   ├── review-flags.ts            검수 배지·승격 필수 6칸 판정(순수) — 목록·단건이 같은 답을 낸다
+│   ├── review-edits.ts            검수가 고칠 수 있는 칸 + CHECK 짝 규칙(순수) — 화면·액션 공용
 │   ├── job-visibility.ts          만료 판정 단일 소스(todayInSeoul·isPubliclyOpen·hiddenReason)
 │   ├── job-church.ts              공고↔교회 파생 — church_id가 null일 수 있어 생긴 로직
 │   │                              (jobChurchRef=표시값 규칙 · churchIdentityKey=교회 수 집계)
@@ -142,13 +146,15 @@ src/
 └── proxy.ts                       Next 16 Proxy — 세션 refresh + 접근 1차 판정(진짜 307)
 
 supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관례 = `YYYYMMDDHHmmss_name.sql`)
-└── 20260820231650_init.sql   테이블 7개 + 제약 + 인덱스. ⬜ RLS(유예)·Storage는 다음 파일
+├── 20260820231650_init.sql   테이블 7개 + 제약 + 인덱스. ⬜ RLS(유예)·Storage는 다음 파일
+├── 20260820234934_source_url_not_blank.sql
+└── 20260821051500_drop_job_status_pending.sql   jobs.status = OPEN·CLOSED 둘뿐
 ```
 
 > **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
 >
 > **배치 규칙**: 한 페이지 전용 뷰·폼·헬퍼는 **그 페이지 폴더에** 둔다(`jobs-view.tsx`·`job-form.tsx`). 두 곳 이상에서 쓰면 `components/`로 올린다. mutation은 그 라우트의 `actions.ts`.
-> **mutation `actions.ts`는 아직 login·mypage(로그아웃)뿐** — 공고 등록·수정·admin 승격은 Phase 1에서 각 라우트에 추가한다.
+> **mutation `actions.ts`는 login·mypage(로그아웃)·admin/review(검수 판정)** — 공고 등록·수정은 Phase 1에서 각 라우트에 추가한다.
 
 ## Layer Responsibilities
 
@@ -172,6 +178,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 - **예외(인증 의존·PII read)** — `'use cache'`/`cacheTag`를 쓰지 않는 함수들:
   - `users.ts` **전체**(`getCurrentUser`·`getChurchDashboard`·`getEditableJob`) — 모두 로그인 사용자에 종속돼 방문자마다 결과가 다르다. `getCurrentUser`는 `server.ts`(쿠키 세션)를 쓰고 `React.cache`로 요청당 1회만 왕복한다 — 신원은 `auth.users`(Auth API), 소속·인증상태는 **`public.users` + `churches` 조인**에서 온다(`auth` 스키마는 PostgREST JOIN이 안 돼 프로필을 복제해 둔다).
   - `verifications.ts` — 인증 신청 PII(가드레일 #3). 현재 mock, 실배선 시 `server.ts`.
+  - `review.ts` — **미검수 크롤 데이터**(`review_data`). 판정하는 순간 바뀌므로 캐시하면 방금 처리한 건이 큐에 남는다. 컬럼명도 여기만 snake_case를 유지한다(크롤러 소유 테이블을 직접 편집하는 도구라 명세와 1:1로 대조해야 한다).
   - 이 함수들은 **dynamic 페이지의 `<Suspense>` 안·Server Action·route handler에서만** 호출한다(cached scope에서 부르면 빌드가 깨진다).
 
 ### Auth (`lib/auth.ts` · `lib/auth-guard.ts`)
@@ -182,10 +189,6 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 - **2단 방어**: `proxy.ts`가 렌더 전에 진짜 307/리다이렉트로 1차 차단(비로그인 → `/login`, 운영자 아닌데 `/admin` → `/`), 페이지 게이트가 최종 판단. `(authed)` 페이지는 proxy 목록에서 빠져도 데이터가 새지 않는다.
   - ⚠️ **예외 = `/admin`·`/admin/jobs`** — `○ Static` 유지 목적상 페이지 게이트가 없어 **proxy가 유일한 관문**이다. 그래서 proxy는 Auth 장애로 판정이 안 될 때도 admin만은 **fail-closed**(홈으로)로 막는다.
   - `/admin/*` 중 **dynamic인 `/admin/verify`(PII)·`/admin/review/**`(미검수 데이터)** 는 페이지에서도 `requireOperator`를 다시 부른다. `/admin`·`/admin/jobs`는 정적 유지 목적상 proxy 판정에 의존한다(실 데이터 연결 시 재검토).
-
-### Ingest (`lib/ingest/*.ts`)
-- 사람이 확보한 공고 텍스트를 받아 AI로 구조화하는 함수. admin 등록 도구가 호출.
-- 입력은 항상 "사람이 붙여넣은 텍스트"다. 외부 사이트를 자동으로 가져오는 코드를 여기 두지 않는다 (가드레일).
 
 ### View (`app/**/*-view.tsx`)
 - 페이지의 **프레젠테이션 뷰**. `page.tsx`는 데이터·조합만, 화면 구성은 여기로 위임.
@@ -210,6 +213,7 @@ DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. �
 
 - 키: **publishable**(구 anon, RLS 적용, `NEXT_PUBLIC_*`) / **secret**(구 service_role, RLS 우회, 서버 전용). env 이름은 README의 환경 변수 절 참조(`.env.example`은 삭제됨).
 - 세션 쿠키 정책은 `lib/supabase/cookie-options.ts` 한 곳 — `httpOnly`(브라우저 클라이언트를 안 쓰므로 JS 접근 불필요) + 배포 시 `secure`. ⚠️ 로컬에서 `next start`(NODE_ENV=production)를 http로 띄우면 `secure` 때문에 로그인이 안 된다 — 로컬 로그인 테스트는 `npm run dev`로.
+- **예외 1개 — 비공개 Storage 서명**: `lib/queries/review.ts`의 포스터 signed URL은 `service.ts`를 쓴다. `storage.objects`는 RLS가 **항상** 켜져 있고 `postings` 버킷엔 정책이 없어(RLS 유예) publishable 키로는 서명이 조용히 빈 URL을 돌려준다(실측 2026-08-22). 정책을 만들면 로그인한 아무나 포스터를 읽게 되고, 운영자만 허용하려면 `.env ADMIN_EMAILS` 판정을 DB에 넣어야 해 "DB는 저장 전용"과 부딪힌다. 호출은 `requireOperator()` 뒤에서만 일어나고 나가는 것은 개체 하나에 묶인 30분 URL이다. **이 예외를 늘리지 말 것.**
 - `service.ts`가 RLS를 우회하므로 cached read(공개·비개인 조회 — 공고·교회·운영자 목록 등) 전용으로만. **인증 의존·PII read(예: 교회 인증 신청)와 모든 인증·권한 작업은 반드시 `server.ts`**(cached 금지).
 - ⚠️ **인증만 실배선** — `getCurrentUser`(users.ts)는 Supabase Auth 실동작. 나머지 `lib/queries/*`(공고·교회·인증신청)는 아직 mock(JSON)이며 DB 전환은 쿼리 본문만 교체(시그니처 불변).
 
