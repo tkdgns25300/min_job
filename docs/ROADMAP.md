@@ -95,7 +95,7 @@
   - **`hasChurchAccess`가 사람·교회 양쪽을 본다** — 사람만 승인하고 교회가 미검증이면 검수 안 끝난 교회가 공고를 올린다. `CurrentUser`에 `churchIsVerified`·`churchRejectionReason`을 실어 호출부 8곳이 한 곳도 빠뜨리지 않게 했다
   - **공개 조회는 `APPROVED`만**(`mocks`의 `publicChurchOf`) — ⚠️ **RLS는 이 경로를 못 막는다**(공개 교회 조회는 cached read라 `service.ts` secret 키를 쓰고 그건 RLS 우회). 조건은 쿼리 본문이 유일한 방어선이다. sitemap도 전용 조회(`getIndexableChurchIds`)로 분리 — 운영자용 목록을 재사용하면 검수 중 교회 URL이 색인돼 404가 된다
   - ⏸ **남은 것 = Server Action 2개뿐** — 화면·타입·mock은 확정 완료. `mypage/verify/actions.ts`(제출)·`admin/verify/actions.ts`(승인·반려 + 증빙 즉시 파기) 단계별 명세는 **SPEC 교회 인증 절**이 정본. 테이블·Storage 버킷은 아래 `001_init.sql`과 한 묶음
-> ⛔ **`/admin/jobs`에 "미상" 필터·카운터를 만들지 않는다 (2026-08-17 판단 철회)** — DATA §3의 *"검수에서 채울 값"*을 `/admin/jobs`로 잘못 읽고 한때 할 일로 올렸다. 그 검수는 **승격 전** 브릿지(`/admin/ingest` → `review_data` 보정 후 `jobs`로 INSERT)를 말한다. `/admin/jobs`는 **이미 공개된 공고**를 관리하는 화면이라 애초에 그 일을 하는 자리가 아니고, 미상 공고도 기본(전체) 목록에는 그대로 조회된다. 사후 수정이 필요하면 제목·교회 검색으로 찾는다.
+> ⛔ **`/admin/jobs`에 "미상" 필터·카운터를 만들지 않는다 (2026-08-17 판단 철회)** — DATA §3의 *"검수에서 채울 값"*을 `/admin/jobs`로 잘못 읽고 한때 할 일로 올렸다. 그 검수는 **승격 전** 브릿지(`/admin/review` → `review_data` 보정 → 크롤러가 `jobs`로 INSERT)를 말한다. `/admin/jobs`는 **이미 공개된 공고**를 관리하는 화면이라 애초에 그 일을 하는 자리가 아니고, 미상 공고도 기본(전체) 목록에는 그대로 조회된다. 사후 수정이 필요하면 제목·교회 검색으로 찾는다.
 - [x] ✅ **`pay_period` 정합 (2026-08-21 — 드리프트 1곳 해소)** — 스키마엔 `jobs.pay_period`(MONTH/YEAR)가 있는데 코드는 사례비를 **전부 월로 하드코딩**하고 있었다(`formatPay` 주석 "월 사례비", `Job.payMin` 주석 "월 사례비"). **판정과 표시를 갈라서** 닫았다 — 시간을 3층으로 다루는 규칙(DATA §6-2)과 같은 모양이다.
   - **표시는 원문 단위 그대로** — `formatPay`가 `"월 280만원"`·`"연 4,140~4,440만원"`. 월로 환산해 보여주지 **않는다**: 연봉에 상여가 섞이면 ÷12가 실제 월 지급액이 아니어서 **우리가 없는 숫자를 만든다**(DATA §3 "DEFAULT로 값을 지어내지 않는다"와 같은 이유, 가드레일 #1의 "요약 + 출처 링크" 포지셔닝). 값이 단위를 드는 이유는 **카드에 라벨이 없어서** — 없으면 `4,140만원`이 월인지 연인지 알 수 없다. 공고 상세 라벨은 `"월 사례비"` → **`"사례비"`**(라벨이 "월"을 주장하면 연 공고에서 거짓말)
   - **필터는 월로 환산해 비교** — 안 하면 연 4,140만원 공고가 "월 300 이상"에 걸린다(4140 ≥ 300). 환산 규칙을 **필터 힌트 + 활성 칩**("월 사례비 …")에 드러냈다 — 안 밝히면 결과가 버그로 보인다
@@ -127,7 +127,7 @@
     - `qualification` — 자격/경력 **enum**(필터축). 폼의 `qualifications`는 `requirements[]`(자유 텍스트)로 가는 별개 필드다 → 교회 등록 공고는 자격 필터에서 영구 탈락
     - `preferred` — 우대 사항. 공고 상세엔 섹션이 있는데 교회가 채울 수 없다
     - `housing_note` — 사택 비정형("사택 협의"). 사택은 제공/미제공 칩만 받는다
-  - **`/admin/ingest`(수집 도구)** — `IngestDraft`에 **연락처 4칸이 없다** → CHECK ②(연락처 ≥1)를 통과하는 초안을 만들 수 없다. `job_kind`·`role`도 없다
+  - ⛔ ~~`/admin/ingest`(수집 도구)~~ — **도구 자체를 없앤다**(2026-08-21). `IngestDraft`에 연락처 4칸·`job_kind`·`role`이 없어 유효한 초안을 만들 수 없었는데, 수집원이 크롤러와 교회 등록 둘뿐이 되면서 고칠 필요가 사라졌다
   > ⚠️ **저장 시 유실이 진짜 위험이다.** 폼이 읽지 않는 필드를 그대로 저장하면 값이 `null`로 덮인다 — 크롤 공고를 교회가 claim해 수정하면 크롤러가 채운 `housing_note`·`role`·`qualification`이 사라진다. mutation은 **폼이 다루지 않는 컬럼을 건드리지 않도록** 써야 한다(부분 UPDATE).
 
 - [ ] ⏸ **`/jobs` 사역직/일반직 필터축이 없다 (2026-08-21 발견 · 보류 결정)** — SPEC은 **"기본뷰=사역직(`job_kind @> ARRAY['MINISTRY']`), 일반직은 필터 전환, 혼합 공고는 양쪽에 다 뜬다"** 로 확정했는데(2026-07-28 운영자 확정 · SPEC §목록·§필터표) **코드에 그 축이 없다** — `FilterDim`에 `jobKind`가 없고 `JobCard`에 `jobKind`도 없다. mock에 일반직이 0건이라 안 보였고, 위 항목에서 반례를 심자 **기본 목록에 순수 일반직 2건이 그대로 섞였다.**
@@ -194,7 +194,7 @@
 - [~] 교회 상세 (`/churches/[id]`) — **mock UI 완료**. 교회 정보 + 현재/지난 공고 + 갤러리 + 지도 링크. 공개는 `verification_status='APPROVED'`만(DATA §9). 교회 목록 browse는 두지 않음 — SPEC 참조
 
 ### 1-3. 운영자 도구 (admin) — manual seeding의 핵심
-- [~] admin 수집 등록 도구 (`/admin/ingest`) — **mock UI 완료**(붙여넣기 → 구조화 → 프리필 폼 → 등록은 no-op). 실 등록·검수 브릿지는 크롤러 트랙(1-10)
+- [x] ⛔ ~~admin 수집 등록 도구 (`/admin/ingest`)~~ — **삭제(2026-08-21)**. 붙여넣기 UI + `lib/ingest/structure.ts`(mock AI 휴리스틱 200줄)를 함께 지우고 `/admin/review`(검수 브릿지)로 대체한다. 수집원이 크롤러와 교회 직접 등록 둘뿐이 되어 운영자가 직접 넣을 일이 없어졌다(가드레일 #1 개정)
 - [~] AI 구조화 파이프라인 (`lib/ingest/`) — **키워드 휴리스틱으로 동작 중**(`structure.ts`). Claude API 호출로 교체는 Phase 1 Server Action
 - [~] admin 공고 관리 (`/admin/jobs`) — **mock UI 완료**(탭·필터·테이블·행 액션·Sheet). 실 저장과 **검수중 탭 복원**은 아래 검수 큐 항목
 - [~] "주인 없는 공고" 등록 — **모델 확정**: `source=OPERATOR` + **작성자 컬럼 없음**(가드레일 #2, `owner_id`는 2026-08-07 제거), 편집 권한 = 그 교회 인증 관리자. mock 89건 반영. ⏸ 실 등록(Server Action)은 크롤러 승격 트랙과 한 묶음
@@ -330,7 +330,7 @@
 - [~] jobs 신규 필드 반영 — `jobKind`(MINISTRY/GENERAL)·`role`·`contact` = `types/domain.ts`+mock 반영 **완료(2026-07-29)**. `position` NULL 허용·폼 seam·일반직 UI는 크롤러 실데이터 시(deferred), 마이그레이션 SQL 보류
 
 **(c) admin 검수 브릿지**
-- [ ] `review_data` → 승격 UI — 크롤 적재분을 운영자가 검토 후 churches/jobs로 승격(기존 `/admin/ingest`와 정합)
+- [ ] `review_data` 검수 UI — **`/admin/review`**(화면 3개). ⚠️ `churches`·`jobs`에 쓰지 않는다 — `review_status`만 바꾸고 공개는 크롤러 다음 실행이 한다. 명세 = SPEC 수집 검수 절
 - [ ] **크롤 대시보드** — 수집 현황·큐 상태 admin 노출
 
 **▶ 중복 판정: 교회 직접 등록 ↔ 크롤링 (2026-08-05 식별 · 2026-08-07 판정 주체 확정 — 구현 미착수)**
