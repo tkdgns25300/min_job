@@ -15,28 +15,35 @@ import {
   positionLabel,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { EMPLOYMENT_TYPES, JOB_SOURCES, type JobSource } from "@/constants/domain";
+import { APPLY_METHODS, EMPLOYMENT_TYPES, JOB_SOURCES, type JobSource } from "@/constants/domain";
 import type { Church, Job, JobCard as JobCardData, JobChurchRef, JobDetail } from "@/types/domain";
 
 const externalLinkAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
 
-interface ApplyTarget {
+interface SourceLink {
   url: string;
   label: string;
 }
 
-// 지원 동선 — 원문(수집 공고) 우선, 없으면 교회 홈페이지.
-// 만료 공고는 사실확인용 원문 보기만 — 지원을 유도하면 안 된다(마감일 경과·상시모집 90일 초과 포함).
-function getApplyTarget(
+/**
+ * 확인용 출처 링크 — 원문(수집 공고) 우선, 없으면 교회 홈페이지.
+ *
+ * **지원 동선이 아니다.** 지원은 `ApplyMethods`가 보여주는 연락처로 한다. 이 링크의 일은 두 가지다:
+ * 우리가 원문에서 뽑은 값이 틀렸을 때 원본을 확인시키는 것, 그리고 수집 공고의 출처 표기
+ * (가드레일 #1의 "요약 + 출처 링크")를 지키는 것.
+ *
+ * 만료 공고에도 남긴다 — 그때는 사실확인이 유일한 용도다.
+ */
+function getSourceLink(
   job: Job,
   church: Church | null,
   isPubliclyOpen: boolean,
-): ApplyTarget | null {
+): SourceLink | null {
   if (job.sourceUrl) return { url: job.sourceUrl, label: "원문 공고 보기" };
   // 미claim 공고는 교회 채널을 모른다 — 수집 공고라 위의 원문 링크가 동선을 맡는다
   const homepage = church?.links.find((l) => l.type === "HOMEPAGE")?.url ?? null;
   if (isPubliclyOpen && homepage) {
-    return { url: homepage, label: "교회 홈페이지에서 지원 안내 확인" };
+    return { url: homepage, label: "교회 홈페이지 보기" };
   }
   return null;
 }
@@ -120,13 +127,11 @@ function MainContent({
   church,
   churchRef,
   churchJobs,
-  apply,
 }: {
   job: Job;
   church: Church | null;
   churchRef: JobChurchRef;
   churchJobs: JobCardData[];
-  apply: ApplyTarget | null;
 }) {
   // 위치 표기·지도 검색 규칙은 lib/format이 단일 소스(교회 상세도 같은 함수를 쓴다)
   const location = churchPlaceLine(churchRef);
@@ -191,23 +196,6 @@ function MainContent({
         </Section>
       )}
 
-      <Section title="지원 방법">
-        <p className="mt-3 text-sm leading-relaxed text-foreground/90">
-          {job.source === "OPERATOR"
-            ? "이 공고는 공개된 청빙 공고를 정리한 거예요. 원문 공고와 교회 안내를 따라 교회로 직접 지원해 주세요."
-            : "지원은 교회가 안내하는 채널로 직접 해주세요. 민잡은 지원서를 대신 받지 않아요."}
-        </p>
-        {apply && (
-          <a
-            href={apply.url}
-            {...externalLinkAttrs}
-            className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4"
-          >
-            {apply.label}
-          </a>
-        )}
-      </Section>
-
       {/* 교회 프로필 — 미claim 공고는 `churches` 행 자체가 없어 설립연도·채널·상세가 전부 없다.
           빈 껍데기를 그리거나 내부 데이터 사정을 설명하는 대신 섹션을 통째로 생략한다. */}
       {church && (
@@ -270,14 +258,47 @@ function MainContent({
   );
 }
 
+/**
+ * 지원 방법 — 공고가 공개한 연락처를 **전부** 보여준다. 순서는 `APPLY_METHODS` 정의 순서
+ * (링크 > 이메일 > 우편 > 전화 — 앞셋은 서류를 내는 경로, 전화는 대개 문의용).
+ *
+ * **클릭 대상으로 만들지 않는다** — `mailto:`·`tel:`은 기기 설정에 따라 아무 일도 일어나지 않거나
+ * 엉뚱한 앱이 열리고, 우편 주소는 애초에 열 것이 없다. 값을 읽고 직접 쓰는 편이 어긋남이 없다.
+ *
+ * ⚠️ 가드레일 #3 — 여기 있는 값은 공고가 **지원용으로 명시 공개**한 것뿐이다(`jobs.contact_*`).
+ *    `churches.contact_*`(사무용, 인증 검수 대조용)는 **공개 화면에 렌더하지 않는다**(DATA §3).
+ */
+function ApplyMethods({ job }: { job: Job }) {
+  const contacts = [
+    { key: "LINK", value: job.contactLink },
+    { key: "EMAIL", value: job.contactEmail },
+    { key: "POST", value: job.contactPost },
+    { key: "TEL", value: job.contactTel },
+  ] as const;
+  const shown = contacts.filter((c) => c.value);
+  // CHECK ②가 최소 1개를 강제하지만 타입상으론 전부 null일 수 있다
+  if (shown.length === 0) return null;
+
+  return (
+    <dl className="space-y-2.5">
+      {shown.map(({ key, value }) => (
+        <div key={key}>
+          <dt className="text-xs text-muted-foreground">{APPLY_METHODS[key]}</dt>
+          <dd className="mt-0.5 text-sm font-medium break-words">{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 // 우측 카드 (B) — 사례비·마감·고용형태 + 지원. 데스크톱 sticky, 모바일 제목 아래.
 function SummaryAside({
   job,
-  apply,
+  sourceLink,
   isPubliclyOpen,
 }: {
   job: Job;
-  apply: ApplyTarget | null;
+  sourceLink: SourceLink | null;
   isPubliclyOpen: boolean;
 }) {
   const hasPay = job.payMin !== null || job.payMax !== null;
@@ -285,21 +306,24 @@ function SummaryAside({
   return (
     <Card className="order-first gap-0 overflow-hidden p-0 lg:sticky lg:top-20 lg:order-none">
       <div className="p-5">
-        {/* 만료 공고에 "지원하기"를 띄우면 바로 위 마감 배너와 모순되고 헛걸음을 시킨다.
-            링크 자체는 남긴다 — 사실확인용 원문 보기(getApplyTarget의 라벨이 그 문구를 들고 있다). */}
-        {apply && (
+        {/* 만료 공고엔 연락처를 내리고 원문 링크만 남긴다 — 바로 위 마감 배너와 모순되고,
+            지원해도 받아주지 않는 곳으로 헛걸음을 시킨다. */}
+        {isPubliclyOpen && <ApplyMethods job={job} />}
+        {/* 보조 링크 — 라벨과 대상 판단은 `getSourceLink`가 든다 */}
+        {sourceLink && (
           <a
-            href={apply.url}
+            href={sourceLink.url}
             {...externalLinkAttrs}
             className={cn(
-              buttonVariants({ size: "lg", variant: isPubliclyOpen ? "default" : "outline" }),
+              buttonVariants({ variant: "outline" }),
               "w-full",
+              isPubliclyOpen && "mt-4",
             )}
           >
-            {isPubliclyOpen ? "지원하기" : apply.label}
+            {sourceLink.label}
           </a>
         )}
-        <p className={cn("text-xs leading-relaxed text-muted-foreground", apply && "mt-3")}>
+        <p className={cn("text-xs leading-relaxed text-muted-foreground", sourceLink && "mt-3")}>
           {isPubliclyOpen
             ? "민잡은 지원서를 직접 받지 않아요. 지원은 교회로 직접 해주세요."
             : "모집이 끝난 공고예요. 내용 확인용으로만 남겨둡니다."}
@@ -387,7 +411,7 @@ export function JobDetailView({
   similar: JobCardData[];
 }) {
   const { job, church, churchRef } = detail;
-  const apply = getApplyTarget(job, church, detail.isPubliclyOpen);
+  const sourceLink = getSourceLink(job, church, detail.isPubliclyOpen);
   // "더 보기" — 넓은 탐색은 /jobs로 (부서 우선, 없으면 직분으로 미리 필터).
   // ⚠️ 직분은 배열이라 **반복 파라미터**로 넘긴다(`?position=A&position=B`) — jobs-url-state가
   // `searchParams.getAll(dim)`으로 읽으므로 콤마로 이으면 "A,B" 한 값이 되어 아무것도 안 걸린다.
@@ -412,14 +436,8 @@ export function JobDetailView({
       <PostHeader job={job} church={churchRef} />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-        <MainContent
-          job={job}
-          church={church}
-          churchRef={churchRef}
-          churchJobs={churchJobs}
-          apply={apply}
-        />
-        <SummaryAside job={job} apply={apply} isPubliclyOpen={detail.isPubliclyOpen} />
+        <MainContent job={job} church={church} churchRef={churchRef} churchJobs={churchJobs} />
+        <SummaryAside job={job} sourceLink={sourceLink} isPubliclyOpen={detail.isPubliclyOpen} />
       </div>
 
       {similar.length > 0 && <SimilarJobsSection jobs={similar} moreHref={moreHref} />}

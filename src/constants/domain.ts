@@ -228,11 +228,14 @@ export const HOUSING_OPTIONS = {
 export type HousingOption = keyof typeof HOUSING_OPTIONS;
 
 // 지원(접수) 방법 — 사이트 내 지원 없음(가드레일). 교회 채널로 안내만.
+// 지원 접수 방법 — `jobs.contact_email`·`contact_link`·`contact_tel`·`contact_post`와 1:1(닫힌 4키).
+// **정의 순서 = 표시 순서**(CHURCH_CHANNELS와 같은 규칙). 앞의 셋은 서류를 내는 경로이고
+// 전화는 대개 문의용이라 마지막이다 — 공고 상세와 등록 폼이 이 순서를 함께 쓴다.
 export const APPLY_METHODS = {
-  EMAIL: "이메일",
   LINK: "홈페이지·양식 링크",
-  TEL: "전화",
+  EMAIL: "이메일",
   POST: "우편·방문",
+  TEL: "전화",
 } as const;
 export type ApplyMethod = keyof typeof APPLY_METHODS;
 
