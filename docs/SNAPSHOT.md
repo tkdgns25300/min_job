@@ -72,7 +72,7 @@
 | `/mypage/church/info` 교회 정보 | ✅ | ✅ | ✅ | ✅ `e89bebd` | mock — 소개·연락처·채널6·사진. 실 저장 Phase 1 |
 | `/mypage/church/promote` 노출 결제 | ✅ | ✅ | ✅ | ✅ `5764fdc` | **PortOne V2 · 실카드 청구**(2026-08-05 활성, 서버 금액 검증). 화면이 실청구·수동 적용·환불 기준을 밝힌다. 주문 저장·실 노출 적용·모바일 redirect 복귀 Phase 1 |
 | `/terms`·`/privacy` | 🟡 초안 보강 | — | ✅ | ✅ `150aa99` | 법률검토·`[ ]`실값 대기 |
-| `/admin` 셸·홈·`/admin/jobs` | ✅ | ✅ | ✅ | ✅ `bcb9e77`+ | mock — 셸(딥그린 사이드바·noindex·**운영자 게이트 적용**: proxy `/admin/**` + `.env ADMIN_EMAILS`, 2026-07-29)·홈(요약 카드+빠른 작업)·공고 관리(탭[전체·모집중·마감]·필터·테이블·노출/수정 Sheet). ⚠️ **공고 전수 검수로 되돌림(2026-08-05)** — 검수중 탭·승인/반려 복원 필요(ROADMAP 1-4). mutation Phase 1 |
+| `/admin` 셸·홈·`/admin/jobs` | ✅ | ✅ | ✅ | ✅ `bcb9e77`+ | mock — 셸(딥그린 사이드바·noindex·**운영자 게이트 적용**: proxy `/admin/**` + `.env ADMIN_EMAILS`, 2026-07-29)·홈(요약 카드+빠른 작업)·공고 관리(탭[전체·모집중·마감]·필터·테이블·노출/수정 Sheet). ⚠️ **공고 전수 검수 철회(2026-08-21)** — 검수중 탭을 만들지 않는다. 검수는 수집 공고 한 곳(`review_data`)뿐. mutation Phase 1 |
 | `/admin/verify` 교회 인증 검수 | ✅ | ✅ | ✅ | ✅ `a4599c9` | mock — **유일 검수 게이트**. 탭[검수중·완료·반려·전체]·필터·테이블·승인/반려 Sheet(서류확인+반려사유). **dynamic**(운영자+PII라 `'use cache'` 금지 — `<Suspense>` 안 `requireOperator()`가 쿠키를 읽어 dynamic). 정렬=대기 우선. 승인/반려 mutation·알림 Phase 1 |
 | `/admin/ingest` 공고 수집 | ✅ | ✅ | ✅ | ✅ `fdc7c21` | mock — 원문 붙여넣기 → **AI 구조화**(휴리스틱 seam `lib/ingest/structure.ts`) → 프리필 폼 검토 → ‘운영자 등록’(no-op). 교회 datalist 매칭. 이 화면은 **붙여넣기 경로**(크롤러 수집분은 검수 브릿지 §C). 구조화 API(Claude)·실 등록 Phase 1 |
 
@@ -136,12 +136,12 @@ curl -sI localhost:3000/opengraph-image                 # image/png 1200x630
 ## 5. 데이터 (mock 스키마 = 확정 진행 중)
 
 ### mock 현황 (`src/mocks/`)
-- **churches.json 36개** · **jobs.json 101개**(2026-08-14 날짜 현행화 — 상대 관계 보존한 채 +37일 이동). 분포: **공개 노출 63건**(유료 8 · HERO 3 · 이번 주 새 공고 9) / 마감일 경과 12 · 상시 90일 초과 4 **← 만료 기능 시연용** / CLOSED 22 / PENDING 0(**전수 검수 결정(2026-08-05) 이후에도 mutation이 없어 아직 0** — 검수 큐 구현 시 발생) · OPERATOR·CHURCH 혼합. **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. 전 공고 `jobKind=["MINISTRY"]`.
+- **churches.json 36개** · **jobs.json 101개**(2026-08-14 날짜 현행화 — 상대 관계 보존한 채 +37일 이동). 분포: **공개 노출 63건**(유료 8 · HERO 3 · 이번 주 새 공고 9) / 마감일 경과 12 · 상시 90일 초과 4 **← 만료 기능 시연용** / CLOSED 22 · OPERATOR·CHURCH 혼합. (⚠️ 이 수치는 2026-08-14 기준 101건 시절이다 — 지금은 **104건**이고 일반직 2·혼합 1·연 사례비 3이 더해졌다. `PENDING`은 상태값 자체가 제거됐다.) **새벽빛교회(ch-saebyeok) = 교회 등록 3 + 운영자 등록 1(job-101, 클레임 데모)**. 전 공고 `jobKind=["MINISTRY"]`.
 - **church-verifications.json 7건**(admin/verify 검수용): 검수중 4·인증완료 2·반려 1. 이미 인증된 교회에 담당자가 추가 신청 6 + 신규 교회 신청 1(`ch-lifewater` — 제출 시 `PENDING` 행이 먼저 생기므로 `church.id`는 항상 있다). PII는 **전건 명백한 합성값**(신청자 이메일 @example.com — 담당자 전화는 2026-08-18에 수집 자체를 폐기).
 - **인증(2026-07-29 실 전환)**: mock 로그인 계정(`src/lib/mock-auth.ts`)·테스트 계정(`test1@test.com`·`test2@test.com`)·세션 쿠키 `mj_session`은 **전부 삭제**됐다(코드·mock 데이터에 테스트 계정 잔재 0건 — 2026-08-05 확인). 이제 로그인 수단은 **Supabase Auth Google OAuth 단독** — 이메일/비밀번호 로그인도 없다. 세션 = Supabase 쿠키(`httpOnly` + 배포 시 `secure` + `sameSite=lax`, `lib/supabase/cookie-options.ts`). 카카오는 **오픈 전 추가**, 네이버는 Supabase 기본 미지원이라 보류. ⚠️ 로컬에서 `next start`를 http로 띄우면 `secure` 때문에 로그인이 끝까지 진행되지 않는다 — 로그인 테스트는 `npm run dev`로.
 
 ### enum (`src/constants/domain.ts`)
-DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**) · **JOB_KINDS**(사역직 MINISTRY·일반직 GENERAL) · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED·PENDING[**살아있는 상태** — 전수 검수 2026-08-05, 아직 mutation 없어 미발생]) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · HOUSING_OPTIONS · APPLY_METHODS(닫힌 4키 EMAIL·LINK·TEL·POST — ETC 없음) · **PAY_NOTE_PRESETS**(구 STIPEND_NOTE_PRESETS) · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
+DENOMINATIONS(**10키 — KIJANG 제거·기장=ETC·HAPSIN 유지, 2026-07-29**) · **JOB_KINDS**(사역직 MINISTRY·일반직 GENERAL) · REGIONS(18) · POSITIONS(담임목사·부목사·전도사·강도사·기타) · DEPARTMENTS · EMPLOYMENT_TYPES · **QUALIFICATIONS**(ANY·ENTRY·EXPERIENCED·ORDAINED·SEMINARIAN) · **JOB_STATUSES**(OPEN·CLOSED — ⚠️ `PENDING` 제거 2026-08-21) · FEATURED_TIERS · **EXPOSURE_PRODUCTS**(PREMIUM·HERO — weekly·bundle4 가격)·**EXPOSURE_WEEKS**(1·2·4)·**exposurePrice()**(결제 금액 단일 소스, client+server 공용) · JOB_SOURCES · CHURCH_CHANNELS(6·ETC) · **CHURCH_VERIFICATION_STATUSES**(PENDING·APPROVED·REJECTED) · HOUSING_OPTIONS · APPLY_METHODS(닫힌 4키 EMAIL·LINK·TEL·POST — ETC 없음) · **PAY_NOTE_PRESETS**(구 STIPEND_NOTE_PRESETS) · QUALIFICATION_PRESETS · REQUIRED_DOC_PRESETS
 
 ### 스키마 확정 (2026-08-04~05) — **문서만 반영, 코드는 아직 옛 스키마**
 
@@ -456,7 +456,7 @@ mock 기준 **79건 → 21건**. 크게 줄지만 나머지 58건은 지금 거�
 ### B. 교회 인증 (공고 게재 게이트 — "누구나" 차단)
 - **증빙 서류 제출 + 운영자 승인**: 가입 시 **고유번호증(또는 사업자등록증)** 사본 + 교회정보 → 운영자 검토·승인 → **인증 교회만 공고 게재**. 승인 전 게재 불가(작성 게이트).
 - 사업자등록증 강제(사람인·갓피플식) 대신 **고유번호증**(교회 대부분 보유 = 기부금영수증용) 수용. 서류 없는 교회 대비 = **공개 대표연락처 인증코드**(하이브리드, 후순위).
-- 상태: **검수중 → 인증완료(배지) / 반려**. (공고는 **운영자 전수 검수** — 2026-08-05 결정으로 2026-07-21 "검수 제거"를 되돌림.)
+- 상태: **검수중 → 인증완료(배지) / 반려**. (공고 전수 검수는 **철회** — 2026-08-21. 교회 인증이 등록 자격 게이트이므로 그 위에 공고 검수를 또 두지 않는다.)
 
 ### C. `/mypage` 교회 view 섹션 (Phase 1, `getOwnedJobs` 있음)
 1. 계정 헤더(교회명 + **인증 상태 배지**) 2. **요약**(게재중/검수중/마감) 3. **내 공고 목록**(상태 배지·노출 배지 + 액션: **수정·마감·복사=재등록·삭제**; 마감건은 복사만) + **"노출 올리기→문의"**(pricing 연동) 4. **새 공고 등록** CTA(**인증 전 비활성**) 5. ⭐**운영자 공고 클레임**(owner 없는 병존 공고를 이 계정에 연결 — 우리 고유) 6. 교회정보 설정

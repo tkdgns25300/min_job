@@ -41,7 +41,7 @@
 | **employment_type** (고용형태) | `jobs.employment_type` | FULL_TIME · SEMI_FULL_TIME · PART_TIME · `NULL`(=미상, 원문 언급률 51%) |
 | **qualification** (자격/경력) | `jobs.qualification` | ANY · ENTRY · EXPERIENCED · ORDAINED · SEMINARIAN · `NULL`(=무관) |
 | **pay_period** (사례비·급여 기간) | `jobs.pay_period` | MONTH(기본) · YEAR |
-| **job_status** | `jobs.status` | OPEN(기본) · CLOSED · **PENDING**(검수중 — 전수 검수 결정 2026-08-05로 예약. 마이그레이션 CHECK에 반드시 포함할 것) |
+| **job_status** | `jobs.status` | OPEN(기본) · CLOSED. ⚠️ ~~PENDING(검수중)~~은 **제거**(2026-08-21 · 마이그레이션 `20260821051500`) — 공고 전수 검수를 하지 않는다 |
 | **job_source** (출처) | `jobs.source` | OPERATOR · CHURCH |
 | **featured_tier** (노출) | `jobs.featured_tier` | NONE(기본) · PREMIUM · HERO(=대표광고) |
 | **verification_status** (인증 상태) | `users.church_verification_status` · **`churches.verification_status`** | PENDING · APPROVED · REJECTED. `users`는 `NULL`(=미신청) 허용, `churches`는 NOT NULL(행을 만드는 쪽이 항상 상태를 정한다 — §3). **두 컬럼은 다른 사실이다** — `users`=이 사람이 그 교회 관리자로 인정됐나, `churches`=이 교회가 검증됐나 |
@@ -196,7 +196,11 @@ CHECK ( source_url IS NULL OR length(btrim(source_url)) > 0 )
 | `{MINISTRY}` | 없음 | — | ⛔ 사역직인데 직분 없음 |
 | `{GENERAL}` | 있음 | — | ⛔ 일반직인데 직분 박힘 |
 
-직분이 안 적힌 사역직 공고(*"교역자 청빙"*)는 `POSITIONS.ETC`로 넣는다 — "기타 직분"과 "직분 미상"이 합쳐지지만, 전수 검수 전제라 운영자가 판단을 강제당하는 게 낫다고 봤다.
+직분이 안 적힌 사역직 공고(*"교역자 청빙"*)는 `POSITIONS.ETC`로 넣는다 — "기타 직분"과 "직분 미상"이 합쳐진다.
+⚠️ **근거가 사라졌다(2026-08-21).** 원래 근거는 *"전수 검수 전제라 운영자가 판단을 강제당하는 게 낫다"* 였다. 그런데 크롤러 자동공개(2026-08-20)로 `high` 공고는 사람을 거치지 않고, 전수 검수도 철회됐다 → **미상이 "기타 직분"으로 표시된 채 그대로 공개된다.** 실측: 수집 9건 중 1건(세움교회 *"유치부 파트 교역자"* → `position=["ETC"]` · `APPROVED`).
+- **지금 비울 수는 없다** — CHECK ①이 *"사역직이면 직분이 비어 있을 수 없다"* 를 강제한다.
+- **답은 `POSITIONS`에 `UNKNOWN` 추가**로 보인다. 크롤러가 **교단에서 이미 같은 판단**을 내렸다: *"그 외 전부 → `ETC`는 구현하지 않는다. 못 알아본 글자는 `UNKNOWN`이다 — `ETC`는 '그 외 교단'이라는 **주장**이라 거짓이 된다."* 직분도 같다.
+- ⏸ **보류** — enum 추가는 마이그레이션 + 크롤러 조율 + 표기 규칙(공개는 조각 생략 / 운영자는 "미상")까지 딸린다. 실데이터로 빈도를 보고 결정한다.
 
 #### 한 글에 여러 자리가 있을 때 — 필드별 판정 규칙 (2026-08-07 확정)
 
