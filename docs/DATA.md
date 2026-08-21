@@ -544,29 +544,10 @@ users ──▶ bookmarks ──▶ jobs     (Phase 1)
 
 - **RLS = 운영자 전용**(min_job admin이 대시보드·검수에 read), 크롤러는 service-role로 write. **public 노출 없음.**
 
-- **`pay_period` — "모른다"가 저장되지 않는다.** 크롤러는 주기를 못 정하면 **INSERT 본문에서 키를 뺀다**(테스트로 고정). `jobs.pay_period`가 `NOT NULL DEFAULT 'MONTH'`라 그러면 `MONTH`가 들어가고, **우리는 "월급"과 "모른다"를 구분할 수 없다.**
-  - 그게 무해한 근거 = **"금액은 있는데 주기가 없는 행"이 0건**(크롤러 실측 694건, 2026-08-21). 금액이 없으면 주기가 가리킬 대상이 없고, 화면은 금액이 없을 때 주기를 렌더하지 않는다(`formatPay`).
-  - ⚠️ **그 0건이 우리 쪽 유일한 방어선이다.** 크롤러는 주기 표기가 없으면 **금액 크기**로 정한다(월 ≤300만 / 연 ≥3,200만). **그 사이 구간(연봉 2,800~3,100만원대 — 일반직에 흔하다)** 은 어느 쪽으로도 안 잡혀 키가 비고 → 조용히 `MONTH`가 되어 **12배로 공개**된다. 승격 후엔 감지할 수단이 없다.
-  - → **일반직이 섞인 게시판이 소스에 추가될 때 이 경계를 다시 본다.** 분류가 애매하면 키를 비우는 대신 `PENDING`으로 남기는 편이 안전하다(검수 화면에 걸린다).
-- ⏸ **당분간 RLS를 켜지 않는다**(2026-08-21 결정). 표는 **켤 때의 의도**이고, 지금은 11개 테이블 전부 꺼져 있다 — 실 데이터가 없어 잃을 것이 없고, 정책 없이 켜면 코드가 전면 차단된다. ⚠️ **크롤러가 실 공고를 적재하기 전**에는 켜야 한다(그 뒤엔 anon 키로 전량 읽기·삭제가 가능해진다).
-- ⚠️⚠️ **`users`에 "본인 행 INSERT" 정책이 반드시 있어야 한다** — 없으면 `auth/callback`의 프로필 upsert가 막혀 **아무도 로그인하지 못한다**(콜백이 실패 시 세션을 폐기하므로). RLS를 켜는 마이그레이션에서 같이 넣을 것.
-- ⛔ **크롤러는 service role로 붙는다**(2026-08-21 확정). 그래서 **컬럼 단위 GRANT는 쓰지 않는다** — service key는 RLS와 GRANT를 **모두 우회**하므로 `GRANT UPDATE (posted_at)` 같은 제한이 아무것도 막지 못한다(별도 DB 롤을 만들어 그 롤로 접속해야 의미가 생기는데, 그 길로 가지 않기로 했다).
-  - **대신 규율은 크롤러 코드가 지킨다**(정본 = min_job_agent SPEC §8): 크롤러가 건드리는 `jobs` 행은 **`review_data.published_job_id`로 이어졌고 `church_id IS NULL`인 것만**이고, 갱신하는 컬럼은 `posted_at` 하나다(끌어올림 — 교회가 계속 올리는 자리를 갱신하지 않으면 아직 뽑는데 목록에서 사라진다). 조건은 `WHERE id = ? AND church_id IS NULL`. **교회가 claim하면 소유권이 넘어가고 크롤러는 손을 뗀다.**
-  - ⚠️ **그래서 "운영자가 검수에서 고친 값을 크롤러 버그가 덮는" 경로는 DB가 막아주지 않는다.** 코드 규율이 유일한 방어선이다.
-- **공개 흐름(2026-08-20 개정)**: **크롤러가 `jobs`에 직접 INSERT**한다 — `review_status=APPROVED`인 행을 **요약 + `source_url` + 연락처 4컬럼 + `source=OPERATOR` + `church_id=NULL`**로. `churches`에는 쓰지 않는다. 검수 메타는 넘기지 않고, 결과를 `review_data.published_job_id`에 적는다. min_job admin은 `PENDING`만 검수한다. **교단은 미상이면 `NULL`로 그대로 승격**(2026-08-05 — 과거 "승격 전 10키로 해소" 규칙은 철회). **지역이 미상이면 NULL로 승격**(2026-08-05 실데이터 검증). 게시일은 **필수**라 없으면 검수에서 입력(2026-08-14). 승격 가능 여부는 §3 "최소 조건 — 필수 5 + CHECK 2"가 판정한다.
-- **`review_data` 주요 컬럼**(검수 브릿지가 읽는 것): `job_kind`**[]**·`role`·`title`·`position`**[]**·`department`·`employment_type`·**`pay_min`·`pay_max`·`pay_note`·`pay_period`** · **`city`·`address`**(2026-08-17 — 승격 시 `jobs.city`·`jobs.address`로 간다) · `denomination`(+`denomination_source`·`denomination_evidence`·`raw_denomination` · **미상 가능**) · **`contact_email`·`contact_tel`·`contact_link`·`contact_post`** · `confidence` · `dedup_key`·`dedup_state` · `review_status`(PENDING/APPROVED/REJECTED) + **`reject_reason`**(DUPLICATE/HERESY/CLOSED/OPERATOR) · `published_job_id` FK→jobs · `heresy_flag`·`heresy_evidence` · `reviewed_by`·`reviewed_at` 등. **전체 스키마·판정 정본은 min_job_agent SPEC §6.**
-  - ⛔ **`matched_church_id`는 읽지 않는다** — 크롤러가 교회 행을 만들지 않기로 해(2026-08-06) **항상 NULL**이다. 컬럼만 남아 있다.
-- ⚠️⚠️ **`review_data`를 고칠 때 지켜야 하는 불변식** (2026-08-19 크롤러 팀 요청 · 정본 = min_job_agent SPEC §6). 어기면 크롤러가 그 행을 읽다 `SerdeError`로 **조용히 건너뛴다**(그쪽 실측 확인) — 행이 사라진 걸 아무도 모른다. 마이그레이션은 크롤러 소유라 우리가 CHECK를 넣지 않지만, **admin 검수 화면이 이 규칙을 지켜야 한다**:
-  ```sql
-  CHECK ((review_status = 'REJECTED') = (reject_reason IS NOT NULL))
-  CHECK ((reject_reason = 'DUPLICATE') = (dedup_state = 'DUPLICATE'))
-  ```
-  | admin이 | 해야 하는 일 |
-  |---|---|
-  | 승인 | `review_status`만 `APPROVED`로 + `reviewed_by`·`reviewed_at` 기록 |
-  | 거절 | `REJECTED` + **`reject_reason` 반드시 함께**(DUPLICATE/HERESY/CLOSED/OPERATOR) |
-  | 값 수정 | 자유 — 단 `review_status`도 함께 바꿔야 한다(그대로 두면 재구조화가 고친 값을 덮는다) |
-  | **하면 안 되는 것** | 이유 없이 `REJECTED` · `dedup_state`·`heresy_*`만 바꾸기 · `jobs`에 직접 INSERT |
+- **`pay_period` — 주기를 모르면 금액도 내보내지 않는다(크롤러 코드 불변식 · 2026-08-21 확정).** 크롤러가 주기를 못 정하면 `pay_period`만 빼는 게 아니라 **`pay_min`·`pay_max`도 INSERT 본문에서 빼고 원문 표현을 `pay_note`에 남긴다.** 따라서 **"금액은 있는데 주기가 없는 행"은 구조적으로 생기지 않는다** — 실측 0건(694건)이 아니라 코드가 보장한다.
+  - **왜 필요한가**: `jobs.pay_period`가 `NOT NULL DEFAULT 'MONTH'`라 키를 빼면 `MONTH`가 들어가고, 승격 후엔 **"월급"과 "모른다"를 구분할 수 없다.** 금액이 함께 빠지면 주기가 가리킬 대상이 없어 무해하다(화면도 금액이 없으면 주기를 렌더하지 않는다 — `formatPay`). 원칙은 **빈 칸 > 틀린 값**.
+  - **판정 방식**: 원문에 주기 표기가 있으면 그대로. 없으면 금액 크기로 — `≤500만원 → MONTH` · `≥1,000만원 → YEAR` · **501~999만원 = 판정 불가**(여기서 금액까지 비운다). 상수는 크롤러 `_MONTHLY_CEILING`·`_YEARLY_FLOOR`.
+  - ⛔ **`review_status=PENDING`으로 붙잡지 않는다** — 사례비 한 칸이 애매할 뿐이고 교회·직분·연락처·마감은 정상이라, 공고 전체를 검수 큐에 세우는 건 과하다. 그 칸만 비우면 공고는 제 역할을 한다.
 
 - ⚠️ **크로스 리포 동기화 필요(2026-08-05)** — 이번 스키마 확정으로 `review_data`와 어긋나는 지점 4개. `review_data`는 min_job_agent 소유라 우리가 바꾸지 않고 **승격 시 매핑**하거나 크롤러 쪽에 반영을 요청한다:
   1. ✅ **해소됨(2026-08-19 확인)** — `stipend_*` → `pay_*` 개명. 크롤러 `models.py`가 이미 `pay_min`·`pay_max`·`pay_note`·`pay_period`다
