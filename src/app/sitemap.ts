@@ -16,8 +16,8 @@ const STATIC_PATHS = ["/", "/jobs", "/about", "/pricing", "/terms", "/privacy"] 
  * changeFrequency·priority는 검색엔진이 사실상 무시하므로 넣지 않는다.
  *
  * ⚠️ 공고가 수만 건이 되면 sitemap 분할(index)이 필요하다 — 규모 문제이지 DB 전환과는 무관.
- * ⚠️ 교회 목록은 **전용 조회**(`getIndexableChurchIds`)를 쓴다. 운영자용 `getChurchOptions`는
- *    검수 중 교회까지 포함하므로, 그걸 재사용하면 sitemap이 404 URL을 검색엔진에 먹인다.
+ * ⚠️ 교회 목록은 **전용 조회**(`getIndexableChurchIds`)를 쓴다 — 검수 중 교회가 섞인 목록을
+ *    재사용하면 sitemap이 404 URL을 검색엔진에 먹인다.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [jobs, churchIds] = await Promise.all([getAllJobCards(), getIndexableChurchIds()]);

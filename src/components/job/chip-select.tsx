@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-// 칩 선택 컨트롤 — /jobs/new 폼과 /admin/ingest 둘 다 쓰므로 components/로 올렸다
+// 칩 선택 컨트롤 — /jobs/new 폼과 /admin/review 둘 다 쓰므로 components/에 있다
 // (CLAUDE.md 배치 규칙: 두 곳 이상에서 쓰면 페이지 폴더 밖으로).
 
 // 칩 하나의 시각 문법 — 단일/다중이 같은 모양이어야 하므로 한 곳에서 관리

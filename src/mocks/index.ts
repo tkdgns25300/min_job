@@ -5,7 +5,6 @@ import type {
   AdminJob,
   AdminOverview,
   Church,
-  ChurchOption,
   ChurchVerification,
   Job,
   JobCard,
@@ -150,23 +149,11 @@ export function getChurch(id: string): Church | null {
 
 /**
  * 색인 대상 교회 id — **공개 상세가 실제로 열리는 교회만**(`getChurch`와 같은 조건).
- * sitemap 전용으로 따로 둔다: 운영자용 `getChurchOptions`를 재사용하면 검수 중 교회 URL이
- * sitemap에 실려 검색엔진이 404를 긁는다.
+ * sitemap 전용으로 따로 둔다: 전체 교회를 쓰면 검수 중 교회 URL이 sitemap에 실려
+ * 검색엔진이 404를 긁는다.
  */
 export function getIndexableChurchIds(): string[] {
   return churches.filter(isPubliclyVisible).map((c) => c.id);
-}
-
-/**
- * 교회 선택 옵션 — 이름·교단·지역만, 가나다순. 공고 등록 시 인라인 매칭·자동완성(admin/ingest).
- * ⚠️ **운영자 도구라 검수 중 교회도 포함한다**(§9 "+ operator는 전체") — 거르면 검수 브릿지가
- *    검수 중인 교회에 공고를 붙일 수 없다. 공개 화면은 `getChurch`가 따로 막고,
- *    sitemap은 `getIndexableChurchIds`를 쓴다(이 함수를 공개 경로에 재사용하지 말 것).
- */
-export function getChurchOptions(): ChurchOption[] {
-  return churches
-    .map((c) => ({ id: c.id, name: c.name, denomination: c.denomination, region: c.region }))
-    .sort((a, b) => a.name.localeCompare(b.name, "ko"));
 }
 
 /** 교회의 현재 모집 중 공고 (excludeId 지정 시 해당 공고 제외 — 공고 상세의 "이 교회 다른 모집") */
@@ -377,7 +364,7 @@ export function getSearchSuggestions(today: string): string[] {
   }
   for (const { term, count } of churchNames.values()) {
     // bump()를 우회하므로 빈 값 가드를 여기서 다시 건다 — `church_name`은 NOT NULL이지만 ""를
-    // 막지 않고, ingest 구조화가 교회명을 못 뽑으면 ""를 넣는다(lib/ingest/structure.ts)
+    // 막지 않고, 크롤러 구조화가 교회명을 못 뽑으면 빈 값이 온다(검수에서 채운다)
     if (!term) continue;
     counts.set(term, (counts.get(term) ?? 0) + count);
   }

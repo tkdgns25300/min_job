@@ -248,9 +248,6 @@ export interface JobCard {
   deadline: string | null;
 }
 
-// 교회 선택 옵션 — 이름·교단·지역만(공고 등록 시 인라인 매칭·자동완성). (admin/ingest)
-export type ChurchOption = Pick<Church, "id" | "name" | "denomination" | "region">;
-
 // 운영자 공고 관리 테이블용 projection — 전체 상태·출처 포함(공개 카드와 달리 CLOSED·운영자/교회 구분). (admin/jobs)
 export interface AdminJob {
   /** 공개 목록에 실제로 뜨는가 (DATA §6-1). `status`만 보면 내려간 공고를 "게재중"으로 표시하게 된다 */
