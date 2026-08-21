@@ -133,13 +133,20 @@
   - mock 반례: 고용형태 미상 12건 · 사택 정보없음 4건(전엔 1건). ⚠️ **실측 비율(고용형태 51%)보다 낮게 잡았다** — 경로를 보이게 하는 게 목적이고 51%로 채우면 다른 검수가 시끄러워진다
   - 검증: 자리줄 조각 생략 · 고용형태·자격 필터에서 미상 탈락 · 자유검색 · JSON-LD 필드 유무 · 사택 3상태 · 빈 description 폴백
 
-- [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합 (나머지 11곳)** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.**
+- [x] ✅ **정합 C-1 — 지원 연락처 4칸 (2026-08-21 · 4곳 해소 → 남은 7곳)** — `Job.contact` 1칸을 `contactEmail`·`contactTel`·`contactLink`·`contactPost`로 교체(`APPLY_METHODS` 닫힌 4키와 1:1). **타입·데이터만 — 화면은 C-2**.
+  - ⚠️ 알고 보니 `Job.contact`는 **읽는 곳이 0곳**이고 mock 104건 전부 `null`이었다 — 지원 연락처는 **한 번도 화면에 나온 적이 없다.** 실제 지원 동선은 `getApplyTarget`의 두 갈래뿐이다(`sourceUrl` 50건 · 교회 홈페이지 8건 · 없음 1건). 그래서 C-2는 "1칸을 4칸으로 쪼개는 일"이 아니라 **연락처를 처음 화면에 붙이는 일**이다
+  - mock 104건에 채웠다 — **CHECK ②가 `source_url`을 세지 않으므로 전 건에 최소 1개**가 필요하다. 조합 반례 9종(이메일만·전화만·링크만·**우편만**·4개 전부 등). ⚠️ 실제 도메인·번호를 쓰지 않는다 — 전에 mock에 넣은 도메인 17개가 살아 있는 주소였다. `recruit@<slug>.example.com` · `<지역번호>-000-nnnn` · `https://example.com/<slug>/apply`
+  - **수정 폼 프리필을 고쳤다** — `toDraft`가 `job?.sourceUrl ? { LINK: sourceUrl } : {}`로 접수 방법을 채우고 있었다. 교회 공고는 `sourceUrl`이 null이라 **수정 화면이 접수 방법을 비운 채 열리고** 필수 검증에 걸려 교회가 매번 다시 입력해야 했다. 이제 저장된 4칸을 읽는다(`applyMethodsOf`)
+  > ⏭ **C-2(화면) 결정 완료** — 있는 방법을 **전부** 보여주고 **우선순위로 정렬**(링크 > 이메일 > 우편 > 전화 — 앞셋은 서류 내는 경로, 전화는 대개 문의용). **클릭 동작은 만들지 않는다**(텍스트 표시). 원문 링크는 **보조**로 격하 — 사이드 카드의 `[지원하기]` 버튼을 **"원문 공고 보기"** 로 바꾸고 연락처 목록을 그 카드에 둔다.
+  > ⏭ **`/admin/ingest`에 연락처 입력칸이 없다** — `IngestDraft`에 4칸이 없어 **수집 도구로는 CHECK ②를 통과하는 초안을 만들 수 없다.** `job_kind` 입력이 없는 것과 같은 뿌리이고, 같은 묶음(공고 등록 mutation)에서 닫는다.
+
+- [ ] ⚠️ **`types/domain.ts`·mock ↔ DATA.md 정합 (나머지 7곳)** — 스키마 확정(2026-08-05~06)이 **문서에만 반영됐고 코드는 아직 옛 스키마다.**
   - ✅ **nullable 4개·`description`은 위 A·B 항목에서 해소**(2026-08-21). `position`은 seam 정규화로 닫기로 결정 — 타입 변경 대상이 아니다
-  - **남은 것 = 타입에 아예 없는 필드 11개**: `contactEmail`·`contactTel`·`contactLink`·`contactPost`(현재 `contact` 1개) · `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil`  (`payPeriod`는 위 항목으로 **해소**)
+  - **남은 것 = 타입에 아예 없는 필드 7개**: `headcount` · `startTiming` · `processSteps` · `optionalDocs` · `housingNote` · `benefitNote` · `featuredUntil`  (연락처 4칸·`payPeriod`·`denomination`은 위 항목들로 **해소**)
   - 함께 필요한 것: mock JSON 104건에 신규 필드 채우기
   > **타이밍 = 마이그레이션과 한 묶음.** 초기 마이그레이션 적용·`database.ts` 생성은 **완료(2026-08-21)** → 남은 순서: `domain.ts` 정합 → mock JSON 전환 → `lib/queries` 본문 교체. **공고 등록·수정 mutation을 붙이는 시점이 이 항목의 마감선이다**(그때 `description` 모순이 런타임 에러로 터진다).
   > ⚠️ **개수는 실측으로 다시 셌다(2026-08-21)** — `Job`과 DB `jobs`(43컬럼)를 필드 단위로 대조하니 **목록에 3개가 빠져 있었다**: `qualification`·`housingProvided`(TS `?` ↔ DB NULL)·`denomination`(아예 없음). 대신 `contact`를 4개로 세어 합계만 우연히 맞아 있었다.
-  > **셈 규칙**: `contact` 1개가 `contact_*` 4컬럼으로 쪼개지는 것은 **4로 센다**(그게 실제 작업량). 남은 것은 **없는 필드 11곳**뿐이다(엄격 4 + 느슨 1은 2026-08-21 해소).
+  > **셈 규칙**: `contact` 1개가 `contact_*` 4컬럼으로 쪼개지는 것은 **4로 센다**(그게 실제 작업량). 남은 것은 **없는 필드 7곳**뿐이다 — 엄격 4·느슨 1·연락처 4는 2026-08-21 해소.
   > ⚠️ 한때 여기 "13곳"이라 적혀 있었다 — 빠진 3개를 목록에 더하면서 헤더 총계를 고치지 않은 탓이다(2026-08-21 정정). **목록을 고치면 헤더를 다시 세라.**
 
 **병행 트랙 (Phase 0~1 내내)**
@@ -159,7 +166,7 @@
 > **② 데이터(공고·교회)** — JSON → Supabase 테이블. ⚠️ **핵심은 seam 전환(쉬움 — `lib/queries` 본문만)이 아니라 "데이터 유입"**: (a)크롤러 승격=검수브릿지(크롤러 스키마 확정 후) (b)교회 등록 mutation (c)seed(임시). **DB가 비면 read 전환해도 빈 화면** → 유입이 먼저. read+write는 도메인별로 함께. **실데이터는 크롤러 검수브릿지 준비 후**라, ①(로그인)을 먼저 한다.
 
 ### 1-1. 공통 골격
-- [~] 도메인 타입 (`types/domain.ts`) — Job·Church·User·CurrentUser 등 **작성 완료**. ⚠️ **DATA와 어긋난 11곳이 남아 있다**(아래 별도 항목) — 그게 닫혀야 [x]
+- [~] 도메인 타입 (`types/domain.ts`) — Job·Church·User·CurrentUser 등 **작성 완료**. ⚠️ **DATA와 어긋난 7곳이 남아 있다**(아래 별도 항목) — 그게 닫혀야 [x]
 - [x] 도메인 상수·enum (`constants/`) — 교단·지역·직분·부서·고용형태 (영어 key + 한글 라벨)
 - [x] 레이아웃 (헤더·푸터·모바일 네비), globals.css, 디자인 토큰
 
