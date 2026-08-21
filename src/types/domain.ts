@@ -104,8 +104,20 @@ export interface Job {
   employmentType: EmploymentType | null;
   /** 자격/경력 요건 (필터 전용 — 표시하는 화면은 없다). **null = 무관** */
   qualification: Qualification | null;
+  /**
+   * 모집 인원 — **자유 텍스트**. "약간명"·"1~2명" 같은 비정형이 흔해 숫자로 담지 않는다.
+   * 한 글에 여러 자리가 있으면 원문을 그대로 담는다("1.부목사(전임) 2.교육목사") — Phase 2에서
+   * 자리별로 나눌 때 이 값이 근거가 된다(DATA §3).
+   */
+  headcount: string | null;
+  /** 부임 시기 — 자유 텍스트("즉시"·"협의"·"2월 중") */
+  startTiming: string | null;
   /** 사택. **null = 정보 없음/협의 · true = 제공 · false = 명시적 미제공** — 셋을 구분한다(DATA §3) */
   housingProvided: boolean | null;
+  /** 사택 비정형 표현("사택 협의"·"보증금 지원") — `payNote`가 `payMin`의 짝인 것과 같은 관계 */
+  housingNote: string | null;
+  /** 그 외 처우 비고(4대보험·교육비·안식월 등) — 자유 텍스트 */
+  benefitNote: string | null;
   payMin: number | null; // 사례비·급여, 만원 단위. 월/연 여부는 payPeriod가 든다
   payMax: number | null;
   payNote: string | null; // "내규에 따름" 등 비정형 표현 보존
@@ -116,13 +128,21 @@ export interface Job {
   payPeriod: PayPeriod;
   status: JobStatus;
   featuredTier: FeaturedTier;
+  /**
+   * 유료 노출 만료일("YYYY-MM-DD"). `featuredTier`와 한 짝인 **판정 캐시**로, 원장은
+   * `job_promotions`다(DATA §3). **화면에 그리지 않는다** — "지금 유료 노출 중인가"를
+   * `now()` 없이 판정하려고 두는 값이다(만료 판정은 seam이 `todayInSeoul()`을 만들어 넘긴다).
+   */
+  featuredUntil: string | null;
   postedAt: string; // "YYYY-MM-DD"
   deadline: string | null; // "YYYY-MM-DD", null = 상시모집
   // --- 상세 필드 ---
   workDays: string | null; // 출근 요일·시간 (자유 텍스트: "주일·수요" 등)
   requirements: string[]; // 자격요건 (항목 리스트)
   preferred: string[]; // 우대사항 (항목 리스트)
-  requiredDocs: string[]; // 제출 서류 (["이력서", "자기소개서", ...])
+  requiredDocs: string[]; // 제출 서류 — **필수** (["이력서", "자기소개서", ...])
+  optionalDocs: string[]; // 제출 서류 — **선택**. 배열 2개로 나눈다(jsonb `{name,required}`보다 표시가 단순)
+  processSteps: string[]; // 전형 절차 (서류→면접→설교…) — 순서가 뜻을 가진다
   /**
    * 공고 본문 — 운영자 요약 또는 교회 작성(원문 통째 복제 X · 가드레일 #1). DB는 `NOT NULL`.
    * ⚠️ 빈 문자열은 막지 못한다 — 메타 description은 `||`로 폴백한다(`lib/seo.ts`).

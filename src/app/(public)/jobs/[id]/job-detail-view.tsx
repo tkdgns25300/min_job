@@ -10,6 +10,7 @@ import {
   churchPlaceLine,
   naverMapUrl,
   formatPay,
+  housingLabel,
   jobRoleLine,
   payLabel,
   positionLabel,
@@ -77,6 +78,30 @@ function BulletList({ items }: { items: string[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+// 순서가 뜻을 갖는 목록(전형 절차) — 대시 불릿과 달리 번호를 붙인다
+function StepList({ items }: { items: string[] }) {
+  return (
+    <ol className="mt-3 space-y-2">
+      {items.map((item, index) => (
+        <li key={item} className="flex gap-2 text-sm break-keep">
+          <span className="shrink-0 tabular-nums text-muted-foreground">{index + 1}.</span>
+          <span>{item}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+// 모집 조건 행 (라벨 위 · 값 아래) — 값이 자유 텍스트라 좌우 정렬로는 넘친다(SPEC 1번)
+function ConditionRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 text-sm font-medium break-keep">{value}</dd>
+    </div>
   );
 }
 
@@ -168,33 +193,36 @@ function MainContent({
   churchJobs: JobCardData[];
   isPubliclyOpen: boolean;
 }) {
-  // 위치 표기·지도 검색 규칙은 lib/format이 단일 소스(교회 상세도 같은 함수를 쓴다)
+  // 위치·사택 표기 규칙은 lib/format이 단일 소스(교회 상세도 같은 함수를 쓴다)
   const location = churchPlaceLine(churchRef);
+  const housing = housingLabel(job);
   const mapUrl = naverMapUrl(churchRef);
 
   return (
     <div>
       <Section title="모집 조건" first>
         <dl className="mt-3 space-y-3">
-          <div>
-            <dt className="text-xs text-muted-foreground">출근</dt>
-            <dd className="mt-0.5 text-sm font-medium break-keep">{job.workDays ?? "협의"}</dd>
-          </div>
-          {/* null(정보 없음/협의)과 false(명시적 미제공)는 다르다 — DATA §3. null이면 줄을 뺀다 */}
-          {job.housingProvided !== null && (
-            <div>
-              <dt className="text-xs text-muted-foreground">사택</dt>
-              <dd className="mt-0.5 text-sm font-medium">
-                {job.housingProvided ? "제공" : "미제공"}
-              </dd>
-            </div>
-          )}
-          <div>
-            <dt className="text-xs text-muted-foreground">제출 서류</dt>
-            <dd className="mt-0.5 text-sm font-medium break-keep">
-              {job.requiredDocs.length > 0 ? job.requiredDocs.join(" · ") : "—"}
-            </dd>
-          </div>
+          {job.headcount && <ConditionRow label="모집 인원" value={job.headcount} />}
+          {job.startTiming && <ConditionRow label="부임 시기" value={job.startTiming} />}
+          <ConditionRow label="출근" value={job.workDays ?? "협의"} />
+          {/* 사택은 `null`(정보 없음/협의)·`true`·`false`가 서로 다른 값이다 — 표기는 `housingLabel`이
+              단일 소스이고, 정보가 전혀 없으면 null을 돌려 이 줄이 사라진다(DATA §3) */}
+          {housing && <ConditionRow label="사택" value={housing} />}
+          {job.benefitNote && <ConditionRow label="복리후생" value={job.benefitNote} />}
+          <ConditionRow
+            label="제출 서류"
+            value={
+              <>
+                {job.requiredDocs.length > 0 ? job.requiredDocs.join(" · ") : "—"}
+                {/* 선택 서류는 필수와 무게가 달라야 한다 — 같은 굵기면 다 내야 하는 것으로 읽힌다 */}
+                {job.optionalDocs.length > 0 && (
+                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                    선택 · {job.optionalDocs.join(" · ")}
+                  </span>
+                )}
+              </>
+            }
+          />
         </dl>
       </Section>
 
@@ -213,6 +241,12 @@ function MainContent({
           <p className="mt-3 text-sm leading-relaxed whitespace-pre-line text-foreground/90">
             {job.description}
           </p>
+        </Section>
+      )}
+
+      {job.processSteps.length > 0 && (
+        <Section title="전형 절차">
+          <StepList items={job.processSteps} />
         </Section>
       )}
 

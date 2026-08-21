@@ -10,7 +10,7 @@ import {
   type Position,
 } from "@/constants/domain";
 import { NAVER_MAP_SEARCH_URL } from "@/constants/site";
-import type { JobCard, JobChurchRef } from "@/types/domain";
+import type { Job, JobCard, JobChurchRef } from "@/types/domain";
 
 // 도메인 값 표시 포매터
 
@@ -36,6 +36,18 @@ export function formatPay(
   // 비정형 표현엔 단위를 붙이지 않는다 — "월 교회 내규에 따름"은 원문에 없는 말이 된다.
   if (note) return note;
   return "협의";
+}
+
+/**
+ * 사택 표기 — boolean 3상태와 비정형 표현을 한 문장으로. `payNote`가 `payMin`의 짝인 것과 같은 관계.
+ *
+ * `null`(정보 없음/협의)과 `false`(명시적 미제공)를 구분한다(DATA §3): 정보가 없는데 "미제공"이라
+ * 쓰면 공고가 하지 않은 말을 우리가 하는 것이 된다. **둘 다 비면 `null`을 돌려 호출부가 줄째 생략**한다.
+ */
+export function housingLabel(job: Pick<Job, "housingProvided" | "housingNote">): string | null {
+  const { housingProvided: provided, housingNote: note } = job;
+  if (provided === null) return note;
+  return [provided ? "제공" : "미제공", note].filter(Boolean).join(" · ");
 }
 
 /**

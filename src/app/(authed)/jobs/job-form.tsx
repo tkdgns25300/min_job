@@ -38,7 +38,9 @@ const METHOD_PLACEHOLDER: Record<ApplyMethod, string> = {
   TEL: "접수 전화번호",
 };
 
-// mock draft — Job 스키마보다 넓다(모집인원·부임시기·전형절차·접수방법·서류 필수여부는 Phase 1에서 DATA 반영).
+// 폼 draft — Job 스키마와 모양이 다르다. 접수 방법은 4컬럼↔맵, 제출 서류는 배열 2개↔`required` 플래그로
+// 옮겨 담는다(위 `applyMethodsOf`·`toDraft`). ⬜ `housingNote`(사택 비정형)는 아직 입력칸이 없다 —
+// 사택은 제공/미제공 칩만 받는다. 크롤 공고엔 "사택 협의" 같은 원문 표현이 들어온다.
 interface JobDraft {
   title: string;
   position: Position[]; // 배열 — 자리가 여럿이거나 자격을 열어둔 공고(DATA §3)
@@ -90,8 +92,8 @@ function toDraft(job?: Job): JobDraft {
     department: job?.department ?? null,
     departmentEtc: "",
     employmentType: job?.employmentType ?? null,
-    headcount: "",
-    startTiming: "",
+    headcount: job?.headcount ?? "",
+    startTiming: job?.startTiming ?? "",
     workDays: job?.workDays ?? "",
     intro: job?.description ?? "",
     qualifications: (job?.requirements ?? []).map((name) => ({ name, required: true })),
@@ -101,9 +103,13 @@ function toDraft(job?: Job): JobDraft {
     payPeriod: job?.payPeriod ?? "MONTH",
     housing:
       job?.housingProvided === true ? "PROVIDED" : job?.housingProvided === false ? "NONE" : null,
-    benefitNote: "",
-    docs: (job?.requiredDocs ?? []).map((name) => ({ name, required: true })),
-    processSteps: [],
+    benefitNote: job?.benefitNote ?? "",
+    // 필수·선택이 DB에선 배열 2개다 — 폼은 항목당 `required` 플래그 하나로 다룬다(DATA §3)
+    docs: [
+      ...(job?.requiredDocs ?? []).map((name) => ({ name, required: true })),
+      ...(job?.optionalDocs ?? []).map((name) => ({ name, required: false })),
+    ],
+    processSteps: job?.processSteps ?? [],
     applyMethods: applyMethodsOf(job),
     inquiry: "",
     deadline: job?.deadline ?? "",
