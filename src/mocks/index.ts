@@ -118,11 +118,11 @@ export function getAllJobCards(today: string): JobCard[] {
  * 저장한 공고(북마크) 해석용 카드 — **만료·마감분까지 포함**한다.
  * 북마크는 클라이언트 localStorage의 id 목록이라 서버가 전체 카드를 넘겨 매칭시킨다.
  * 공개 목록(`getAllJobCards`)을 쓰면 만료된 순간 저장한 공고가 **아무 안내 없이 증발**한다
- * — 카드의 `isPubliclyOpen`으로 "마감" 표시를 붙여 보여준다. 검수 중(PENDING)은 공개 전이라 제외.
+ * — 카드의 `isPubliclyOpen`으로 "마감" 표시를 붙여 보여준다.
  * (Phase 1에서 계정 귀속 bookmarks 테이블 서버 조회로 대체 — 이 전체-카드 전달은 mock 과도기)
  */
 export function getSavedJobCards(today: string): JobCard[] {
-  return jobs.filter((j) => j.status !== "PENDING").map((j) => toCard(j, today));
+  return jobs.map((j) => toCard(j, today));
 }
 
 /**
@@ -177,13 +177,13 @@ export function getChurchOpenJobs(churchId: string, today: string, excludeId?: s
 }
 
 /**
- * 교회의 지난 공고 — 최신순. 검수 중(PENDING)은 공개 전이라 제외.
+ * 교회의 지난 공고 — 최신순.
  * ⚠️ `status === "CLOSED"`만 보면 **만료된 OPEN 공고가 현재 목록에도 지난 공고에도 안 뜬다**
  *    (실측 당시 교회 8곳이 통째로 빈 페이지가 됐다). 공개에서 내려간 것은 전부 여기로 모은다.
  */
 export function getChurchPastJobs(churchId: string, today: string): PastJob[] {
   return jobs
-    .filter((j) => j.churchId === churchId && j.status !== "PENDING" && !isPubliclyOpen(j, today))
+    .filter((j) => j.churchId === churchId && !isPubliclyOpen(j, today))
     .map((j) => ({
       id: j.id,
       position: j.position,
@@ -281,7 +281,7 @@ export function getEditableJob(id: string, churchId: string): Job | null {
 
 // --- 운영자(admin) — 전체 공고 관리. 실구현은 operator RLS(DATA §RLS) + 인증 게이트(Phase 1). ---
 
-// 운영자 관리 행 projection — 전체 상태·출처 + 교회 조인(공개 카드와 달리 CLOSED·PENDING 포함)
+// 운영자 관리 행 projection — 전체 상태·출처 + 교회 조인(공개 카드와 달리 CLOSED 포함)
 function toAdminRow(job: Job, today: string): AdminJob {
   const church = jobChurchRef(job, churchOf(job));
   return {

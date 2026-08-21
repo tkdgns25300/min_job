@@ -15,17 +15,11 @@ export function JobStatusPanel({ job }: { job: Job }) {
           현재 상태: {JOB_STATUSES[job.status]}
           {job.status === "OPEN" && " — 마감해도 공고 이력은 남아요. 삭제보다 마감을 권해요."}
         </p>
-        {job.status === "PENDING" ? (
-          <p className="mt-4 text-sm text-muted-foreground">
-            검수가 끝나면 여기에서 마감·재모집을 관리할 수 있어요.
-          </p>
-        ) : (
-          <div className="mt-4">
-            <Button variant="outline" disabled>
-              {job.status === "OPEN" ? "모집 마감하기" : "다시 모집"}
-            </Button>
-          </div>
-        )}
+        <div className="mt-4">
+          <Button variant="outline" disabled>
+            {job.status === "OPEN" ? "모집 마감하기" : "다시 모집"}
+          </Button>
+        </div>
       </section>
 
       {/* 위험 영역 — 삭제는 확인 다이얼로그 필수(실구현) */}

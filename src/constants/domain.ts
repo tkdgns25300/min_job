@@ -107,11 +107,13 @@ export const QUALIFICATIONS = {
 } as const;
 export type Qualification = keyof typeof QUALIFICATIONS;
 
-// 공고 상태 — 모집중/마감. PENDING(검수중)은 공고 검수 제거(2026-07-21)로 미사용(방어적 잔존) — 교회 인증이 유일 게이트
+// 공고 상태 — 두 값뿐이다. ⚠️ `PENDING`(검수중)은 **뺐다**(2026-08-21): 공고 전수 검수를
+// 하지 않는다. 공고를 올릴 수 있는 사람은 교회 인증을 통과한 관리자뿐이고, 크롤 공고는
+// `review_data`에서 이미 검수를 거치므로 두 입력 경로 모두 관문을 이미 지난다.
+// (이 결정은 세 번 뒤집혔다 — 근거는 마이그레이션 20260821051500 주석에 있다.)
 export const JOB_STATUSES = {
   OPEN: "모집중",
   CLOSED: "마감",
-  PENDING: "검수중",
 } as const;
 export type JobStatus = keyof typeof JOB_STATUSES;
 

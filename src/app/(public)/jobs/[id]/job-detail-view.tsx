@@ -485,9 +485,7 @@ export function JobDetailView({
         ← 목록으로
       </Link>
 
-      {job.status !== "PENDING" && !detail.isPubliclyOpen && (
-        <ClosedBanner job={job} hasSimilar={similar.length > 0} />
-      )}
+      {!detail.isPubliclyOpen && <ClosedBanner job={job} hasSimilar={similar.length > 0} />}
 
       <PostHeader job={job} church={churchRef} />
 

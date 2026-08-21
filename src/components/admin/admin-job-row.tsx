@@ -11,10 +11,9 @@ import { cn } from "@/lib/utils";
 import { FEATURED_TIERS, JOB_SOURCES, JOB_STATUSES } from "@/constants/domain";
 import type { AdminJob, JobStatus } from "@/types/domain";
 
-const STATUS_VARIANT: Record<JobStatus, "default" | "secondary" | "outline"> = {
+const STATUS_VARIANT: Record<JobStatus, "default" | "secondary"> = {
   OPEN: "default",
   CLOSED: "secondary",
-  PENDING: "outline",
 };
 
 // status가 OPEN인데 공개 목록에서 내려간 경우 — "게재중"으로 뭉뚱그리면 운영자가

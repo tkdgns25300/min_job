@@ -281,7 +281,10 @@ export default async function PricingPage() {
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1.5 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm">
             <span>
-              <b className="text-primary">✓ 모든 공고 운영자 검수</b>
+              {/* ⚠️ "모든 공고 운영자 검수"였다 — 공고 전수 검수를 하지 않기로 해(2026-08-21)
+                  거짓이 됐다. 유료 상품 페이지의 신뢰 문구라 사실인 것만 적는다: 등록 자격은
+                  교회 인증(증빙 + 운영자 승인)이 막는다. */}
+              <b className="text-primary">✓ 인증된 교회만 등록</b>
             </span>
             <span className="text-muted-foreground">VAT 포함</span>
           </div>

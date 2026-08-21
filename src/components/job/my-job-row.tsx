@@ -11,11 +11,10 @@ import { FEATURED_TIERS, JOB_STATUSES, ALWAYS_OPEN_MAX_DAYS } from "@/constants/
 import type { JobStatus } from "@/types/domain";
 import type { MyJob } from "@/lib/queries/users";
 
-// 상태 배지 위계 — 모집중=default(초록 면), 마감=secondary, 검수중=outline
-const STATUS_BADGE_VARIANT: Record<JobStatus, "default" | "secondary" | "outline"> = {
+// 상태 배지 위계 — 모집중=default(초록 면), 마감=secondary
+const STATUS_BADGE_VARIANT: Record<JobStatus, "default" | "secondary"> = {
   OPEN: "default",
   CLOSED: "secondary",
-  PENDING: "outline",
 };
 
 interface MenuItem {
@@ -124,18 +123,12 @@ export function MyJobRow({ job }: { job: MyJob }) {
         {hidden && (
           <p className="mt-1.5 text-xs font-semibold text-gold-ink">{HIDDEN_NOTICE[hidden]}</p>
         )}
-        {job.status === "PENDING" ? (
-          <p className="mt-1.5 text-xs text-muted-foreground">
-            검수 중이에요 — 확인이 끝나면 곧 게재돼요.
-          </p>
-        ) : (
-          <p className="mt-1.5 text-xs text-muted-foreground">
-            조회 · 북마크
-            <span className="ml-1.5 rounded border px-1 text-[10px] text-muted-foreground/70">
-              집계 준비 중
-            </span>
-          </p>
-        )}
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          조회 · 북마크
+          <span className="ml-1.5 rounded border px-1 text-[10px] text-muted-foreground/70">
+            집계 준비 중
+          </span>
+        </p>
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5">

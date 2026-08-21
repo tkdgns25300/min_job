@@ -52,14 +52,11 @@ function EditForm({ job, onClose }: { job: AdminJob; onClose: () => void }) {
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium text-muted-foreground">상태</span>
           <NativeSelect className="w-auto" defaultValue={job.status}>
-            {/* 공고 검수 제거 — 검수중(PENDING)은 선택 불가, 모집중/마감만 */}
-            {Object.entries(JOB_STATUSES)
-              .filter(([key]) => key !== "PENDING")
-              .map(([key, label]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
+            {Object.entries(JOB_STATUSES).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
           </NativeSelect>
         </label>
         <p className="text-xs break-keep text-muted-foreground">
