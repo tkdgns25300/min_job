@@ -128,6 +128,8 @@ export type FeaturedTier = keyof typeof FEATURED_TIERS;
 // 상시모집(마감일 없음) 공고의 공개 유효 기간(일). 이 기간이 지나면 공개 목록에서 내린다.
 // 마감일 없이 방치된 공고가 영구히 "모집중"으로 남는 것을 막는다 (DATA.md §6-1).
 // 짧게 잡아 살아있는 공고를 숨기는 게 더 나쁜 오류라 넉넉히 잡았다.
+// ⚠️ **이 숫자를 바꾸면 크롤러에 통보한다** — 그쪽이 사본을 들고 중복 판정에 쓴다
+//    (근거·증상은 `lib/job-visibility.ts`의 `isPubliclyOpen` 주석).
 export const ALWAYS_OPEN_MAX_DAYS = 90;
 
 // "이번 주 새 공고" 집계 창(일). 홈 스탯과 운영자 홈이 같은 값을 써야 숫자가 갈리지 않는다.
