@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { Database } from "@/types/database";
 import { SESSION_COOKIE_OPTIONS } from "./cookie-options";
 
 // 쿠키 기반 서버 클라이언트(publishable 키 + RLS) — actions.ts(모든 mutation)·dynamic 페이지 전용.
@@ -8,7 +9,7 @@ import { SESSION_COOKIE_OPTIONS } from "./cookie-options";
 export async function createClient() {
   const cookieStore = await cookies();
 
-  return createServerClient(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {

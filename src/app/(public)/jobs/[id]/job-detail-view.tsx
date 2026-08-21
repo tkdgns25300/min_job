@@ -11,6 +11,7 @@ import {
   naverMapUrl,
   formatPay,
   jobRoleLine,
+  payLabel,
   positionLabel,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -139,7 +140,8 @@ function MainContent({
             <dt className="text-xs text-muted-foreground">출근</dt>
             <dd className="mt-0.5 text-sm font-medium break-keep">{job.workDays ?? "협의"}</dd>
           </div>
-          {job.housingProvided !== undefined && (
+          {/* null(정보 없음/협의)과 false(명시적 미제공)는 다르다 — DATA §3. null이면 줄을 뺀다 */}
+          {job.housingProvided !== null && (
             <div>
               <dt className="text-xs text-muted-foreground">사택</dt>
               <dd className="mt-0.5 text-sm font-medium">
@@ -253,7 +255,7 @@ function MainContent({
                             hasPay ? "text-primary" : "text-muted-foreground",
                           )}
                         >
-                          {formatPay(cj.payMin, cj.payMax, cj.payNote)}
+                          {formatPay(cj)}
                         </span>
                       </Link>
                     </li>
@@ -305,17 +307,20 @@ function SummaryAside({
       </div>
       <dl className="space-y-3 border-t p-5">
         <InfoRow
-          label="월 사례비"
+          label={payLabel(job.jobKind)}
           value={
             hasPay ? (
-              <span className="text-primary">{formatPay(job.payMin, job.payMax, job.payNote)}</span>
+              <span className="text-primary">{formatPay(job)}</span>
             ) : (
               (job.payNote ?? "협의")
             )
           }
         />
         <InfoRow label="마감일" value={job.deadline ?? "상시모집"} />
-        <InfoRow label="고용 형태" value={EMPLOYMENT_TYPES[job.employmentType]} />
+        <InfoRow
+          label="고용 형태"
+          value={job.employmentType ? EMPLOYMENT_TYPES[job.employmentType] : "정보 없음"}
+        />
       </dl>
     </Card>
   );

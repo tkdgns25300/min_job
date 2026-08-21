@@ -6,6 +6,7 @@ import type {
   Department,
   EmploymentType,
   Qualification,
+  PayPeriod,
   FeaturedTier,
   JobKind,
   JobSource,
@@ -55,6 +56,7 @@ export interface Church {
 export interface PastJob {
   id: string;
   position: Position[];
+  role: string | null; // 일반직 지난 공고 — 없으면 자리 이름이 빈칸이 된다
   department: Department | null;
   postedAt: string;
   deadline: string | null;
@@ -71,6 +73,12 @@ export interface Job {
   /** 공고가 말한 교회명 그대로 — `churchId`가 null이어도 교회를 표시할 수 있게 하는 값(DATA §3) */
   churchName: string;
   /**
+   * 공고 시점에 파악한 교단. null = 미상·무소속 → **교단 필터에서 탈락**한다.
+   * ⚠️ 의도적 비정규화(DATA §1 예외 1 — `region`과 근거가 같다). claim 뒤에도 이 값을 쓴다:
+   *    교회 것과 다르면 `churches`가 정본이지만, 표시·필터는 공고가 말한 교단을 따른다(DATA §3).
+   */
+  denomination: Denomination | null;
+  /**
    * 공고 시점에 파악한 광역. null = 미상 → **지역 필터에서 탈락**한다(검수에서 먼저 채울 값).
    * ⚠️ 의도적 비정규화(DATA §1 예외) — `churchId`가 null이면 `churches`를 JOIN할 수 없어
    *    지역 필터가 통째로 죽는다. 필터·정렬은 교회가 아니라 이 값을 쓴다.
@@ -84,14 +92,28 @@ export interface Job {
   address: string | null;
   title: string;
   jobKind: JobKind[]; // 사역직/일반직 — 최상위 채용 구분. 배열: 한 글에 두 종류가 섞인 공고 표현(DATA §3 판정 규칙)
-  position: Position[]; // 사역 직분 — **배열**. 자리 수·자격 범위를 전부 담는다(DATA §3 판정 규칙)
+  /**
+   * 사역 직분 — **배열**. 자리 수·자격 범위를 전부 담는다(DATA §3 판정 규칙).
+   * ⚠️ DB는 `text[] NULL`이지만 여기선 **non-null**이다 — CHECK ①이 `coalesce(cardinality(...), 0)`로
+   *    NULL과 빈 배열을 같게 보고, 소비자도 구분하지 않는다(필터는 `.some()`, `positionLabel([])`은 "").
+   *    seam이 `null → []`로 정규화한다. 빈 상태를 둘로 만들면 호출부가 전부 두 번 검사해야 한다.
+   */
+  position: Position[];
   department: Department | null;
-  employmentType: EmploymentType;
-  qualification?: Qualification; // 자격/경력 요건 (필터). 미지정 = 무관 취급. 실데이터에선 필수화 예정
-  housingProvided?: boolean; // 사택 제공 여부 (필터). 실데이터에선 필수화 예정
-  payMin: number | null; // 월 사례비, 만원 단위
+  /** 고용형태. **null = 미상** — 원문 언급률 51%뿐이라 DB도 NULL 허용이다(DATA §3). 필터에서 탈락한다 */
+  employmentType: EmploymentType | null;
+  /** 자격/경력 요건 (필터 전용 — 표시하는 화면은 없다). **null = 무관** */
+  qualification: Qualification | null;
+  /** 사택. **null = 정보 없음/협의 · true = 제공 · false = 명시적 미제공** — 셋을 구분한다(DATA §3) */
+  housingProvided: boolean | null;
+  payMin: number | null; // 사례비·급여, 만원 단위. 월/연 여부는 payPeriod가 든다
   payMax: number | null;
   payNote: string | null; // "내규에 따름" 등 비정형 표현 보존
+  /**
+   * 금액이 월 기준인지 연 기준인지. **표시는 이 단위 그대로**, 필터만 월로 환산한다.
+   * `payMin`이 null이면 의미가 없지만 DB가 NOT NULL DEFAULT 'MONTH'라 항상 값이 있다.
+   */
+  payPeriod: PayPeriod;
   status: JobStatus;
   featuredTier: FeaturedTier;
   postedAt: string; // "YYYY-MM-DD"
@@ -101,10 +123,18 @@ export interface Job {
   requirements: string[]; // 자격요건 (항목 리스트)
   preferred: string[]; // 우대사항 (항목 리스트)
   requiredDocs: string[]; // 제출 서류 (["이력서", "자기소개서", ...])
-  description: string | null; // 공고 본문 (운영자 요약 or 교회 작성 — 원문 통째 복제 X)
+  /**
+   * 공고 본문 — 운영자 요약 또는 교회 작성(원문 통째 복제 X · 가드레일 #1). DB는 `NOT NULL`.
+   * ⚠️ 빈 문자열은 막지 못한다 — 메타 description은 `||`로 폴백한다(`lib/seo.ts`).
+   */
+  description: string;
   source: JobSource; // 출처 — 운영자 등록 / 교회 직접 등록 (owner nullable 가드레일)
   sourceUrl: string | null; // 원문 링크 (운영자 수집 공고). 재호스팅 대신 링크로 안내
-  role: string | null; // 일반직(GENERAL) 분류 자유텍스트(방송·행정 등). 사역직은 null
+  /**
+   * 일반직 직무 — **자유 텍스트**(통제 목록 아님): "행정간사"·"방송·미디어" 등. 사역직은 null.
+   * 직분(`position`)의 일반직 짝이다 — `jobRoleLine`이 둘을 같은 자리에 놓고, 자유검색도 훑는다.
+   */
+  role: string | null;
   contact: string | null; // 지원용 공개 연락처(전화·이메일·링크). 가드레일 #3
 }
 
@@ -171,13 +201,15 @@ export interface JobCard {
   title: string;
   church: Omit<JobChurchRef, "id" | "address">; // 카드는 교회로 링크하지도, 지도를 그리지도 않는다
   position: Position[];
+  role: string | null;
   department: Department | null;
-  employmentType: EmploymentType;
-  qualification?: Qualification;
-  housingProvided?: boolean;
+  employmentType: EmploymentType | null;
+  qualification: Qualification | null;
+  housingProvided: boolean | null;
   payMin: number | null;
   payMax: number | null;
   payNote: string | null;
+  payPeriod: PayPeriod; // 카드 표시 + 사례비 필터의 월 환산에 쓴다
   featuredTier: FeaturedTier;
   postedAt: string;
   deadline: string | null;
@@ -196,8 +228,9 @@ export interface AdminJob {
   title: string;
   church: Pick<JobChurchRef, "name" | "denomination" | "region">; // 운영자 테이블이 실제로 쓰는 것만
   position: Position[];
+  role: string | null;
   department: Department | null;
-  employmentType: EmploymentType;
+  employmentType: EmploymentType | null;
   status: JobStatus;
   featuredTier: FeaturedTier;
   source: JobSource;

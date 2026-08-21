@@ -50,7 +50,7 @@ export function FeaturedJobCard({ job }: { job: JobCard }) {
             hasPay ? "font-bold text-primary" : "text-sm font-semibold text-muted-foreground",
           )}
         >
-          {formatPay(job.payMin, job.payMax, job.payNote)}
+          {formatPay(job)}
         </span>
         <span className="text-xs text-muted-foreground/80">
           <RelativeTime date={job.postedAt} />

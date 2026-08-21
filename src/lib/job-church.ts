@@ -10,8 +10,8 @@ import type { Church, Job, JobChurchRef } from "@/types/domain";
  * (이전엔 조인 실패 시 `"알 수 없는 교회"`·`ETC`·`SEOUL`로 메웠는데, 미상 교단이 `ETC`로,
  *  미상 지역이 서울로 둔갑해 필터·거점 판정을 오염시켰다.)
  *
- * **규칙 한 줄: `jobs`에 컬럼이 있으면 그 값이 표시 정본이고, 없는 것만 `churches`에서 온다.**
- * 이름·위치 3종은 `jobs`(비정규화 — DATA §1 예외), 교단은 아직 `jobs`에 컬럼이 없어 교회에서 읽는다.
+ * **규칙 한 줄: 표시값은 전부 `jobs`에서 온다. `churches`는 "claim됐나 + 어디로 링크하나"만 답한다.**
+ * 이름·교단·위치 3종이 모두 `jobs`의 비정규화 컬럼이다(DATA §1 예외 1·3).
  *
  * ⚠️ **왜 교회를 정본으로 삼지 않는가** — 지역으로 거르는 코드가 조인 없이 돌아야 하기 때문이다.
  *    `getSimilarJobs`의 "같은 지역" 단계, 앞으로의 서버측 지역 필터·`jobs(region)` 인덱스가 전부
@@ -25,13 +25,14 @@ import type { Church, Job, JobChurchRef } from "@/types/domain";
  * 그건 어긋남이 아니라 의도다 — 공고 화면은 공고가 말한 이름을, 교회 상세는 인증된 이름을 보여준다.
  */
 export function jobChurchRef(
-  job: Pick<Job, "churchName" | "region" | "city" | "address">,
-  church: Church | null,
+  job: Pick<Job, "churchName" | "denomination" | "region" | "city" | "address">,
+  // id만 쓴다 — claim 여부와 교회 상세 링크 대상. 표시값은 위 규칙대로 공고에서 온다.
+  church: Pick<Church, "id"> | null,
 ): JobChurchRef {
   return {
     id: church?.id ?? null,
     name: job.churchName,
-    denomination: church?.denomination ?? null,
+    denomination: job.denomination,
     region: job.region,
     city: job.city,
     address: job.address,

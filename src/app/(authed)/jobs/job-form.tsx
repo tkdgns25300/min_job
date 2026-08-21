@@ -20,10 +20,12 @@ import {
   QUALIFICATION_PRESETS,
   REQUIRED_DOC_PRESETS,
   PAY_NOTE_PRESETS,
+  PAY_PERIODS,
   type ApplyMethod,
   type Department,
   type EmploymentType,
   type HousingOption,
+  type PayPeriod,
   type Position,
 } from "@/constants/domain";
 import type { Church, Job } from "@/types/domain";
@@ -51,6 +53,7 @@ interface JobDraft {
   payMin: string;
   payMax: string;
   payNote: string;
+  payPeriod: PayPeriod;
   housing: HousingOption | null;
   benefitNote: string;
   docs: CheckItem[];
@@ -77,6 +80,7 @@ function toDraft(job?: Job): JobDraft {
     payMin: job?.payMin?.toString() ?? "",
     payMax: job?.payMax?.toString() ?? "",
     payNote: job?.payNote ?? "",
+    payPeriod: job?.payPeriod ?? "MONTH",
     housing:
       job?.housingProvided === true ? "PROVIDED" : job?.housingProvided === false ? "NONE" : null,
     benefitNote: "",
@@ -140,8 +144,15 @@ function PayFields({ draft, patch }: SectionProps) {
     ? draft.payNote
     : null;
   return (
-    <Field label="월 사례비 (만원)" group>
-      <div className="flex items-center gap-2">
+    <Field label="사례비 (만원)" group>
+      {/* 기간을 먼저 고르고 금액을 적는다. 재클릭 해제는 기본값(월)으로 — DB가 NOT NULL이라
+          "기간 없음"이라는 상태가 없다(constants/domain.ts PAY_PERIODS). */}
+      <ChipSelect
+        options={PAY_PERIODS}
+        value={draft.payPeriod}
+        onChange={(v) => patch({ payPeriod: v ?? "MONTH" })}
+      />
+      <div className="mt-2 flex items-center gap-2">
         <Input
           inputMode="numeric"
           value={draft.payMin}

@@ -123,6 +123,8 @@ export function JobFilter({
 
       <div>
         <h3 className="mb-2 text-xs font-bold text-muted-foreground">월 사례비 (만원)</h3>
+        {/* 환산 규칙을 드러낸다 — 안 밝히면 "월 300 이상"에 연봉 공고가 걸리는 게 버그로 보인다 */}
+        <p className="mb-2 text-xs text-muted-foreground">연 단위 공고는 월로 환산해 비교해요.</p>
         <div className="flex items-center gap-2">
           <Input
             inputMode="numeric"

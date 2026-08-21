@@ -1,19 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { positionLabel } from "@/lib/format";
+import { jobRoleLine } from "@/lib/format";
 import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  DEPARTMENTS,
-  EMPLOYMENT_TYPES,
-  FEATURED_TIERS,
-  JOB_STATUSES,
-  ALWAYS_OPEN_MAX_DAYS,
-} from "@/constants/domain";
+import { FEATURED_TIERS, JOB_STATUSES, ALWAYS_OPEN_MAX_DAYS } from "@/constants/domain";
 import type { JobStatus } from "@/types/domain";
 import type { MyJob } from "@/lib/queries/users";
 
@@ -99,13 +93,7 @@ const HIDDEN_NOTICE: Record<"deadline" | "stale", string> = {
 export function MyJobRow({ job }: { job: MyJob }) {
   const isClosed = job.status === "CLOSED";
   const hidden = job.hiddenReason;
-  const roleLine = [
-    positionLabel(job.position),
-    job.department && DEPARTMENTS[job.department],
-    EMPLOYMENT_TYPES[job.employmentType],
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const roleLine = jobRoleLine(job);
 
   return (
     <div className="flex items-center gap-4 px-4 py-4 sm:px-5">

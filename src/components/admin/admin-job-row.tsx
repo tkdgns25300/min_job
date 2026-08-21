@@ -1,20 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { positionLabel } from "@/lib/format";
+import { jobRoleLine } from "@/lib/format";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  DEPARTMENTS,
-  EMPLOYMENT_TYPES,
-  FEATURED_TIERS,
-  JOB_SOURCES,
-  JOB_STATUSES,
-} from "@/constants/domain";
+import { FEATURED_TIERS, JOB_SOURCES, JOB_STATUSES } from "@/constants/domain";
 import type { AdminJob, JobStatus } from "@/types/domain";
 
 const STATUS_VARIANT: Record<JobStatus, "default" | "secondary" | "outline"> = {
@@ -122,13 +116,7 @@ export function AdminJobRow({
   onEdit: () => void;
   onFeature: () => void;
 }) {
-  const role = [
-    positionLabel(job.position),
-    job.department && DEPARTMENTS[job.department],
-    EMPLOYMENT_TYPES[job.employmentType],
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const roleLine = jobRoleLine(job);
 
   return (
     <tr>
@@ -136,7 +124,7 @@ export function AdminJobRow({
         <Link href={`/jobs/${job.id}`} className="font-semibold hover:underline">
           {job.title}
         </Link>
-        <div className="mt-0.5 text-xs text-muted-foreground">{role}</div>
+        <div className="mt-0.5 text-xs text-muted-foreground">{roleLine}</div>
       </td>
       <td className="px-4 py-3 align-middle whitespace-nowrap">{job.church.name}</td>
       <td className="px-4 py-3 align-middle">

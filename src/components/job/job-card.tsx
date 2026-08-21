@@ -46,7 +46,7 @@ export function JobCard({ job }: { job: JobCardData }) {
         <p className="text-sm text-muted-foreground">{role}</p>
         <div className="mt-auto flex items-center justify-between pt-1">
           <span className={cn("font-bold", hasPay ? "text-primary" : "text-muted-foreground")}>
-            {formatPay(job.payMin, job.payMax, job.payNote)}
+            {formatPay(job)}
           </span>
           <span className="text-xs text-muted-foreground">
             <RelativeTime date={job.postedAt} />

@@ -20,11 +20,12 @@ const DIM_OPTIONS: Record<FilterDim, Record<string, string>> = {
   qualification: QUALIFICATIONS,
 };
 
-// 사례비 입력값 → 요약 라벨 ("200~300만원" / "200만원 이상" / "300만원 이하")
+// 사례비 입력값 → 요약 라벨. "월"을 붙인다 — 이 필터는 월 기준이고
+// 연 단위 공고는 환산해 비교되므로(filter-jobs.ts), 기준을 칩에도 남겨야 결과가 설명된다.
 function payLabel(min: string, max: string): string | null {
-  if (min && max) return `사례비 ${min}~${max}만원`;
-  if (min) return `사례비 ${min}만원 이상`;
-  if (max) return `사례비 ${max}만원 이하`;
+  if (min && max) return `월 사례비 ${min}~${max}만원`;
+  if (min) return `월 사례비 ${min}만원 이상`;
+  if (max) return `월 사례비 ${max}만원 이하`;
   return null;
 }
 

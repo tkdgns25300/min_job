@@ -15,11 +15,12 @@ import type { Church, JobCard as JobCardData, PastJob } from "@/types/domain";
 
 const externalAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
 
-// 자리 이름: 부서 + 직분 (예: "유초등부 전도사")
-function roleLabel(role: Pick<PastJob, "position" | "department">): string {
+// 자리 이름: 부서 + 직분/직무 (예: "유초등부 전도사"·"행정 행정간사")
+// 일반직은 직분이 비어 `role`이 그 자리를 채운다 — 안 넣으면 빈 줄이 된다.
+function roleLabel(role: Pick<PastJob, "position" | "role" | "department">): string {
   return [
     role.department ? DEPARTMENTS[role.department] : null,
-    positionLabel(role.position, { full: true }),
+    positionLabel(role.position, { full: true }) || role.role,
   ]
     .filter(Boolean)
     .join(" ");
@@ -38,7 +39,7 @@ function OpenJobCard({ job }: { job: JobCardData }) {
       <p
         className={cn("mt-auto pt-1 font-bold", hasPay ? "text-primary" : "text-muted-foreground")}
       >
-        {formatPay(job.payMin, job.payMax, job.payNote)}
+        {formatPay(job)}
       </p>
     </Link>
   );

@@ -50,13 +50,9 @@ export function JobRow({ job }: { job: JobCard }) {
 
       <div className="shrink-0 text-right">
         {hasPay ? (
-          <div className="font-bold text-primary">
-            {formatPay(job.payMin, job.payMax, job.payNote)}
-          </div>
+          <div className="font-bold text-primary">{formatPay(job)}</div>
         ) : (
-          <div className="text-sm font-semibold text-muted-foreground">
-            {formatPay(job.payMin, job.payMax, job.payNote)}
-          </div>
+          <div className="text-sm font-semibold text-muted-foreground">{formatPay(job)}</div>
         )}
         <div className="mt-1.5 text-xs text-muted-foreground/80">
           <RelativeTime date={job.postedAt} />

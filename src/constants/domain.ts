@@ -150,6 +150,19 @@ export const EXPOSURE_PRODUCTS = {
 export type ExposureProduct = keyof typeof EXPOSURE_PRODUCTS;
 export const EXPOSURE_WEEKS = [1, 2, 4] as const;
 
+// 노출 구매 원장(`job_promotions.status`)의 상태 — 결제 이력 한 줄이 지금 어떤 상태인가.
+// 원장은 append-only라 행을 지우지 않고 이 값을 바꾼다(DATA.md §3 `job_promotions`).
+// ⚠️ REFUNDED와 CANCELLED의 **경계는 아직 정하지 않았다** — 스키마 확정(2026-08-05) 때 세 값만
+//    정해졌다. 라벨은 어느 해석에도 참인 직역으로 두었다. 주문 저장(ROADMAP Phase 1)에서
+//    "적용 전 전액취소 vs 적용 후 일할환불"인지 "승인취소 vs 매입후환불"인지 정하고 여기 적는다
+//    — HERO 구좌 판정이 취소된 행을 세는지에 답이 달라진다.
+export const PROMOTION_STATUSES = {
+  PAID: "결제완료",
+  REFUNDED: "환불",
+  CANCELLED: "취소",
+} as const;
+export type PromotionStatus = keyof typeof PROMOTION_STATUSES;
+
 // 노출 금액 계산 — 4주는 묶음가, 그 외는 주 단가 × 주수. (client·server 동일 계산 → 위변조 검증)
 export function exposurePrice(tier: ExposureProduct, weeks: number): number {
   const p = EXPOSURE_PRODUCTS[tier];
@@ -171,6 +184,16 @@ export const CHURCH_VERIFICATION_STATUSES = {
   REJECTED: "반려",
 } as const;
 export type ChurchVerificationStatus = keyof typeof CHURCH_VERIFICATION_STATUSES;
+
+// 사례비·급여 기간 — 금액이 월 기준인지 연 기준인지. 사역직은 월이 압도적이라 기본이 MONTH고,
+// 일반직·담임목사 공고에서 연 표기가 나온다. **표시는 이 라벨 그대로**(원문 단위 유지),
+// **필터는 월로 환산해 비교**한다(filter-jobs.ts) — 환산값을 화면에 쓰지 않는 이유는
+// 연봉에 상여가 섞이면 ÷12가 실제 월 지급액이 아니어서, 우리가 없는 숫자를 만들게 되기 때문이다.
+export const PAY_PERIODS = {
+  MONTH: "월",
+  YEAR: "연",
+} as const;
+export type PayPeriod = keyof typeof PAY_PERIODS;
 
 // 공고 등록 폼 프리셋 — 인터뷰 반영: 사례비는 "거의 내규에 따름"(비정형 경로를 숫자와 동급으로)
 export const PAY_NOTE_PRESETS = ["교회 내규에 따름", "면접 후 협의"] as const;

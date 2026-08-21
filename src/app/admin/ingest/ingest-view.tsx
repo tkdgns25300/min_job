@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChipMultiSelect } from "@/components/job/chip-select";
+import { ChipMultiSelect, ChipSelect } from "@/components/job/chip-select";
 import { Field } from "@/components/field";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   DENOMINATIONS,
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
+  PAY_PERIODS,
   POSITIONS,
   REGIONS,
 } from "@/constants/domain";
@@ -243,8 +244,14 @@ function DraftPanel({
           />
         </Field>
 
-        <Field label="월 사례비 (만원)" group>
-          <div className="flex items-center gap-2">
+        <Field label="사례비 (만원)" group>
+          {/* 구조화가 "연봉" 표기를 잡으면 연으로 온다 — 원문과 대조해 운영자가 확정한다 */}
+          <ChipSelect
+            options={PAY_PERIODS}
+            value={draft.payPeriod}
+            onChange={(v) => patch({ payPeriod: v ?? "MONTH" })}
+          />
+          <div className="mt-2 flex items-center gap-2">
             <Input
               className="h-9"
               inputMode="numeric"

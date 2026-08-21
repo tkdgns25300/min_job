@@ -2,6 +2,7 @@ import { cache } from "react";
 import { unstable_rethrow } from "next/navigation";
 import * as mock from "@/mocks";
 import { createClient } from "@/lib/supabase/server";
+import { CHURCH_VERIFICATION_STATUSES, type ChurchVerificationStatus } from "@/constants/domain";
 import { todayInSeoul, type HiddenReason } from "@/lib/job-visibility";
 import type { Church, CurrentUser, Job } from "@/types/domain";
 
@@ -19,6 +20,7 @@ export type MyJob = Pick<
   | "postedAt"
   | "deadline"
   | "position"
+  | "role"
   | "department"
   | "employmentType"
   | "source"
@@ -75,18 +77,22 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       // 로그인 상태는 유지하고, 교회 기능만 잠긴다. 열어두면 미인증 교회가 공고를 올릴 수 있다.
       console.error("[auth] 프로필 조회 실패 — 교회 권한 없이 진행", profileError);
     }
-    // `churches`는 1:1 조인이라 객체지만, PostgREST 타입이 배열로 넓게 잡힐 수 있어 둘 다 받는다.
-    const church = Array.isArray(profile?.churches) ? profile?.churches[0] : profile?.churches;
+    // enum 컬럼은 `text + CHECK`라 DB에서 `string`으로 온다(types/database.ts) — 여기서 좁힌다.
+    // 아는 값이 아니면 null(미신청)로 본다 — 위 프로필 실패와 같은 fail-closed 방향.
+    const status = profile?.church_verification_status;
 
     return {
       id: data.user.id,
       email: data.user.email,
       name: displayName(data.user.user_metadata),
       churchId: profile?.church_id ?? null,
-      churchName: church?.name ?? null,
-      churchVerificationStatus: profile?.church_verification_status ?? null,
+      churchName: profile?.churches?.name ?? null,
+      churchVerificationStatus:
+        status && status in CHURCH_VERIFICATION_STATUSES
+          ? (status as ChurchVerificationStatus)
+          : null,
       // 사람과 교회 양쪽이 승인돼야 교회 기능이 열린다(`hasChurchAccess`) — 여기선 교회 쪽만 담는다.
-      churchIsVerified: church?.verification_status === "APPROVED",
+      churchIsVerified: profile?.churches?.verification_status === "APPROVED",
       churchRejectionReason: profile?.verification_rejection_reason ?? null,
     };
   } catch (thrown) {

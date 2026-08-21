@@ -2,9 +2,11 @@ import {
   DENOMINATIONS,
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
+  PAY_PERIODS,
   POSITIONS,
   REGIONS,
   type Denomination,
+  type JobKind,
   type Position,
 } from "@/constants/domain";
 import { NAVER_MAP_SEARCH_URL } from "@/constants/site";
@@ -14,10 +16,24 @@ import type { JobCard, JobChurchRef } from "@/types/domain";
 
 const KRW_PER_MAN = 10000; // 원 → 만원
 
-// 월 사례비 표시: 범위/단일/비정형(내규 등)/없음 순
-export function formatPay(min: number | null, max: number | null, note: string | null): string {
-  if (min !== null && max !== null && min !== max) return `${min}~${max}만원`;
-  if (min !== null) return `${min}만원`;
+// 천 단위 구분 — 연 금액은 네 자리(4,140만원)라 없으면 읽히지 않는다.
+const comma = (value: number) => value.toLocaleString("ko-KR");
+
+/**
+ * 사례비·급여 표시: 범위 / 단일 / 비정형(내규 등) / 없음 순.
+ *
+ * **접두는 공고에 적힌 단위 그대로**("월 280만원"·"연 4,140만원"). 값이 단위를 드는 이유:
+ * 목록 카드에는 라벨이 없어서, 값에 단위가 없으면 `4,140만원`이 월인지 연인지 알 수 없다.
+ * 월로 환산해 보여주지 않는 근거는 `PAY_PERIODS` 주석 참조(없는 숫자를 만들게 된다).
+ */
+export function formatPay(
+  job: Pick<JobCard, "payMin" | "payMax" | "payNote" | "payPeriod">,
+): string {
+  const { payMin: min, payMax: max, payNote: note, payPeriod: period } = job;
+  const unit = PAY_PERIODS[period];
+  if (min !== null && max !== null && min !== max) return `${unit} ${comma(min)}~${comma(max)}만원`;
+  if (min !== null) return `${unit} ${comma(min)}만원`;
+  // 비정형 표현엔 단위를 붙이지 않는다 — "월 교회 내규에 따름"은 원문에 없는 말이 된다.
   if (note) return note;
   return "협의";
 }
@@ -31,7 +47,7 @@ export function formatPay(min: number | null, max: number | null, note: string |
  *    만원 배수라 문제없지만, 그런 가격을 쓰기로 하면 표기 단위부터 다시 정해야 한다.
  */
 export function formatExposurePrice(won: number): string {
-  return `${(won / KRW_PER_MAN).toLocaleString("ko-KR")}만원`;
+  return `${comma(won / KRW_PER_MAN)}만원`;
 }
 
 /**
@@ -67,18 +83,33 @@ export function positionLabel(positions: Position[], opts: { full?: boolean } = 
   return `${labels[0]} 외 ${labels.length - 1}`;
 }
 
-// 직분 · 부서 · 고용형태 한 줄 (카드·로우 공통). 상세는 { full: true }로 직분 전부.
+/**
+ * 자리 한 줄: 직분 · 직무 · 부서 · 고용형태 (카드·로우·운영자 테이블 공통).
+ * 상세는 `{ full: true }`로 직분을 전부 펼친다.
+ *
+ * **직분과 직무는 같은 자리에 온다** — 사역직은 `position`, 일반직은 `role`이 채우고
+ * 둘이 섞인 공고(한 글에 부목사 + 관리직원)는 둘 다 나온다. 없는 쪽은 조각째 빠진다.
+ */
 export function jobRoleLine(
-  job: Pick<JobCard, "position" | "department" | "employmentType">,
+  job: Pick<JobCard, "position" | "role" | "department" | "employmentType">,
   opts: { full?: boolean } = {},
 ): string {
   return [
     positionLabel(job.position, opts),
+    job.role,
     job.department ? DEPARTMENTS[job.department] : null,
-    EMPLOYMENT_TYPES[job.employmentType],
+    job.employmentType ? EMPLOYMENT_TYPES[job.employmentType] : null,
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+/**
+ * 금액 항목 이름 — 사역직은 "사례비", 일반직은 "급여"(DATA §3 `pay_min`).
+ * 혼합 공고는 "사례비" — 주력이 사역직이고, 라벨을 둘 다 붙이면 길어진다.
+ */
+export function payLabel(jobKind: JobKind[]): string {
+  return jobKind.length === 1 && jobKind[0] === "GENERAL" ? "급여" : "사례비";
 }
 
 // 교단 라벨 — 미상이면 null이라 호출부의 `filter(Boolean)`·조건부 렌더가 조각째 걷어낸다.

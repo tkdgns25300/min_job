@@ -5,6 +5,7 @@ import {
   POSITIONS,
   QUALIFICATIONS,
   REGIONS,
+  type PayPeriod,
 } from "@/constants/domain";
 import { normalizeChurchName } from "@/lib/job-church";
 import type { FilterDim, JobCard } from "@/types/domain";
@@ -14,6 +15,8 @@ import type { FilterDim, JobCard } from "@/types/domain";
 
 const TIER_RANK = { HERO: 0, PREMIUM: 1, NONE: 2 } as const;
 
+const MONTHS_PER_YEAR = 12;
+
 export interface JobFilterCriteria {
   q: string;
   selected: Record<FilterDim, Set<string>>;
@@ -21,6 +24,18 @@ export interface JobFilterCriteria {
   payMax: number | null;
   includeNego: boolean;
   housingOnly: boolean;
+}
+
+/**
+ * 사례비 필터의 비교값 — **월 기준으로 환산**한다. 필터 입력은 항상 월 금액이고
+ * (`job-filter.tsx`의 "월 사례비"), 공고는 연 기준일 수 있어 그냥 비교하면
+ * 연 4,140만원 공고가 "월 300만원 이상"에 걸린다(4140 ≥ 300).
+ *
+ * ⚠️ 환산값은 **판정에만** 쓴다 — 화면에는 원문 단위를 그대로 보여준다(`formatPay`).
+ *    연봉에 상여가 섞이면 ÷12가 실제 월 지급액이 아니라서, 표시에 쓰면 없는 숫자를 만든다.
+ */
+function monthlyPay(amount: number, period: PayPeriod): number {
+  return period === "YEAR" ? amount / MONTHS_PER_YEAR : amount;
 }
 
 export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCard[] {
@@ -34,7 +49,8 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
     if (s.region.size && !s.region.has(j.church.region ?? "")) return false;
     if (s.position.size && !j.position.some((p) => s.position.has(p))) return false;
     if (s.department.size && (!j.department || !s.department.has(j.department))) return false;
-    if (s.employmentType.size && !s.employmentType.has(j.employmentType)) return false;
+    if (s.employmentType.size && (!j.employmentType || !s.employmentType.has(j.employmentType)))
+      return false;
     if (s.qualification.size && (!j.qualification || !s.qualification.has(j.qualification)))
       return false;
     if (c.housingOnly && !j.housingProvided) return false;
@@ -43,14 +59,16 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
     if (!hasNumber) {
       if (!c.includeNego) return false;
     } else {
-      const jMax = j.payMax ?? j.payMin ?? 0;
-      const jMin = j.payMin ?? j.payMax ?? 0;
+      const jMax = monthlyPay(j.payMax ?? j.payMin ?? 0, j.payPeriod);
+      const jMin = monthlyPay(j.payMin ?? j.payMax ?? 0, j.payPeriod);
       if (c.payMin !== null && jMax < c.payMin) return false;
       if (c.payMax !== null && jMin > c.payMax) return false;
     }
 
     if (query) {
-      // 자유검색 매칭 소스 = 교회명·제목·지역·도시 + 직분·부서·교단·고용형태 라벨
+      // 자유검색 매칭 소스 = 교회명·제목·지역·도시 + 직분·직무·부서·교단·고용형태
+      // (직무는 일반직의 직분 짝이라 빠지면 "행정간사"로 검색해도 그 공고가 안 나온다.
+      //  단 검색어 **제안**에는 넣지 않는다 — 자유 텍스트라 표기가 제각각이어서 후보로 부적합하다)
       // (검색어 완성 후보와 소스를 맞춰, 제안한 검색어가 반드시 결과로 이어지게 한다)
       const hay = [
         j.church.name,
@@ -62,9 +80,10 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
         j.church.region ? REGIONS[j.church.region] : "",
         j.church.city ?? "",
         ...j.position.map((p) => POSITIONS[p]),
+        j.role ?? "",
         j.department ? DEPARTMENTS[j.department] : "",
         j.church.denomination ? DENOMINATIONS[j.church.denomination] : "",
-        EMPLOYMENT_TYPES[j.employmentType],
+        j.employmentType ? EMPLOYMENT_TYPES[j.employmentType] : "",
         j.qualification ? QUALIFICATIONS[j.qualification] : "",
       ].join(" ");
       if (!hay.includes(query)) return false;

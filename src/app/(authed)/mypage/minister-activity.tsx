@@ -142,7 +142,7 @@ function SavedRow({ job, onUnsave }: { job: JobCard; onUnsave: (id: string) => v
       </div>
       <div className="shrink-0 text-right">
         <div className={cn(hasPay ? "font-bold text-primary" : "text-sm text-muted-foreground")}>
-          {formatPay(job.payMin, job.payMax, job.payNote)}
+          {formatPay(job)}
         </div>
       </div>
       <button

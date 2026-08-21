@@ -16,7 +16,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const detail = await getJobDetail(id);
   if (!detail) return { title: "공고를 찾을 수 없습니다 | 민잡" };
 
-  const description = detail.job.description ?? jobRoleSummary(detail);
+  // `||` — DB는 NOT NULL이지만 빈 문자열이 가능하다(`lib/seo.ts` 같은 이유)
+  const description = detail.job.description || jobRoleSummary(detail);
   return {
     title: `${detail.job.title} | 민잡`,
     description,
@@ -78,7 +79,7 @@ async function JobDetailContent({ params }: Params) {
         location={location}
         pay={
           detail.job.payMin !== null || detail.job.payMax !== null
-            ? formatPay(detail.job.payMin, detail.job.payMax, detail.job.payNote)
+            ? formatPay(detail.job)
             : undefined
         }
       />

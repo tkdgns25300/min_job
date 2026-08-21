@@ -36,7 +36,9 @@ export function jobPostingJsonLd(detail: JobDetail) {
             "@type": "QuantitativeValue",
             minValue: job.payMin * KRW_PER_MAN,
             maxValue: (job.payMax ?? job.payMin) * KRW_PER_MAN,
-            unitText: "MONTH",
+            // 공고에 적힌 기간 그대로 — 우리 키(MONTH/YEAR)가 schema.org 값과 같다.
+            // 하드코딩하면 연 금액을 월급으로 신고해 구글에 12배로 노출된다.
+            unitText: job.payPeriod,
           },
         }
       : undefined;
@@ -45,10 +47,12 @@ export function jobPostingJsonLd(detail: JobDetail) {
     "@context": "https://schema.org",
     "@type": "JobPosting",
     title: job.title,
-    description: job.description ?? jobRoleSummary(detail),
+    // `||` — DB가 NOT NULL이라 null은 안 오지만 **빈 문자열**은 온다. `??`는 그걸 통과시켜 빈 설명이 나간다
+    description: job.description || jobRoleSummary(detail),
     datePosted: job.postedAt,
     validThrough: job.deadline ?? undefined,
-    employmentType: SCHEMA_EMPLOYMENT[job.employmentType],
+    // 미상이면 필드를 뺀다 — 구글에 빈 값·추측값을 넣지 않는다(원문 언급률 51%)
+    ...(job.employmentType ? { employmentType: SCHEMA_EMPLOYMENT[job.employmentType] } : {}),
     hiringOrganization: {
       "@type": "Organization",
       name: church.name, // jobs.church_name — 미claim 공고도 항상 채용 주체를 밝힌다

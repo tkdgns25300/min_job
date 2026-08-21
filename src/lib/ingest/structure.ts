@@ -6,6 +6,7 @@ import {
   REGIONS,
   PAY_NOTE_PRESETS,
   type Denomination,
+  type PayPeriod,
   type Department,
   type EmploymentType,
   type Position,
@@ -34,6 +35,7 @@ export interface IngestDraft {
   payMin: string;
   payMax: string;
   payNote: string;
+  payPeriod: PayPeriod; // 원문에 연 표기가 없으면 MONTH — DB 기본값과 같다
   deadline: string; // "YYYY-MM-DD" | ""
   sourceUrl: string;
   body: string; // 요약·본문 — 사람이 직접 작성(원문 통째 복제 X, 가드레일 #1: DB권·재호스팅). 원문은 좌측 패널에만.
@@ -54,6 +56,7 @@ function emptyIngestDraft(): IngestDraft {
     payMin: "",
     payMax: "",
     payNote: "",
+    payPeriod: "MONTH",
     deadline: "",
     sourceUrl: "",
     body: "",
@@ -93,19 +96,25 @@ function matchEmployment(text: string): EmploymentType | null {
 }
 
 // 사례비 — 명시 금액 우선(범위 → 단일). 금액이 없을 때만 비정형 표현(내규·협의)으로 추정.
-function parsePay(text: string): Pick<IngestDraft, "payMin" | "payMax" | "payNote"> {
-  const range = text.match(/(\d{2,4})\s*(?:만\s*원?)?\s*~\s*(\d{2,4})\s*만/);
-  if (range) return { payMin: range[1], payMax: range[2], payNote: "" };
+// 기간은 "연봉"·"연 사례비" 같은 표기가 있을 때만 YEAR. 없으면 MONTH — 사역직 공고는 월 표기가
+// 압도적이고, 잘못 YEAR로 잡으면 금액이 12배로 읽혀 필터·JSON-LD까지 어긋난다.
+function parsePay(text: string): Pick<IngestDraft, "payMin" | "payMax" | "payNote" | "payPeriod"> {
+  // 천 단위 구분을 지운다 — "4,200만원"이 연 금액의 일반 표기인데 아래 숫자 패턴이 못 잡는다.
+  const flat = text.replace(/(\d),(\d)/g, "$1$2");
+  const payPeriod: PayPeriod = /연\s*봉|연\s*(?:사례비|급여)/.test(flat) ? "YEAR" : "MONTH";
 
-  const single = text.match(/(\d{2,4})\s*만\s*원?/);
-  if (single) return { payMin: single[1], payMax: "", payNote: "" };
+  const range = flat.match(/(\d{2,4})\s*(?:만\s*원?)?\s*~\s*(\d{2,4})\s*만/);
+  if (range) return { payMin: range[1], payMax: range[2], payNote: "", payPeriod };
 
-  const note = text.includes("내규")
+  const single = flat.match(/(\d{2,4})\s*만\s*원?/);
+  if (single) return { payMin: single[1], payMax: "", payNote: "", payPeriod };
+
+  const note = flat.includes("내규")
     ? PAY_NOTE_PRESETS.find((p) => p.includes("내규"))
-    : text.includes("협의")
+    : flat.includes("협의")
       ? PAY_NOTE_PRESETS.find((p) => p.includes("협의"))
       : undefined;
-  return { payMin: "", payMax: "", payNote: note ?? "" };
+  return { payMin: "", payMax: "", payNote: note ?? "", payPeriod };
 }
 
 // 주소 라벨이 붙은 줄만 본다 — 불릿·기호 접두 허용. 라벨 없는 줄은 쓰지 않는다:
