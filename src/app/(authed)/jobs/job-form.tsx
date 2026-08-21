@@ -30,11 +30,12 @@ import {
 } from "@/constants/domain";
 import type { Church, Job } from "@/types/domain";
 
+// 순서는 `APPLY_METHODS`와 같게 둔다 — 그쪽이 표시 순서의 단일 소스다(Record라 동작엔 무관)
 const METHOD_PLACEHOLDER: Record<ApplyMethod, string> = {
-  EMAIL: "접수 이메일 (예: recruit@church.org)",
   LINK: "접수 링크 URL",
-  TEL: "접수 전화번호",
+  EMAIL: "접수 이메일 (예: recruit@church.org)",
   POST: "접수 주소 / 수신처 (예: ○○교회 청빙위원장 귀하)",
+  TEL: "접수 전화번호",
 };
 
 // mock draft — Job 스키마보다 넓다(모집인원·부임시기·전형절차·접수방법·서류 필수여부는 Phase 1에서 DATA 반영).

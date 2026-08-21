@@ -87,7 +87,7 @@ export interface Job {
   city: string | null; // 시·군·구 (표시용 자유 텍스트) — 〃 같은 이유로 공고가 직접 든다
   /**
    * 주소 원문 그대로(도로명/지번 안 나눔) — 〃. 지도가 쓴다.
-   * ⚠️ `contact`(지원용 연락처)의 우편 접수처와 **다른 값**이다 — 이건 교회 위치다.
+   * ⚠️ `contactPost`(우편 접수처)와 **다른 값**이다 — 이건 교회 위치다.
    */
   address: string | null;
   title: string;

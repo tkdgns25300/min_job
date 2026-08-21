@@ -121,17 +121,52 @@ function PostHeader({ job, church }: { job: Job; church: JobChurchRef }) {
   );
 }
 
+/**
+ * 지원 방법 — 공고가 공개한 연락처를 **전부** 보여준다. 순서는 `APPLY_METHODS` 정의 순서
+ * (링크 > 이메일 > 우편 > 전화 — 앞셋은 서류를 내는 경로, 전화는 대개 문의용).
+ *
+ * **클릭 대상으로 만들지 않는다** — `mailto:`·`tel:`은 기기 설정에 따라 아무 일도 일어나지 않거나
+ * 엉뚱한 앱이 열리고, 우편 주소는 애초에 열 것이 없다. 값을 읽고 직접 쓰는 편이 어긋남이 없다.
+ *
+ * ⚠️ 가드레일 #3 — 여기 있는 값은 공고가 **지원용으로 명시 공개**한 것뿐이다(`jobs.contact_*`).
+ *    `churches.contact_*`(사무용, 인증 검수 대조용)는 **공개 화면에 렌더하지 않는다**(DATA §3).
+ */
+function ApplyMethods({ job }: { job: Job }) {
+  const contacts = [
+    { key: "LINK", value: job.contactLink },
+    { key: "EMAIL", value: job.contactEmail },
+    { key: "POST", value: job.contactPost },
+    { key: "TEL", value: job.contactTel },
+  ] as const;
+  const shown = contacts.filter((c) => c.value);
+  // CHECK ②가 최소 1개를 강제하지만 타입상으론 전부 null일 수 있다
+  if (shown.length === 0) return null;
+
+  return (
+    <dl className="space-y-2.5">
+      {shown.map(({ key, value }) => (
+        <div key={key}>
+          <dt className="text-xs text-muted-foreground">{APPLY_METHODS[key]}</dt>
+          <dd className="mt-0.5 text-sm font-medium break-words">{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 // 좌측 본문 — 사례비·마감·고용형태는 우측 카드, 나머지 조건·내용은 여기
 function MainContent({
   job,
   church,
   churchRef,
   churchJobs,
+  isPubliclyOpen,
 }: {
   job: Job;
   church: Church | null;
   churchRef: JobChurchRef;
   churchJobs: JobCardData[];
+  isPubliclyOpen: boolean;
 }) {
   // 위치 표기·지도 검색 규칙은 lib/format이 단일 소스(교회 상세도 같은 함수를 쓴다)
   const location = churchPlaceLine(churchRef);
@@ -193,6 +228,22 @@ function MainContent({
             <span className="text-sm font-medium text-foreground">지도에서 위치 보기</span>
             <span className="text-xs text-muted-foreground">네이버 지도에서 열기</span>
           </a>
+        </Section>
+      )}
+
+      {/* 지원 방법 — 만료 공고에는 섹션째 생략한다. 받아주지 않는 곳으로 헛걸음을 시키고,
+          마감 배너와도 모순된다. 그때는 우측 카드가 원문 링크만 남긴다(사실확인용). */}
+      {isPubliclyOpen && (
+        <Section title="지원 방법">
+          <p className="mt-3 text-sm leading-relaxed text-foreground/90">
+            {job.source === "OPERATOR"
+              ? "공개된 청빙 공고에서 정리한 연락처예요. 정확한 내용은 원문도 확인해 주세요."
+              : "교회가 직접 등록한 연락처예요."}{" "}
+            민잡은 지원서를 받지 않아요 — 지원은 교회로 직접 해주세요.
+          </p>
+          <div className="mt-4">
+            <ApplyMethods job={job} />
+          </div>
         </Section>
       )}
 
@@ -258,39 +309,6 @@ function MainContent({
   );
 }
 
-/**
- * 지원 방법 — 공고가 공개한 연락처를 **전부** 보여준다. 순서는 `APPLY_METHODS` 정의 순서
- * (링크 > 이메일 > 우편 > 전화 — 앞셋은 서류를 내는 경로, 전화는 대개 문의용).
- *
- * **클릭 대상으로 만들지 않는다** — `mailto:`·`tel:`은 기기 설정에 따라 아무 일도 일어나지 않거나
- * 엉뚱한 앱이 열리고, 우편 주소는 애초에 열 것이 없다. 값을 읽고 직접 쓰는 편이 어긋남이 없다.
- *
- * ⚠️ 가드레일 #3 — 여기 있는 값은 공고가 **지원용으로 명시 공개**한 것뿐이다(`jobs.contact_*`).
- *    `churches.contact_*`(사무용, 인증 검수 대조용)는 **공개 화면에 렌더하지 않는다**(DATA §3).
- */
-function ApplyMethods({ job }: { job: Job }) {
-  const contacts = [
-    { key: "LINK", value: job.contactLink },
-    { key: "EMAIL", value: job.contactEmail },
-    { key: "POST", value: job.contactPost },
-    { key: "TEL", value: job.contactTel },
-  ] as const;
-  const shown = contacts.filter((c) => c.value);
-  // CHECK ②가 최소 1개를 강제하지만 타입상으론 전부 null일 수 있다
-  if (shown.length === 0) return null;
-
-  return (
-    <dl className="space-y-2.5">
-      {shown.map(({ key, value }) => (
-        <div key={key}>
-          <dt className="text-xs text-muted-foreground">{APPLY_METHODS[key]}</dt>
-          <dd className="mt-0.5 text-sm font-medium break-words">{value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
 // 우측 카드 (B) — 사례비·마감·고용형태 + 지원. 데스크톱 sticky, 모바일 제목 아래.
 function SummaryAside({
   job,
@@ -305,31 +323,28 @@ function SummaryAside({
 
   return (
     <Card className="order-first gap-0 overflow-hidden p-0 lg:sticky lg:top-20 lg:order-none">
-      <div className="p-5">
-        {/* 만료 공고엔 연락처를 내리고 원문 링크만 남긴다 — 바로 위 마감 배너와 모순되고,
-            지원해도 받아주지 않는 곳으로 헛걸음을 시킨다. */}
-        {isPubliclyOpen && <ApplyMethods job={job} />}
-        {/* 보조 링크 — 라벨과 대상 판단은 `getSourceLink`가 든다 */}
-        {sourceLink && (
-          <a
-            href={sourceLink.url}
-            {...externalLinkAttrs}
-            className={cn(
-              buttonVariants({ variant: "outline" }),
-              "w-full",
-              isPubliclyOpen && "mt-4",
-            )}
-          >
-            {sourceLink.label}
-          </a>
-        )}
-        <p className={cn("text-xs leading-relaxed text-muted-foreground", sourceLink && "mt-3")}>
-          {isPubliclyOpen
-            ? "민잡은 지원서를 직접 받지 않아요. 지원은 교회로 직접 해주세요."
-            : "모집이 끝난 공고예요. 내용 확인용으로만 남겨둡니다."}
-        </p>
-      </div>
-      <dl className="space-y-3 border-t p-5">
+      {/* 원문·홈페이지 링크 — 이전 "지원하기" 버튼 자리에 그대로 두되 **outline으로 격하**한다.
+          지원 동선은 본문 "지원 방법"의 연락처가 맡고, 이 버튼의 일은 사실확인 + 출처 표기다.
+          링크는 여기 한 곳에만 둔다 — 본문에도 두면 같은 URL이 한 화면에 두 번 나온다. */}
+      {(sourceLink || !isPubliclyOpen) && (
+        <div className="border-b p-5">
+          {!isPubliclyOpen && (
+            <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+              모집이 끝난 공고예요. 내용 확인용으로만 남겨둡니다.
+            </p>
+          )}
+          {sourceLink && (
+            <a
+              href={sourceLink.url}
+              {...externalLinkAttrs}
+              className={cn(buttonVariants({ size: "lg", variant: "outline" }), "w-full")}
+            >
+              {sourceLink.label}
+            </a>
+          )}
+        </div>
+      )}
+      <dl className="space-y-3 p-5">
         <InfoRow
           label={payLabel(job.jobKind)}
           value={
@@ -343,7 +358,14 @@ function SummaryAside({
         <InfoRow label="마감일" value={job.deadline ?? "상시모집"} />
         <InfoRow
           label="고용 형태"
-          value={job.employmentType ? EMPLOYMENT_TYPES[job.employmentType] : "정보 없음"}
+          value={
+            job.employmentType ? (
+              EMPLOYMENT_TYPES[job.employmentType]
+            ) : (
+              // 부재는 강조하지 않는다 — 사례비 금액과 같은 굵기면 없는 정보가 값처럼 읽힌다
+              <span className="font-normal text-muted-foreground">정보 없음</span>
+            )
+          }
         />
       </dl>
     </Card>
@@ -436,7 +458,13 @@ export function JobDetailView({
       <PostHeader job={job} church={churchRef} />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-        <MainContent job={job} church={church} churchRef={churchRef} churchJobs={churchJobs} />
+        <MainContent
+          job={job}
+          church={church}
+          churchRef={churchRef}
+          churchJobs={churchJobs}
+          isPubliclyOpen={detail.isPubliclyOpen}
+        />
         <SummaryAside job={job} sourceLink={sourceLink} isPubliclyOpen={detail.isPubliclyOpen} />
       </div>
 

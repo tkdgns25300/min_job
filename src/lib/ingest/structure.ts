@@ -28,7 +28,7 @@ export interface IngestDraft {
   denomination: Denomination | null;
   region: Region | null;
   city: string; // 시·군·구 — 자유 텍스트라 자동 추출하지 않는다(운영자가 채운다)
-  address: string; // 주소 원문 — 지도가 쓴다. 접수처(contact)와 다른 값이다(DATA §3)
+  address: string; // 주소 원문 — 지도가 쓴다. 접수처(`contactPost`)와 다른 값이다(DATA §3)
   position: Position[]; // 배열 — 원문에 여러 직분이 나열될 수 있다(DATA §3)
   department: Department | null;
   employmentType: EmploymentType | null;
