@@ -8,7 +8,8 @@ import { PATHNAME_HEADER, loginPathWithNext } from "@/lib/auth";
 // ② 렌더 전에 도는 유일한 지점이라 **진짜 307**을 낼 수 있다. 페이지 안에서 redirect하면
 //    cacheComponents 제약상 Suspense 안이 되어 200 + 스켈레톤으로 나간다(JS 없는 클라이언트엔 무용).
 // ⚠️ (authed) 페이지는 requireUser가 최종 방어선이라 여기서 빠뜨려도 데이터가 새지 않지만,
-//    **/admin 3개 페이지는 ○ Static이라 페이지 게이트가 없다** → admin은 판정 불가 시 fail-closed.
+//    **/admin·/admin/jobs는 ○ Static이라 페이지 게이트가 없다** → admin은 판정 불가 시 fail-closed.
+//    (/admin/verify·/admin/review**는 dynamic이라 requireOperator가 한 번 더 받는다.)
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   // 현재 경로를 요청 헤더로 넘긴다 — 페이지 게이트가 복귀 경로를 만들 때 쓴다(경로 지식은 여기만).

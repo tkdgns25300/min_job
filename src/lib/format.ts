@@ -117,6 +117,20 @@ export function jobRoleLine(
 }
 
 /**
+ * 닫힌 라벨 맵의 한글 라벨 — **값이 `string`으로 오는 칸**에 쓴다(크롤러 테이블은 enum이 `text`라
+ * 생성 타입이 `string`이다). 맵에 없는 값은 `null` — 호출부가 대체 문구를 고른다.
+ *
+ * 도메인 타입이 이미 좁혀진 칸은 맵을 그냥 색인한다(`DEPARTMENTS[job.department]`).
+ * 이 함수는 **좁혀지지 않은 쪽 전용**이고, 그래서 `as keyof typeof` 캐스트가 화면마다 흩어지지 않는다.
+ */
+export function enumLabel<K extends string>(
+  map: Record<K, string>,
+  value: string | null,
+): string | null {
+  return value !== null && value in map ? map[value as K] : null;
+}
+
+/**
  * 금액 항목 이름 — 사역직은 "사례비", 일반직은 "급여"(DATA §3 `pay_min`).
  * 혼합 공고는 "사례비" — 주력이 사역직이고, 라벨을 둘 다 붙이면 길어진다.
  */

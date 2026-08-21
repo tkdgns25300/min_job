@@ -46,8 +46,9 @@ export default async function AdminHomePage() {
       <section className="mt-6">
         <h2 className="mb-2 text-sm font-bold">빠른 작업</h2>
         <div className="flex flex-wrap gap-2">
-          <Link href="/admin/ingest" className={cn(buttonVariants())}>
-            ＋ 공고 수집
+          {/* 건수를 여기 붙이지 않는다 — 미검수 데이터는 캐시할 수 없어 이 페이지가 ○ Static을 잃는다 */}
+          <Link href="/admin/review" className={cn(buttonVariants())}>
+            수집 검수
           </Link>
           <Link href="/admin/jobs" className={cn(buttonVariants({ variant: "outline" }))}>
             공고 관리

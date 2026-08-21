@@ -420,6 +420,7 @@ export type Database = {
           pay_period: string | null;
           position: string[];
           posted_at: string;
+          poster_paths: string[];
           preferred: string[];
           process_steps: string[];
           published_job_id: string | null;
@@ -429,6 +430,7 @@ export type Database = {
           reject_reason: string | null;
           required_docs: string[];
           requirements: string[];
+          review_note: string | null;
           review_status: string;
           reviewed_at: string | null;
           reviewed_by: string | null;
@@ -475,6 +477,7 @@ export type Database = {
           pay_period?: string | null;
           position?: string[];
           posted_at: string;
+          poster_paths?: string[];
           preferred?: string[];
           process_steps?: string[];
           published_job_id?: string | null;
@@ -484,6 +487,7 @@ export type Database = {
           reject_reason?: string | null;
           required_docs?: string[];
           requirements?: string[];
+          review_note?: string | null;
           review_status?: string;
           reviewed_at?: string | null;
           reviewed_by?: string | null;
@@ -530,6 +534,7 @@ export type Database = {
           pay_period?: string | null;
           position?: string[];
           posted_at?: string;
+          poster_paths?: string[];
           preferred?: string[];
           process_steps?: string[];
           published_job_id?: string | null;
@@ -539,6 +544,7 @@ export type Database = {
           reject_reason?: string | null;
           required_docs?: string[];
           requirements?: string[];
+          review_note?: string | null;
           review_status?: string;
           reviewed_at?: string | null;
           reviewed_by?: string | null;
@@ -551,13 +557,6 @@ export type Database = {
           work_days?: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "review_data_published_job_id_fkey";
-            columns: ["published_job_id"];
-            isOneToOne: false;
-            referencedRelation: "jobs";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "review_data_run_id_fkey";
             columns: ["run_id"];

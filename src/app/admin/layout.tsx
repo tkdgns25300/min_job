@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { Suspense } from "react";
+import { AdminSidebar, AdminSidebarFallback } from "@/components/admin/admin-sidebar";
 
 // 운영자 전체 색인 제외 — 하위 admin 페이지가 상속(개별 noindex 불필요).
 export const metadata: Metadata = { robots: { index: false } };
@@ -12,7 +13,10 @@ export const metadata: Metadata = { robots: { index: false } };
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
-      <AdminSidebar />
+      {/* 활성 표시(usePathname)는 동적 세그먼트에서 프리렌더할 수 없다 — 경계 없이는 `[id]` 빌드가 막힌다 */}
+      <Suspense fallback={<AdminSidebarFallback />}>
+        <AdminSidebar />
+      </Suspense>
       <main className="min-w-0 flex-1">{children}</main>
     </div>
   );
