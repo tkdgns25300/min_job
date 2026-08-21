@@ -120,6 +120,16 @@
   - mock에 **일반직 2건 + 혼합 1건**(job-102·103·104). CHECK ①(MINISTRY↔position · GENERAL↔role)을 데이터 생성 시 직접 검증했다. 하나는 연봉으로 뒀다 — 연 표기가 실제로 나오는 자리가 일반직이다
   - 검증: 카드 자리 한 줄 · 급여/사례비 라벨 · 직무 검색 3건 · 직분 필터에서 순수 일반직 탈락·혼합 포함 · 운영자 테이블 · 연봉 일반직의 월 환산 필터
 
+- [ ] 🔴 **입력 경로가 `jobs`를 다 채우지 못한다 (2026-08-21 실측)** — 타입·mock 정합은 끝났지만 **사람이 값을 넣는 두 화면이 컬럼을 다 못 받는다.** 공고 등록·수정 mutation을 붙일 때 **한 묶음으로** 닫는다 — 지금 붙이면 저장할 때 값이 사라진다.
+  - **`/jobs/new`·`/jobs/[id]/edit` 폼에 입력칸이 없는 컬럼 5개**
+    - `job_kind` — **NOT NULL이고 CHECK ①이 `position`/`role`과 묶여 있다.** 즉 지금 폼으로는 애초에 **유효한 행을 만들 수 없다**
+    - `role` — 일반직 직무. `job_kind`와 한 짝
+    - `qualification` — 자격/경력 **enum**(필터축). 폼의 `qualifications`는 `requirements[]`(자유 텍스트)로 가는 별개 필드다 → 교회 등록 공고는 자격 필터에서 영구 탈락
+    - `preferred` — 우대 사항. 공고 상세엔 섹션이 있는데 교회가 채울 수 없다
+    - `housing_note` — 사택 비정형("사택 협의"). 사택은 제공/미제공 칩만 받는다
+  - **`/admin/ingest`(수집 도구)** — `IngestDraft`에 **연락처 4칸이 없다** → CHECK ②(연락처 ≥1)를 통과하는 초안을 만들 수 없다. `job_kind`·`role`도 없다
+  > ⚠️ **저장 시 유실이 진짜 위험이다.** 폼이 읽지 않는 필드를 그대로 저장하면 값이 `null`로 덮인다 — 크롤 공고를 교회가 claim해 수정하면 크롤러가 채운 `housing_note`·`role`·`qualification`이 사라진다. mutation은 **폼이 다루지 않는 컬럼을 건드리지 않도록** 써야 한다(부분 UPDATE).
+
 - [ ] ⏸ **`/jobs` 사역직/일반직 필터축이 없다 (2026-08-21 발견 · 보류 결정)** — SPEC은 **"기본뷰=사역직(`job_kind @> ARRAY['MINISTRY']`), 일반직은 필터 전환, 혼합 공고는 양쪽에 다 뜬다"** 로 확정했는데(2026-07-28 운영자 확정 · SPEC §목록·§필터표) **코드에 그 축이 없다** — `FilterDim`에 `jobKind`가 없고 `JobCard`에 `jobKind`도 없다. mock에 일반직이 0건이라 안 보였고, 위 항목에서 반례를 심자 **기본 목록에 순수 일반직 2건이 그대로 섞였다.**
   > `FilterDim`(선택 없으면 전체)이 아니라 **기본값 있는 토글**이라 `includeNego`·`housingOnly`처럼 별도 필드가 맞다. 범위: `JobCard.jobKind` → mock projection → `JobFilterCriteria` → `filter-jobs` 판정 → `jobs-url-state` → `job-filter` UI → `active-filter-chips` → `jobs-view` 상태(약 7파일).
   > **언제 해야 하나**: mock엔 일반직이 2건뿐이라 지금은 티가 안 난다. **크롤러가 일반직을 보내기 시작하면 기본 목록이 오염된다** — 실데이터 유입이 마감선이다. SPEC 필터표·사이드바에 ⬜로 표시해 두었다(명세는 확정, 구현만 보류).
@@ -138,7 +148,6 @@
   - mock 104건에 채웠다 — **CHECK ②가 `source_url`을 세지 않으므로 전 건에 최소 1개**가 필요하다. 조합 반례 9종(이메일만·전화만·링크만·**우편만**·4개 전부 등). ⚠️ 실제 도메인·번호를 쓰지 않는다 — 전에 mock에 넣은 도메인 17개가 살아 있는 주소였다. `recruit@<slug>.example.com` · `<지역번호>-000-nnnn` · `https://example.com/<slug>/apply`
   - **수정 폼 프리필을 고쳤다** — `toDraft`가 `job?.sourceUrl ? { LINK: sourceUrl } : {}`로 접수 방법을 채우고 있었다. 교회 공고는 `sourceUrl`이 null이라 **수정 화면이 접수 방법을 비운 채 열리고** 필수 검증에 걸려 교회가 매번 다시 입력해야 했다. 이제 저장된 4칸을 읽는다(`applyMethodsOf`)
   > ⏭ **C-2(화면) 결정 완료** — 있는 방법을 **전부** 보여주고 **우선순위로 정렬**(링크 > 이메일 > 우편 > 전화 — 앞셋은 서류 내는 경로, 전화는 대개 문의용). **클릭 동작은 만들지 않는다**(텍스트 표시). 원문 링크는 **보조**로 격하 — 사이드 카드의 `[지원하기]` 버튼을 **"원문 공고 보기"** 로 바꾸고 연락처 목록을 그 카드에 둔다.
-  > ⏭ **`/admin/ingest`에 연락처 입력칸이 없다** — `IngestDraft`에 4칸이 없어 **수집 도구로는 CHECK ②를 통과하는 초안을 만들 수 없다.** `job_kind` 입력이 없는 것과 같은 뿌리이고, 같은 묶음(공고 등록 mutation)에서 닫는다.
 
 - [x] ✅ **정합 D — 남은 7컬럼 (2026-08-21) → `types/domain.ts` ↔ `jobs` 어긋남 0** — `headcount`·`startTiming`·`housingNote`·`benefitNote`·`optionalDocs`·`processSteps`·`featuredUntil`. 셋으로 갈렸다.
   - **폼에 입력칸은 있는데 저장할 곳이 없던 5개**(`headcount`·`startTiming`·`benefitNote`·`processSteps`·`optionalDocs`) — 교회가 입력하면 버려지고 있었다(폼 주석이 그 사실을 적어뒀다). `toDraft`가 저장값을 읽는다. 제출 서류는 DB에선 배열 2개, 폼에선 항목당 `required` 플래그 하나라 옮겨 담는다
@@ -148,7 +157,6 @@
   - **전형 절차는 번호 목록**(`StepList`) — 순서가 뜻을 가지므로 자격·우대의 대시 불릿과 다르다. 값 없으면 섹션째 생략, **만료 공고에도 남긴다**(행동을 유도하지 않는 정보라 지원 방법과 다르다)
   - **`featuredUntil`은 타입에만 두고 그리지 않는다** — `featuredTier`와 한 짝인 유료 노출 판정 캐시다(원장은 `job_promotions`). SPEC의 "이 페이지가 쓰는 필드" 목록에 ⬜로 명시했다
   - mock 104건에 채웠다 — 값 있음/없음을 섞고(모집인원 64/40 · 전형절차 25/79 등) 교회 등록 공고에 더 자주 넣었다. `housingProvided=null`인 4건 중 **1건은 `housingNote`도 비워** 줄이 사라지는 경로를 남겼다
-  > ⬜ **`housingNote` 입력칸이 폼에 없다** — 사택은 제공/미제공 칩만 받는다. 크롤 공고엔 "사택 협의" 같은 원문 표현이 들어오는데 교회가 직접 등록할 때는 그 표현을 쓸 수 없다. 폼 draft 주석에 남겼다
 
 - [x] ✅ **`types/domain.ts`·mock ↔ DATA.md 정합 — 완료(2026-08-21)** — 스키마 확정(2026-08-05~06)이 문서에만 반영돼 있던 상태를 닫았다. `Job`(38필드) ↔ `jobs`(43컬럼) 실측 어긋남 **0**(차이는 `id`·`created_at`·`updated_at` 3개로, 앱이 쓰지 않는다).
   - ✅ 해소 경로: nullable 4개·`description`(A·B) · 연락처 4칸(C-1) · `payPeriod` · `denomination` · 남은 7컬럼(D). `position`은 **seam 정규화**로 닫았다(타입 변경 대상 아님 — DB CHECK ①이 NULL과 빈 배열을 같게 본다)
