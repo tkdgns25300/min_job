@@ -135,7 +135,20 @@ export interface Job {
    * 직분(`position`)의 일반직 짝이다 — `jobRoleLine`이 둘을 같은 자리에 놓고, 자유검색도 훑는다.
    */
   role: string | null;
-  contact: string | null; // 지원용 공개 연락처(전화·이메일·링크). 가드레일 #3
+  /**
+   * 지원용 **공개** 연락처 4칸 — `APPLY_METHODS`(EMAIL·TEL·LINK·POST) 닫힌 4키와 1:1.
+   * 가드레일 #3: 공고에 지원용으로 명시 공개된 것만 담는다(제3자 개인정보 X).
+   *
+   * ⚠️ **CHECK ②로 최소 하나는 반드시 있다.** `source_url`은 그 셈에 들어가지 않는다 —
+   *    세면 크롤 공고가 항상 통과해 제약이 장식이 된다.
+   * ⚠️ `contactPost`(우편 접수처)는 `address`(교회 위치)와 **다른 값**이다. 지도는 `address`를 쓴다.
+   * ⚠️ `churches.contactEmail`·`contactTel`(사무용, 인증 검수 대조용)과도 **다르다** — 그쪽은
+   *    공개 화면에 렌더하지 않는다(DATA §3).
+   */
+  contactEmail: string | null;
+  contactTel: string | null;
+  contactLink: string | null;
+  contactPost: string | null;
 }
 
 // 로그인 사용자 — 단일 계정 모델(DATA §3). 모든 계정은 기본 사역자(MINISTER).

@@ -34,7 +34,10 @@
     "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/172",
-    "contact": null
+    "contactEmail": "recruit@seongeun.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-002",
@@ -71,7 +74,10 @@
     "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/122",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "02-000-1007",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-003",
@@ -108,7 +114,10 @@
     "description": "청년 사역에 비전을 품은 사역자를 청빙합니다. 예배 인도와 제자훈련, 새가족 정착을 함께 감당할 분을 기다립니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@mideumdongsan.example.com",
+    "contactTel": "053-000-1014",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-004",
@@ -141,7 +150,10 @@
     "description": "주일 예배 찬양을 섬길 파트 전도사를 청빙합니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@saebyeok.example.com",
+    "contactTel": "031-000-1021",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-005",
@@ -174,7 +186,10 @@
     "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1278",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": "https://example.com/church005/apply",
+    "contactPost": null
   },
   {
     "id": "job-006",
@@ -211,7 +226,10 @@
     "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/146",
-    "contact": null
+    "contactEmail": "recruit@dongsan.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/dongsan/apply",
+    "contactPost": null
   },
   {
     "id": "job-007",
@@ -248,7 +266,10 @@
     "description": "교회 학교와 예배 사역 전반을 함께 섬길 전도사를 청빙합니다. 부서 배치는 면담 후 협의합니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@hanbit.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": "한빛교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-008",
@@ -285,7 +306,10 @@
     "description": "영유아부 아이들과 부모를 함께 섬길 사역자를 청빙합니다. 놀이와 말씀으로 첫 신앙의 기초를 세우고, 교사들과 협력하여 부서를 운영할 분을 기다립니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@onsaemi.example.com",
+    "contactTel": "052-000-1049",
+    "contactLink": null,
+    "contactPost": "온새미교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-009",
@@ -323,7 +347,10 @@
     "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/539",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "054-000-1056",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-010",
@@ -360,7 +387,10 @@
     "description": "다음세대 교육에 헌신할 유초등부 전도사를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 사역자를 기다립니다. 사택을 제공합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3402",
-    "contact": null
+    "contactEmail": "recruit@church010.example.com",
+    "contactTel": "031-000-1063",
+    "contactLink": "https://example.com/church010/apply",
+    "contactPost": "온누리사랑교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-011",
@@ -398,7 +428,10 @@
     "description": "영유아부를 따뜻하게 섬길 사역자를 찾습니다. 부모와 소통하며 다음세대의 첫 신앙을 세워갈 분을 청빙합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3465",
-    "contact": null
+    "contactEmail": "recruit@banseok.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-012",
@@ -431,7 +464,10 @@
     "description": "청년부 전도사를 상시 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/529",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "063-000-1077",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-013",
@@ -467,7 +503,10 @@
     "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/606",
-    "contact": null
+    "contactEmail": "recruit@church013.example.com",
+    "contactTel": "051-000-1084",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-014",
@@ -500,7 +539,10 @@
     "description": "청년부 부흥을 함께 이끌 전도사를 청빙합니다. 청년들과 눈높이를 맞추고 말씀으로 세워갈 동역자를 찾습니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@saebyeok.example.com",
+    "contactTel": "031-000-1091",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-015",
@@ -538,7 +580,10 @@
     "description": "청년 사역에 비전을 품은 사역자를 청빙합니다. 예배 인도와 제자훈련, 새가족 정착을 함께 감당할 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/568",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": "https://example.com/church015/apply",
+    "contactPost": null
   },
   {
     "id": "job-016",
@@ -575,7 +620,10 @@
     "description": "은퇴하시는 담임목사님의 뒤를 이어 교회를 섬길 담임목사를 청빙합니다. 말씀과 기도로 공동체를 이끌어가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1276",
-    "contact": null
+    "contactEmail": "recruit@church016.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/church016/apply",
+    "contactPost": null
   },
   {
     "id": "job-017",
@@ -611,7 +659,10 @@
     "description": "유초등부 아이들을 말씀으로 양육할 사역자를 청빙합니다. 주일 예배와 공과 지도, 절기 행사를 교사들과 함께 섬길 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/533",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": "푸른초장교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-018",
@@ -648,7 +699,10 @@
     "description": "교구 담당 부목사를 재청빙합니다. 심방과 성도 돌봄, 소그룹 목회에 헌신할 동역자를 기다립니다. 사택을 제공합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3406",
-    "contact": null
+    "contactEmail": "recruit@church018.example.com",
+    "contactTel": "042-000-1119",
+    "contactLink": null,
+    "contactPost": "제자들교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-019",
@@ -681,7 +735,10 @@
     "description": "함께 교회를 세워갈 강도사를 청빙합니다. 예배와 양육 사역 전반을 섬길 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/169",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "02-000-1126",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-020",
@@ -718,7 +775,10 @@
     "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@jeonwon.example.com",
+    "contactTel": "031-000-1133",
+    "contactLink": "https://example.com/jeonwon/apply",
+    "contactPost": "전원교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-021",
@@ -756,7 +816,10 @@
     "description": "교회 행정과 문서 업무를 담당할 사역자를 청빙합니다. 꼼꼼하고 성실하게 교회 살림을 함께 세워갈 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/179",
-    "contact": null
+    "contactEmail": "recruit@church021.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-022",
@@ -789,7 +852,10 @@
     "description": "교회 행정과 문서 업무를 담당할 사역자를 청빙합니다. 꼼꼼하고 성실하게 교회 살림을 함께 세워갈 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1277",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "02-000-1147",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-023",
@@ -825,7 +891,10 @@
     "description": "예배와 찬양 사역을 섬길 사역자를 청빙합니다. 찬양팀 훈련과 예배 준비를 함께할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/530",
-    "contact": null
+    "contactEmail": "recruit@hanbit.example.com",
+    "contactTel": "031-000-1154",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-024",
@@ -858,7 +927,10 @@
     "description": "주일 예배 찬양을 인도하고 찬양팀을 세워갈 사역자를 청빙합니다. 예배를 사랑하고 팀원들을 섬길 줄 아는 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3450",
-    "contact": null
+    "contactEmail": "recruit@emmaus.example.com",
+    "contactTel": "051-000-1161",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-025",
@@ -891,7 +963,10 @@
     "description": "함께 교회를 세워갈 강도사를 청빙합니다. 예배와 양육 사역 전반을 섬길 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/152",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": "https://example.com/church025/apply",
+    "contactPost": null
   },
   {
     "id": "job-026",
@@ -924,7 +999,10 @@
     "description": "말씀 사역에 집중할 강도사를 청빙합니다. 설교와 양육 사역을 함께 감당할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/131",
-    "contact": null
+    "contactEmail": "recruit@church026.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/church026/apply",
+    "contactPost": null
   },
   {
     "id": "job-027",
@@ -957,7 +1035,10 @@
     "description": "지난 사역자의 사임으로 중고등부 전도사를 다시 청빙합니다. 학생들과 함께 호흡하며 예배와 소그룹 양육을 감당할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/104",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": "반석교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-028",
@@ -994,7 +1075,10 @@
     "description": "교회 학교와 예배 사역 전반을 함께 섬길 전도사를 청빙합니다. 부서 배치는 면담 후 협의합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3434",
-    "contact": null
+    "contactEmail": "recruit@hanmaum.example.com",
+    "contactTel": "043-000-1189",
+    "contactLink": null,
+    "contactPost": "한마음교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-029",
@@ -1031,7 +1115,10 @@
     "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/126",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "02-000-1196",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-030",
@@ -1068,7 +1155,10 @@
     "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3482",
-    "contact": null
+    "contactEmail": "recruit@hangang.example.com",
+    "contactTel": "02-000-1203",
+    "contactLink": "https://example.com/hangang/apply",
+    "contactPost": "한강중앙교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-031",
@@ -1101,7 +1191,10 @@
     "description": "말씀 사역에 집중할 강도사를 청빙합니다. 설교와 양육 사역을 함께 감당할 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/163",
-    "contact": null
+    "contactEmail": "recruit@neulpureun.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-032",
@@ -1138,7 +1231,10 @@
     "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1243",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "02-000-1217",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-033",
@@ -1174,7 +1270,10 @@
     "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1229",
-    "contact": null
+    "contactEmail": "recruit@juane.example.com",
+    "contactTel": "032-000-1224",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-034",
@@ -1210,7 +1309,10 @@
     "description": "예배와 찬양 사역을 섬길 사역자를 청빙합니다. 찬양팀 훈련과 예배 준비를 함께할 분을 기다립니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@neulpureun.example.com",
+    "contactTel": "031-000-1231",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-035",
@@ -1247,7 +1349,10 @@
     "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/540",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": "https://example.com/saemmul/apply",
+    "contactPost": null
   },
   {
     "id": "job-036",
@@ -1284,7 +1389,10 @@
     "description": "행정 업무와 부서 사역을 병행할 사역자를 모십니다. 문서 작성과 회계 보조 등 교회 행정 전반을 담당합니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1221",
-    "contact": null
+    "contactEmail": "recruit@gwangya.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/gwangya/apply",
+    "contactPost": null
   },
   {
     "id": "job-037",
@@ -1320,7 +1428,10 @@
     "description": "주일 예배 찬양을 인도하고 찬양팀을 세워갈 사역자를 청빙합니다. 예배를 사랑하고 팀원들을 섬길 줄 아는 분을 찾습니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3411",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": "성은교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-038",
@@ -1357,7 +1468,10 @@
     "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3423",
-    "contact": null
+    "contactEmail": "recruit@bitsogeum.example.com",
+    "contactTel": "051-000-1259",
+    "contactLink": null,
+    "contactPost": "빛과소금교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-039",
@@ -1394,7 +1508,10 @@
     "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@chambit.example.com",
+    "contactTel": "055-000-1266",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-040",
@@ -1427,7 +1544,10 @@
     "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3468",
-    "contact": null
+    "contactEmail": "recruit@pyeonggang.example.com",
+    "contactTel": "042-000-1273",
+    "contactLink": "https://example.com/pyeonggang/apply",
+    "contactPost": "평강교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-041",
@@ -1465,7 +1585,10 @@
     "description": "성도들을 돌보고 교구를 섬길 사역자를 모십니다. 심방과 소그룹 목회에 헌신할 동역자를 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1260",
-    "contact": null
+    "contactEmail": "recruit@hanmaum.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-042",
@@ -1503,7 +1626,10 @@
     "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/170",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "041-000-1287",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-043",
@@ -1540,7 +1666,10 @@
     "description": "주일 예배 찬양을 인도하고 찬양팀을 세워갈 사역자를 청빙합니다. 예배를 사랑하고 팀원들을 섬길 줄 아는 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/553",
-    "contact": null
+    "contactEmail": "recruit@keunnamu.example.com",
+    "contactTel": "02-000-1294",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-044",
@@ -1576,7 +1705,10 @@
     "description": "예배와 찬양 사역을 섬길 사역자를 청빙합니다. 찬양팀 훈련과 예배 준비를 함께할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1266",
-    "contact": null
+    "contactEmail": "recruit@saemmul.example.com",
+    "contactTel": "031-000-1301",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-045",
@@ -1613,7 +1745,10 @@
     "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3457",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": "https://example.com/somangsaem/apply",
+    "contactPost": null
   },
   {
     "id": "job-046",
@@ -1650,7 +1785,10 @@
     "description": "교회 학교와 예배 사역 전반을 함께 섬길 전도사를 청빙합니다. 부서 배치는 면담 후 협의합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/564",
-    "contact": null
+    "contactEmail": "recruit@keunnamu.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/keunnamu/apply",
+    "contactPost": null
   },
   {
     "id": "job-047",
@@ -1687,7 +1825,10 @@
     "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1281",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": "나눔교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-048",
@@ -1724,7 +1865,10 @@
     "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/558",
-    "contact": null
+    "contactEmail": "recruit@onsaemi.example.com",
+    "contactTel": "052-000-1329",
+    "contactLink": null,
+    "contactPost": "온새미교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-049",
@@ -1757,7 +1901,10 @@
     "description": "말씀 사역에 집중할 강도사를 청빙합니다. 설교와 양육 사역을 함께 감당할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/151",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "033-000-1336",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-050",
@@ -1794,7 +1941,10 @@
     "description": "영유아부를 따뜻하게 섬길 사역자를 찾습니다. 부모와 소통하며 다음세대의 첫 신앙을 세워갈 분을 청빙합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/537",
-    "contact": null
+    "contactEmail": "recruit@hyanggi.example.com",
+    "contactTel": "044-000-1343",
+    "contactLink": "https://example.com/hyanggi/apply",
+    "contactPost": "향기나는교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-051",
@@ -1832,7 +1982,10 @@
     "description": "교회 사역 전반을 함께 감당할 부목사를 모십니다. 예배 인도와 성도 돌봄에 헌신할 동역자를 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/591",
-    "contact": null
+    "contactEmail": "recruit@dongsan.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-052",
@@ -1868,7 +2021,10 @@
     "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/155",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "02-000-1357",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-053",
@@ -1906,7 +2062,10 @@
     "description": "교회 행정과 문서 업무를 담당할 사역자를 청빙합니다. 꼼꼼하고 성실하게 교회 살림을 함께 세워갈 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1256",
-    "contact": null
+    "contactEmail": "recruit@immanuel.example.com",
+    "contactTel": "02-000-1364",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-054",
@@ -1943,7 +2102,10 @@
     "description": "유초등부 전도사를 다시 청빙합니다. 아이들을 사랑으로 양육하고 교사들과 협력할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3401",
-    "contact": null
+    "contactEmail": "recruit@saesomang.example.com",
+    "contactTel": "02-000-1371",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-055",
@@ -1980,7 +2142,10 @@
     "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/130",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": "https://example.com/hangang/apply",
+    "contactPost": null
   },
   {
     "id": "job-056",
@@ -2017,7 +2182,10 @@
     "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3480",
-    "contact": null
+    "contactEmail": "recruit@joeunssiat.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/joeunssiat/apply",
+    "contactPost": null
   },
   {
     "id": "job-057",
@@ -2054,7 +2222,10 @@
     "description": "청년 사역에 비전을 품은 사역자를 청빙합니다. 예배 인도와 제자훈련, 새가족 정착을 함께 감당할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3436",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": "좋은씨앗교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-058",
@@ -2087,7 +2258,10 @@
     "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/147",
-    "contact": null
+    "contactEmail": "recruit@nanum.example.com",
+    "contactTel": "02-000-1399",
+    "contactLink": null,
+    "contactPost": "나눔교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-059",
@@ -2124,7 +2298,10 @@
     "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/557",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "031-000-1406",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-060",
@@ -2157,7 +2334,10 @@
     "description": "청년부 전도사를 다시 청빙합니다. 청년들과 함께 예배와 공동체를 세워갈 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/108",
-    "contact": null
+    "contactEmail": "recruit@galilee.example.com",
+    "contactTel": "063-000-1413",
+    "contactLink": "https://example.com/galilee/apply",
+    "contactPost": "갈릴리교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-061",
@@ -2193,7 +2373,10 @@
     "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/153",
-    "contact": null
+    "contactEmail": "recruit@neulpureun.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-062",
@@ -2226,7 +2409,10 @@
     "description": "주일 예배 찬양을 인도하고 찬양팀을 세워갈 사역자를 청빙합니다. 예배를 사랑하고 팀원들을 섬길 줄 아는 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1218",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "055-000-1427",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-063",
@@ -2263,7 +2449,10 @@
     "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/559",
-    "contact": null
+    "contactEmail": "recruit@sionseong.example.com",
+    "contactTel": "062-000-1434",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-064",
@@ -2300,7 +2489,10 @@
     "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/560",
-    "contact": null
+    "contactEmail": "recruit@bitgoeul.example.com",
+    "contactTel": "062-000-1441",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-065",
@@ -2337,7 +2529,10 @@
     "description": "교육 부서 전반을 함께 섬길 사역자를 청빙합니다. 부서 간 협력과 교육 프로그램 운영을 담당할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3484",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": "https://example.com/yeolmae/apply",
+    "contactPost": null
   },
   {
     "id": "job-066",
@@ -2374,7 +2569,10 @@
     "description": "유초등부 아이들을 말씀으로 양육할 사역자를 청빙합니다. 주일 예배와 공과 지도, 절기 행사를 교사들과 함께 섬길 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/593",
-    "contact": null
+    "contactEmail": "recruit@sarangbit.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/sarangbit/apply",
+    "contactPost": null
   },
   {
     "id": "job-067",
@@ -2407,7 +2605,10 @@
     "description": "예배와 찬양 사역을 섬길 사역자를 청빙합니다. 찬양팀 훈련과 예배 준비를 함께할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3462",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": "은혜로교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-068",
@@ -2444,7 +2645,10 @@
     "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1249",
-    "contact": null
+    "contactEmail": "recruit@tamna.example.com",
+    "contactTel": "064-000-1469",
+    "contactLink": null,
+    "contactPost": "탐라중앙교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-069",
@@ -2482,7 +2686,10 @@
     "description": "중고등부 학생들과 함께 호흡하며 신앙의 기초를 세워갈 사역자를 청빙합니다. 주일 예배 인도와 소그룹 양육, 수련회 기획을 함께할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/164",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "055-000-1476",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-070",
@@ -2519,7 +2726,10 @@
     "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3414",
-    "contact": null
+    "contactEmail": "recruit@tamna.example.com",
+    "contactTel": "064-000-1483",
+    "contactLink": "https://example.com/tamna/apply",
+    "contactPost": "탐라중앙교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-071",
@@ -2555,7 +2765,10 @@
     "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/128",
-    "contact": null
+    "contactEmail": "recruit@bitgoeul.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-072",
@@ -2588,7 +2801,10 @@
     "description": "담임목사를 도와 교회 전반의 목회를 함께할 부목사를 청빙합니다. 설교와 심방, 행정 사역을 균형 있게 감당할 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/595",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "02-000-1497",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-073",
@@ -2625,7 +2841,10 @@
     "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/552",
-    "contact": null
+    "contactEmail": "recruit@mideumdongsan.example.com",
+    "contactTel": "053-000-1504",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-074",
@@ -2661,7 +2880,10 @@
     "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/159",
-    "contact": null
+    "contactEmail": "recruit@joeunssiat.example.com",
+    "contactTel": "031-000-1511",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-075",
@@ -2698,7 +2920,10 @@
     "description": "유초등부 아이들을 말씀으로 양육할 사역자를 청빙합니다. 주일 예배와 공과 지도, 절기 행사를 교사들과 함께 섬길 분을 찾습니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@nanum.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/nanum/apply",
+    "contactPost": null
   },
   {
     "id": "job-076",
@@ -2735,7 +2960,10 @@
     "description": "은퇴하시는 담임목사님의 뒤를 이어 교회를 섬길 담임목사를 청빙합니다. 말씀과 기도로 공동체를 이끌어가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/547",
-    "contact": null
+    "contactEmail": "recruit@sarangbit.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/sarangbit/apply",
+    "contactPost": null
   },
   {
     "id": "job-077",
@@ -2771,7 +2999,10 @@
     "description": "영유아부를 따뜻하게 섬길 사역자를 찾습니다. 부모와 소통하며 다음세대의 첫 신앙을 세워갈 분을 청빙합니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/145",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": "대광교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-078",
@@ -2804,7 +3035,10 @@
     "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@hanbit.example.com",
+    "contactTel": "031-000-1539",
+    "contactLink": null,
+    "contactPost": "한빛교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-079",
@@ -2837,7 +3071,10 @@
     "description": "교회 행정과 문서 업무를 담당할 사역자를 청빙합니다. 꼼꼼하고 성실하게 교회 살림을 함께 세워갈 분을 기다립니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@haneulmun.example.com",
+    "contactTel": "031-000-1546",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-080",
@@ -2870,7 +3107,10 @@
     "description": "중고등부를 섬길 전도사를 청빙했던 공고입니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@saebyeok.example.com",
+    "contactTel": "031-000-1553",
+    "contactLink": "https://example.com/saebyeok/apply",
+    "contactPost": "새벽빛교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-081",
@@ -2907,7 +3147,10 @@
     "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/555",
-    "contact": null
+    "contactEmail": "recruit@immanuel.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-082",
@@ -2940,7 +3183,10 @@
     "description": "함께 교회를 세워갈 강도사를 청빙합니다. 예배와 양육 사역 전반을 섬길 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/578",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "032-000-1567",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-083",
@@ -2973,7 +3219,10 @@
     "description": "중고등부 학생들을 말씀으로 양육할 전도사를 청빙합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3403",
-    "contact": null
+    "contactEmail": "recruit@banseok.example.com",
+    "contactTel": "053-000-1574",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-084",
@@ -3009,7 +3258,10 @@
     "description": "유초등부 아이들을 말씀으로 양육할 사역자를 청빙합니다. 주일 예배와 공과 지도, 절기 행사를 교사들과 함께 섬길 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/603",
-    "contact": null
+    "contactEmail": "recruit@bitgoeul.example.com",
+    "contactTel": "062-000-1581",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-085",
@@ -3047,7 +3299,10 @@
     "description": "다음세대 교육에 헌신할 유초등부 사역자를 청빙합니다. 아이들을 사랑으로 양육하고 부서 교사들과 협력하여 예배와 공과를 섬길 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3425",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": "https://example.com/eunhyero/apply",
+    "contactPost": null
   },
   {
     "id": "job-086",
@@ -3083,7 +3338,10 @@
     "description": "교육 부서 전반을 함께 섬길 사역자를 청빙합니다. 부서 간 협력과 교육 프로그램 운영을 담당할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/141",
-    "contact": null
+    "contactEmail": "recruit@hyanggi.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/hyanggi/apply",
+    "contactPost": null
   },
   {
     "id": "job-087",
@@ -3120,7 +3378,10 @@
     "description": "예배와 찬양 사역을 섬길 사역자를 청빙합니다. 찬양팀 훈련과 예배 준비를 함께할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/116",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": "하늘문교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-088",
@@ -3157,7 +3418,10 @@
     "description": "은퇴하시는 담임목사님의 뒤를 이어 교회를 섬길 담임목사를 청빙합니다. 말씀과 기도로 공동체를 이끌어가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3474",
-    "contact": null
+    "contactEmail": "recruit@onsaemi.example.com",
+    "contactTel": "052-000-1609",
+    "contactLink": null,
+    "contactPost": "온새미교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-089",
@@ -3194,7 +3458,10 @@
     "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3415",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "062-000-1616",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-090",
@@ -3227,7 +3494,10 @@
     "description": "성도들을 돌보고 교구를 섬길 사역자를 모십니다. 심방과 소그룹 목회에 헌신할 동역자를 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1242",
-    "contact": null
+    "contactEmail": "recruit@bitsogeum.example.com",
+    "contactTel": "051-000-1623",
+    "contactLink": "https://example.com/bitsogeum/apply",
+    "contactPost": "빛과소금교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-091",
@@ -3260,7 +3530,10 @@
     "description": "교회 사역 전반을 함께 감당할 부목사를 모십니다. 예배 인도와 성도 돌봄에 헌신할 동역자를 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/161",
-    "contact": null
+    "contactEmail": "recruit@juane.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-092",
@@ -3297,7 +3570,10 @@
     "description": "성도들을 돌보고 교구를 섬길 부목사를 모십니다. 심방과 소그룹 목회에 헌신할 동역자를 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/105",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "042-000-1637",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-093",
@@ -3333,7 +3609,10 @@
     "description": "중고등부를 말씀으로 세워갈 사역자를 찾습니다. 학생들의 눈높이에서 소통하며 예배와 양육을 감당할 분을 청빙합니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://example-presbytery.or.kr/board/recruit/1254",
-    "contact": null
+    "contactEmail": "recruit@seongeun.example.com",
+    "contactTel": "061-000-1644",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-094",
@@ -3370,7 +3649,10 @@
     "description": "교구 심방과 성도 돌봄을 담당할 사역자를 청빙합니다. 소그룹 인도와 양육 사역에 헌신할 분을 기다립니다. 준전임 사역으로 근무 요일은 협의 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/544",
-    "contact": null
+    "contactEmail": "recruit@emmaus.example.com",
+    "contactTel": "051-000-1651",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-095",
@@ -3403,7 +3685,10 @@
     "description": "청년부를 함께 세워갈 전도사를 청빙합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/527",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": "https://example.com/galilee/apply",
+    "contactPost": null
   },
   {
     "id": "job-096",
@@ -3436,7 +3721,10 @@
     "description": "청년 사역에 비전을 품은 사역자를 청빙합니다. 예배 인도와 제자훈련, 새가족 정착을 함께 감당할 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/607",
-    "contact": null
+    "contactEmail": "recruit@hyanggi.example.com",
+    "contactTel": null,
+    "contactLink": "https://example.com/hyanggi/apply",
+    "contactPost": null
   },
   {
     "id": "job-097",
@@ -3469,7 +3757,10 @@
     "description": "청년부를 말씀과 공동체로 세워갈 사역자를 청빙합니다. 청년들과 눈높이를 맞추며 예배와 소그룹을 이끌어갈 동역자를 찾습니다. 파트 사역으로 학업과 병행이 가능합니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://notice.example-denomination.or.kr/bbs/recruit/532",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": "전원교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-098",
@@ -3506,7 +3797,10 @@
     "description": "유초등부 아이들을 말씀으로 양육할 전도사를 청빙합니다. 주일 예배와 공과, 절기 행사를 교사들과 함께 섬길 분을 찾습니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3400",
-    "contact": null
+    "contactEmail": "recruit@saesomang.example.com",
+    "contactTel": "02-000-1679",
+    "contactLink": null,
+    "contactPost": "새소망교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-099",
@@ -3543,7 +3837,10 @@
     "description": "성도들을 돌보고 교구를 섬길 사역자를 모십니다. 심방과 소그룹 목회에 헌신할 동역자를 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://job.example-seminary.ac.kr/board/view/3485",
-    "contact": null
+    "contactEmail": null,
+    "contactTel": "054-000-1686",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-100",
@@ -3580,7 +3877,10 @@
     "description": "본 교회를 말씀으로 이끌어갈 담임목사를 청빙합니다. 건강한 신학과 목회 철학으로 성도들과 함께 교회를 세워가실 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-nohoe.or.kr/board/call/167",
-    "contact": null
+    "contactEmail": "recruit@hanmaum.example.com",
+    "contactTel": "043-000-1693",
+    "contactLink": "https://example.com/hanmaum/apply",
+    "contactPost": "한마음교회 청빙위원회 (주소는 문의)"
   },
   {
     "id": "job-101",
@@ -3613,7 +3913,10 @@
     "description": "새벽빛교회 유초등부를 섬길 교육 전도사를 청빙합니다. 다음세대를 향한 마음이 있는 분을 기다립니다.",
     "source": "OPERATOR",
     "sourceUrl": "https://www.example-board.or.kr/call/saebyeok-1",
-    "contact": null
+    "contactEmail": "recruit@saebyeok.example.com",
+    "contactTel": null,
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-102",
@@ -3646,7 +3949,10 @@
     "description": "주보 제작·교적 관리·회계 보조를 담당할 행정간사를 모집합니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@eunhyero.example.com",
+    "contactTel": "02-000-1707",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-103",
@@ -3679,7 +3985,10 @@
     "description": "예배당·교육관 시설을 관리할 직원을 채용합니다. 자세한 내용은 원문을 확인해 주세요.",
     "source": "OPERATOR",
     "sourceUrl": "https://example.com/board/1103",
-    "contact": null
+    "contactEmail": "recruit@church103.example.com",
+    "contactTel": "031-000-1714",
+    "contactLink": null,
+    "contactPost": null
   },
   {
     "id": "job-104",
@@ -3712,6 +4021,9 @@
     "description": "유초등부 전도사와 시설 관리집사를 함께 청빙합니다.",
     "source": "CHURCH",
     "sourceUrl": null,
-    "contact": null
+    "contactEmail": "recruit@hanbit.example.com",
+    "contactTel": "031-000-1721",
+    "contactLink": null,
+    "contactPost": null
   }
 ]

@@ -64,6 +64,23 @@ interface JobDraft {
   alwaysOpen: boolean;
 }
 
+// 저장된 연락처 4칸 → 폼의 접수 방법 맵. `APPLY_METHODS` 닫힌 4키와 1:1이라 표 하나로 끝난다.
+// (이전엔 `sourceUrl`을 LINK 칸에 넣었다 — 교회 공고는 `sourceUrl`이 null이라 **수정 화면이
+//  접수 방법을 비운 채 열렸고**, 필수 검증에 걸려 교회가 매번 다시 입력해야 했다.)
+function applyMethodsOf(job?: Job): Partial<Record<ApplyMethod, string>> {
+  const saved: Record<ApplyMethod, string | null | undefined> = {
+    EMAIL: job?.contactEmail,
+    LINK: job?.contactLink,
+    TEL: job?.contactTel,
+    POST: job?.contactPost,
+  };
+  return Object.fromEntries(
+    (Object.entries(saved) as [ApplyMethod, string | null | undefined][]).filter(
+      (entry): entry is [ApplyMethod, string] => Boolean(entry[1]),
+    ),
+  );
+}
+
 function toDraft(job?: Job): JobDraft {
   return {
     title: job?.title ?? "",
@@ -86,7 +103,7 @@ function toDraft(job?: Job): JobDraft {
     benefitNote: "",
     docs: (job?.requiredDocs ?? []).map((name) => ({ name, required: true })),
     processSteps: [],
-    applyMethods: job?.sourceUrl ? { LINK: job.sourceUrl } : {},
+    applyMethods: applyMethodsOf(job),
     inquiry: "",
     deadline: job?.deadline ?? "",
     alwaysOpen: job ? job.deadline === null : false,
