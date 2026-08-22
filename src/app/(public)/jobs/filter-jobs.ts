@@ -10,7 +10,7 @@ import {
 import { normalizeChurchName } from "@/lib/job-church";
 import type { FilterDim, JobCard } from "@/types/domain";
 
-// mock 단계 클라이언트 필터/정렬 (순수 함수).
+// 클라이언트 필터/정렬 (순수 함수) — `/jobs`는 서버가 전체 카드를 한 번 내리고 여기서 다 거른다.
 // 실제 데이터 연동 시 이 로직은 lib/queries의 서버 쿼리로 이전한다.
 
 const TIER_RANK = { HERO: 0, PREMIUM: 1, NONE: 2 } as const;

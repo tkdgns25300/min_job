@@ -10,7 +10,7 @@ import type { CurrentUser } from "@/types/domain";
 export const metadata: Metadata = { title: "교회 인증 | 민잡" }; // noindex는 (authed) layout 상속
 
 // 교회 인증 — 사역자 → 교회 담당자 승격 관문. dynamic(인증 의존).
-// 실 업로드·운영자 승인·결과 알림 메일은 Phase 1(Server Actions). 지금은 mock UI.
+// 실 업로드·운영자 승인·결과 알림 메일은 Phase 1(Server Actions) — 화면만 있고 제출은 안 된다.
 // 이메일 인증(인증코드)은 없다 — Google OAuth로 이미 검증된 users.email을 쓴다.
 export default function ChurchVerifyPage() {
   return (

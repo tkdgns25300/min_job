@@ -1,5 +1,5 @@
 // 도메인 enum — 영어 대문자 key(저장·URL) + 한글 라벨(표시). CLAUDE 컨벤션.
-// 허용값은 실제 공고 수집하며 확장한다 (DATA.md). key는 mock/스키마의 단일 출처.
+// 허용값은 실제 공고 수집하며 확장한다 (DATA.md). key는 **DB CHECK와 화면**이 함께 쓰는 단일 출처.
 
 export const DENOMINATIONS = {
   HAPDONG: "예장합동",

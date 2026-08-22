@@ -7,7 +7,8 @@ import { DENOMINATIONS, REGIONS, POSITIONS } from "@/constants/domain";
 import { contactMailto } from "@/constants/business";
 import { Field } from "@/components/field";
 
-// 교회 인증 신청 폼(단일·그룹형). mock — 실 제출·업로드·결과 알림 메일은 Phase 1 Server Actions.
+// 교회 인증 신청 폼(단일·그룹형). **제출이 아직 배선되지 않았다** — 실 제출·서류 업로드·결과 알림은
+// Phase 1 Server Action. 읽기 쪽(운영자 검수 목록)은 실 DB다(lib/queries/verifications.ts).
 // ⚠️ 제출은 아무 데이터도 보내지 않는다. 실 로그인 전환(2026-07-29) 이후 누구나 이 화면에 올 수 있으므로
 //    "접수됐어요"라고 하면 거짓 안내가 된다 → 폼 앞에서 미리 알리고, 제출 후에도 저장되지 않았음을 밝힌다.
 const VERIFY_REQUEST_MAILTO = contactMailto("[민잡] 교회 인증 요청");

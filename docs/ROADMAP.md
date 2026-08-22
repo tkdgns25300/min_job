@@ -329,6 +329,15 @@
 - [x] denomination enum에서 **KIJANG 제거 → 10키**(기장=ETC로 흡수, HAPSIN 유지). mock churches의 KIJANG 건은 ETC로 교정 (완료 2026-07-29)
 - [~] jobs 신규 필드 반영 — `jobKind`(MINISTRY/GENERAL)·`role`·`contact` = `types/domain.ts`+mock 반영 **완료(2026-07-29)**. `position` NULL 허용·폼 seam·일반직 UI는 크롤러 실데이터 시(deferred), 마이그레이션 SQL 보류
 
+**(b-2) `lib/queries` 읽기 → 실 DB (2026-08-22 완료)**
+- [x] **18개 함수 전부 Supabase 쿼리로 교체 + `src/mocks/` 삭제** — jobs 12 · churches 3 · users 2 · verifications 1. **페이지 코드 0줄 변경 · 라우트 모드(`◐`/`○`) 불변**(seam을 둔 값어치가 여기서 드러났다)
+  - 새 파일: `lib/queries/row-map.ts`(행 → 도메인 41필드, enum 좁히기 · queries 내부 전용) · `lib/domain-enum.ts`(`keyOf`·`keysOf`·`enumLabel` — `as keyof typeof` 캐스트를 한 곳에 가둔다)
+  - `lib/job-visibility.ts`에 **`isFeaturedOn`** 추가 — `featured_until`은 mock에 없던 개념이라 그대로 옮겼으면 **기한 지난 유료 노출이 영구히 "노출중"** 이 됐다. 기한 없는 등급은 노출로 보지 않는다(fail-closed · 노출 적용 경로를 만들 때 재검토)
+  - ⚠️ 지킨 규칙 셋: **공개 판정을 SQL로 옮기지 않는다**(`isPubliclyOpen`은 크롤러가 사본을 들고 있어 SQL로 쓰면 사본이 셋 — SQL은 `status='OPEN'`만 미리 거르고 판정은 JS) · **`!inner` 금지**(크롤 공고는 `church_id=NULL`이 정상이라 통째로 탈락) · **`service.ts`는 RLS 우회**라 "검수 통과 교회만"을 쿼리가 직접 건다
+  - 검증: 충돌 불가능한 이름의 임시 공고 7 + 교회 2 + 임시 인증신청 2를 심어 **공개 페이지 23항목 실측 통과** 후 전부 삭제, 빈 DB에서도 확인(0건 표시·sitemap 정적 6개)
+- [ ] ⚠️ **`/jobs` payload 재검토** — 서버가 열린 공고 **전부**를 내리고 클라이언트가 거르는 설계다(CLAUDE 아키텍처 표). 3천 건에서 실측해 페이지네이션·서버 필터가 필요한지 정한다. 서버 필터를 만들면 canonical 전제도 함께 재검토
+- [ ] ⚠️ **`/mypage` 북마크 서버 이전** — localStorage id 목록을 맞추려고 **만료 포함 전 공고**를 내린다. 3천 건이면 가장 무거운 페이지가 된다. `bookmarks` 테이블은 이미 있다
+
 **(c) admin 검수 브릿지**
 - [x] `review_data` 검수 UI — **`/admin/review`**(화면 3개, 2026-08-22 완료 · **실 DB 직결**). 큐 목록(`page`+`review-queue-view`) · 단건 검수(`[id]`: 원문 열 + 편집 열 + 승격 게이트 + 판정) · 묶음 판정(`[id]/group`). seam = `lib/queries/review.ts`(캐시 안 함·snake_case 유지), 판정 = `admin/review/actions.ts`(승인·거절·저장만·되돌리기), 순수 규칙 = `lib/review-flags.ts`·`lib/review-edits.ts`. ⚠️ `churches`·`jobs`에 쓰지 않는다 — `review_status`만 바꾸고 공개는 크롤러 다음 실행이 한다
   - 남은 것: 키보드 단축키·일괄 거절(둘 다 실제 큐가 쌓이는 것을 보고 판단) · 배열 칸은 읽기 전용으로 확정(SPEC)

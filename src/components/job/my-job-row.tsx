@@ -23,7 +23,7 @@ interface MenuItem {
 }
 
 // 케밥 오버플로우 메뉴 — shadcn DropdownMenu 미설치라 최소 client 구현.
-// mock: 항목 클릭은 닫기만. 실제 마감·삭제(확인 다이얼로그 포함)는 Phase 1 Server Action.
+// 항목 클릭은 아직 닫기만 한다. 실제 마감·삭제(확인 다이얼로그 포함)는 Phase 1 Server Action.
 function OverflowMenu({ items, label }: { items: MenuItem[]; label: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -134,7 +134,7 @@ export function MyJobRow({ job }: { job: MyJob }) {
       <div className="flex shrink-0 items-center gap-1.5">
         {isClosed ? (
           <>
-            {/* 재등록 = 이 공고를 다시 올리기. mock: 새 공고 등록으로 이동(프리필은 Phase 1) */}
+            {/* 재등록 = 이 공고를 다시 올리기. 지금은 새 공고 등록으로 이동(프리필은 Phase 1) */}
             <Link
               href="/jobs/new"
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}

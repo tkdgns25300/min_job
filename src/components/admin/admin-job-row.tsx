@@ -25,7 +25,7 @@ const HIDDEN_LABEL: Record<"deadline" | "stale", string> = {
 
 // 케밥 메뉴 — DropdownMenu 미설치라 직접 구현. 테이블이 overflow-x-auto(=overflow-y도 auto)라
 // absolute 메뉴가 마지막 행에서 잘림 → body로 portal + fixed 위치로 클리핑 탈출.
-// 바깥 클릭·Escape·스크롤·리사이즈에 닫힘 + ARIA. 항목은 mock no-op(Phase 1 Server Action).
+// 바깥 클릭·Escape·스크롤·리사이즈에 닫힘 + ARIA. 항목은 아직 no-op(Phase 1 Server Action).
 function OverflowMenu({
   label,
   items,

@@ -3,7 +3,7 @@ import { JOB_STATUSES } from "@/constants/domain";
 import type { Job } from "@/types/domain";
 
 // 상태 관리 + 위험 영역 — 폼과 구분선(별도 면)으로 분리, 맨 아래 (SPEC.md /jobs/[id]/edit §3·4).
-// 마감/다시모집/삭제 mutation은 Phase 1 Server Action에서 배선 — mock 단계 비활성.
+// 마감/다시모집/삭제 mutation은 Phase 1 Server Action에서 배선 — 지금은 비활성.
 // TODO(design): ❓ "다시 모집" = 기존 공고 재오픈 vs 새 공고 복제 — 사람 결정 필요 (SPEC.md #10).
 // 재공고 이력 정합이 판단 근거였으나 그 기능은 제거됐다(2026-08-07) → 지금은 교회 편의로만 판단하면 된다.
 export function JobStatusPanel({ job }: { job: Job }) {

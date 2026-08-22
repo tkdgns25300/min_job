@@ -18,13 +18,15 @@
 >
 > ▶ **2026-08-16 교회 조인 경로 정합 (claim 결정을 코드로 내림)**: 2026-08-06의 `church_id` nullable 결정이 **DATA.md에만 있고 코드는 조인에 의존**하고 있었다. 조인이 실패하면 교단을 `ETC`·지역을 `SEOUL`로 **지어냈고**(미상이 기타교단·서울로 둔갑 → 필터·거점 판정 오염), 공고 상세는 교회가 없으면 **404**였다(크롤 공고가 통째로 안 열림). 잠복 상태였던 이유는 mock 101건이 전부 유효한 `church_id`를 갖고 있었기 때문 — 그래서 mock에 **미claim 14건**을 심어 재발을 막았다. 함께 고친 것: `getSimilarJobs`(둘 다 NULL이면 무관한 교회가 "같은 교회") · `getSearchSuggestions`(크롤 교회명 누락) · `getJobStats`(NULL이 한 덩어리) · `getCoverageStats`(NULL을 교단·지역 하나로 셈). 홈 지표는 **"함께하는 교회" → "청빙 중인 교회"** (수집 교회들은 우리와 함께하기로 한 적이 없다). 표기 규칙 = SPEC 공고 상세 §미claim 축소 표시.
 >
+> ▶ **2026-08-22 mock 제거 — 읽기가 전부 실 DB로**: `lib/queries` 18개 함수(jobs 12·churches 3·users 2·verifications 1)를 Supabase 쿼리로 교체하고 **`src/mocks/` 폴더를 삭제**했다. seam을 둔 값어치가 여기서 드러났다 — **페이지 코드 0줄 · 라우트 모드(`◐`/`○`) 그대로.** 새로 생긴 것 = `lib/queries/row-map.ts`(DB 행 → 도메인 41필드, enum 좁히기) · `lib/domain-enum.ts`(`keyOf`·`keysOf`·`enumLabel` — 캐스트를 한 곳에 가둔다) · `lib/job-visibility.ts`의 `isFeaturedOn`(유료 노출 기한 판정 — mock엔 없던 개념이라 기한 지난 등급이 영구 노출될 자리였다). 검증은 충돌 불가능한 이름의 임시 행 7개 + 교회 2곳 + 임시 인증신청 2건을 심어 **공개 페이지 23항목**을 실측하고 전부 지웠다(빈 DB에서도 확인). ⚠️ **`church_verifications` 테이블은 설계상 없다** — 신청은 `users.verification_*` + `churches` 행 조인으로 조립한다.
+>
 > ▶ **2026-08-05 SEO 마감**: `sitemap.xml`·`robots.txt`·canonical·OG(이미지 포함) 완료(§7 6·§8 SEO). **dev에 커밋 완료.** 남은 것 = **Search Console 사이트맵 등록**(실데이터 후 — 등록이 곧 "가짜 공고 색인 요청") · **공고별 OG 이미지**(한글 정적 폰트 선행).
 
 ---
 
 ## 0. 한 문장 요약
 
-흩어진 교회 **사역자 청빙 공고**(→ **개교회 채용**으로 범위 확장: 사역직+일반직, 2026-07-28)를 모아 구조화·비교로 차별화하는 채용 플랫폼(재공고 추적은 2026-08-07 보류). **mock 데이터로 페이지를 하나씩 디자인·확정하는 단계.** 완료(mock): 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + Supabase Auth Google OAuth 실 로그인 동작**(2026-07-29 — mock 세션·test 계정 폐기), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃(Server Action)·회원탈퇴 안내는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP, 서버 금액 검증 포함) — 2026-07-20 테스트 결제로 검증했고 2026-08-05부터 실카드 청구다.** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** **✅ SEO 마감(2026-08-05)**: sitemap·robots·canonical·OG 이미지. 남은 것: terms/privacy 법률검토 + **교회 멤버십**(admin 4페이지 mock 완료 · 운영자 게이트는 2026-07-29 완료). **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 가맹 심사 + 카드사 등록 둘 다 통과 → 실카드결제 활성(2026-08-05, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **Phase 1 — 교회 멤버십 배선**(결제 경로의 유일한 블로커) + 데이터 유입(§7). **인증(로그인)만 실배선 완료**(2026-07-29), 나머지 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용은 Phase 1.
+흩어진 교회 **사역자 청빙 공고**(→ **개교회 채용**으로 범위 확장: 사역직+일반직, 2026-07-28)를 모아 구조화·비교로 차별화하는 채용 플랫폼(재공고 추적은 2026-08-07 보류). **페이지 스캐폴드는 확정, 읽기는 실 DB로 전환 완료(2026-08-22), 남은 것은 쓰기.** 완료: 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·**/mypage(사역자)·/mypage/verify(교회 인증)·/jobs/new(3스텝 위저드)**. **단일 계정 + Supabase Auth Google OAuth 실 로그인 동작**(2026-07-29 — mock 세션·test 계정 폐기), 헤더 우측 = "교회 공고 등록" 상시 링크 + 아바타(마이페이지 직행), 로그아웃(Server Action)·회원탈퇴 안내는 /mypage 계정 영역. **`/mypage/church` 재설계 + `/mypage/church/info` + `/jobs/new` 인증 게이트 + `/terms`·`/privacy` 초안 보강(사업자번호 165-41-01202·푸터 표기·청약철회 조항) 완료(mock).** **✅ `/mypage/church/promote` 노출 결제 flow 구현·실동작 검증(PortOne V2 + KCP, 서버 금액 검증 포함) — 2026-07-20 테스트 결제로 검증했고 2026-08-05부터 실카드 청구다.** **✅ 약관·개인정보처리방침 확정본화(초안 배너 제거·시행일 표기)·실 사업자정보(훈테크·대표 이상훈·전화·주소) 반영·문의 이메일 단일화.** **✅ SEO 마감(2026-08-05)**: sitemap·robots·canonical·OG 이미지. 남은 것: terms/privacy 법률검토 + **교회 멤버십**(admin 4페이지 mock 완료 · 운영자 게이트는 2026-07-29 완료). **✅ Vercel 배포 · Supabase 연결 · 도메인 `www.minjob.co.kr` 연결(SSL) · PortOne 실연동 KCP 채널(`kcp_v2`) 전환 · NHN KCP 가맹 심사 + 카드사 등록 둘 다 통과 → 실카드결제 활성(2026-08-05, PG=KCP 일반결제 단일, 통신판매 면제)** → 다음 = **Phase 1 — 교회 멤버십 배선**(결제 경로의 유일한 블로커) + 데이터 유입(§7). **인증(로그인)만 실배선 완료**(2026-07-29), 나머지 백엔드(Supabase 실사용)·모든 mutation·실 노출 적용은 Phase 1.
 
 > **▶ 방향 전환(2026-07-28, 법률 검토 완료)**: 자매 프로젝트 **min_job_agent 크롤러 도입 확정** — 데이터 수집을 사람 수집에서 **공개 공식 게시판 자동 수집 → AI 구조화 → 검수 큐(`review_data`) → 운영자 승격**으로 전환. 제품 범위도 **개교회 채용(사역직 MINISTRY + 일반직 GENERAL)**으로 확장. 가드레일 #1·#3 재정의. min_job 쪽 싱크(문서·코드·검수 브릿지)는 Phase로 진행(ROADMAP 1-10). 정본 = **`../min_job_agent/docs/`**(CRAWLER_HANDOFF.md는 흡수 후 삭제, 2026-08-05).
 
@@ -36,44 +38,44 @@
 
 | 축 | 완성 | 남은 것 |
 |---|---|---|
-| UI/디자인 스캐폴드 | ~90% | (거의 끝 — 전 페이지 mock 확정) |
+| UI/디자인 스캐폴드 | ~90% | (거의 끝 — 전 페이지 확정) |
 | 인프라/배포 | ~90% | Vercel·도메인·SSL·Supabase 연결 완료 |
 | 수익화/결제 | ~70% | ✅ **KCP 가맹·카드사 심사 둘 다 통과 → 실카드결제 활성(2026-08-05)**. 남은 것 = 주문 저장(`job_promotions` INSERT)·실 노출 적용(featured)·모바일 redirect 복귀. ⚠️ **결제 경로 자체가 교회 멤버십에 막혀 도달 불가** |
 | 프론트 로직 디테일(1-9) | ~85% | URL동기화·404/error·위저드검증·모바일네비·?next·admin deep-link 완료(2026-07-29). pagination 잔여 |
-| 백엔드(Supabase 실사용) | ~20% | **Auth(Google OAuth)·운영자 게이트 완료(2026-07-29)**. **스키마 설계 확정(2026-08-05, 테이블 7개·승격 게이트 필수 5+CHECK 2)** **초기 마이그레이션 적용 + `types/database.ts` 생성 완료(2026-08-20~21)**. `types/domain.ts`·mock은 아직 어긋남(개수·목록은 ROADMAP Phase 0). mutation·`lib/queries` mock→DB + **교회 멤버십** 잔여 (Phase 1, **최대 덩어리**) |
-| 데이터(실 공고·구조화) | ~5% | 실 공고 0·Claude 구조화 미연동 (다른 세션) |
+| 백엔드(Supabase 실사용) | ~55% | Auth·운영자 게이트(2026-07-29) · 마이그레이션 + `types/database.ts`(2026-08-20~21) · **수집 검수 실 DB**(2026-08-22) · **`lib/queries` 읽기 전부 DB + mocks 삭제**(2026-08-22). 남은 것 = **모든 mutation**(공고 등록·수정·클레임·교회 정보·인증 접수/판정)과 **교회 멤버십 배선**, 그리고 **RLS**(§9 유예 — 공개 전 필수) |
+| 데이터(실 공고·구조화) | ~25% | 크롤러가 실수집 가동 중(`source_data` 449건·계속 증가). `jobs`는 크롤러 재실행 대기로 일시 0건. 구조화는 크롤러가 담당 |
 | 크롤러 연동(min_job_agent) | ~10% | **크롤러는 수집 가동 중**(백업 3,181건 — 이 데이터로 우리 필수값을 검증했다). min_job 쪽은 스키마 정합만 끝났고 **검수 브릿지 미착수**. ⚠️ `review_data`와 4곳 어긋남(ROADMAP Phase 0). 정본 = `../min_job_agent/docs/` (CRAWLER_HANDOFF.md는 흡수 후 삭제) |
 | SEO | ~80% (기술 마감 O, **유입 설계 X**) | **기술 요소 완료(2026-08-05)**: sitemap·robots·canonical·metadataBase·OG(이미지 포함)·JobPosting. 남은 것 = **지역·직분 랜딩 라우트**(노리는 키워드 `"OO지역 전도사 청빙"`를 받을 URL이 아직 없다 — §7 미해결 3) · 실데이터 후 Search Console 등록 · 공고별 OG 이미지(한글 폰트 선행) · 유입 측정 |
 | 법률/행정 | ~50% | 약관 법률검토 전 (사업자등록·통신판매 면제 O) |
 
-> 격차의 정체: **"보이는 절반"(디자인·인프라·결제 UI)은 무겁게 됐고, "안 보이는 심장"(백엔드·데이터·실동작)이 남았다.** "완료(mock)"에 안심하지 말 것(§1 범례 참조).
+> 격차의 정체: **읽기는 실 DB가 됐고(2026-08-22), 남은 심장은 "쓰기"다.** 화면이 다 있어도 저장되는 곳은 수집 검수 판정과 로그인/로그아웃뿐이다.
 > **▶ 방향 전환(2026-07-28)**: 크롤러 도입(min_job_agent) + 개교회 채용으로 범위 확장 = **새 대축**. 데이터 수집 방식이 사람→크롤러로 바뀌며 "데이터" 축의 채우기 방식이 달라진다(§6 방향 전환 기록·ROADMAP 1-10).
 
 ## 1. 페이지 현황 (핵심)
 
 **범례**: ✅ 완료(검수+커밋) · 🟡 Fable 초안(코드 있음·검수 전) · ⬜ 스캐폴드(미착수)
 
-> ⚠️ **"완료(mock)" = 디자인·UI 스캐폴드 완성**이지 프론트 로직·인터랙션 디테일 완성이 아니다. 폼 제출·hover/토글·상태 분기·빈 상태·모바일 등 mock에서도 동작해야 할 구멍이 페이지마다 남아 있다 — **전 페이지 로직 디테일 마감은 별도 갈래(ROADMAP 1-9)**. (실 DB·Auth 의존분은 Phase 1.)
+> ⚠️ **"완료" = 디자인·UI 스캐폴드 + 읽기 배선**이지 쓰기·인터랙션 디테일 완성이 아니다. 폼 제출·hover/토글·상태 분기·빈 상태·모바일 등 mock에서도 동작해야 할 구멍이 페이지마다 남아 있다 — **전 페이지 로직 디테일 마감은 별도 갈래(ROADMAP 1-9)**. (실 DB·Auth 의존분은 Phase 1.)
 
 | 페이지 | 섹션 | 디자인 | 검수 | 커밋 | 데이터 |
 |---|:--:|:--:|:--:|---|:--:|
-| `/` 홈 | ✅ | ✅ | ✅ | ✅ (이전 세션) | mock |
-| `/jobs` 목록 | ✅ | ✅ | ✅ | ✅ `af391ce`·`0119de9`·`03d2758` | mock |
-| `/jobs/[id]` 공고 상세 | ✅ | ✅ | ✅ | ✅ `85f53bb` | mock |
-| `/churches/[id]` 교회 상세 | ✅ | ✅ | ✅ | ✅ `e586fe0`·`38e6432`·`e1efa16` | mock |
+| `/` 홈 | ✅ | ✅ | ✅ | ✅ (이전 세션) | **실 DB** |
+| `/jobs` 목록 | ✅ | ✅ | ✅ | ✅ `af391ce`·`0119de9`·`03d2758` | **실 DB**. ⚠️ 서버가 열린 공고 **전부**를 내리고 클라이언트가 거른다 — 3천 건에서 payload를 다시 본다 |
+| `/jobs/[id]` 공고 상세 | ✅ | ✅ | ✅ | ✅ `85f53bb` | **실 DB**. 미claim 공고도 열린다(교회 프로필만 빠짐) |
+| `/churches/[id]` 교회 상세 | ✅ | ✅ | ✅ | ✅ `e586fe0`·`38e6432`·`e1efa16` | **실 DB**(검수 통과 교회만). ⚠️ `churches` 0행이라 당분간 전부 404 — 교회가 claim해야 생긴다 |
 | `/about` 소개 | ✅ | ✅ | ✅ | ✅ `f787c3d` | 정적(+실집계) |
 | `/pricing` 노출 안내 | ✅ | ✅ | ✅ | ✅ `e35fcb8`·`59c7aa6`·`a0d4cdd` | 정적(+실집계) |
 | `/login` | ✅ | ✅ | ✅ | ✅ `c517faf`·`a79692d` | **Google OAuth 실 로그인**(2026-07-29 — 서버 렌더 폼·`?next=` 복귀·`?error=oauth`) |
-| `/mypage` 사역자 view | ✅ | ✅ | ✅ | ✅ `8ded8d3`·`84d6b36` | mock(북마크·최근본 localStorage) + 하단 교회 CTA·계정(로그아웃 **실동작**·회원탈퇴 안내) |
-| `/mypage/verify` 교회 인증 폼 | ✅ | ✅ | ✅ | ✅ `8ded8d3` | mock UI(미신청 폼 / PENDING 안내 / APPROVED는 `/mypage/church`로 redirect). 실 접수·결과 알림 메일 Phase 1 |
-| `/jobs/new` 공고 등록 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | **3스텝 위저드** mock + **인증 게이트**(hasChurchAccess). 저장 Phase 1 |
+| `/mypage` 사역자 view | ✅ | ✅ | ✅ | ✅ `8ded8d3`·`84d6b36` | **실 DB**(북마크·최근본은 여전히 localStorage) + 하단 교회 CTA·계정(로그아웃 **실동작**·회원탈퇴 안내) |
+| `/mypage/verify` 교회 인증 폼 | ✅ | ✅ | ✅ | ✅ `8ded8d3` | 화면만(미신청 폼 / PENDING 안내 / APPROVED는 `/mypage/church`로 redirect). 실 접수·결과 알림 메일 Phase 1 |
+| `/jobs/new` 공고 등록 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | **3스텝 위저드** + **인증 게이트**(hasChurchAccess). **저장 미배선** |
 | `/jobs/[id]/edit` 수정 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | 위저드 공유(소유권 체크 有)·저장 Phase 1 |
-| `/mypage/church` 교회 관리 | ✅ | ✅ | ✅ | ✅ `e89bebd` | mock — 탭·노출광고 사이드바·공고 행(수정/⋯). mutation Phase 1 |
-| `/mypage/church/info` 교회 정보 | ✅ | ✅ | ✅ | ✅ `e89bebd` | mock — 소개·연락처·채널6·사진. 실 저장 Phase 1 |
+| `/mypage/church` 교회 관리 | ✅ | ✅ | ✅ | ✅ `e89bebd` | **읽기 실 DB**(managed/claimable 분리) — 탭·노출광고 사이드바·공고 행. mutation 미배선 |
+| `/mypage/church/info` 교회 정보 | ✅ | ✅ | ✅ | ✅ `e89bebd` | **읽기 실 DB** — 소개·연락처·채널6·사진. 실 저장 미배선 |
 | `/mypage/church/promote` 노출 결제 | ✅ | ✅ | ✅ | ✅ `5764fdc` | **PortOne V2 · 실카드 청구**(2026-08-05 활성, 서버 금액 검증). 화면이 실청구·수동 적용·환불 기준을 밝힌다. 주문 저장·실 노출 적용·모바일 redirect 복귀 Phase 1 |
 | `/terms`·`/privacy` | 🟡 초안 보강 | — | ✅ | ✅ `150aa99` | 법률검토·`[ ]`실값 대기 |
-| `/admin` 셸·홈·`/admin/jobs` | ✅ | ✅ | ✅ | ✅ `bcb9e77`+ | mock — 셸(딥그린 사이드바·noindex·**운영자 게이트 적용**: proxy `/admin/**` + `.env ADMIN_EMAILS`, 2026-07-29)·홈(요약 카드+빠른 작업)·공고 관리(탭[전체·모집중·마감]·필터·테이블·노출/수정 Sheet). ⚠️ **공고 전수 검수 철회(2026-08-21)** — 검수중 탭을 만들지 않는다. 검수는 수집 공고 한 곳(`review_data`)뿐. mutation Phase 1 |
-| `/admin/verify` 교회 인증 검수 | ✅ | ✅ | ✅ | ✅ `a4599c9` | mock — **유일 검수 게이트**. 탭[검수중·완료·반려·전체]·필터·테이블·승인/반려 Sheet(서류확인+반려사유). **dynamic**(운영자+PII라 `'use cache'` 금지 — `<Suspense>` 안 `requireOperator()`가 쿠키를 읽어 dynamic). 정렬=대기 우선. 승인/반려 mutation·알림 Phase 1 |
+| `/admin` 셸·홈·`/admin/jobs` | ✅ | ✅ | ✅ | ✅ `bcb9e77`+ | **읽기 실 DB** — 셸(딥그린 사이드바·noindex·**운영자 게이트 적용**: proxy `/admin/**` + `.env ADMIN_EMAILS`, 2026-07-29)·홈(요약 카드+빠른 작업)·공고 관리(탭[전체·모집중·마감]·필터·테이블·노출/수정 Sheet). ⚠️ **공고 전수 검수 철회(2026-08-21)** — 검수중 탭을 만들지 않는다. 검수는 수집 공고 한 곳(`review_data`)뿐. mutation Phase 1 |
+| `/admin/verify` 교회 인증 검수 | ✅ | ✅ | ✅ | ✅ `a4599c9` | **읽기 실 DB**(`users` ⋈ `churches` 조인 — 전용 테이블 없음) — **유일 검수 게이트**. 탭[검수중·완료·반려·전체]·필터·테이블·승인/반려 Sheet(서류확인+반려사유). **dynamic**(운영자+PII라 `'use cache'` 금지 — `<Suspense>` 안 `requireOperator()`가 쿠키를 읽어 dynamic). 정렬=대기 우선. 승인/반려 mutation·알림 Phase 1 |
 | `/admin/review` 수집 검수 | ✅ | ✅ | ✅ | ✅ 미커밋 | **실 DB 직결 — mock이 아닌 첫 화면.** 화면 3개(큐 목록 · `[id]` 단건 · `[id]/group` 묶음) 전부 `◐`. 큐 조건은 `review_status='PENDING'` 하나, 배지·승격 게이트는 저장값에서 계산(`lib/review-flags`), 편집 짝 규칙은 `lib/review-edits`, 판정은 `admin/review/actions.ts`(승인·거절·저장만·되돌리기). `jobs`·`source_data`에 쓰지 않는다 — 공개는 크롤러 다음 실행 |
 | ~~`/admin/ingest` 공고 수집~~ | ⛔ | — | — | **삭제됨(2026-08-22)** | `/admin/review`로 대체. 붙여넣기 UI + `lib/ingest/structure.ts` + 죽은 `getChurchOptions`까지 지웠다 |
 

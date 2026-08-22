@@ -132,6 +132,8 @@ src/
 │   ├── auth-guard.ts              requireUser·requireOperator — 서버 전용 게이트(redirect 수행)
 │   ├── operator.ts                운영자 판정(.env ADMIN_EMAILS) — 서버 전용
 │   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications·review (도메인 1파일)
+│   │                              + row-map.ts(DB 행 → 도메인 타입 · queries 내부 전용)
+│   ├── domain-enum.ts             닫힌 라벨 맵 ↔ DB 문자열(keyOf·keysOf·enumLabel) — 캐스트를 한 곳에 가둔다
 │   ├── review-flags.ts            검수 배지·승격 필수 6칸 판정(순수) — 목록·단건이 같은 답을 낸다
 │   ├── review-edits.ts            검수가 고칠 수 있는 칸 + CHECK 짝 규칙(순수) — 화면·액션 공용
 │   ├── job-visibility.ts          만료 판정 단일 소스(todayInSeoul·isPubliclyOpen·hiddenReason)
@@ -139,8 +141,6 @@ src/
 │   │                              (jobChurchRef=표시값 규칙 · churchIdentityKey=교회 수 집계)
 │   ├── bookmarks.ts · recent-jobs.ts · recent-searches.ts   localStorage 클라이언트 헬퍼
 │   └── seo.ts · format.ts · utils.ts
-├── mocks/                         **현재 데이터 소스**(jobs·churches·church-verifications JSON + index.ts)
-│                                  — lib/queries만 접근. DB 전환 시 이 폴더가 사라진다
 ├── types/                         domain.ts(공유 도메인 타입 = 화면이 쓰는 모양) ·
 │                                  database.ts(**자동 생성** — DB 행의 모양. 손으로 고치지 않는다)
 └── proxy.ts                       Next 16 Proxy — 세션 refresh + 접근 1차 판정(진짜 307)
@@ -160,7 +160,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 
 ### Page (`app/**/page.tsx`)
 - **조합만** 한다. 로직·데이터 fetching·집계 안 한다.
-- **캐시는 페이지가 아니라 query 함수에 있다** — 페이지는 `lib/queries/*`를 `await` 하기만 하고, `'use cache'`+`cacheTag`+`cacheLife`는 그 query 함수 안에 붙인다. 페이지에 직접 붙이지 말 것(데이터 출처를 페이지가 몰라야 mock→DB 전환 때 페이지가 안 바뀐다)
+- **캐시는 페이지가 아니라 query 함수에 있다** — 페이지는 `lib/queries/*`를 `await` 하기만 하고, `'use cache'`+`cacheTag`+`cacheLife`는 그 query 함수 안에 붙인다. 페이지에 직접 붙이지 말 것(데이터 출처를 페이지가 몰라야 데이터 소스가 바뀔 때 페이지가 안 바뀐다 — 2026-08-22 DB 전환에서 실제로 0줄이었다)
 - dynamic 페이지(검색·admin·authed): `<Suspense>`로 data 컴포넌트 감싸기
 - 동적 segment(`[id]`)는 `generateMetadata` + JSON-LD. 빌드타임 prerender 안 함 — on-demand `'use cache'`로 캐시
 
@@ -170,14 +170,17 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 - 끝에서 `updateTag(resource)` — read-your-own-writes
 - **데이터 CRUD용 REST API 라우트 만들지 않는다.** 외부 규약이 HTTP 엔드포인트를 강제할 때만 route handler 허용 — 현재 예외 2개뿐: `app/auth/callback`(OAuth 리다이렉트 수신), `app/api/payments/complete`(결제 검증).
 
-### Query (`lib/queries/*.ts`) — 데이터 소스 seam (mock ↔ DB)
-- **페이지·view는 데이터를 여기서만 가져온다.** `@/mocks` 직접 import 금지 — 데이터 출처를 이 레이어에 은닉해, mock→DB 전환 시 **페이지 코드 0 변경**.
+### Query (`lib/queries/*.ts`) — 데이터 소스 seam
+- **페이지·view는 데이터를 여기서만 가져온다.** 데이터 출처를 이 레이어에 은닉한다 — 2026-08-22 mock→DB 전환에서 **페이지 코드가 0줄** 바뀌었고 라우트 모드(`◐`/`○`)도 그대로였다.
 - **함수는 `async` + `'use cache'` + `cacheTag`** (read 전용). fetch + transform + return, 집계·파생 계산 등 비즈니스 로직은 여기.
-- **mock 단계**: 내부에서 `mocks/*` 위임(현재). **DB 전환**: 본문만 `createServiceClient()`(service.ts) Supabase 호출로 교체 — 시그니처·반환 타입 동일.
+- **행 → 도메인 변환은 `row-map.ts`가 한다.** enum 컬럼은 `text + CHECK`라 생성 타입이 `string`이므로 `keyOf`/`keysOf`(lib/domain-enum)로 좁힌다. ⚠️ 좁히기 실패의 기본값은 **덜 보이는 쪽**이다(`status`→`CLOSED`, `featured_tier`→`NONE`) — 모르는 값을 공개·유료 노출로 읽으면 사고가 된다.
+- ⚠️ **`service.ts`는 RLS를 우회한다** → "검수 통과 교회만 공개" 같은 노출 조건은 **쿼리가 직접 걸어야** 한다(RLS가 막아 주지 않는다).
+- ⚠️ **공개 노출 판정(`isPubliclyOpen`)을 SQL로 옮기지 않는다.** `lib/job-visibility.ts`가 단일 소스이고 **크롤러가 사본을 들고 있어** SQL로 한 벌 더 쓰면 사본이 셋이 된다(그래서 `jobs_visible` 뷰도 만들지 않았다). SQL은 `status='OPEN'` 같은 **확실히 탈락하는 것만 미리 거르고**(부피 줄이기), 판정은 JS가 한다.
+- ⚠️ **공고↔교회 embed에 `!inner`를 쓰지 않는다** — 크롤 공고는 `church_id=NULL`이 정상이라(가드레일 #1) inner join이면 통째로 탈락한다.
 - **쿠키·헤더 절대 만지지 마라** — cached scope 안에서 호출됨
 - **예외(인증 의존·PII read)** — `'use cache'`/`cacheTag`를 쓰지 않는 함수들:
   - `users.ts` **전체**(`getCurrentUser`·`getChurchDashboard`·`getEditableJob`) — 모두 로그인 사용자에 종속돼 방문자마다 결과가 다르다. `getCurrentUser`는 `server.ts`(쿠키 세션)를 쓰고 `React.cache`로 요청당 1회만 왕복한다 — 신원은 `auth.users`(Auth API), 소속·인증상태는 **`public.users` + `churches` 조인**에서 온다(`auth` 스키마는 PostgREST JOIN이 안 돼 프로필을 복제해 둔다).
-  - `verifications.ts` — 인증 신청 PII(가드레일 #3). 현재 mock, 실배선 시 `server.ts`.
+  - `verifications.ts` — 인증 신청 PII(가드레일 #3). `server.ts`. ⚠️ **`church_verifications` 테이블은 없다** — 신청은 `users.verification_*` + `churches` 행에 나뉘어 있고 이 함수가 조인해 조립한다(DATA §3).
   - `review.ts` — **미검수 크롤 데이터**(`review_data`). 판정하는 순간 바뀌므로 캐시하면 방금 처리한 건이 큐에 남는다. 컬럼명도 여기만 snake_case를 유지한다(크롤러 소유 테이블을 직접 편집하는 도구라 명세와 1:1로 대조해야 한다).
   - 이 함수들은 **dynamic 페이지의 `<Suspense>` 안·Server Action·route handler에서만** 호출한다(cached scope에서 부르면 빌드가 깨진다).
 
@@ -215,7 +218,7 @@ DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. �
 - 세션 쿠키 정책은 `lib/supabase/cookie-options.ts` 한 곳 — `httpOnly`(브라우저 클라이언트를 안 쓰므로 JS 접근 불필요) + 배포 시 `secure`. ⚠️ 로컬에서 `next start`(NODE_ENV=production)를 http로 띄우면 `secure` 때문에 로그인이 안 된다 — 로컬 로그인 테스트는 `npm run dev`로.
 - **예외 1개 — 비공개 Storage 서명**: `lib/queries/review.ts`의 포스터 signed URL은 `service.ts`를 쓴다. `storage.objects`는 RLS가 **항상** 켜져 있고 `postings` 버킷엔 정책이 없어(RLS 유예) publishable 키로는 서명이 조용히 빈 URL을 돌려준다(실측 2026-08-22). 정책을 만들면 로그인한 아무나 포스터를 읽게 되고, 운영자만 허용하려면 `.env ADMIN_EMAILS` 판정을 DB에 넣어야 해 "DB는 저장 전용"과 부딪힌다. 호출은 `requireOperator()` 뒤에서만 일어나고 나가는 것은 개체 하나에 묶인 30분 URL이다. **이 예외를 늘리지 말 것.**
 - `service.ts`가 RLS를 우회하므로 cached read(공개·비개인 조회 — 공고·교회·운영자 목록 등) 전용으로만. **인증 의존·PII read(예: 교회 인증 신청)와 모든 인증·권한 작업은 반드시 `server.ts`**(cached 금지).
-- ⚠️ **인증만 실배선** — `getCurrentUser`(users.ts)는 Supabase Auth 실동작. 나머지 `lib/queries/*`(공고·교회·인증신청)는 아직 mock(JSON)이며 DB 전환은 쿼리 본문만 교체(시그니처 불변).
+- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 남은 것은 **쓰기**다 — 공고 등록·수정, 교회 정보 저장, 인증 신청 접수·판정, 클레임은 아직 Server Action이 없다(화면만 있다).
 
 ## `'use cache'` 제약 (필수 준수)
 

@@ -11,7 +11,7 @@ import type { JobCard } from "@/types/domain";
 
 // 사역자 view의 "내 활동" — 저장한 공고(북마크) + 최근 본 공고. 둘 다 localStorage 기반(로그인 불필요).
 // 저장 ID만 저장되므로, 서버가 넘긴 전체 카드(allCards)에서 매칭해 렌더한다.
-// ⚠️ Phase 1: 계정 귀속 북마크(bookmarks 테이블) 서버 조회로 대체 — 이 클라 필터는 mock 과도기.
+// ⬜ 북마크가 아직 localStorage라 클라이언트가 전체 카드에서 걸러낸다 — 계정 귀속으로 옮기면 사라진다.
 export function MinisterActivity({ allCards }: { allCards: JobCard[] }) {
   const [hydrated, setHydrated] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>([]);

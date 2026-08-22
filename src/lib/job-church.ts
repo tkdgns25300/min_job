@@ -3,7 +3,7 @@ import type { Church, Job, JobChurchRef } from "@/types/domain";
 
 // 공고 ↔ 교회 파생 로직 — 전부 **`jobs.church_id`가 null일 수 있어서** 생긴다(DATA §3).
 // 교회 식별을 claim으로 미룬 결과, 공고는 소속 교회를 모른 채로 존재할 수 있다.
-// mock→DB 전환 후에도 그대로 쓰는 순수 함수라 lib에 둔다(job-visibility.ts와 같은 자리).
+// DB 전환에도 그대로 쓴 순수 함수라 lib에 둔다(job-visibility.ts와 같은 자리).
 
 /**
  * 공고에 붙여 보여줄 교회 정보 — 조인이 성립하지 않을 때가 정상이라 **없는 값을 지어내지 않는다**.

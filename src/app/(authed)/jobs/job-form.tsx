@@ -527,7 +527,7 @@ function stepSections(
 }
 
 // 공고 등록/수정 공유 폼 — 3스텝 위저드(모집 기본 → 처우·서류 → 지원·마감).
-// mock 단계 — Phase 1에서 actions.ts Server Action(검증→저장→updateTag("jobs")) 배선.
+// 제출 미배선 — Phase 1에서 actions.ts Server Action(검증→저장→updateTag("jobs"))을 붙인다.
 export function JobForm({
   mode,
   church,

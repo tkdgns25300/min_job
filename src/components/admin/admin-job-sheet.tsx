@@ -23,7 +23,7 @@ import type { AdminJob } from "@/types/domain";
 
 export type SheetState = { job: AdminJob; mode: "edit" | "feature" } | null;
 
-// 운영자 공고 편집·노출 설정 시트 — mock. 실 저장(Server Action + updateTag)은 Phase 1.
+// 운영자 공고 편집·노출 설정 시트 — **저장 미배선**. 실 저장(Server Action + updateTag)은 Phase 1.
 export function AdminJobSheet({ state, onClose }: { state: SheetState; onClose: () => void }) {
   return (
     <Sheet open={state !== null} onOpenChange={(open) => !open && onClose()}>

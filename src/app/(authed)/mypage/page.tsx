@@ -20,7 +20,8 @@ export default function MyPage() {
 async function MypageContent() {
   const user = await requireUser();
   // 저장한 공고는 클라이언트가 localStorage ID를 읽어 렌더 → 전체 카드를 넘겨 필터.
-  // Phase 1: 계정 귀속 bookmarks 테이블 서버 조회로 대체(이 전체-카드 전달은 mock 과도기).
+  // ⬜ 북마크가 localStorage라서 서버가 전체 카드를 넘긴다 — 계정 귀속(`bookmarks` 테이블)으로
+  //    옮기면 id로 조회해 이 전달을 없앤다(ROADMAP). 공고가 3천 건이 되면 이 페이지가 가장 무겁다.
   const allCards = await getSavedJobCards();
   return <MypageView user={user} allCards={allCards} />;
 }

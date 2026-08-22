@@ -25,7 +25,7 @@ import type { ChurchVerification } from "@/types/domain";
 
 export type SheetState = ChurchVerification | null;
 
-// 교회 인증 검수 시트 — 증빙 확인 후 승인/반려. mock. 실 처리(상태 변경 + updateTag + 알림)는 Phase 1.
+// 교회 인증 검수 시트 — 증빙 확인 후 승인/반려. **판정 미배선**. 실 처리(상태 변경 + 알림)는 Phase 1.
 export function VerificationSheet({ state, onClose }: { state: SheetState; onClose: () => void }) {
   return (
     <Sheet open={state !== null} onOpenChange={(open) => !open && onClose()}>
@@ -85,7 +85,7 @@ function ReviewBody({
         </Section>
 
         <Section title="증빙 서류">
-          {/* 서류 열람 — mock. 실구현은 비공개 Storage signed URL(DATA §3).
+          {/* 서류 열람 — 미배선. 실구현은 비공개 Storage signed URL(DATA §3).
               종류·등록번호는 저장하지 않는다 — 서류를 열면 보이고, 저장하면 보관 부담만 진다.
               처리가 끝나면 파기하므로(개인정보처리방침) 열 서류가 남아 있지 않다 */}
           {verification.docFileName ? (

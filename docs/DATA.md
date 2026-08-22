@@ -6,9 +6,9 @@
 > 마이그레이션은 `supabase/migrations/`(Supabase CLI 관례 `YYYYMMDDHHmmss_name.sql`). **적용된 파일은 고치지 않는다 — 변경은 항상 새 파일이다**(고치면 파일과 실제 DB가 어긋나 재현이 깨진다).
 > · `20260820231650_init.sql` — 테이블 7개 + 제약 + 인덱스
 > · `20260820234934_source_url_not_blank.sql` — CHECK ⑤
-> 둘 다 **원격 적용 완료**(2026-08-20 · MCP로 테이블 7·컬럼 88·CHECK 25·FK 8·인덱스 30 확인). ⬜ **RLS 정책·Storage 버킷은 아직 없다** — 다음 마이그레이션이다(RLS는 당분간 유예 — §9). **GRANT는 쓰지 않는다** — 크롤러가 service role로 붙어 우회한다(§9). (mock: `src/mocks/*.json`, 타입: `src/types/domain.ts`(화면이 쓰는 모양)·`src/types/database.ts`(**DB 행의 모양** — 자동 생성, 2026-08-21), enum: `src/constants/domain.ts`)
+> 둘 다 **원격 적용 완료**(2026-08-20 · MCP로 테이블 7·컬럼 88·CHECK 25·FK 8·인덱스 30 확인). ⬜ **RLS 정책·Storage 버킷은 아직 없다** — 다음 마이그레이션이다(RLS는 당분간 유예 — §9). **GRANT는 쓰지 않는다** — 크롤러가 service role로 붙어 우회한다(§9). (타입: `src/types/domain.ts`(화면이 쓰는 모양)·`src/types/database.ts`(**DB 행의 모양** — 자동 생성, 2026-08-21), 행↔도메인 변환: `src/lib/queries/row-map.ts`, enum: `src/constants/domain.ts`. ⛔ `src/mocks/`는 2026-08-22 삭제 — 읽기는 전부 실 DB다)
 >
-> ⚠️ **살아있는 문서.** 페이지 디자인·기능을 고도화하며 필드가 늘면 이 문서·mock 스키마를 **함께 확장**한다. 데이터는 `lib/queries/*`(seam)로만 접근해 mock↔DB 전환 시 페이지 불변.
+> ⚠️ **살아있는 문서.** 페이지 디자인·기능을 고도화하며 필드가 늘면 이 문서와 `types/`·`row-map.ts`를 **함께 확장**한다. 데이터는 `lib/queries/*`(seam)로만 접근한다 — 그 덕에 2026-08-22 DB 전환에서 페이지가 한 줄도 안 바뀌었다.
 
 ---
 

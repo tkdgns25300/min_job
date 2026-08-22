@@ -9,7 +9,8 @@ const STATIC_PATHS = ["/", "/jobs", "/about", "/pricing", "/terms", "/privacy"] 
 /**
  * sitemap.xml — 정적 페이지 + 공고 상세 + 교회 상세.
  *
- * URL 목록을 `lib/queries` seam에서 가져오므로 **mock→DB 전환 시 이 파일은 그대로**다.
+ * URL 목록을 `lib/queries` seam에서 가져온다 — 그래서 **DB 전환에도 이 파일은 한 줄도 바뀌지 않았다**
+ * (2026-08-22 전환 완료. seam을 둔 이유가 이것이다).
  * `getAllJobCards()`는 **모집중만** 준다 — 구글도 마감 공고는 sitemap에서 빼라고 권장하므로
  * 의도된 동작이다(마감 공고 페이지는 계속 열리지만 색인을 재촉하지 않는다).
  * lastModified는 데이터에서 나온 값만 쓴다(`new Date()`는 비결정적이라 캐시와 상충 — CLAUDE 규칙).

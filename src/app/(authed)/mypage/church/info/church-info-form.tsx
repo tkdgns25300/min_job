@@ -9,7 +9,7 @@ import { contactMailto } from "@/constants/business";
 import { Field } from "@/components/field";
 import type { Church } from "@/types/domain";
 
-// 교회 정보 관리 폼 — mock. 실 저장·사진 업로드(Storage)는 Phase 1 Server Action.
+// 교회 정보 관리 폼 — **저장이 아직 배선되지 않았다**. 실 저장·사진 업로드(Storage)는 Phase 1 Server Action.
 // 교회명·교단은 인증 확정값이라 여기서 못 바꿈(문의).
 // 소개(한 줄·상세)는 두지 않는다 — 표시하는 화면이 없어 입력만 받는 값이 된다(2026-08-18).
 
@@ -144,7 +144,7 @@ export function ChurchInfoForm({ church }: { church: Church }) {
               )}
             </div>
           ))}
-          {/* mock — 실 업로드는 Phase 1(Storage) */}
+          {/* 실 업로드는 Phase 1(Storage) */}
           <button
             type="button"
             disabled

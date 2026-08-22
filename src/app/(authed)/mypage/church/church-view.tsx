@@ -93,7 +93,7 @@ function ChurchDashboardView({
             <span className="font-bold">운영자가 정리한 우리 교회 공고 {claimableCount}건</span>
             <span className="text-muted-foreground"> — 가져오면 직접 수정·관리할 수 있어요.</span>
           </p>
-          {/* mock 비활성 — Phase 1 클레임 액션(source→CHURCH, owner 연결) */}
+          {/* 비활성 — 클레임 액션(source→CHURCH)은 Phase 1 Server Action */}
           <button
             disabled
             className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}

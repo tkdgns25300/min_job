@@ -52,7 +52,7 @@ export function ChurchSummaryCard({ church }: { church: Church }) {
 }
 
 // 첫 등록 교회 정보 입력 — 교단은 enum 드롭다운(자유입력 금지: 이단 1차 차단, ROADMAP 1-4).
-// mock 단계라 값은 이 컴포넌트 안에만 머문다(제출 배선은 Phase 1 Server Action).
+// 제출이 배선되기 전이라 값은 이 컴포넌트 안에만 머문다(Phase 1 Server Action).
 export function ChurchFields() {
   const [draft, setDraft] = useState<ChurchDraft>(EMPTY_DRAFT);
   const patch = (partial: Partial<ChurchDraft>) => setDraft((d) => ({ ...d, ...partial }));

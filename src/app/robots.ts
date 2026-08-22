@@ -8,7 +8,8 @@ import { SITE_URL } from "@/constants/site";
  * (색인 차단과 크롤링 차단은 별개다).
  *
  * ⚠️ 검색엔진에 "초대"하는 행위는 이 파일이 아니라 **Search Console 사이트맵 등록**이다.
- *    지금 데이터는 mock이므로 등록은 실 공고가 들어온 뒤에 한다(ROADMAP 1-5).
+ *    공고가 실 DB에서 나오기 시작했으니(2026-08-22) 남은 조건은 **공고가 쌓이는 것**뿐이다 —
+ *    빈 사이트맵을 등록하면 크롤러가 다시 오기까지 오래 걸린다(ROADMAP 1-5).
  */
 export default function robots(): MetadataRoute.Robots {
   return {
