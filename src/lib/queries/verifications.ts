@@ -63,7 +63,7 @@ export async function getVerifications(): Promise<ChurchVerification[]> {
   const rows = await fetchAllRows<ApplicantRow>("인증 신청", (from, to) =>
     supabase
       .from("users")
-      .select(SELECT)
+      .select(SELECT, { count: "exact" })
       .not("verification_submitted_at", "is", null)
       .order("id")
       .range(from, to),

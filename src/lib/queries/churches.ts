@@ -38,7 +38,7 @@ export async function getIndexableChurchIds(): Promise<string[]> {
   const rows = await fetchAllRows<{ id: string }>("교회 목록", (from, to) =>
     createServiceClient()
       .from("churches")
-      .select("id")
+      .select("id", { count: "exact" })
       .eq("verification_status", "APPROVED")
       .order("id")
       .range(from, to),

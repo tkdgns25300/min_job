@@ -196,7 +196,7 @@ export async function getQueueNavigation(id: string): Promise<QueueNavigation> {
   const data = await fetchAllRows<QueueNeighbor>("큐 순서", (from, to) =>
     supabase
       .from("review_data")
-      .select("id, dedup_state, dedup_key")
+      .select("id, dedup_state, dedup_key", { count: "exact" })
       .eq("review_status", "PENDING")
       .order("created_at", { ascending: true })
       .order("id")

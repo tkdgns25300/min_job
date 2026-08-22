@@ -75,7 +75,7 @@ function toEntry(row: CardRow): CardEntry {
 function cardPage(from: number, to: number, onlyVisible: boolean) {
   const query = createServiceClient()
     .from("jobs")
-    .select(`${JOB_CARD_COLUMNS}, ${CHURCH_REF_EMBED}`)
+    .select(`${JOB_CARD_COLUMNS}, ${CHURCH_REF_EMBED}`, { count: "exact" })
     .order("posted_at", { ascending: false })
     .order("id")
     .range(from, to);
@@ -293,7 +293,7 @@ export async function getCoverageStats(): Promise<{
     fetchAllRows<{ region: string | null; denomination: string | null }>("교회 집계", (from, to) =>
       createServiceClient()
         .from("churches")
-        .select("region, denomination")
+        .select("region, denomination", { count: "exact" })
         .eq("verification_status", "APPROVED")
         .order("id")
         .range(from, to),
