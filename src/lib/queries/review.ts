@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "./fetch-all";
 import { createServiceClient } from "@/lib/supabase/service";
 import { POSTER_BUCKET, POSTER_URL_TTL_SECONDS } from "@/constants/review";
 import {
@@ -191,13 +192,16 @@ export async function getReviewRow(id: string): Promise<Tables<"review_data"> | 
  */
 export async function getQueueNavigation(id: string): Promise<QueueNavigation> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("review_data")
-    .select("id, dedup_state, dedup_key")
-    .eq("review_status", "PENDING")
-    .order("created_at", { ascending: true });
-
-  if (error) throw new Error(`큐 순서 조회 실패: ${error.message}`);
+  // 큐 전체를 훑는다 — 1,000행 상한에 닿으면 "n / m"이 조용히 틀린 수가 된다(fetch-all)
+  const data = await fetchAllRows<QueueNeighbor>("큐 순서", (from, to) =>
+    supabase
+      .from("review_data")
+      .select("id, dedup_state, dedup_key")
+      .eq("review_status", "PENDING")
+      .order("created_at", { ascending: true })
+      .order("id")
+      .range(from, to),
+  );
 
   const index = data.findIndex((r) => r.id === id);
   return {

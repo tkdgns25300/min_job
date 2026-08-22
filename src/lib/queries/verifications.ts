@@ -6,6 +6,7 @@ import {
 } from "@/constants/domain";
 import { keyOf } from "@/lib/domain-enum";
 import { createClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "./fetch-all";
 import type { Tables } from "@/types/database";
 import type { ChurchVerification } from "@/types/domain";
 
@@ -58,13 +59,16 @@ type ApplicantRow = Pick<
  */
 export async function getVerifications(): Promise<ChurchVerification[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("users")
-    .select(SELECT)
-    .not("verification_submitted_at", "is", null);
-
-  if (error) throw new Error(`인증 신청 조회 실패: ${error.message}`);
-  return (data as unknown as ApplicantRow[]).map(toVerification).sort(byReviewQueue);
+  // 테이블 전체를 훑으므로 페이지를 이어 붙인다(1,000행 상한 · fetch-all)
+  const rows = await fetchAllRows<ApplicantRow>("인증 신청", (from, to) =>
+    supabase
+      .from("users")
+      .select(SELECT)
+      .not("verification_submitted_at", "is", null)
+      .order("id")
+      .range(from, to),
+  );
+  return rows.map(toVerification).sort(byReviewQueue);
 }
 
 function toVerification(row: ApplicantRow): ChurchVerification {

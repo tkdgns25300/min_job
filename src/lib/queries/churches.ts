@@ -4,6 +4,7 @@ import { keyOf, keysOf } from "@/lib/domain-enum";
 import { isPubliclyOpen, todayInSeoul } from "@/lib/job-visibility";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { Church, PastJob } from "@/types/domain";
+import { fetchAllRows } from "./fetch-all";
 import { CHURCH_FULL_COLUMNS, toChurch, type ChurchFullRow } from "./row-map";
 
 // 데이터 소스 seam (교회) — 페이지는 여기서만 가져온다.
@@ -33,13 +34,16 @@ export async function getIndexableChurchIds(): Promise<string[]> {
   "use cache";
   cacheTag("churches");
   cacheLife("days");
-  const { data, error } = await createServiceClient()
-    .from("churches")
-    .select("id")
-    .eq("verification_status", "APPROVED");
-
-  if (error) throw new Error(`교회 목록 조회 실패: ${error.message}`);
-  return data.map((c) => c.id);
+  // 테이블 전체를 훑으므로 페이지를 이어 붙인다 — sitemap이 1,000곳에서 조용히 잘리면 안 된다
+  const rows = await fetchAllRows<{ id: string }>("교회 목록", (from, to) =>
+    createServiceClient()
+      .from("churches")
+      .select("id")
+      .eq("verification_status", "APPROVED")
+      .order("id")
+      .range(from, to),
+  );
+  return rows.map((c) => c.id);
 }
 
 /**

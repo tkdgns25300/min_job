@@ -15,6 +15,7 @@ import {
   todayInSeoul,
 } from "@/lib/job-visibility";
 import { createServiceClient } from "@/lib/supabase/service";
+import { fetchAllRows } from "./fetch-all";
 import type { AdminJob, AdminOverview, JobCard, JobDetail } from "@/types/domain";
 import { getChurch } from "./churches";
 import {
@@ -39,9 +40,11 @@ import {
 // 만료가 최대 하루 늦게 반영되지만, 공고 목록 자체가 하루 캐시라 무해하다.
 // 인자로 받으려면 호출부에 `await connection()`이 필요하고 `◐ PPR` → `ƒ` 로 떨어진다.
 
-// ⚠️ 교회를 조인하는 쿼리는 `cacheTag("jobs", "churches")`를 함께 단다 — 카드·상세에 교회명·교단이
-//    실리고 **검수 상태(APPROVED)로 교회 노출 여부가 갈리므로**, 교회가 승인되면 공고 캐시도 함께
-//    무효화돼야 한다. 교회를 안 읽는 집계(getJobStats·getAdminOverview)는 "jobs"만 단다.
+// ⚠️ 태그 기준은 "교회를 읽는가"가 아니라 **"결과가 교회에 따라 달라지는가"**다. 카드·상세는
+//    검수 상태(APPROVED)로 교회 노출 여부가 갈리므로 `cacheTag("jobs", "churches")`를 함께 단다 —
+//    교회가 승인되면 공고 캐시도 무효화돼야 한다. 반면 `getJobStats`·`getAdminOverview`는 같은
+//    조회를 쓰지만 **교회 값을 결과에 쓰지 않는다**(교회 수는 `churchIdentityKey`가 `jobs` 컬럼만
+//    본다) → "jobs"만 단다.
 
 /**
  * SQL 선거름 — **판정이 아니라 부피 줄이기**다. 확실히 탈락하는 것만 뺀다(3천 건이 목표 규모다).
@@ -65,29 +68,30 @@ function toEntry(row: CardRow): CardEntry {
 }
 
 /**
- * 공개 목록 후보 — 최신순. ⚠️ **embed에 `!inner`를 쓰지 않는다**: 크롤 공고는 `church_id=NULL`이
- * 정상이라(가드레일 #1) inner join이면 통째로 탈락한다.
+ * 카드 조회 한 장 — 최신순 + `id`로 마지막 정렬(장 경계에서 행이 새거나 겹치지 않게 · fetch-all).
+ * ⚠️ **embed에 `!inner`를 쓰지 않는다**: 크롤 공고는 `church_id=NULL`이 정상이라(가드레일 #1)
+ *    inner join이면 통째로 탈락한다.
  */
-async function fetchOpenCards(): Promise<CardEntry[]> {
-  const { data, error } = await createServiceClient()
+function cardPage(from: number, to: number, onlyVisible: boolean) {
+  const query = createServiceClient()
     .from("jobs")
     .select(`${JOB_CARD_COLUMNS}, ${CHURCH_REF_EMBED}`)
-    .eq("status", VISIBLE_STATUS)
-    .order("posted_at", { ascending: false });
+    .order("posted_at", { ascending: false })
+    .order("id")
+    .range(from, to);
+  return onlyVisible ? query.eq("status", VISIBLE_STATUS) : query;
+}
 
-  if (error) throw new Error(`공고 목록 조회 실패: ${error.message}`);
-  return (data as unknown as CardRow[]).map(toEntry);
+/** 공개 목록 후보 — 테이블 전체를 훑으므로 페이지를 이어 붙인다(1,000행 상한 · fetch-all) */
+async function fetchOpenCards(): Promise<CardEntry[]> {
+  const rows = await fetchAllRows<CardRow>("공고 목록", (from, to) => cardPage(from, to, true));
+  return rows.map(toEntry);
 }
 
 /** 전체 공고 — 마감·만료 포함. 저장한 공고·운영자 화면 전용 */
 async function fetchAllCards(): Promise<CardEntry[]> {
-  const { data, error } = await createServiceClient()
-    .from("jobs")
-    .select(`${JOB_CARD_COLUMNS}, ${CHURCH_REF_EMBED}`)
-    .order("posted_at", { ascending: false });
-
-  if (error) throw new Error(`공고 목록 조회 실패: ${error.message}`);
-  return (data as unknown as CardRow[]).map(toEntry);
+  const rows = await fetchAllRows<CardRow>("공고 목록", (from, to) => cardPage(from, to, false));
+  return rows.map(toEntry);
 }
 
 /**
@@ -142,7 +146,12 @@ export async function getAdJobs(): Promise<JobCard[]> {
   cacheTag("jobs", "churches");
   cacheLife("days");
   const today = todayInSeoul();
-  return onlyOpen(await fetchOpenCards(), today)
+  // 등급은 저장된 값이라 SQL로 미리 거른다 — 전 공고를 훑어 3건을 고르지 않는다.
+  // 기한 만료는 여전히 JS가 본다(`toCard`) → 여기서 걸러도 결과가 달라지지 않는다.
+  const rows = await fetchAllRows<CardRow>("대표광고 공고", (from, to) =>
+    cardPage(from, to, true).eq("featured_tier", "HERO"),
+  );
+  return onlyOpen(rows.map(toEntry), today)
     .map((e) => toCard(e, today))
     .filter((c) => c.featuredTier === "HERO");
 }
@@ -220,6 +229,7 @@ export async function getAdminJobs(): Promise<AdminJob[]> {
 /** 운영자 홈 요약 — 노출중(유료 OPEN)·이번주 등록·전체 공고. admin 홈 전용 */
 export async function getAdminOverview(): Promise<AdminOverview> {
   "use cache";
+  // 〃 — 요약 수치 넷 다 `jobs` 컬럼에서만 나온다
   cacheTag("jobs");
   cacheLife("days");
   const today = todayInSeoul();
@@ -247,6 +257,7 @@ export async function getJobStats(): Promise<{
   churchCount: number;
 }> {
   "use cache";
+  // 결과가 `jobs` 컬럼만으로 나온다 — 교회 승인이 이 수치를 바꾸지 않는다(위 태그 규칙)
   cacheTag("jobs");
   cacheLife("days");
   const today = todayInSeoul();
@@ -276,18 +287,20 @@ export async function getCoverageStats(): Promise<{
   cacheTag("jobs", "churches");
   cacheLife("days");
   const today = todayInSeoul();
-  const [open, churches] = await Promise.all([
+  const [open, rows] = await Promise.all([
     fetchOpenCards().then((entries) => onlyOpen(entries, today)),
     // 검수 전 교회는 공개 지표에서 뺀다 — `service.ts`가 RLS를 우회하므로 쿼리가 직접 건다
-    createServiceClient()
-      .from("churches")
-      .select("region, denomination")
-      .eq("verification_status", "APPROVED"),
+    fetchAllRows<{ region: string | null; denomination: string | null }>("교회 집계", (from, to) =>
+      createServiceClient()
+        .from("churches")
+        .select("region, denomination")
+        .eq("verification_status", "APPROVED")
+        .order("id")
+        .range(from, to),
+    ),
   ]);
-  if (churches.error) throw new Error(`교회 집계 조회 실패: ${churches.error.message}`);
 
   // 미상(null)은 지역·교단 하나로 세지 않는다 — 그대로 두면 "교단 10개"처럼 조용히 +1 된다.
-  const rows = churches.data;
   return {
     openCount: open.length,
     churchCount: rows.length,

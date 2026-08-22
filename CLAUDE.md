@@ -132,7 +132,8 @@ src/
 │   ├── auth-guard.ts              requireUser·requireOperator — 서버 전용 게이트(redirect 수행)
 │   ├── operator.ts                운영자 판정(.env ADMIN_EMAILS) — 서버 전용
 │   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications·review (도메인 1파일)
-│   │                              + row-map.ts(DB 행 → 도메인 타입 · queries 내부 전용)
+│   │                              + row-map.ts(DB 행 → 도메인 타입) · fetch-all.ts(1,000행 상한 페이징)
+│   │                              둘 다 queries 내부 전용
 │   ├── domain-enum.ts             닫힌 라벨 맵 ↔ DB 문자열(keyOf·keysOf·enumLabel) — 캐스트를 한 곳에 가둔다
 │   ├── review-flags.ts            검수 배지·승격 필수 6칸 판정(순수) — 목록·단건이 같은 답을 낸다
 │   ├── review-edits.ts            검수가 고칠 수 있는 칸 + CHECK 짝 규칙(순수) — 화면·액션 공용
@@ -176,6 +177,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 - **행 → 도메인 변환은 `row-map.ts`가 한다.** enum 컬럼은 `text + CHECK`라 생성 타입이 `string`이므로 `keyOf`/`keysOf`(lib/domain-enum)로 좁힌다. ⚠️ 좁히기 실패의 기본값은 **덜 보이는 쪽**이다(`status`→`CLOSED`, `featured_tier`→`NONE`) — 모르는 값을 공개·유료 노출로 읽으면 사고가 된다.
 - ⚠️ **`service.ts`는 RLS를 우회한다** → "검수 통과 교회만 공개" 같은 노출 조건은 **쿼리가 직접 걸어야** 한다(RLS가 막아 주지 않는다).
 - ⚠️ **공개 노출 판정(`isPubliclyOpen`)을 SQL로 옮기지 않는다.** `lib/job-visibility.ts`가 단일 소스이고 **크롤러가 사본을 들고 있어** SQL로 한 벌 더 쓰면 사본이 셋이 된다(그래서 `jobs_visible` 뷰도 만들지 않았다). SQL은 `status='OPEN'` 같은 **확실히 탈락하는 것만 미리 거르고**(부피 줄이기), 판정은 JS가 한다.
+- ⚠️⚠️ **PostgREST는 1,000행에서 자르고 에러를 주지 않는다**(실측 2026-08-22: 1,400행 중 1,000행만 오고 `count`만 1,400. `range(0,4999)`로도 안 풀린다 — 서버측 설정이다). **테이블 전체를 훑는 조회는 `fetchAllRows`(lib/queries/fetch-all.ts)로 감싼다.** 안 감싸면 공고가 1,000건을 넘는 순간 목록·통계·sitemap이 **조용히** 잘린다(목표 규모 3천 건). 페이징 조회는 **정렬 마지막 키가 유일해야** 한다(`.order("id")`) — 아니면 장 경계에서 행이 겹치거나 빠진다. 개체에 묶인 조회(교회 하나의 공고 등)는 상한에 닿을 수 없어 감싸지 않는다.
 - ⚠️ **공고↔교회 embed에 `!inner`를 쓰지 않는다** — 크롤 공고는 `church_id=NULL`이 정상이라(가드레일 #1) inner join이면 통째로 탈락한다.
 - **쿠키·헤더 절대 만지지 마라** — cached scope 안에서 호출됨
 - **예외(인증 의존·PII read)** — `'use cache'`/`cacheTag`를 쓰지 않는 함수들:
