@@ -36,8 +36,8 @@ import {
 
 // 만료 판정 기준일은 **cached scope 안에서** 만든다 (CLAUDE.md `'use cache'` 제약 #2).
 // 호출부(`/jobs`·홈·`sitemap.xml`)가 전부 프리렌더 스코프라 거기서 `new Date()`를 부르면
-// **빌드 시각이 굳는다**. 여기서 만들면 `cacheLife("days")`와 함께 하루마다 갱신되므로
-// 만료가 최대 하루 늦게 반영되지만, 공고 목록 자체가 하루 캐시라 무해하다.
+// **빌드 시각이 굳는다**. 여기서 만들면 `cacheLife("hours")`와 함께 한 시간마다 갱신되므로
+// 만료가 최대 한 시간 늦게 반영되지만, 공고 목록 자체가 한 시간 캐시라 무해하다.
 // 인자로 받으려면 호출부에 `await connection()`이 필요하고 `◐ PPR` → `ƒ` 로 떨어진다.
 
 // ⚠️ 태그 기준은 "교회를 읽는가"가 아니라 **"결과가 교회에 따라 달라지는가"**다. 카드·상세는
@@ -144,7 +144,7 @@ function toCard(entry: CardEntry, today: string): JobCard {
 export async function getAdJobs(): Promise<JobCard[]> {
   "use cache";
   cacheTag("jobs", "churches");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   // 등급은 저장된 값이라 SQL로 미리 거른다 — 전 공고를 훑어 3건을 고르지 않는다.
   // 기한 만료는 여전히 JS가 본다(`toCard`) → 여기서 걸러도 결과가 달라지지 않는다.
@@ -160,7 +160,7 @@ export async function getAdJobs(): Promise<JobCard[]> {
 export async function getListJobs(limit = 8): Promise<JobCard[]> {
   "use cache";
   cacheTag("jobs", "churches");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   const rank = (tier: string) => (tier === "PREMIUM" ? 0 : 1);
   // 등급은 만료를 반영한 카드 값으로 판단한다 — 기한 지난 프리미엄이 앞자리를 차지하지 않게
@@ -175,7 +175,7 @@ export async function getListJobs(limit = 8): Promise<JobCard[]> {
 export async function getAllJobCards(): Promise<JobCard[]> {
   "use cache";
   cacheTag("jobs", "churches");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   return onlyOpen(await fetchOpenCards(), today).map((e) => toCard(e, today));
 }
@@ -190,7 +190,7 @@ export async function getAllJobCards(): Promise<JobCard[]> {
 export async function getSavedJobCards(): Promise<JobCard[]> {
   "use cache";
   cacheTag("jobs", "churches");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   return (await fetchAllCards()).map((e) => toCard(e, today));
 }
@@ -221,7 +221,7 @@ function toAdminRow(entry: CardEntry, today: string): AdminJob {
 export async function getAdminJobs(): Promise<AdminJob[]> {
   "use cache";
   cacheTag("jobs", "churches");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   return (await fetchAllCards()).map((e) => toAdminRow(e, today));
 }
@@ -231,7 +231,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
   "use cache";
   // 〃 — 요약 수치 넷 다 `jobs` 컬럼에서만 나온다
   cacheTag("jobs");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   const all = (await fetchAllCards()).map((e) => toAdminRow(e, today));
   // "노출중" = **실제로 공개 목록에 뜨는** 유료 공고. status만 보면 만료돼 숨겨진 유료 공고까지
@@ -259,7 +259,7 @@ export async function getJobStats(): Promise<{
   "use cache";
   // 결과가 `jobs` 컬럼만으로 나온다 — 교회 승인이 이 수치를 바꾸지 않는다(위 태그 규칙)
   cacheTag("jobs");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   const open = onlyOpen(await fetchOpenCards(), today);
   const weekAgo = addDays(today, -RECENT_WINDOW_DAYS);
@@ -285,7 +285,7 @@ export async function getCoverageStats(): Promise<{
 }> {
   "use cache";
   cacheTag("jobs", "churches");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   const [open, rows] = await Promise.all([
     fetchOpenCards().then((entries) => onlyOpen(entries, today)),
@@ -317,7 +317,7 @@ export async function getCoverageStats(): Promise<{
 export async function getJobDetail(id: string): Promise<JobDetail | null> {
   "use cache";
   cacheTag("jobs", "churches", `job-${id}`);
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   const supabase = createServiceClient();
 
@@ -349,7 +349,7 @@ export async function getJobDetail(id: string): Promise<JobDetail | null> {
 export async function getSimilarJobs(id: string, limit = 4): Promise<JobCard[]> {
   "use cache";
   cacheTag("jobs", "churches");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   const entries = onlyOpen(await fetchOpenCards(), today);
 
@@ -390,7 +390,7 @@ async function fetchCardFields(id: string): Promise<JobCardFields | null> {
 export async function getChurchOpenJobs(churchId: string, excludeId?: string): Promise<JobCard[]> {
   "use cache";
   cacheTag("jobs", "churches");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   const { data, error } = await createServiceClient()
     .from("jobs")
@@ -413,7 +413,7 @@ export async function getChurchOpenJobs(churchId: string, excludeId?: string): P
 export async function getSearchSuggestions(): Promise<string[]> {
   "use cache";
   cacheTag("jobs", "churches");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   const counts = new Map<string, number>();
   const bump = (term: string | null | undefined) => {

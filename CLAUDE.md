@@ -38,6 +38,7 @@
 | `/admin`, `/admin/jobs` | `'use cache'` (non-PII read) | 운영자 도구지만 공개·비개인 데이터(공고 집계·목록) — 모든 운영자 동일 뷰. 공개 헤더를 안 써서 ○ Static 유지. **접근 판정은 proxy가 담당** |
 | `/admin/review/**` | dynamic (`<Suspense>` + `requireOperator`) | **미검수 크롤 데이터**(`review_data`) — 캐시 금지(판정하는 순간 바뀐다). 포스터는 Storage signed URL이라 만료가 있어 요청마다 만든다 |
 | `/admin/verify` | dynamic (`<Suspense>` + `requireOperator`) | 인증 신청 PII(담당자 실명·직분·이메일 + 증빙 서류) — 캐시 금지 + 페이지에서도 운영자 재확인 |
+| `sitemap.xml` | **dynamic (`ƒ`) — 의도적** | 순수 정적 렌더에서는 Supabase 클라이언트의 인증 경로가 부르는 `Date.now()`가 금지돼, 캐시 무효화 뒤 **가장 먼저 재생성될 때 500 + 빈 sitemap**이 나간다(실측 2026-08-22). `connection()`으로 dynamic을 선언해 그 금지를 벗는다 — **데이터는 계속 `'use cache'`에서** 오고 요청마다 하는 일은 XML 조립뿐이다 |
 | `/login` | dynamic (`<Suspense>`) | `?next=`·`?error=` 의존. 폼은 **서버 렌더**(JS 없이도 제출 동작) |
 | `/mypage` 등 `(authed)` | dynamic (`<Suspense>` + `requireUser`) | 인증 의존 |
 
@@ -155,7 +156,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 > **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
 >
 > **배치 규칙**: 한 페이지 전용 뷰·폼·헬퍼는 **그 페이지 폴더에** 둔다(`jobs-view.tsx`·`job-form.tsx`). 두 곳 이상에서 쓰면 `components/`로 올린다. mutation은 그 라우트의 `actions.ts`.
-> **mutation `actions.ts`는 login·mypage(로그아웃)·admin/review(검수 판정)** — 공고 등록·수정은 Phase 1에서 각 라우트에 추가한다.
+> **mutation `actions.ts`는 login·mypage(로그아웃)·admin(캐시 새로고침)·admin/review(검수 판정)** — 공고 등록·수정은 Phase 1에서 각 라우트에 추가한다.
 
 ## Layer Responsibilities
 
@@ -169,6 +170,8 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 - `"use server"` 디렉티브. 모든 mutation(공고 등록·수정·삭제)은 여기서.
 - `createClient()` (server.ts, 쿠키 기반)으로 인증 보장된 호출
 - 끝에서 `updateTag(resource)` — read-your-own-writes
+- ⚠️ **`updateTag`은 Server Action에서만 부를 수 있다**(문서 명시 — route handler·client에서는 던진다). route handler에서 무효화해야 하면 `revalidateTag`뿐이고 그건 stale-while-revalidate라 **다음 방문자가 아직 옛 데이터를 본다**. 즉시 반영이 필요하면 경로가 Server Action이어야 한다.
+- ⚠️ **공고는 크롤러(별개 프로세스)가 `jobs`에 직접 쓴다** → 우리 캐시를 무효화할 방법이 없다. 그래서 공개 데이터는 `cacheLife("hours")`로 한 시간마다 스스로 갱신되고(바닥선), 즉시 반영이 필요할 때 운영자가 `/admin`의 **공개 목록 새로고침**(`refreshPublicCache`)을 누른다(가속기).
 - **데이터 CRUD용 REST API 라우트 만들지 않는다.** 외부 규약이 HTTP 엔드포인트를 강제할 때만 route handler 허용 — 현재 예외 2개뿐: `app/auth/callback`(OAuth 리다이렉트 수신), `app/api/payments/complete`(결제 검증).
 
 ### Query (`lib/queries/*.ts`) — 데이터 소스 seam
@@ -229,7 +232,7 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 1. **cached scope 안에서 `cookies()`/`headers()`/`searchParams` 절대 호출 X** — 검색·필터는 dynamic 페이지로
 2. **시간은 3층으로 다룬다**(DATA §6-2) — **저장**은 `timestamptz`(절대 시점) / `date`(사람이 정한 날짜), **판정**은 `todayInSeoul()`("오늘이 며칠인가"), **표시**는 `formatKstDate()`. `timestamptz`를 화면에 그대로 그리면 UTC가 나와 **날짜가 하루 어긋난다**. 시각 정렬은 문자열이 아니라 시점으로 비교한다.
 3. **`new Date()`·`Math.random()` 등 비결정적 값은 캐시 엔트리가 만들어질 때 한 번 평가되고, 그 엔트리가 사는 동안 고정된다.** 금지가 아니라 **성질**이다 — 필요한 정확도와 `cacheLife` 갱신 주기를 비교해 판단한다.
-   - **갱신 주기로 충분하면 cached scope 안에서 계산한다.** 예: 공고 만료 판정은 `cacheLife("days")`라 날짜가 하루마다 갱신된다 — 만료가 최대 하루 늦게 반영되지만 공고 목록 자체가 하루 캐시라 무해하다.
+   - **갱신 주기로 충분하면 cached scope 안에서 계산한다.** 예: 공고 만료 판정은 `cacheLife("hours")`라 날짜가 한 시간마다 갱신된다 — 만료가 최대 한 시간 늦게 반영되지만 공고 목록 자체가 한 시간 캐시라 무해하다.
    - **요청 시각 정확도가 필요하면** 캐시 밖에서 만들어 인자로 넘긴다. ⚠️ 단 그 **호출부가 dynamic이 되어 PPR을 잃는다** — `/jobs`·홈처럼 프리렌더되는 페이지에서는 `new Date()`가 **빌드 시각으로 굳는다**(`await connection()`으로 강제하면 `◐ PPR` → `ƒ`).
 4. **dynamic 데이터는 `<Suspense>`로 감싸기**
 5. **공고 상세는 빌드타임 prerender 안 함** — `generateStaticParams` 없이 `<Suspense>`로 감싼다. **데이터**는 `getJobDetail`의 `'use cache'`+`cacheTag("jobs", "job-<id>")`가 캐시하고, **페이지 셸은 요청마다 렌더**된다(셸까지 캐시하려면 별도 결정 필요). datePosted 등 시간 표시는 클라이언트에서 계산

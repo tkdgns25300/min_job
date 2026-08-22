@@ -17,7 +17,7 @@ import { CHURCH_FULL_COLUMNS, toChurch, type ChurchFullRow } from "./row-map";
 export async function getChurch(id: string): Promise<Church | null> {
   "use cache";
   cacheTag("churches");
-  cacheLife("days");
+  cacheLife("hours");
   const { data, error } = await createServiceClient()
     .from("churches")
     .select(CHURCH_FULL_COLUMNS)
@@ -33,7 +33,7 @@ export async function getChurch(id: string): Promise<Church | null> {
 export async function getIndexableChurchIds(): Promise<string[]> {
   "use cache";
   cacheTag("churches");
-  cacheLife("days");
+  cacheLife("hours");
   // 테이블 전체를 훑으므로 페이지를 이어 붙인다 — sitemap이 1,000곳에서 조용히 잘리면 안 된다
   const rows = await fetchAllRows<{ id: string }>("교회 목록", (from, to) =>
     createServiceClient()
@@ -55,7 +55,7 @@ export async function getIndexableChurchIds(): Promise<string[]> {
 export async function getChurchPastJobs(churchId: string): Promise<PastJob[]> {
   "use cache";
   cacheTag("jobs", "churches");
-  cacheLife("days");
+  cacheLife("hours");
   const today = todayInSeoul();
   const { data, error } = await createServiceClient()
     .from("jobs")

@@ -11,7 +11,8 @@ import type { Job } from "@/types/domain";
  * ⚠️ `new Date().toISOString()`을 쓰지 말 것: 서버 TZ가 UTC(Vercel)라 한국 00:00~09:00 사이엔
  *    **어제 날짜**가 나온다. 100% 한국 서비스라 마감일 하루가 통째로 어긋난다.
  * ⚠️ 호출 위치 주의 — cached scope 안에서 부르면 그 캐시 엔트리가 사는 동안 값이 고정된다
- *    (CLAUDE.md `'use cache'` 제약 #2). 공개 목록은 `cacheLife("days")`라 하루마다 갱신된다.
+ *    (CLAUDE.md `'use cache'` 제약 #2). 공개 목록은 `cacheLife("hours")`라 **한 시간마다** 갱신되고,
+ *    운영자가 `/admin`에서 새로고침을 누르면 그 즉시 다시 계산된다 — 날짜가 굳어 있는 창이 그만큼 짧다.
  */
 export function todayInSeoul(): string {
   // en-CA 로케일이 YYYY-MM-DD를 준다 — 수동 조립보다 짧고 자릿수 패딩 실수가 없다.

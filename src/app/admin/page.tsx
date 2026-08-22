@@ -3,6 +3,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getAdminOverview } from "@/lib/queries/jobs";
+import { RefreshButton } from "./refresh-button";
 
 export const metadata: Metadata = { title: "운영자 홈 | 민잡 운영자" };
 
@@ -45,7 +46,7 @@ export default async function AdminHomePage() {
       {/* 빠른 작업 */}
       <section className="mt-6">
         <h2 className="mb-2 text-sm font-bold">빠른 작업</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-start gap-2">
           {/* 건수를 여기 붙이지 않는다 — 미검수 데이터는 캐시할 수 없어 이 페이지가 ○ Static을 잃는다 */}
           <Link href="/admin/review" className={cn(buttonVariants())}>
             수집 검수
@@ -53,7 +54,12 @@ export default async function AdminHomePage() {
           <Link href="/admin/jobs" className={cn(buttonVariants({ variant: "outline" }))}>
             공고 관리
           </Link>
+          <RefreshButton />
         </div>
+        <p className="mt-2 text-xs leading-relaxed break-keep text-muted-foreground">
+          공개 목록은 <b>한 시간마다</b> 스스로 갱신됩니다. 크롤러가 새 공고를 공개한 뒤 바로 보이게
+          하려면 <b>공개 목록 새로고침</b>을 눌러 주세요 — 누르지 않아도 한 시간 안에 반영됩니다.
+        </p>
       </section>
 
       {/* 교회 인증 검수 — 유일한 검수 게이트(다음 단계 /admin/verify) */}
