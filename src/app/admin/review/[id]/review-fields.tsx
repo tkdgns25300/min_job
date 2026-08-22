@@ -16,7 +16,8 @@ import {
   type JobKind,
 } from "@/constants/domain";
 import { DENOMINATION_SOURCES } from "@/constants/review";
-import { denominationChoice, keyOf, type ReviewEdits } from "@/lib/review-edits";
+import { keyOf } from "@/lib/domain-enum";
+import { denominationChoice, type ReviewEdits } from "@/lib/review-edits";
 import { isDenominationPublished } from "@/lib/review-flags";
 
 // 고칠 수 있는 칸들. 짝 규칙(종류↔직분·직무, 교단↔근거)은 **컨트롤이 스스로 맞춘다** —

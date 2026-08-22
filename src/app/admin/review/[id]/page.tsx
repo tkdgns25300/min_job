@@ -7,7 +7,7 @@ import { todayInSeoul } from "@/lib/job-visibility";
 import { getQueueNavigation, getReviewDetail, type QueueNeighbor } from "@/lib/queries/review";
 import { FlagBadge, reviewHref } from "@/components/admin/review-row";
 import { CONFIDENCE_LEVELS } from "@/constants/review";
-import { enumLabel } from "@/lib/format";
+import { enumLabel } from "@/lib/domain-enum";
 import { PassthroughValues } from "./passthrough-values";
 import { ReviewForm } from "./review-form";
 import { SourcePane } from "./source-pane";

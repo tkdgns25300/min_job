@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { DEDUP_STATES, REVIEW_STATUSES } from "@/constants/review";
-import { enumLabel } from "@/lib/format";
+import { enumLabel } from "@/lib/domain-enum";
 import { toEdits } from "@/lib/review-edits";
 import type { ReviewRow } from "@/lib/queries/review";
 import { approveReview, rejectReview, type ReviewActionResult } from "../../actions";

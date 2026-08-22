@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { QUALIFICATIONS } from "@/constants/domain";
-import { enumLabel } from "@/lib/format";
+import { enumLabel } from "@/lib/domain-enum";
 import type { Tables } from "@/types/database";
 
 // 고칠 수 없고 **그대로 공개되는** 값 — 편집칸을 만들지 않은 이유는 `lib/review-edits.ts`에 적었다.

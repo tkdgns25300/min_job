@@ -15,6 +15,7 @@ import {
   type Region,
 } from "@/constants/domain";
 import { DENOMINATION_SOURCES, type DenominationSource } from "@/constants/review";
+import { keyOf, keysOf } from "@/lib/domain-enum";
 import type { GapInput } from "@/lib/review-flags";
 import type { Tables } from "@/types/database";
 
@@ -48,18 +49,6 @@ export interface ReviewEdits extends GapInput {
   pay_period: PayPeriod | null;
   pay_note: string | null;
   deadline: string | null;
-}
-
-/**
- * 닫힌 라벨 맵의 키만 통과 — DB CHECK가 이미 막지만, 타입을 좁히려면 런타임 확인이 필요하다.
- * `<select>`가 주는 문자열을 받는 화면 쪽도 이걸 쓴다 — 캐스트로 우기는 대신 모르는 값을 `null`로 만든다.
- */
-export function keyOf<K extends string>(map: Record<K, string>, value: string | null): K | null {
-  return value !== null && value in map ? (value as K) : null;
-}
-
-function keysOf<K extends string>(map: Record<K, string>, values: string[]): K[] {
-  return values.filter((v): v is K => v in map);
 }
 
 /**
