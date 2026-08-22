@@ -1,14 +1,17 @@
 import { cache } from "react";
 import { unstable_rethrow } from "next/navigation";
-import * as mock from "@/mocks";
 import { createClient } from "@/lib/supabase/server";
-import { CHURCH_VERIFICATION_STATUSES, type ChurchVerificationStatus } from "@/constants/domain";
-import { todayInSeoul, type HiddenReason } from "@/lib/job-visibility";
+import { CHURCH_VERIFICATION_STATUSES, DENOMINATIONS, REGIONS } from "@/constants/domain";
+import { keyOf } from "@/lib/domain-enum";
+import { hiddenReason, isFeaturedOn, isPubliclyOpen, todayInSeoul } from "@/lib/job-visibility";
+import type { HiddenReason } from "@/lib/job-visibility";
 import type { Church, CurrentUser, Job } from "@/types/domain";
+import { JOB_CARD_COLUMNS, JOB_FULL_COLUMNS, toJob, toJobCardFields } from "./row-map";
+import type { JobCardFields, JobCardRow } from "./row-map";
 
 // 데이터 소스 seam (인증 사용자) — 인증 페이지는 여기서만 가져온다.
-// ⚠️ 인증 의존 read는 'use cache' 금지 — 쿠키 세션 기반 server.ts를 쓴다(service.ts X).
-// getCurrentUser는 Supabase Auth 실배선 완료. 교회 대시보드·공고 조회는 아직 mock 위임.
+// ⚠️ 인증 의존 read는 **`'use cache'` 금지** — 쿠키 세션 기반 `server.ts`를 쓴다(`service.ts` X).
+//    그래서 `todayInSeoul()`을 여기서 만들어도 캐시에 굳지 않는다(CLAUDE.md 제약 #2와 사정이 다르다).
 
 // 마이페이지 관리 리스트 projection — 관리·표시에 필요한 필드만
 export type MyJob = Pick<
@@ -87,10 +90,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       name: displayName(data.user.user_metadata),
       churchId: profile?.church_id ?? null,
       churchName: profile?.churches?.name ?? null,
-      churchVerificationStatus:
-        status && status in CHURCH_VERIFICATION_STATUSES
-          ? (status as ChurchVerificationStatus)
-          : null,
+      churchVerificationStatus: keyOf(CHURCH_VERIFICATION_STATUSES, status ?? null),
       // 사람과 교회 양쪽이 승인돼야 교회 기능이 열린다(`hasChurchAccess`) — 여기선 교회 쪽만 담는다.
       churchIsVerified: profile?.churches?.verification_status === "APPROVED",
       churchRejectionReason: profile?.verification_rejection_reason ?? null,
@@ -118,7 +118,56 @@ function displayName(metadata: Record<string, unknown>): string | null {
  *    공개 목록 쪽(`queries/jobs.ts`)은 cached scope라 사정이 다르다(CLAUDE.md 제약 #2).
  */
 export async function getChurchDashboard(churchId: string): Promise<ChurchDashboard> {
-  return mock.getChurchDashboard(churchId, todayInSeoul());
+  const today = todayInSeoul();
+  const supabase = await createClient();
+  const [church, jobs] = await Promise.all([
+    supabase
+      .from("churches")
+      .select("name, denomination, region, city")
+      .eq("id", churchId)
+      .maybeSingle(),
+    supabase
+      .from("jobs")
+      .select(JOB_CARD_COLUMNS)
+      .eq("church_id", churchId)
+      .order("posted_at", { ascending: false }),
+  ]);
+  if (church.error) throw new Error(`교회 조회 실패: ${church.error.message}`);
+  if (jobs.error) throw new Error(`교회 공고 조회 실패: ${jobs.error.message}`);
+
+  const rows = (jobs.data as unknown as JobCardRow[]).map(toJobCardFields);
+  return {
+    // 교회명·교단·지역은 **인증된 교회 행**에서 온다 — 공고 화면과 달리 여기는 교회 자기 정보다
+    church: church.data
+      ? {
+          name: church.data.name,
+          denomination: keyOf(DENOMINATIONS, church.data.denomination),
+          region: keyOf(REGIONS, church.data.region),
+          city: church.data.city,
+        }
+      : null,
+    managed: rows.filter((j) => j.source === "CHURCH").map((j) => toMyJob(j, today)),
+    claimableCount: rows.filter((j) => j.source === "OPERATOR").length,
+  };
+}
+
+/** 마이페이지 관리 행 — 만료 판정을 붙여 내려보낸다(교회는 "왜 안 보이는지"를 알아야 한다) */
+function toMyJob(job: JobCardFields, today: string): MyJob {
+  return {
+    id: job.id,
+    title: job.title,
+    status: job.status,
+    featuredTier: isFeaturedOn(job, today) ? job.featuredTier : "NONE",
+    postedAt: job.postedAt,
+    deadline: job.deadline,
+    position: job.position,
+    role: job.role,
+    department: job.department,
+    employmentType: job.employmentType,
+    source: job.source,
+    isPubliclyOpen: isPubliclyOpen(job, today),
+    hiddenReason: hiddenReason(job, today),
+  };
 }
 
 /**
@@ -127,5 +176,17 @@ export async function getChurchDashboard(churchId: string): Promise<ChurchDashbo
  * 남의 교회 공고·미클레임 공고는 null → notFound
  */
 export async function getEditableJob(id: string, churchId: string): Promise<Job | null> {
-  return mock.getEditableJob(id, churchId);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(JOB_FULL_COLUMNS)
+    .eq("id", id)
+    .eq("church_id", churchId)
+    // ⚠️ 권한 조건을 **쿼리에 건다** — 읽어와서 JS로 거르면 남의 공고를 한 번은 메모리에 올린다.
+    //    `source=CHURCH`만 편집 대상이다(운영자 등록 공고는 클레임을 거쳐야 한다 · 대시보드와 같은 술어).
+    .eq("source", "CHURCH")
+    .maybeSingle();
+
+  if (error) throw new Error(`수정 대상 공고 조회 실패: ${error.message}`);
+  return data ? toJob(data) : null;
 }

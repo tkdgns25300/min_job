@@ -2,8 +2,8 @@ import { ALWAYS_OPEN_MAX_DAYS } from "@/constants/domain";
 import type { Job } from "@/types/domain";
 
 // 공고가 공개 목록에 뜨는지 판정 — DATA.md §6-1.
-// mock·DB 어느 쪽이든 같은 규칙을 써야 하므로 `mocks/`가 아니라 여기에 둔다
-// (mocks/ 폴더는 DB 전환 시 사라지지만 이 술어는 계속 필요하다 — MyJob.isPubliclyOpen 등).
+// 공개 목록·교회 화면·운영자 화면이 **같은 술어**를 써야 하므로 데이터 계층이 아니라 여기에 둔다.
+// ⚠️ 크롤러(min_job_agent)도 사본을 들고 있다 — 아래 `isPubliclyOpen` 주석의 통보 규칙을 볼 것.
 
 /**
  * 만료 판정 기준일 — **한국 시각(Asia/Seoul) 기준 YYYY-MM-DD**.
@@ -53,6 +53,23 @@ export function isPubliclyOpen(
   if (job.status !== "OPEN") return false;
   if (job.deadline) return job.deadline >= today;
   return addDays(job.postedAt, ALWAYS_OPEN_MAX_DAYS) >= today; // 상시모집은 게시 후 N일까지
+}
+
+/**
+ * 지금 유료 노출 중인가 — `featured_tier`는 **`now()` 없이 읽는 판정 캐시**고 기한은 `featured_until`이다
+ * (DATA §3·§7. 원장은 `job_promotions`). 그래서 만료 판정은 이 술어가, 날짜는 seam이 만들어 넘긴다.
+ *
+ * ⚠️ **기한이 없으면 노출로 보지 않는다.** 둘은 결제 시 함께 써지는 한 쌍이고(N주 → 종료일이 항상 있다)
+ *    짝을 강제하는 CHECK는 없다 — 기한 없는 등급은 덜 써진 캐시이거나 손으로 넣은 값이다. 그걸 노출로
+ *    읽으면 **끝나지 않는 무료 프리미엄**이 되고, 반대 방향(노출이 빠짐)은 교회가 알려줘 고쳐진다.
+ *    ⬜ 노출 적용 경로(`/mypage/church/promote` → `jobs` 쓰기)를 만들 때 이 판단을 다시 본다.
+ */
+export function isFeaturedOn(
+  job: Pick<Job, "featuredTier" | "featuredUntil">,
+  today: string,
+): boolean {
+  if (job.featuredTier === "NONE" || job.featuredUntil === null) return false;
+  return job.featuredUntil >= today;
 }
 
 /** 공개 목록에서 내려간 이유. null = 노출 중이거나 교회가 직접 마감한 것 */
