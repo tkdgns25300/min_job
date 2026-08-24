@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { TabBar } from "@/components/tab-bar";
 import { NativeSelect } from "@/components/ui/native-select";
 import { ReviewRowItem } from "@/components/admin/review-row";
+import { boardLabel } from "@/constants/review";
+import { ATTENTION_KINDS, type AttentionKind } from "@/lib/review-flags";
 import type { ReviewRow } from "@/lib/queries/review";
 
 // 큐는 서버가 이미 `review_status='PENDING'`으로 걸러 왔다 — 여기 필터는 **그 위에 얹는 것**이고
@@ -25,40 +27,45 @@ export function ReviewQueueView({
 }: {
   queue: ReviewRow[];
   done: ReviewRow[];
-  /** 처리한 것의 실제 개수 — `done`은 잘려 오므로 배지에 `done.length`를 쓰면 상한에서 멈춘다 */
+  /** 처리한 것의 실제 개수 — `done`은 잘려 오므로 탭에 `done.length`를 쓰면 상한에서 멈춘다 */
   doneTotal: number;
   /** 남은 것의 실제 개수 — `queue`도 잘려 온다(같은 이유) */
   pending: number;
   reviewedToday: number;
 }) {
   const [tab, setTab] = useState<Tab>("queue");
-  const [flag, setFlag] = useState("all");
+  const [kind, setKind] = useState<AttentionKind | "all">("all");
   const [board, setBoard] = useState("all");
   const [q, setQ] = useState("");
 
   const rows = tab === "queue" ? queue : done;
 
-  // 배지·게시판 선택지는 **지금 화면에 있는 값에서** 만든다 — 고정 목록을 두면 게시판이 31곳으로
-  // 늘 때마다 손대야 하고, 크롤러가 배지 근거를 바꾸면 조용히 어긋난다.
-  const flagOptions = useMemo(
-    () => [...new Set(rows.flatMap((r) => r.flags.map((f) => f.label)))].sort(),
-    [rows],
-  );
+  // 게시판 선택지는 **지금 화면에 있는 값에서** 만든다 — 고정 목록을 두면 게시판이 31곳으로
+  // 늘 때마다 손대야 한다. 확인 필요 유형은 반대로 고정이다: 화면에 있는 것만 모으면 첫 100건에
+  // 없는 유형이 **선택지에 아예 나타나지 않아** 그 유형만 골라 보는 일이 불가능해진다.
+  // 키를 앞세운다 — 운영자는 `CSU`로 기억하고 이름으로 확인한다. 정렬도 키 순(앞에 오는 값 순).
   const boardOptions = useMemo(
-    () => [...new Set(rows.map((r) => r.source.source_key))].sort(),
+    () =>
+      [...new Set(rows.map((r) => r.source.source_key))]
+        .sort()
+        // 이름을 아직 안 넣은 게시판은 `boardLabel`이 키를 그대로 돌려준다 — `KEY · KEY`가 되지 않게
+        .map((key) => {
+          const name = boardLabel(key);
+          return { key, label: name === key ? key : `${key} · ${name}` };
+        }),
     [rows],
   );
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
     return rows.filter((r) => {
-      if (flag !== "all" && !r.flags.some((f) => f.label === flag)) return false;
+      if (kind !== "all" && !r.attention.some((a) => a.kind === kind)) return false;
       if (board !== "all" && r.source.source_key !== board) return false;
       if (query && !`${r.row.church_name ?? ""} ${r.row.title ?? ""}`.toLowerCase().includes(query))
         return false;
       return true;
     });
-  }, [rows, flag, board, q]);
+  }, [rows, kind, board, q]);
 
   return (
     <div>
@@ -78,27 +85,27 @@ export function ReviewQueueView({
       <TabBar
         tabs={TABS}
         active={tab}
-        // 배지는 **전체 수**다 — 목록은 잘려 오므로 `length`를 쓰면 상한에서 멈춘다
+        // 탭 건수는 **전체 수**다 — 목록은 잘려 오므로 `length`를 쓰면 상한에서 멈춘다
         counts={{ queue: pending, done: doneTotal }}
         onChange={(key) => {
           setTab(key);
-          // 탭마다 있는 배지·게시판이 달라 선택값이 남으면 결과가 0건이 된다
-          setFlag("all");
+          // 탭마다 있는 게시판·유형이 달라 선택값이 남으면 결과가 0건이 된다
+          setKind("all");
           setBoard("all");
         }}
       />
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <NativeSelect
-          aria-label="배지 필터"
+          aria-label="확인 필요 유형 필터"
           className="w-auto"
-          value={flag}
-          onChange={(e) => setFlag(e.target.value)}
+          value={kind}
+          onChange={(e) => setKind(attentionKindOf(e.target.value))}
         >
-          <option value="all">배지 전체</option>
-          {flagOptions.map((f) => (
-            <option key={f} value={f}>
-              {f}
+          <option value="all">확인 필요 유형 전체</option>
+          {ATTENTION_KINDS.map(({ kind: key, label }) => (
+            <option key={key} value={key}>
+              {label}
             </option>
           ))}
         </NativeSelect>
@@ -109,9 +116,9 @@ export function ReviewQueueView({
           onChange={(e) => setBoard(e.target.value)}
         >
           <option value="all">게시판 전체</option>
-          {boardOptions.map((b) => (
-            <option key={b} value={b}>
-              {b}
+          {boardOptions.map(({ key, label }) => (
+            <option key={key} value={key}>
+              {label}
             </option>
           ))}
         </NativeSelect>
@@ -123,9 +130,6 @@ export function ReviewQueueView({
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <p className="ml-auto text-[11px] text-muted-foreground">
-          큐 = 검수 대기 · 오래된 순 (필터는 그 위에 얹습니다)
-        </p>
       </div>
 
       <div className="mt-4 overflow-hidden rounded-2xl border bg-card">
@@ -151,6 +155,12 @@ export function ReviewQueueView({
       )}
     </div>
   );
+}
+
+/** select 값 좁히기 — 캐스트를 한 곳에 가둔다(`lib/domain-enum`의 `keyOf`와 같은 관용구) */
+function attentionKindOf(value: string): AttentionKind | "all" {
+  const hit = ATTENTION_KINDS.find((option) => option.kind === value);
+  return hit ? hit.kind : "all";
 }
 
 /**

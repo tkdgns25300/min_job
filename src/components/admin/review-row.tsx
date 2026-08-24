@@ -2,31 +2,46 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { DEPARTMENTS, POSITIONS, REGIONS, type Position } from "@/constants/domain";
+import { boardLabel, REJECT_REASONS, REVIEW_STATUSES } from "@/constants/review";
 import { enumLabel } from "@/lib/domain-enum";
 import { positionLabel } from "@/lib/format";
-import { REJECT_REASONS, REVIEW_STATUSES } from "@/constants/review";
-import type { ReviewFlag } from "@/lib/review-flags";
+import type { Attention, AttentionLevel } from "@/lib/review-flags";
 import type { QueueNeighbor, ReviewRow } from "@/lib/queries/review";
 
 // 검수 큐 한 줄. **"왜 봐야 하나"가 이 행의 주인공**이다 — `confidence`는 등급만 말하고 이유를
-// 말하지 않으므로, 저장된 값에서 계산한 배지가 그 자리를 채운다(lib/review-flags).
+// 말하지 않으므로, 저장된 값에서 계산한 판정이 그 자리를 채운다(lib/review-flags).
 
-const FLAG_TONE: Record<ReviewFlag["tone"], string> = {
-  danger: "border-destructive/25 bg-destructive/8 text-destructive",
-  warn: "border-gold/40 bg-gold/10 text-gold-ink",
-  info: "border-primary/25 bg-primary/8 text-primary",
+/**
+ * 확인할 것 — **세 단계로 색이 갈린다**(lib/review-flags의 `AttentionLevel`).
+ *
+ * 처음엔 색 없는 한 줄 글이었는데, 판정이 여러 개 붙는 행에서 **급한 것과 참고가 같은 회색**이라
+ * 구별이 안 됐다(운영자 지적 2026-08-23). 색은 장식이 아니라 **행동이 다르다는 표시**다:
+ * 막힘 = 고쳐야 승인된다 · 판단 = 사람이 결론을 내야 한다 · 참고 = 알고만 있으면 된다.
+ */
+const LEVEL_SKIN: Record<AttentionLevel, string> = {
+  blocked: "border-destructive/30 bg-destructive/8 text-destructive font-bold",
+  judge: "border-gold/45 bg-gold/12 text-gold-ink font-semibold",
+  note: "border-border bg-muted/60 text-muted-foreground",
 };
 
-export function FlagBadge({ flag }: { flag: ReviewFlag }) {
+export function AttentionLine({ items }: { items: Attention[] }) {
+  if (items.length === 0) {
+    return <p className="text-xs text-muted-foreground">확인할 것 없음</p>;
+  }
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap",
-        FLAG_TONE[flag.tone],
-      )}
-    >
-      {flag.label}
-    </span>
+    <ul className="flex flex-wrap gap-1">
+      {items.map((item) => (
+        <li
+          key={item.kind}
+          className={cn(
+            "rounded border px-1.5 py-0.5 text-[11px] whitespace-nowrap",
+            LEVEL_SKIN[item.level],
+          )}
+        >
+          {item.label}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -62,7 +77,7 @@ export function reviewHref(row: QueueNeighbor): string {
 }
 
 export function ReviewRowItem({ item }: { item: ReviewRow }) {
-  const { row, source, flags } = item;
+  const { row, source, attention } = item;
   const isGroup = row.dedup_state === "UNCERTAIN" && row.dedup_key !== null;
   const pending = row.review_status === "PENDING";
 
@@ -76,19 +91,15 @@ export function ReviewRowItem({ item }: { item: ReviewRow }) {
             placeLabel(row),
             seatLabel(row) || "자리 미상",
             enumLabel(DEPARTMENTS, row.department),
-            source.source_key,
+            boardLabel(source.source_key),
           ]
             .filter(Boolean)
             .join(" · ")}
         </p>
       </div>
 
-      <div className="flex min-w-0 flex-wrap gap-1.5 sm:w-64 sm:shrink-0">
-        {flags.length > 0 ? (
-          flags.map((f) => <FlagBadge key={f.key} flag={f} />)
-        ) : (
-          <span className="text-xs text-muted-foreground">확인할 것 없음</span>
-        )}
+      <div className="min-w-0 sm:w-64 sm:shrink-0">
+        <AttentionLine items={attention} />
       </div>
 
       {/* 게시판에 올라온 날. `row.posted_at`을 쓰지 않는 이유는 그것이 묶음의 최신 게시일로
@@ -100,9 +111,9 @@ export function ReviewRowItem({ item }: { item: ReviewRow }) {
       <div className="flex shrink-0 items-center gap-2 sm:w-32 sm:justify-end">
         {pending ? (
           <>
-            {/* 저장만 해 둔 건 — 저장도 `reviewed_by`를 찍으므로(actions.ts) 손댄 흔적이 남는다 */}
+            {/* 판정을 되돌린 건 — 되돌리기는 `reviewed_by`를 지우지 않는다(actions.ts) */}
             {row.reviewed_by && (
-              <span className="text-[11px] text-muted-foreground">저장해 둠</span>
+              <span className="text-[11px] text-muted-foreground">되돌린 건</span>
             )}
             <Link
               href={reviewHref(row)}

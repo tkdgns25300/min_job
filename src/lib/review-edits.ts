@@ -5,6 +5,7 @@ import {
   JOB_KINDS,
   PAY_PERIODS,
   POSITIONS,
+  QUALIFICATIONS,
   REGIONS,
   type Denomination,
   type Department,
@@ -12,6 +13,7 @@ import {
   type JobKind,
   type PayPeriod,
   type Position,
+  type Qualification,
   type Region,
 } from "@/constants/domain";
 import { DENOMINATION_SOURCES, type DenominationSource } from "@/constants/review";
@@ -28,10 +30,10 @@ import type { Tables } from "@/types/database";
  * 고칠 수 있는 칸. `GapInput`을 확장하므로 **초안에 그대로 `promotionGaps`를 걸 수 있다** —
  * 승인 게이트가 저장된 행과 고치는 중인 초안에서 같은 답을 낸다.
  *
- * ⚠️ **여기 없는 칸은 원문 값이 그대로 공개된다**(요건·우대·제출서류·전형절차 배열, 근무일,
- *    모집인원, 시작시기, 자격, 복리후생, 주소). 편집칸을 안 만든 이유는 셋 다다: 목록 표시용이라
- *    틀려도 사고가 없고, 칸이 늘면 한 건에 드는 시간이 늘어 큐가 밀리고, 잘못된 값은 거절로
- *    걸러도 된다. 대신 화면은 그 값들을 **읽기 전용으로 보여준다** — 승인 판단에는 보이는 것이 필요하다.
+ * ⚠️ **여기 없는 칸은 원문 값이 그대로 공개된다**(근무일·모집인원·시작시기·복리후생). 편집칸을
+ *    안 만든 이유는 셋 다다: 표시용이라 틀려도 지원 결과가 안 바뀌고, 칸이 늘면 한 건에 드는
+ *    시간이 늘어 큐가 밀리고, 잘못된 값은 거절로 걸러도 된다. 대신 화면은 그 값들을 **읽기 전용으로
+ *    보여준다** — 승인 판단에는 보이는 것이 필요하다.
  */
 export interface ReviewEdits extends GapInput {
   job_kind: JobKind[];
@@ -49,7 +51,25 @@ export interface ReviewEdits extends GapInput {
   pay_period: PayPeriod | null;
   pay_note: string | null;
   deadline: string | null;
+  qualification: Qualification | null;
+  /** 교회 주소 — 지도 노출의 근거다(`churches.address`). 틀리면 엉뚱한 곳에 핀이 꽂힌다 */
+  address: string | null;
+  /**
+   * 목록 칸 다섯. **`requirements`가 편집 대상인 이유**는 `qualification`이 다섯 값뿐이어서
+   * `본 교단 신학대학원`·`총회 인준 신학교` 같은 조건을 담을 수 없고, 그것이 빠지면
+   * **다른 교단 지원자가 헛지원**하기 때문이다(크롤러 SPEC — 172건 중 23건에서 사라졌다).
+   * 나머지 넷도 지원자가 그대로 따라야 하는 것이라 같은 성질이다.
+   */
+  requirements: string[];
+  preferred: string[];
+  required_docs: string[];
+  optional_docs: string[];
+  process_steps: string[];
 }
+
+/** 목록 칸 다섯의 키 — 화면이 같은 컨트롤을 다섯 번 그린다(`ListRow`) */
+export type EditableList =
+  "requirements" | "preferred" | "required_docs" | "optional_docs" | "process_steps";
 
 /**
  * 저장된 행 → 편집 초안.
@@ -82,6 +102,13 @@ export function toEdits(row: Tables<"review_data">): ReviewEdits {
     pay_period: keyOf(PAY_PERIODS, row.pay_period),
     pay_note: row.pay_note,
     deadline: row.deadline,
+    qualification: keyOf(QUALIFICATIONS, row.qualification),
+    address: row.address,
+    requirements: row.requirements,
+    preferred: row.preferred,
+    required_docs: row.required_docs,
+    optional_docs: row.optional_docs,
+    process_steps: row.process_steps,
   };
 }
 
@@ -110,10 +137,20 @@ export function blankToNull(value: string | null): string | null {
   return value === null ? null : value.trim() || null;
 }
 
+/** 빈 줄은 값이 아니다 — 목록 칸에 `[""]`가 남으면 공개 화면에 빈 항목이 그려진다 */
+function cleanList(values: string[]): string[] {
+  return values.map((value) => value.trim()).filter(Boolean);
+}
+
 /** 텍스트 칸을 다듬은 초안. 화면(게이트 표시)과 Server Action(저장)이 같은 것을 봐야 한다 */
 export function normalizeEdits(e: ReviewEdits): ReviewEdits {
   return {
     ...e,
+    requirements: cleanList(e.requirements),
+    preferred: cleanList(e.preferred),
+    required_docs: cleanList(e.required_docs),
+    optional_docs: cleanList(e.optional_docs),
+    process_steps: cleanList(e.process_steps),
     church_name: blankToNull(e.church_name),
     title: blankToNull(e.title),
     role: blankToNull(e.role),
@@ -125,6 +162,7 @@ export function normalizeEdits(e: ReviewEdits): ReviewEdits {
     city: blankToNull(e.city),
     housing_note: blankToNull(e.housing_note),
     pay_note: blankToNull(e.pay_note),
+    address: blankToNull(e.address),
   };
 }
 
@@ -174,14 +212,17 @@ function same(a: unknown, b: unknown): boolean {
 }
 
 /**
- * 초안에서 **실제로 바뀐 칸만**.
+ * 초안과 **저장된 행이 다른 칸만**. UPDATE를 여기에만 걸어 이미 같은 값인 컬럼은 건드리지 않는다.
  *
- * 안 바꾼 칸까지 함께 쓰면, 운영자가 화면을 연 뒤 크롤러가 재구조화한 값을 **손댄 적 없는 칸까지
- * 통째로 덮어쓴다**. 바뀐 칸만 보내면 그 사고 범위가 "내가 고친 칸"으로 줄고, 그래도 짝이 어긋나면
- * DB CHECK가 막아 준다(조용히 틀리는 것보다 낫다).
+ * ⚠️ **"운영자가 손댄 칸만"이 아니다** — 비교 대상은 화면을 열 때의 값이 아니라 **저장 직전에 다시
+ *    읽은 행**이다(actions.ts `prepareEdits`). 그래서 운영자가 화면을 열어 둔 사이 크롤러가
+ *    재구조화한 칸은 "다른 칸"으로 잡혀 **운영자가 본 값으로 되돌아간다.**
+ *    → 그것이 **맞는 동작**이다: 승인은 "내가 본 값을 공개해도 된다"는 뜻이므로, 사람이 본 적 없는
+ *      새 값을 대신 내보내면 이 화면이 존재하는 이유가 사라진다. 창이 열려 있는 동안만 생기는
+ *      좁은 창이기도 하다(크롤러는 `reviewed_by`가 빈 행만 재구조화한다).
  *
  * 짝(`job_kind`↔`position`·`role`, `denomination`↔`denomination_source`)은 화면 컨트롤이 언제나
- * 함께 움직이므로 한쪽만 빠지는 일이 없다.
+ * 함께 움직이므로 한쪽만 빠지는 일이 없다. 그래도 어긋나면 DB CHECK가 막는다.
  */
 export function changedEdits(edits: ReviewEdits, original: ReviewEdits): Partial<ReviewEdits> {
   // Object.fromEntries는 타입을 잃는다 — 값의 출처가 같은 타입의 `edits`라 되돌려 붙여도 안전하다

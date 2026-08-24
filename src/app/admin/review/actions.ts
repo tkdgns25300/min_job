@@ -16,14 +16,17 @@ import { promotionGaps } from "@/lib/review-flags";
 import { createClient } from "@/lib/supabase/server";
 import type { TablesUpdate } from "@/types/database";
 
-// 수집 검수 판정 — `/admin/review**` 세 화면이 함께 쓴다(같은 규칙으로 같은 테이블을 쓰므로
-// 라우트마다 복제하지 않는다. CLAUDE.md 배치 규칙의 "라우트 기능 폴더 공용 파일").
+// 수집 검수 판정 — **단건과 묶음 두 화면**이 함께 쓴다(큐 목록은 판정하지 않는다). 같은 규칙으로
+// 같은 테이블을 쓰므로 라우트마다 복제하지 않는다(CLAUDE.md 배치 규칙의 "라우트 기능 폴더 공용 파일").
 //
 // ⚠️ **`jobs`에 쓰지 않는다.** 승인은 "공개해도 된다"는 표시일 뿐이고 INSERT는 크롤러가 다음
 //    실행에 한다(가드레일 #1 · SPEC). 그래서 `updateTag`도 부르지 않는다 — 이 화면엔 캐시가
 //    없고(`lib/queries/review.ts`), 공개 목록(`jobs`)을 바꾸는 것은 이 액션이 아니다.
 // ⚠️ **`reject_reason`은 항상 `OPERATOR`다.** `DUPLICATE`로 쓰면 크롤러가 자기 판정으로 보고
 //    다음 실행에 되돌린다(constants/review의 경고).
+// ⛔ **"저장만"은 없다**(2026-08-23 · 운영자 판단). 판정하는 두 길(승인·거절)이 이미 `reviewed_by`를
+//    찍으므로 "사람이 손댔다"는 표시에 빠지는 구멍이 없다. 오히려 저장만이 있으면 **판정하지 않은
+//    행에 도장이 찍혀** 크롤러의 재구조화가 그 행을 건너뛴다 — 반쯤 고친 AI 초안이 영구히 굳는다.
 
 /** 실패만 말이 필요하다 — 성공하면 화면이 이동하거나 자기 상태로 안다 */
 export type ReviewActionResult = { ok: true } | { ok: false; message: string };
@@ -32,27 +35,6 @@ const QUEUE_PATH = "/admin/review";
 const GONE = "이미 없는 항목입니다. 큐를 새로 불러 주세요.";
 const ALREADY = "이미 처리된 항목입니다. 큐를 새로 불러 주세요.";
 const RACED = "다른 곳에서 먼저 처리됐습니다. 큐를 새로 불러 주세요.";
-
-/**
- * 저장만 — 판정은 `PENDING` 그대로. 한 건을 한 번에 못 끝낼 때 쓴다.
- *
- * ⚠️ **여기서도 `reviewed_by`를 찍는다.** 그 칸이 "사람이 손댔다"의 정본이고, 비어 있으면
- *    **다음 재구조화가 사람의 교정을 AI 초안으로 되돌린다**(크롤러가 "지금 못 막는 유일한 구멍").
- */
-export async function saveReview(
-  id: string,
-  draft: ReviewEdits,
-  note: string,
-): Promise<ReviewActionResult> {
-  const operator = await requireOperator();
-  const prepared = await prepareEdits(id, draft);
-  if (!prepared.ok) return prepared;
-  return write(id, {
-    ...prepared.changed,
-    review_note: blankToNull(note),
-    ...stamp(operator.email),
-  });
-}
 
 /**
  * 승인 — 고친 값을 저장하고 `APPROVED`로 표시한다. 공개는 크롤러의 다음 실행이 한다.

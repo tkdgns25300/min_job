@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { AttentionLine, reviewHref } from "@/components/admin/review-row";
+import { CONFIDENCE_LEVELS } from "@/constants/review";
 import { requireOperator } from "@/lib/auth-guard";
+import { enumLabel } from "@/lib/domain-enum";
 import { todayInSeoul } from "@/lib/job-visibility";
 import { getQueueNavigation, getReviewDetail, type QueueNeighbor } from "@/lib/queries/review";
-import { FlagBadge, reviewHref } from "@/components/admin/review-row";
-import { CONFIDENCE_LEVELS } from "@/constants/review";
-import { enumLabel } from "@/lib/domain-enum";
-import { PassthroughValues } from "./passthrough-values";
 import { ReviewForm } from "./review-form";
-import { SourcePane } from "./source-pane";
+import { SourcePane, sourceShape, type SourceShape } from "./source-pane";
 
 export const metadata: Metadata = { title: "공고 검수 | 민잡 운영자" };
 
@@ -18,7 +17,7 @@ export const metadata: Metadata = { title: "공고 검수 | 민잡 운영자" };
 // 포스터 signed URL 만료). 셸에 정적으로 그릴 것이 없어 전체를 <Suspense>로 감싼다.
 export default function ReviewDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-8">
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:py-8">
       {/* `params`도 uncached다 — 페이지 본문에서 await하면 셸까지 프리렌더가 막힌다(cacheComponents) */}
       <Suspense fallback={<DetailSkeleton />}>
         <DetailContent params={params} />
@@ -26,6 +25,16 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
     </div>
   );
 }
+
+/**
+ * 열 너비는 **원문 형태가 정한다**(`sourceShape`). 반반으로 고정하면 포스터가 좁아 확대해야
+ * 읽히고, 원문을 못 받은 건은 빈 상자가 화면 절반을 먹는다.
+ */
+const COLUMNS: Record<SourceShape, string> = {
+  image: "lg:grid-cols-[58fr_42fr]",
+  text: "lg:grid-cols-[46fr_54fr]",
+  none: "lg:grid-cols-[32fr_68fr]",
+};
 
 async function DetailContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -35,7 +44,7 @@ async function DetailContent({ params }: { params: Promise<{ id: string }> }) {
   const [detail, nav] = await Promise.all([getReviewDetail(id), getQueueNavigation(id)]);
   if (!detail) notFound();
 
-  const { row, flags } = detail;
+  const { row, attention } = detail;
 
   return (
     <>
@@ -58,24 +67,22 @@ async function DetailContent({ params }: { params: Promise<{ id: string }> }) {
         <h1 className="mt-0.5 text-xl font-bold tracking-tight break-keep">
           {row.title ?? "제목 없음"}
         </h1>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          {flags.map((flag) => (
-            <FlagBadge key={flag.key} flag={flag} />
-          ))}
-          {/* 등급은 이유를 말하지 않으므로 배지 뒤에 보조로만 둔다(constants/review) */}
-          <span className="text-[11px] text-muted-foreground">
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          {/* 판정 문장은 `AttentionLine`이 통째로 만든다 — 빈 경우의 문구까지 그쪽 것이다 */}
+          <AttentionLine items={attention} />
+          {/* 등급은 이유를 말하지 않으므로 보조로만 둔다(constants/review) */}
+          <p className="text-xs text-muted-foreground">
             크롤러 판단: {enumLabel(CONFIDENCE_LEVELS, row.confidence)}
-          </span>
+          </p>
         </div>
       </header>
 
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
-        <SourcePane detail={detail} />
-        <ReviewForm detail={detail} today={todayInSeoul()} />
-      </div>
-
-      <div className="mt-4">
-        <PassthroughValues row={row} />
+      <div className={`mt-4 grid items-start gap-4 ${COLUMNS[sourceShape(detail)]}`}>
+        {/* 원문은 붙어 있어야 한다 — 값을 아래로 훑는 동안 포스터가 화면에서 나가면 대조가 끊긴다 */}
+        <div className="lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto">
+          <SourcePane detail={detail} />
+        </div>
+        <ReviewForm row={row} today={todayInSeoul()} />
       </div>
     </>
   );

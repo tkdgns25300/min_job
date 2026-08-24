@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { requireOperator } from "@/lib/auth-guard";
-import { getReviewGroup, getReviewRow } from "@/lib/queries/review";
 import { seatLabel } from "@/components/admin/review-row";
+import { DEPARTMENTS } from "@/constants/domain";
+import { requireOperator } from "@/lib/auth-guard";
+import { enumLabel } from "@/lib/domain-enum";
+import { getReviewGroup, getReviewRow } from "@/lib/queries/review";
 import { GroupView } from "./group-view";
 
 export const metadata: Metadata = { title: "묶음 판정 | 민잡 운영자" };
@@ -47,12 +49,17 @@ async function GroupContent({ params }: { params: Promise<{ id: string }> }) {
 
       <header className="mt-4">
         <p className="text-xs font-bold text-primary">{row.church_name ?? "교회명 없음"}</p>
+        {/* 제목에 자리 이름을 넣지 않는다 — 직분이 `ETC`면 "기타 — 같은 자리인가"가 되어
+            무슨 화면인지 알 수 없다. 묻는 것은 늘 같으므로 **건수**로 말한다 */}
         <h1 className="mt-0.5 text-xl font-bold tracking-tight break-keep">
-          {seatLabel(row, { full: true }) || "자리 미상"} — 같은 자리인가
+          이 {members.length}건이 같은 자리인가?
         </h1>
         <p className="mt-1 text-sm break-keep text-muted-foreground">
-          크롤러가 <b>같은 자리인지 스스로 정할 수 없다</b>고 넘긴 건입니다. 한 건씩 보면 판단이 안
-          되므로 묶음을 나란히 놓습니다.
+          {[seatLabel(row, { full: true }), enumLabel(DEPARTMENTS, row.department)]
+            .filter(Boolean)
+            .join(" · ") || "자리 미상"}{" "}
+          — 크롤러가 <b>같은 자리인지 스스로 정할 수 없다</b>고 넘긴 건입니다. 한 건씩 보면 판단이
+          안 되므로 묶음을 나란히 놓습니다.
         </p>
       </header>
 

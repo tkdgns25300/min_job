@@ -6,12 +6,11 @@ import { useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { DEDUP_STATES, REVIEW_STATUSES } from "@/constants/review";
-import { enumLabel } from "@/lib/domain-enum";
+import { boardLabel } from "@/constants/review";
 import { toEdits } from "@/lib/review-edits";
 import type { ReviewRow } from "@/lib/queries/review";
 import { approveReview, rejectReview, type ReviewActionResult } from "../../actions";
-import { contactSummary, groupDifferences } from "./group-diff";
+import { groupDifferences, type GroupDifference } from "./group-diff";
 
 // 묶음 판정 — 크롤러가 "같은 자리인지 내가 정할 수 없다"고 넘긴 건. 한 건씩 보면 판단이 안 되므로
 // 묶음을 나란히 놓는다.
@@ -46,32 +45,26 @@ export function GroupView({ members, target }: { members: ReviewRow[]; target: R
 
   return (
     <>
-      <p className="rounded-xl border bg-muted/30 p-3 text-xs leading-relaxed break-keep text-muted-foreground">
-        묶음 키 <code className="font-mono">{target.row.dedup_key}</code> — 크롤러가 매 실행 다시
-        계산합니다. 여기서 고칠 수 없습니다.
-      </p>
-
-      <ol className="mt-4 divide-y overflow-hidden rounded-2xl border bg-card">
+      {/* 묶음 키·묶인 이유를 적던 상자는 없앴다(2026-08-23) — 갈리는 값이 아래에 건별로 다 나와
+          있어 같은 말을 두 번 하고, 키(`교회명:지역:직분:부서:R1`)는 읽을 사람이 없다 */}
+      <ol className="divide-y overflow-hidden rounded-2xl border bg-card">
         {members.map((member, index) => (
           <MemberRow
             key={member.row.id}
             member={member}
             index={index + 1}
             isTarget={member.row.id === target.row.id}
+            differences={differences}
+            at={index}
           />
         ))}
       </ol>
 
       <div className="mt-4 rounded-2xl border bg-card p-4 sm:p-5">
-        <p className="text-sm font-bold">
-          {differences.length > 0
-            ? `다른 점 — ${differences.join(" · ")}`
-            : "다른 점을 찾지 못했습니다"}
-        </p>
+        <p className="text-sm font-bold">이 건을 어떻게 할까요</p>
         <p className="mt-1 text-xs leading-relaxed break-keep text-muted-foreground">
-          {differences.length > 0
-            ? "담당자가 여럿인지, 한 사람이 값을 바꿔 다시 올렸는지를 보고 정합니다."
-            : "값이 같은데 크롤러가 확신하지 못한 건입니다 — 게시 시점과 원문을 비교해 주세요."}
+          담당자가 여럿이어서 자리가 여럿인지, 한 사람이 값을 바꿔 <b>같은 자리를 다시 올렸는지</b>
+          를 보고 정합니다. 게시일이 며칠 간격이고 접수 경로만 바뀌었다면 다시 올린 것입니다.
         </p>
 
         <label className="mt-4 block">
@@ -83,7 +76,8 @@ export function GroupView({ members, target }: { members: ReviewRow[]; target: R
           </span>
           <Textarea
             rows={2}
-            disabled={pending}
+            // 판정한 건에서는 저장할 경로가 없다 — 열어 두면 적어 놓고 사라지는 칸이 된다(단건과 같다)
+            disabled={pending || processed}
             placeholder="무엇을 보고 그렇게 판단했는지 — 중복 규칙을 고칠 때 이 기록이 근거가 됩니다"
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -146,46 +140,76 @@ export function GroupView({ members, target }: { members: ReviewRow[]; target: R
   );
 }
 
+/**
+ * 구성원 한 줄 — **제목이 첫 줄**이다. 접수 이메일을 앞세우면(이전 모양) 사람이 알아볼 수 없는
+ * 문자열이 주인공이 되고, 정작 "같은 글을 다시 올린 것인가"를 판단할 재료가 안 보인다.
+ * 갈리는 값은 **이 건의 값만** 뽑아 라벨과 함께 붙인다 — 표를 좌우로 훑지 않고 세로로 읽으면 된다.
+ */
 function MemberRow({
   member,
   index,
   isTarget,
+  differences,
+  at,
 }: {
   member: ReviewRow;
   index: number;
   isTarget: boolean;
+  differences: GroupDifference[];
+  /** 이 구성원이 묶음에서 몇 번째인가 — `differences[].values`의 첨자 */
+  at: number;
 }) {
   const { row, source } = member;
   return (
-    <li className={cn("flex flex-wrap gap-3 px-4 py-3 text-xs", isTarget && "bg-primary/5")}>
-      <span className="w-5 shrink-0 font-bold tabular-nums text-muted-foreground">{index}</span>
+    <li className={cn("flex gap-3 px-4 py-3 text-xs", isTarget && "bg-primary/5")}>
+      <span className="w-4 shrink-0 pt-0.5 font-bold tabular-nums text-muted-foreground">
+        {index}
+      </span>
       <div className="min-w-0 flex-1">
-        <p className="font-semibold break-all">{contactSummary(row)}</p>
+        <p className="font-semibold break-keep">{row.title ?? "제목 없음"}</p>
+        {/* `source_data.posted_on` — `review_data.posted_at`은 묶음의 최신 게시일로 덮인다(seam 주석) */}
         <p className="mt-0.5 text-muted-foreground">
-          {/* `source_data.posted_on` — `review_data.posted_at`은 묶음의 최신 게시일로 덮인다(seam 주석) */}
-          {[source.source_key, `${source.posted_on} 게시`, enumLabel(DEDUP_STATES, row.dedup_state)]
-            .filter(Boolean)
-            .join(" · ")}
+          {boardLabel(source.source_key)} · {source.posted_on} 게시
         </p>
+        {differences.length > 0 && (
+          <dl className="mt-1.5 space-y-0.5">
+            {differences.map(({ label, values }) => (
+              <div key={label} className="flex gap-2">
+                <dt className="w-16 shrink-0 text-muted-foreground">{label}</dt>
+                <dd className="min-w-0 flex-1 break-all">
+                  {values[at] || <span className="text-muted-foreground">없음</span>}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </div>
-      <div className="shrink-0 text-right">
-        {isTarget && <span className="font-bold text-primary">이 건 · </span>}
-        <span className="text-muted-foreground">
-          {enumLabel(REVIEW_STATUSES, row.review_status)}
-        </span>
+      <div className="w-20 shrink-0 text-right">
+        <p className={cn("font-bold", isTarget ? "text-primary" : "text-muted-foreground")}>
+          {memberState(member, isTarget)}
+        </p>
         {row.published_job_id && (
-          <>
-            <br />
-            <Link
-              href={`/jobs/${row.published_job_id}`}
-              target="_blank"
-              className="font-semibold text-primary underline underline-offset-2"
-            >
-              공개된 공고 보기 ↗
-            </Link>
-          </>
+          <Link
+            href={`/jobs/${row.published_job_id}`}
+            target="_blank"
+            className="font-semibold text-primary underline underline-offset-2"
+          >
+            공고 보기 ↗
+          </Link>
         )}
       </div>
     </li>
   );
+}
+
+/**
+ * 이 구성원이 지금 어떤 상태인가. `dedup_state`는 쓰지 않는다 — 묶음 전원이 `UNCERTAIN`이라
+ * 줄마다 같은 말이 반복되기만 한다(이 화면 자체가 그 뜻이다).
+ */
+function memberState({ row }: ReviewRow, isTarget: boolean): string {
+  if (isTarget) return "판정 대상";
+  if (row.published_job_id) return "공개됨";
+  if (row.review_status === "REJECTED") return "거절됨";
+  if (row.review_status === "APPROVED") return "공개 대기";
+  return "검수 대기";
 }
