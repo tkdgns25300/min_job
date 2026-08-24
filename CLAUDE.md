@@ -106,7 +106,9 @@ src/
 │   │   ├── layout.tsx             admin shell (noindex) — page.tsx·jobs/만 ○ Static
 │   │   ├── page.tsx · jobs/ · verify/(PII — 페이지에서도 requireOperator)
 │   │   └── review/                수집 검수 — page(큐) · review-queue-view · actions.ts(공용) ·
-│   │                              [id]/(단건: review-form·review-fields·source-pane·passthrough-values) ·
+│   │                              [id]/(단건: review-form(상태·판정 바·탭) · value-list(공개 상세와 같은 구획) ·
+│   │                                    value-rows(키·라벨·개수 단일 소스) · value-row(줄·펼침·확인) ·
+│   │                                    source-pane · poster-view · public-preview) ·
 │   │                              [id]/group/(묶음: group-view·group-diff)
 │   ├── login/                     Google OAuth — layout(전용 미니멀 셸) · page ·
 │   │                              login-form(서버) · submit-button(client) · actions.ts
@@ -136,7 +138,7 @@ src/
 │   │                              + row-map.ts(DB 행 → 도메인 타입) · fetch-all.ts(1,000행 상한 페이징)
 │   │                              둘 다 queries 내부 전용
 │   ├── domain-enum.ts             닫힌 라벨 맵 ↔ DB 문자열(keyOf·keysOf·enumLabel) — 캐스트를 한 곳에 가둔다
-│   ├── review-flags.ts            검수 배지·승격 필수 6칸 판정(순수) — 목록·단건이 같은 답을 낸다
+│   ├── review-flags.ts            검수 "확인할 것"·승격 필수 6칸 판정(순수) — 목록·필터·단건이 한 답을 쓴다
 │   ├── review-edits.ts            검수가 고칠 수 있는 칸 + CHECK 짝 규칙(순수) — 화면·액션 공용
 │   ├── job-visibility.ts          만료 판정 단일 소스(todayInSeoul·isPubliclyOpen·hiddenReason)
 │   ├── job-church.ts              공고↔교회 파생 — church_id가 null일 수 있어 생긴 로직
