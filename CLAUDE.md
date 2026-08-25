@@ -151,7 +151,7 @@ src/
 │   │                              + row-map.ts(DB 행 → 도메인 타입) · fetch-all.ts(1,000행 상한 페이징)
 │   │                              둘 다 queries 내부 전용
 │   ├── domain-enum.ts             닫힌 라벨 맵 ↔ DB 문자열(keyOf·keysOf·enumLabel) — 캐스트를 한 곳에 가둔다
-│   ├── queries/crawl.ts           마지막 수집 실행 — 크롤러 소유 표를 **읽기만**(경보 판정 X)
+│   ├── queries/crawl.ts           마지막 수집 실행 + 실패 게시판 키 — 크롤러 소유 표를 **읽기만**(경보 판정 X)
 │   ├── review-flags.ts            검수 "확인할 것"·승격 필수 6칸 판정(순수) — 목록·필터·단건이 한 답을 쓴다
 │   ├── review-edits.ts            검수가 고칠 수 있는 칸 + CHECK 짝 규칙(순수) — 화면·액션 공용
 │   ├── job-edits.ts               공개된 공고를 고칠 수 있는 칸 + `jobs` CHECK 짝 규칙(순수)
@@ -205,7 +205,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
   - `users.ts` **전체**(`getCurrentUser`·`getChurchDashboard`·`getEditableJob`) — 모두 로그인 사용자에 종속돼 방문자마다 결과가 다르다. `getCurrentUser`는 `server.ts`(쿠키 세션)를 쓰고 `React.cache`로 요청당 1회만 왕복한다 — 신원은 `auth.users`(Auth API), 소속·인증상태는 **`public.users` + `churches` 조인**에서 온다(`auth` 스키마는 PostgREST JOIN이 안 돼 프로필을 복제해 둔다).
   - `verifications.ts` — 인증 신청 PII(가드레일 #3). `server.ts`. ⚠️ **`church_verifications` 테이블은 없다** — 신청은 `users.verification_*` + `churches` 행에 나뉘어 있고 이 함수가 조인해 조립한다(DATA §3).
   - `review.ts` — **미검수 크롤 데이터**(`review_data`). 판정하는 순간 바뀌므로 캐시하면 방금 처리한 건이 큐에 남는다. 컬럼명도 여기만 snake_case를 유지한다(크롤러 소유 테이블을 직접 편집하는 도구라 명세와 1:1로 대조해야 한다).
-  - `crawl.ts` — **크롤 실행 기록**(`crawl_run`). 크롤러가 우리 앱 밖에서 쓰므로 무효화할 방법이 없고, "마지막 수집이 언제인가"는 캐시된 답이 무의미한 질문이다. 같은 이유로 snake_case 유지. ⛔ **경보 판정을 옮겨오지 않는다** — 죽음(3시간)·연속 실패(2회)·빈 목록(2회)은 크롤러 `alerts_for`가 정본이고, 사본을 만들면 두 화면이 다른 말을 한다(`isPubliclyOpen`과 같은 이유).
+  - `crawl.ts` — **크롤 실행 기록**(`crawl_run`). 크롤러가 우리 앱 밖에서 쓰므로 무효화할 방법이 없고, "마지막 수집이 언제인가"는 캐시된 답이 무의미한 질문이다. 같은 이유로 snake_case 유지. ⛔ **경보 판정을 옮겨오지 않는다** — 죽음(3시간)·연속 실패(2회)·빈 목록(2회)은 크롤러 `alerts_for`가 정본이고, 사본을 만들면 두 화면이 다른 말을 한다(`isPubliclyOpen`과 같은 이유). 반면 **실패한 게시판 이름과 마지막 실행 시각은 사실이라 그대로 쓴다** — 특히 "너무 오래 안 돌았나"(`CRAWL_OVERDUE_HOURS` · `constants/review.ts`)는 **크롤러가 답할 수 없는 질문**이다(프로세스가 안 뜨면 아무것도 기록하지 않는다). ⚠️ **끊긴 실행은 `finished_at`이 채워지고 `sources_ok`가 손대지 않은 게시판까지 센다** — 그대로 그리면 "전부 성공"이 되므로 `aborted`를 따로 넘긴다.
   - 이 함수들은 **dynamic 페이지의 `<Suspense>` 안·Server Action·route handler에서만** 호출한다(cached scope에서 부르면 빌드가 깨진다).
 
 ### Auth (`lib/auth.ts` · `lib/auth-guard.ts`)
