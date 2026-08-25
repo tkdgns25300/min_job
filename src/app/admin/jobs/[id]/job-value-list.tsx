@@ -5,6 +5,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
 import { ChipMultiSelect, ChipSelect } from "@/components/job/chip-select";
+import { Empty, Lines, ValueRow, ValueSection } from "@/components/admin/value-row";
+import {
+  ContactFields,
+  ContactValue,
+  CONTACT_KEYS,
+  HousingFields,
+  HousingValue,
+  parseAmount,
+} from "@/components/admin/value-fields";
 import {
   DENOMINATIONS,
   DEPARTMENTS,
@@ -16,72 +25,52 @@ import {
   REGIONS,
   type JobKind,
 } from "@/constants/domain";
-import { DENOMINATION_SOURCES } from "@/constants/review";
 import { enumLabel, keyOf } from "@/lib/domain-enum";
 import { payLabel, positionLabel } from "@/lib/format";
-import { denominationChoice, type EditableList, type ReviewEdits } from "@/lib/review-edits";
-import { isDenominationPublished } from "@/lib/review-flags";
-import type { Tables } from "@/types/database";
-import {
-  ContactFields,
-  ContactValue,
-  CONTACT_KEYS,
-  HousingFields,
-  HousingValue,
-  parseAmount,
-} from "@/components/admin/value-fields";
-import { Empty, Lines, ValueRow, ValueSection, type RowShared } from "./value-row";
-import type { RowKey } from "./value-rows";
+import type { EditableJobList, JobEdits } from "@/lib/job-edits";
 
-// 구조화된 값 전체.
+// 공개된 공고의 값 — 읽기가 기본, 고칠 때만 펼친다(줄·구획은 `components/admin/value-row`).
 //
-// **구획은 공개 상세 화면과 같다** — 머리(교회·제목·자리) → 모집 조건 → 자격 요건 → 우대 사항 →
-// 공고 안내 → 전형 절차 → 위치 → 지원 방법. 검수용으로 따로 지은 이름("누가 뽑나"·"어떤 자리")을
-// 쓰던 것을 걷어냈다(운영자 지적 2026-08-23): 검수는 "공개되면 이렇게 보인다"를 확인하는 일인데
-// 화면이 공개 화면과 다른 말로 나누면 머릿속에서 한 번 더 옮겨야 한다.
+// **구획은 공개 상세 화면과 같다** — 검수 화면과 같은 이유다: 운영자가 보는 것은 "지금 공개돼 있는
+// 모양"이고, 화면이 공개 화면과 다른 말로 나누면 머릿속에서 한 번 더 옮겨야 한다.
 //
-// 짝 규칙(종류↔직분·직무, 교단↔근거)은 컨트롤이 스스로 맞춘다(규칙 정본은 lib/review-edits.ts).
+// ⚠️ 검수 화면(`/admin/review/[id]`)의 값 목록과 줄이 비슷하지만 **합치지 않는다.** 제약이 다르고
+//    (lib/job-edits 머리말의 표), 저쪽엔 확인 체크·읽기 전용 칸이 있고 여기엔 없다. 조건문으로
+//    꿰면 양쪽 규칙이 서로 새어 든다 — 공유하는 것은 줄·구획 껍데기까지다.
+// ⚠️ `status`는 여기 없다 — 마감·다시 모집 전용 버튼이 쓴다(같은 컬럼에 쓰기 경로가 둘이면 갈라진다).
 //
-// ⚠️ 여기 몇 함수는 60줄을 넘는다(`IdentityRows`·`SummaryRows` 등). **분해를 검토하고 멈춘 것**이다:
-//    남은 것은 분기 없는 **선언적 줄 나열**이라, 줄마다 컴포넌트로 쪼개면 6-prop 껍데기만 늘고
-//    읽는 순서(= 공개 화면 순서)가 파일 안에서 흩어진다. 로직이 있는 것(`KindAndSeatRows`의 짝
-//    맞추기)과 재사용되는 것(`ListRow`)만 따로 뺐다.
+// ⚠️ 몇 함수는 60줄을 넘는다(`IdentityRows` 등). **분해를 검토하고 멈춘 것**이다: 남은 것은 분기
+//    없는 선언적 줄 나열이라 줄마다 컴포넌트로 쪼개면 prop 껍데기만 늘고 읽는 순서(= 공개 화면
+//    순서)가 흩어진다. 로직이 있는 것(`KindAndSeatRows`의 짝 맞추기)과 재사용되는 것(`ListRow`·
+//    `TextRow`)만 따로 뺐다 — 검수 화면(`/admin/review/[id]/value-list.tsx`)과 같은 기준이다.
 
-/** 바뀐 칸인지 묻는 함수 — 계산은 `changedEdits`가 이미 했다 */
-type Touched = (...keys: (keyof ReviewEdits)[]) => boolean;
-
-interface SectionProps extends RowShared {
-  draft: ReviewEdits;
-  patch: (partial: Partial<ReviewEdits>) => void;
-  touched: Touched;
+/** 구획·줄이 공통으로 받는 것 — `changed`는 위에서 `touched`로 접어 넘긴다(줄은 키만 물어본다) */
+interface SectionProps {
+  draft: JobEdits;
+  patch: (partial: Partial<JobEdits>) => void;
+  touched: (...keys: (keyof JobEdits)[]) => boolean;
 }
 
-export function ValueList({
+export function JobValueList({
   draft,
-  original,
-  changed,
   patch,
-  row,
-  editable,
-  checks,
-}: RowShared & {
-  draft: ReviewEdits;
-  patch: (partial: Partial<ReviewEdits>) => void;
-  /** 저장된 값 — 교단 판정 근거는 "손댔는가"로 정해지므로 원래 값을 알아야 한다 */
-  original: ReviewEdits;
-  /** 실제로 바뀐 칸(`changedEdits`) */
-  changed: Partial<ReviewEdits>;
-  /** 고칠 수 없는 값들의 원본 행 */
-  row: Tables<"review_data">;
+  changed,
+  postedAt,
+}: Omit<SectionProps, "touched"> & {
+  /** 실제로 바뀐 칸(`changedJobEdits`) — 줄마다 "고침"을 붙이는 판단 */
+  changed: Partial<JobEdits>;
+  /** 고칠 수 없는 값 — 크롤러가 재게시를 만나면 끌어올린다(크롤러 SPEC §4.2b). 보여는 준다 */
+  postedAt: string;
 }) {
-  const touched: Touched = (...keys) => keys.some((key) => key in changed);
-  const shared: SectionProps = { draft, patch, touched, editable, checks };
+  const touched = (...keys: (keyof JobEdits)[]) => keys.some((key) => key in changed);
+  const shared: SectionProps = { draft, patch, touched };
 
   return (
     <div className="space-y-3">
-      <HeadSection {...shared} original={original} row={row} />
-      <TermsSection {...shared} row={row} />
+      <HeadSection {...shared} postedAt={postedAt} />
+      <TermsSection {...shared} />
       <QualificationSection {...shared} />
+
       <PreferredSection {...shared} />
       <NoticeSection {...shared} />
       <ProcessSection {...shared} />
@@ -94,28 +83,26 @@ export function ValueList({
 function PreferredSection(props: SectionProps) {
   return (
     <ValueSection title="우대 사항">
-      <ListRow {...props} name="preferred" field="preferred" />
+      <ListRow {...props} field="preferred" label="우대" />
     </ValueSection>
   );
 }
 
 /** 공개 상세의 "공고 안내" — 방문자가 실제로 읽는 글. 상세 본문이 이 한 칸에서 나온다 */
-function NoticeSection({ draft, patch, touched, editable, checks }: SectionProps) {
+function NoticeSection({ draft, patch, touched }: SectionProps) {
   return (
     <ValueSection title="공고 안내">
       <ValueRow
-        name="description"
+        label="설명"
         required
-        editable={editable}
-        checks={checks}
         changed={touched("description")}
-        hint="AI가 쓴 요약입니다. 원문 문장을 그대로 붙이지 마세요(가드레일 #1)"
-        value={draft.description ?? <Empty required />}
+        hint="공개 상세의 본문입니다. 원문 문장을 그대로 옮기지 마세요 — 요약 + 출처 링크가 우리 방어선입니다(가드레일 #1)"
+        value={draft.description || <Empty required />}
       >
         <Textarea
           rows={6}
           aria-label="설명"
-          value={draft.description ?? ""}
+          value={draft.description}
           onChange={(e) => patch({ description: e.target.value })}
         />
       </ValueRow>
@@ -128,8 +115,8 @@ function ProcessSection(props: SectionProps) {
     <ValueSection title="전형 절차">
       <ListRow
         {...props}
-        name="processSteps"
         field="process_steps"
+        label="절차"
         hint="접수 방법도 여기 담습니다 — 지원자가 그대로 따라야 하는 것들입니다"
       />
     </ValueSection>
@@ -137,13 +124,11 @@ function ProcessSection(props: SectionProps) {
 }
 
 /** 공개 상세의 "위치" — 지도가 쓰는 값이라 우편 접수처와 섞이면 엉뚱한 곳에 핀이 꽂힌다 */
-function LocationSection({ draft, patch, touched, editable, checks }: SectionProps) {
+function LocationSection({ draft, patch, touched }: SectionProps) {
   return (
     <ValueSection title="위치">
       <ValueRow
-        name="address"
-        editable={editable}
-        checks={checks}
+        label="주소"
         changed={touched("address")}
         hint="지도에 핀을 꽂는 값입니다 — 우편 접수처(지원 방법)와 다른 값이니 섞지 마세요"
         value={draft.address ?? <Empty />}
@@ -160,81 +145,64 @@ function LocationSection({ draft, patch, touched, editable, checks }: SectionPro
   );
 }
 
+/** 공개 상세의 머리 — 방문자가 제목 아래에서 한눈에 보는 것들 */
 /**
  * 공개 상세의 **머리** — 방문자가 제목 아래에서 한눈에 보는 것들. 공개 화면은 이 부분을 왼쪽 머리와
  * 오른쪽 카드로 나눠 그리지만 값은 한 덩어리라 여기서는 한 구획으로 둔다.
  */
-function HeadSection({
-  original,
-  row,
-  ...section
-}: SectionProps & { original: ReviewEdits; row: Tables<"review_data"> }) {
+function HeadSection({ postedAt, ...section }: SectionProps & { postedAt: string }) {
   return (
     <ValueSection>
-      <IdentityRows {...section} original={original} />
+      <IdentityRows {...section} />
       <KindAndSeatRows {...section} />
-      <SummaryRows {...section} row={row} />
+      <SummaryRows {...section} postedAt={postedAt} />
     </ValueSection>
   );
 }
 
 /** 누구의 공고인가 — 교회명이 틀리면 다른 교회의 공고가 된다 */
-function IdentityRows({
-  draft,
-  patch,
-  touched,
-  editable,
-  checks,
-  original,
-}: SectionProps & { original: ReviewEdits }) {
-  const shared = { editable, checks };
+function IdentityRows({ draft, patch, touched }: SectionProps) {
   return (
     <>
       <ValueRow
-        name="churchName"
+        label="교회명"
         required
-        {...shared}
         changed={touched("church_name")}
-        hint="틀리면 다른 교회의 공고가 됩니다 — 포스터의 교회명과 글자까지 맞춰 주세요"
-        value={draft.church_name ?? <Empty required />}
+        hint="틀리면 다른 교회의 공고가 됩니다 — 비울 수 없습니다"
+        value={draft.church_name || <Empty required />}
       >
         <Input
           className="h-9"
           aria-label="교회명"
-          value={draft.church_name ?? ""}
+          value={draft.church_name}
           onChange={(e) => patch({ church_name: e.target.value })}
         />
       </ValueRow>
 
       <ValueRow
-        name="title"
+        label="제목"
         required
-        {...shared}
         changed={touched("title")}
-        hint="게시판 접두(공고·모집 등)는 크롤러가 걷어냅니다"
-        value={draft.title ?? <Empty required />}
+        value={draft.title || <Empty required />}
       >
         <Input
           className="h-9"
           aria-label="제목"
-          value={draft.title ?? ""}
+          value={draft.title}
           onChange={(e) => patch({ title: e.target.value })}
         />
       </ValueRow>
 
       <ValueRow
-        name="denomination"
-        {...shared}
+        label="교단"
         changed={touched("denomination")}
-        hint={`판정 근거 ${DENOMINATION_SOURCES[draft.denomination_source]} — 고치면 "사람이 확정"으로 바뀝니다`}
-        value={<DenominationValue draft={draft} />}
+        hint="미상이면 교단 필터에서 빠집니다. 공개 화면은 미상을 표시하지 않고 조각째 생략합니다"
+        value={enumLabel(DENOMINATIONS, draft.denomination) ?? <Empty />}
       >
         <NativeSelect
           aria-label="교단"
           value={draft.denomination ?? ""}
-          onChange={(e) =>
-            patch(denominationChoice(keyOf(DENOMINATIONS, e.target.value), original))
-          }
+          onChange={(e) => patch({ denomination: keyOf(DENOMINATIONS, e.target.value) })}
         >
           <option value="">미상</option>
           {Object.entries(DENOMINATIONS).map(([key, label]) => (
@@ -246,10 +214,9 @@ function IdentityRows({
       </ValueRow>
 
       <ValueRow
-        name="region"
-        {...shared}
+        label="지역"
         changed={touched("region", "city")}
-        hint="코드는 근거가 원문에 있는지만 봅니다 — 지역은 항상 눈으로 확인해 주세요. 비면 지역 검색에 걸리지 않습니다"
+        hint="비면 지역 검색에 걸리지 않습니다"
         value={
           [enumLabel(REGIONS, draft.region), draft.city].filter(Boolean).join(" ") || <Empty />
         }
@@ -282,22 +249,12 @@ function IdentityRows({
 }
 
 /** 자리에 딸린 조건 — 부서·고용형태·금액·마감일·게시일(공개 상세의 오른쪽 카드에 해당) */
-function SummaryRows({
-  draft,
-  patch,
-  touched,
-  editable,
-  checks,
-  row,
-}: SectionProps & { row: Tables<"review_data"> }) {
-  const shared = { editable, checks };
+function SummaryRows({ draft, patch, touched, postedAt }: SectionProps & { postedAt: string }) {
   return (
     <>
       <ValueRow
-        name="department"
-        {...shared}
+        label="부서"
         changed={touched("department")}
-        hint="크롤 공고의 69%가 비어 있습니다 — 없는 게 정상입니다"
         value={enumLabel(DEPARTMENTS, draft.department) ?? <Empty />}
       >
         <ChipSelect
@@ -308,8 +265,7 @@ function SummaryRows({
       </ValueRow>
 
       <ValueRow
-        name="employmentType"
-        {...shared}
+        label="고용형태"
         changed={touched("employment_type")}
         value={enumLabel(EMPLOYMENT_TYPES, draft.employment_type) ?? <Empty />}
       >
@@ -320,11 +276,10 @@ function SummaryRows({
         />
       </ValueRow>
 
-      <PayRow draft={draft} patch={patch} touched={touched} {...shared} />
+      <PayRow draft={draft} patch={patch} touched={touched} />
 
       <ValueRow
-        name="deadline"
-        {...shared}
+        label="마감일"
         changed={touched("deadline")}
         hint="비우면 상시모집 — 게시일부터 90일까지만 목록에 뜹니다"
         value={draft.deadline ?? "상시모집"}
@@ -338,17 +293,13 @@ function SummaryRows({
         />
       </ValueRow>
 
-      {/* 공개 상세가 "○일 전"으로 그리는 값 — 고칠 수 없다. 원문 게시일(왼쪽 열)과 다를 수 있는데,
-          중복 묶음의 **최신 게시일로 덮이는 파생값**이라서다(크롤러가 끌어올린다) */}
+      {/* 공개 상세가 "○일 전"으로 그리는 값 — 크롤러가 재게시를 만나면 끌어올리므로 우리 것이 아니다 */}
       <ValueRow
-        name="postedAt"
-        {...shared}
+        label="게시일"
         value={
           <>
-            {row.posted_at}
-            <span className="ml-1.5 text-xs text-muted-foreground">
-              묶음 최신 게시일로 덮이는 파생값
-            </span>
+            {postedAt}
+            <span className="ml-1.5 text-xs text-muted-foreground">수집이 관리 · 고칠 수 없음</span>
           </>
         }
       />
@@ -358,12 +309,12 @@ function SummaryRows({
 
 /**
  * 종류·직분·직무명 — 셋이 한 덩어리다. 종류를 빼면 짝이 되는 칸도 함께 비워야 하고
- * (DB CHECK `review_data_kind_matches_seat`), 그래서 줄을 따로 두면 규칙이 두 곳으로 갈린다.
+ * (CHECK `jobs_kind_matches_seat`), 그래서 줄을 따로 두면 규칙이 두 곳으로 갈린다.
+ * ⚠️ `jobs`는 종류가 **비어 있을 수 없다** — 검수와 다른 점이다(lib/job-edits).
  */
-function KindAndSeatRows({ draft, patch, touched, editable, checks }: SectionProps) {
+function KindAndSeatRows({ draft, patch, touched }: SectionProps) {
   const ministry = draft.job_kind.includes("MINISTRY");
   const general = draft.job_kind.includes("GENERAL");
-  const shared = { editable, checks };
 
   const pickKinds = (next: JobKind[]) =>
     patch({
@@ -375,22 +326,20 @@ function KindAndSeatRows({ draft, patch, touched, editable, checks }: SectionPro
   return (
     <>
       <ValueRow
-        name="kind"
+        label="종류"
         required
-        {...shared}
         changed={touched("job_kind")}
-        hint="사역직에는 직분이, 일반직에는 직무명이 반드시 짝으로 있어야 저장됩니다"
+        hint="하나 이상 골라야 합니다. 사역직에는 직분이, 일반직에는 직무명이 짝으로 있어야 저장됩니다"
         value={draft.job_kind.map((kind) => JOB_KINDS[kind]).join(" · ") || <Empty required />}
       >
         <ChipMultiSelect options={JOB_KINDS} value={draft.job_kind} onChange={pickKinds} />
       </ValueRow>
 
       <ValueRow
-        name="seat"
+        label="직분·직무"
         required
-        {...shared}
         changed={touched("position", "role")}
-        hint="한 글에 자리가 여럿이면 직분을 모두 고릅니다"
+        hint="한 공고에 자리가 여럿이면 직분을 모두 고릅니다"
         value={
           [positionLabel(draft.position, { full: true }), draft.role]
             .filter(Boolean)
@@ -421,23 +370,23 @@ function KindAndSeatRows({ draft, patch, touched, editable, checks }: SectionPro
   );
 }
 
-/** 금액 한 줄 — 주기·범위·비정형이 짝이라 한 칸에 묶여 있다(컨트롤이 셋) */
-function PayRow({ draft, patch, touched, editable, checks }: SectionProps) {
+/**
+ * 금액 한 줄 — 주기·범위·비정형이 짝이라 한 칸에 묶여 있다.
+ * ⚠️ `jobs.pay_period`는 **NOT NULL**이라 비울 수 없다(검수와 다른 점). 금액이 없어도 주기는 남는다.
+ */
+function PayRow({ draft, patch, touched }: SectionProps) {
   return (
     <ValueRow
-      name="pay"
-      // 사역직은 "사례비", 일반직은 "급여" — 공개 화면과 같은 말이어야 한다(`payLabel`이 정본)
       label={payLabel(draft.job_kind)}
-      editable={editable}
-      checks={checks}
       changed={touched("pay_min", "pay_max", "pay_period", "pay_note")}
-      hint="주기를 정할 수 없으면 금액도 비웁니다 — 주기 없이 내보내면 연봉이 월급으로 공개됩니다"
+      hint="금액을 비우면 공개 화면은 비정형 표현을, 그것도 없으면 “협의”를 보여줍니다"
       value={<PayValue draft={draft} />}
     >
       <ChipSelect
         options={PAY_PERIODS}
         value={draft.pay_period}
-        onChange={(pay_period) => patch({ pay_period })}
+        // 주기는 NOT NULL — 재클릭 해제를 무시한다(해제를 null로 받으면 저장이 막힌다)
+        onChange={(pay_period) => pay_period && patch({ pay_period })}
       />
       <div className="mt-2 flex items-center gap-2">
         <Input
@@ -469,27 +418,37 @@ function PayRow({ draft, patch, touched, editable, checks }: SectionProps) {
   );
 }
 
-/** 공개 상세의 "모집 조건" — 고칠 수 없는 네 칸이 여기 모여 있다(표시용이라 열지 않았다) */
-function TermsSection({
-  draft,
-  patch,
-  touched,
-  editable,
-  checks,
-  row,
-}: SectionProps & { row: Tables<"review_data"> }) {
-  const shared = { editable, checks };
+/** 공개 상세의 "모집 조건" */
+function TermsSection({ draft, patch, touched }: SectionProps) {
   return (
     <ValueSection title="모집 조건">
-      <ValueRow name="headcount" {...shared} value={row.headcount ?? <Empty />} />
-      <ValueRow name="startTiming" {...shared} value={row.start_timing ?? <Empty />} />
-      <ValueRow name="workDays" {...shared} value={row.work_days ?? <Empty />} />
+      <TextRow
+        label="모집 인원"
+        value={draft.headcount}
+        changed={touched("headcount")}
+        onChange={(headcount) => patch({ headcount })}
+        placeholder="예: 1명, 약간명"
+      />
+      <TextRow
+        label="부임 시기"
+        value={draft.start_timing}
+        changed={touched("start_timing")}
+        onChange={(start_timing) => patch({ start_timing })}
+        placeholder="예: 즉시, 협의"
+      />
+      <TextRow
+        label="출근"
+        value={draft.work_days}
+        changed={touched("work_days")}
+        onChange={(work_days) => patch({ work_days })}
+        placeholder="예: 주 5일"
+        hint="비우면 공개 화면은 “협의”로 보여줍니다"
+      />
 
       <ValueRow
-        name="housing"
-        {...shared}
+        label="사택"
         changed={touched("housing_provided", "housing_note")}
-        hint="“말하지 않음”은 “없음”과 다른 값입니다 — 그대로 공개됩니다"
+        hint="“말하지 않음”은 “없음”과 다릅니다 — 말하지 않음이면 공개 화면에서 줄째 사라집니다"
         value={<HousingValue provided={draft.housing_provided} note={draft.housing_note} />}
       >
         <HousingFields
@@ -500,36 +459,36 @@ function TermsSection({
         />
       </ValueRow>
 
-      <ValueRow name="benefit" {...shared} value={row.benefit_note ?? <Empty />} />
-
-      <ListRow
-        draft={draft}
-        patch={patch}
-        touched={touched}
-        {...shared}
-        name="requiredDocs"
-        field="required_docs"
+      <TextRow
+        label="복리후생"
+        value={draft.benefit_note}
+        changed={touched("benefit_note")}
+        onChange={(benefit_note) => patch({ benefit_note })}
       />
       <ListRow
         draft={draft}
         patch={patch}
         touched={touched}
-        {...shared}
-        name="optionalDocs"
+        field="required_docs"
+        label="필수 서류"
+      />
+      <ListRow
+        draft={draft}
+        patch={patch}
+        touched={touched}
         field="optional_docs"
+        label="선택 서류"
       />
     </ValueSection>
   );
 }
 
 /** 공개 상세의 "자격 요건" — enum 한 칸(필터용)과 원문 문장 목록이 같은 뜻을 나눠 담는다 */
-function QualificationSection({ draft, patch, touched, editable, checks }: SectionProps) {
+function QualificationSection({ draft, patch, touched }: SectionProps) {
   return (
     <ValueSection title="자격 요건">
       <ValueRow
-        name="qualification"
-        editable={editable}
-        checks={checks}
+        label="자격"
         changed={touched("qualification")}
         hint="다섯 값뿐이라 담지 못하는 조건(본 교단 신학대학원 등)은 아래 '요건'에 남깁니다. 이 칸은 검색 필터에만 쓰입니다"
         value={enumLabel(QUALIFICATIONS, draft.qualification) ?? <Empty />}
@@ -544,27 +503,23 @@ function QualificationSection({ draft, patch, touched, editable, checks }: Secti
         draft={draft}
         patch={patch}
         touched={touched}
-        editable={editable}
-        checks={checks}
-        name="requirements"
         field="requirements"
+        label="요건"
         hint="“본 교단 신학대학원”처럼 자격 칸이 담지 못하는 조건이 여기 남아야 합니다 — 빠지면 다른 교단 지원자가 헛지원합니다"
       />
     </ValueSection>
   );
 }
 
-/** 공개 상세의 "지원 방법" — 연락처 넷을 한 줄로(넷 중 하나는 있어야 공개된다) */
-function ApplySection({ draft, patch, touched, editable, checks }: SectionProps) {
+/** 공개 상세의 "지원 방법" — 넷 중 하나는 있어야 저장된다(CHECK `jobs_needs_contact`) */
+function ApplySection({ draft, patch, touched }: SectionProps) {
   return (
     <ValueSection title="지원 방법">
       <ValueRow
-        name="contact"
+        label="연락처"
         required
-        editable={editable}
-        checks={checks}
         changed={touched(...CONTACT_KEYS)}
-        hint="넷 중 하나는 있어야 공개됩니다. 접수 주소는 원문 대조를 거치지 않은 조립 값이라 특히 확인이 필요합니다"
+        hint="넷 중 하나 이상 있어야 저장됩니다. 지원자가 실제로 서류를 보내는 곳이니 가장 먼저 확인해 주세요"
         value={<ContactValue contacts={draft} />}
       >
         <ContactFields contacts={draft} onChange={patch} />
@@ -573,30 +528,53 @@ function ApplySection({ draft, patch, touched, editable, checks }: SectionProps)
   );
 }
 
+/** 자유 텍스트 한 칸 — 모집 조건 쪽에 같은 모양이 넷 있다 */
+function TextRow({
+  label,
+  value,
+  changed,
+  onChange,
+  placeholder,
+  hint,
+}: {
+  label: string;
+  value: string | null;
+  changed: boolean;
+  onChange: (next: string) => void;
+  placeholder?: string;
+  hint?: string;
+}) {
+  return (
+    <ValueRow label={label} changed={changed} hint={hint} value={value ?? <Empty />}>
+      <Input
+        className="h-9"
+        aria-label={label}
+        placeholder={placeholder}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </ValueRow>
+  );
+}
+
 /**
  * 목록 칸 한 줄 — 줄 단위로 고치고·지우고·더한다.
- *
- * 한 덩어리 textarea로 두지 않는 이유: 줄바꿈이 원소 구분이 되어 **원문에 줄바꿈이 있던 항목이
- * 조용히 둘로 갈린다**. 원소를 원소로 다루면 그 사고가 없다.
+ * 한 덩어리 textarea로 두면 줄바꿈이 원소 구분이 되어 **원문에 줄바꿈이 있던 항목이 둘로 갈린다.**
  */
 function ListRow({
-  name,
   field,
+  label,
   hint,
   draft,
   patch,
   touched,
-  editable,
-  checks,
-}: SectionProps & { name: RowKey; field: EditableList; hint?: string }) {
+}: SectionProps & { field: EditableJobList; label: string; hint?: string }) {
   const items = draft[field];
   const write = (next: string[]) => patch({ [field]: next });
 
   return (
     <ValueRow
-      name={name}
-      editable={editable}
-      checks={checks}
+      label={label}
       changed={touched(field)}
       hint={hint}
       value={items.length > 0 ? <Lines items={items} /> : <Empty />}
@@ -636,11 +614,8 @@ function ListRow({
   );
 }
 
-/**
- * 금액 표시 — 공개 화면의 `formatPay`를 쓰지 않는다. 그쪽은 주기가 **non-null**이라 없으면 월로
- * 읽히는데(`jobs.pay_period` DEFAULT 'MONTH'), 검수에서 알아야 하는 것은 정확히 **그 위험**이다.
- */
-function PayValue({ draft }: { draft: ReviewEdits }) {
+/** 금액 표시 — 공개 화면의 `formatPay`와 같은 순서(범위 → 단일 → 비정형 → 협의) */
+function PayValue({ draft }: { draft: JobEdits }) {
   const { pay_min: min, pay_max: max, pay_period: period, pay_note: note } = draft;
   const amount =
     min !== null && max !== null && min !== max
@@ -651,25 +626,12 @@ function PayValue({ draft }: { draft: ReviewEdits }) {
           ? `${max}만원`
           : null;
 
-  if (amount === null) return note ? <>{note}</> : <Empty />;
+  if (amount === null)
+    return note ? <>{note}</> : <span className="text-muted-foreground">협의</span>;
   return (
     <>
-      {period ? `${PAY_PERIODS[period]} ${amount}` : amount}
-      {!period && <b className="ml-1.5 text-destructive">주기 없음 — 월급으로 공개됩니다</b>}
+      {PAY_PERIODS[period]} {amount}
       {note && <span className="text-muted-foreground"> · {note}</span>}
-    </>
-  );
-}
-
-function DenominationValue({ draft }: { draft: ReviewEdits }) {
-  const label = enumLabel(DENOMINATIONS, draft.denomination);
-  if (label === null) return <Empty />;
-  return (
-    <>
-      {label}
-      {!isDenominationPublished(draft.denomination_source) && (
-        <b className="ml-1.5 text-destructive">이대로면 교단이 공개되지 않습니다</b>
-      )}
     </>
   );
 }

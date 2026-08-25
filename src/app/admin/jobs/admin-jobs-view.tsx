@@ -5,20 +5,17 @@ import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { TabBar } from "@/components/tab-bar";
 import { EnumFilterSelect } from "@/components/enum-filter-select";
-import { AdminJobRow } from "@/components/admin/admin-job-row";
-import { AdminJobSheet, type SheetState } from "@/components/admin/admin-job-sheet";
 import {
   DENOMINATIONS,
   FEATURED_TIERS,
-  JOB_SOURCES,
   JOB_STATUSES,
   REGIONS,
   type Denomination,
   type FeaturedTier,
-  type JobSource,
   type Region,
 } from "@/constants/domain";
 import type { AdminJob } from "@/types/domain";
+import { JobRow } from "./job-row";
 
 // 공고 검수 제거 — 교회 인증이 유일 게이트라 검수중 탭 없음.
 // "내려감" = status는 OPEN인데 공개 목록에서 빠진 것(마감일 경과·상시모집 90일 초과, DATA §6-1).
@@ -42,7 +39,6 @@ function seedFilters(sp: ReadonlyURLSearchParams) {
     v !== null && v in map;
   const tab = sp.get("tab");
   const featured = sp.get("featured");
-  const source = sp.get("source");
   const denom = sp.get("denom");
   const region = sp.get("region");
   return {
@@ -50,7 +46,6 @@ function seedFilters(sp: ReadonlyURLSearchParams) {
     featured: (featured === "paid" || isKey(FEATURED_TIERS, featured)
       ? featured
       : "all") as FeaturedFilter,
-    source: (isKey(JOB_SOURCES, source) ? source : "all") as "all" | JobSource,
     denom: (isKey(DENOMINATIONS, denom) ? denom : "all") as "all" | Denomination,
     region: (isKey(REGIONS, region) ? region : "all") as "all" | Region,
   };
@@ -61,12 +56,10 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
   // URL → 초기 상태 (마운트 1회 시드). 이후 필터 변경은 로컬 state만(URL 역반영 없음).
   const [seed] = useState(() => seedFilters(sp));
   const [tab, setTab] = useState<Tab>(seed.tab);
-  const [source, setSource] = useState<"all" | JobSource>(seed.source);
   const [denom, setDenom] = useState<"all" | Denomination>(seed.denom);
   const [region, setRegion] = useState<"all" | Region>(seed.region);
   const [featured, setFeatured] = useState<FeaturedFilter>(seed.featured);
   const [q, setQ] = useState("");
-  const [sheet, setSheet] = useState<SheetState>(null);
 
   const counts = useMemo(
     () => ({
@@ -86,13 +79,12 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
       if (tab === "CLOSED" && j.status !== "CLOSED") return false;
       if (featured === "paid" && j.featuredTier === "NONE") return false;
       if (featured !== "all" && featured !== "paid" && j.featuredTier !== featured) return false;
-      if (source !== "all" && j.source !== source) return false;
       if (denom !== "all" && j.church.denomination !== denom) return false;
       if (region !== "all" && j.church.region !== region) return false;
       if (query && !`${j.title} ${j.church.name}`.toLowerCase().includes(query)) return false;
       return true;
     });
-  }, [jobs, tab, featured, source, denom, region, q]);
+  }, [jobs, tab, featured, denom, region, q]);
 
   return (
     <div>
@@ -101,7 +93,6 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
 
       {/* 필터 */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <EnumFilterSelect label="출처" labels={JOB_SOURCES} value={source} onChange={setSource} />
         <EnumFilterSelect label="교단" labels={DENOMINATIONS} value={denom} onChange={setDenom} />
         <EnumFilterSelect label="지역" labels={REGIONS} value={region} onChange={setRegion} />
         <EnumFilterSelect
@@ -141,19 +132,12 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((job) => (
-                <AdminJobRow
-                  key={job.id}
-                  job={job}
-                  onEdit={() => setSheet({ job, mode: "edit" })}
-                  onFeature={() => setSheet({ job, mode: "feature" })}
-                />
+                <JobRow key={job.id} job={job} />
               ))}
             </tbody>
           </table>
         )}
       </div>
-
-      <AdminJobSheet state={sheet} onClose={() => setSheet(null)} />
     </div>
   );
 }

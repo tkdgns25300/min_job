@@ -16,6 +16,7 @@ import {
 } from "@/lib/job-visibility";
 import { createServiceClient } from "@/lib/supabase/service";
 import { fetchAllRows } from "./fetch-all";
+import type { Tables } from "@/types/database";
 import type { AdminJob, AdminOverview, JobCard, JobDetail } from "@/types/domain";
 import { getChurch } from "./churches";
 import {
@@ -224,6 +225,32 @@ export async function getAdminJobs(): Promise<AdminJob[]> {
   cacheLife("hours");
   const today = todayInSeoul();
   return (await fetchAllCards()).map((e) => toAdminRow(e, today));
+}
+
+/**
+ * 운영자 편집용 단건 — **행 그대로**(도메인 타입으로 옮기지 않는다).
+ *
+ * `getJobDetail`(공개 상세)과 나누는 이유: 저쪽은 화면이 쓰는 모양(`Job`)으로 옮기면서 만료·노출
+ * 판정을 얹지만, 편집은 **DB 컬럼에 그대로 UPDATE를 걸어야** 해서 옮긴 값이 방해가 된다
+ * (`lib/job-edits.ts`가 snake_case를 유지하는 것과 같은 이유).
+ *
+ * 캐시해도 안전하다 — 저장 액션이 `updateTag("jobs")`를 부르므로 고친 직후 다시 읽힌다.
+ * 화면이 그리는 `posted_at`은 크롤러가 바꿀 수 있지만 편집 대상이 아니고, 저장은 액션이 최신 행을
+ * 다시 읽어 비교한다(actions.ts).
+ */
+export async function getJobForEdit(id: string): Promise<Tables<"jobs"> | null> {
+  "use cache";
+  cacheTag("jobs", `job-${id}`);
+  cacheLife("hours");
+
+  const { data, error } = await createServiceClient()
+    .from("jobs")
+    .select(JOB_FULL_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(`공고 조회 실패: ${error.message}`);
+  return data;
 }
 
 /** 운영자 홈 요약 — 노출중(유료 OPEN)·이번주 등록·전체 공고. admin 홈 전용 */
