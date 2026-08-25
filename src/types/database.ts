@@ -713,6 +713,8 @@ export type Database = {
           verification_applicant_name: string | null;
           verification_applicant_position: string | null;
           verification_contact_email: string | null;
+          verification_consent_at: string | null;
+          verification_consent_version: string | null;
           verification_contact_tel: string | null;
           verification_doc_path: string | null;
           verification_rejection_reason: string | null;
@@ -728,6 +730,8 @@ export type Database = {
           verification_applicant_name?: string | null;
           verification_applicant_position?: string | null;
           verification_contact_email?: string | null;
+          verification_consent_at?: string | null;
+          verification_consent_version?: string | null;
           verification_contact_tel?: string | null;
           verification_doc_path?: string | null;
           verification_rejection_reason?: string | null;
@@ -743,6 +747,8 @@ export type Database = {
           verification_applicant_name?: string | null;
           verification_applicant_position?: string | null;
           verification_contact_email?: string | null;
+          verification_consent_at?: string | null;
+          verification_consent_version?: string | null;
           verification_contact_tel?: string | null;
           verification_doc_path?: string | null;
           verification_rejection_reason?: string | null;
