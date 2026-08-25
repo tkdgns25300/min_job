@@ -128,6 +128,7 @@ export type Database = {
           id: string;
           name: string;
           region: string | null;
+          registration_no: string;
           verification_status: string;
         };
         Insert: {
@@ -141,6 +142,7 @@ export type Database = {
           id?: string;
           name: string;
           region?: string | null;
+          registration_no: string;
           verification_status?: string;
         };
         Update: {
@@ -154,6 +156,7 @@ export type Database = {
           id?: string;
           name?: string;
           region?: string | null;
+          registration_no?: string;
           verification_status?: string;
         };
         Relationships: [];
