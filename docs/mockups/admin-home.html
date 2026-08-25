@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>[시안] 운영자 홈 재설계</title>
+<style>
+  :root{
+    --brand-900:#15332a;--brand-700:#234f41;--primary:#2f5d50;
+    --gold:#d3ad63;--gold-ink:#8a6d2f;
+    --card:#fff;--bg:#f4f6f5;--border:#e3e7e6;--fg:#1a201e;--muted:#6b7674;
+    --destructive:#c0392b;--tint:rgba(47,93,80,.06);--gtint:rgba(211,173,99,.13);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+       background:var(--bg);color:var(--fg);line-height:1.5;padding:28px 20px 90px;font-size:14px}
+  .wrap{max-width:1080px;margin:0 auto}
+  .screencap{font-size:12px;font-weight:800;color:var(--primary);background:var(--tint);
+       border:1px solid rgba(47,93,80,.15);border-radius:8px;padding:9px 12px;margin:44px 0 14px}
+  .screencap:first-of-type{margin-top:0}
+  .screencap i{font-style:normal;color:var(--muted);font-weight:600}
+  .note{font-size:12.5px;color:var(--muted);margin:12px 2px 0;line-height:1.75}
+  .note b{color:var(--fg)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+       background:#eceeed;border-radius:4px;padding:1px 5px}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* ── 셸 ── */
+  .shell{display:grid;grid-template-columns:200px minmax(0,1fr);border:1px solid var(--border);
+         border-radius:14px;overflow:hidden;background:var(--card)}
+  .side{background:var(--brand-900);padding:18px 12px;min-height:470px}
+  .logo{color:#fff;font-weight:800;font-size:16px;padding:4px 10px 18px}
+  .logo span{color:var(--gold)}
+  .logo em{font-style:normal;color:rgba(255,255,255,.5);font-size:12px;font-weight:600}
+  .nav{display:flex;flex-direction:column;gap:2px}
+  .nav a{color:rgba(255,255,255,.72);text-decoration:none;font-size:13.5px;font-weight:600;
+         padding:9px 12px;border-radius:9px;display:block}
+  .nav a.on{background:var(--brand-700);color:#fff}
+  .main{padding:26px 26px 30px;min-width:0;background:var(--bg)}
+
+  h1{font-size:20px;font-weight:800}
+  .sub{margin-top:3px;font-size:12.5px;color:var(--muted)}
+  h2{font-size:11.5px;font-weight:800;color:var(--muted);letter-spacing:.03em;margin-bottom:8px}
+  section{margin-top:22px}
+
+  /* ── 카드 공통: 왼쪽 강조 막대 ── */
+  .card{position:relative;border:1px solid var(--border);border-radius:14px;background:var(--card);
+        overflow:hidden}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent}
+  .card.on::before{background:var(--primary)}
+  .card.warn::before{background:var(--gold)}
+  .card.on{background:linear-gradient(90deg,var(--tint),transparent 46%)}
+  .card.warn{background:linear-gradient(90deg,var(--gtint),transparent 46%)}
+
+  /* ── 처리할 일 ── */
+  .todo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:700px){.todo{grid-template-columns:1fr}}
+  .task{display:block;text-decoration:none;color:inherit;padding:14px 16px}
+  .task .top{display:flex;align-items:center;justify-content:space-between}
+  .task .lab{font-size:13px;font-weight:800}
+  .task .go{font-size:13px;color:var(--muted)}
+  .task:hover .go{color:var(--primary)}
+  .task .val{margin-top:6px;display:flex;align-items:baseline;gap:6px}
+  .task .n{font-size:26px;font-weight:800;line-height:1.1}
+  .task .unit{font-size:13px;font-weight:700;color:var(--muted)}
+  .task .hint{margin-top:3px;font-size:12px;color:var(--muted)}
+  .card.on .task .n{color:var(--primary)}
+  .card.off .task .n{font-size:19px;color:var(--muted)}
+  .card.off .task .lab{color:var(--muted)}
+
+  /* ── 수집 ── */
+  .crawl{padding:14px 16px}
+  .crawl .k{font-size:11.5px;font-weight:800;color:var(--muted);letter-spacing:.03em}
+  .crawl .when{margin-top:4px;font-size:22px;font-weight:800;line-height:1.15}
+  .card.warn .crawl .when{color:var(--gold-ink)}
+  .crawl .res{margin-top:5px;font-size:12.5px;color:var(--muted)}
+  .crawl .res b{color:var(--fg);font-weight:700}
+  .crawl .cli{margin-top:11px;padding-top:10px;border-top:1px solid var(--border);
+              font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+  /* ── 공개 ── */
+  .pub{padding:0}
+  .pubrow{display:grid;grid-template-columns:repeat(3,1fr)}
+  @media(max-width:700px){.pubrow{grid-template-columns:1fr 1fr}}
+  .cell{padding:13px 16px;border-right:1px solid var(--border);text-decoration:none;color:inherit;display:block}
+  .cell:last-child{border-right:0}
+  .cell .l{font-size:11.5px;color:var(--muted);font-weight:600}
+  .cell .v{margin-top:2px;font-size:21px;font-weight:800;line-height:1.15}
+  a.cell:hover{background:var(--tint)}
+  a.cell:hover .v{color:var(--primary)}
+  .cell.gold .v{color:var(--gold-ink)}
+  .pubfoot{border-top:1px solid var(--border);padding:11px 16px;display:flex;flex-wrap:wrap;
+           align-items:center;gap:11px}
+  .btn{border:1px solid var(--border);background:#fff;color:var(--fg);font-family:inherit;
+       font-weight:700;font-size:12.5px;border-radius:9px;padding:7px 13px;cursor:pointer;white-space:nowrap}
+  .btn:hover{border-color:var(--primary);color:var(--primary)}
+  .pubfoot p{font-size:11.5px;color:var(--muted);flex:1;min-width:210px;line-height:1.6}
+  .cut{margin:38px 0 0;border:0;border-top:1px dashed var(--border)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ═══ 상태 1 ═══ -->
+<p class="screencap">상태 1 — 평상시 <i>(정상 수집 하루치: 35건 들어와 3건이 검수로)</i></p>
+<div class="shell">
+  <aside class="side">
+    <div class="logo"><span>Min</span>Job <em>admin</em></div>
+    <nav class="nav"><a class="on" href="#">홈</a><a href="#">수집 검수</a>
+      <a href="#">공고 관리</a><a href="#">교회 인증</a></nav>
+  </aside>
+  <main class="main">
+    <h1>운영자 홈</h1>
+    <p class="sub">처리할 일과 지금 상태.</p>
+
+    <section>
+      <h2>처리할 일</h2>
+      <div class="todo">
+        <div class="card on"><a class="task" href="#">
+          <div class="top"><span class="lab">수집 검수</span><span class="go">→</span></div>
+          <div class="val"><span class="n num">3</span><span class="unit">건 대기</span></div>
+          <div class="hint">가장 오래 기다린 건 1일</div>
+        </a></div>
+        <div class="card off"><a class="task" href="#">
+          <div class="top"><span class="lab">교회 인증</span><span class="go">→</span></div>
+          <div class="val"><span class="n">없음</span></div>
+          <div class="hint">대기 중인 신청이 없습니다</div>
+        </a></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>수집</h2>
+      <div class="card"><div class="crawl">
+        <div class="k">마지막 수집</div>
+        <div class="when">어제 18:04</div>
+        <div class="res">새로 수집 <b>1건</b> · 게시판 30곳 중 <b>1곳 실패</b></div>
+        <div class="cli">게시판별 상태·경보는 <code>minjob-ingest status</code></div>
+      </div></div>
+    </section>
+
+    <section>
+      <h2>공개</h2>
+      <div class="card"><div class="pub">
+        <div class="pubrow">
+          <a class="cell" href="#"><div class="l">공개 중</div><div class="v num">261</div></a>
+          <a class="cell" href="#"><div class="l">내려감</div><div class="v num">0</div></a>
+          <div class="cell"><div class="l">공개 대기</div><div class="v num">0</div></div>
+        </div>
+        <div class="pubfoot">
+          <button class="btn">공개 목록 새로고침</button>
+          <p>공개 목록은 한 시간마다 스스로 갱신됩니다. 지금 바로 반영하려면 누르세요.</p>
+        </div>
+      </div></div>
+    </section>
+  </main>
+</div>
+<p class="note">
+  <b>카드마다 주제가 하나입니다.</b> 들어오는 것(수집) · 내가 손댈 것(처리할 일) · 나가는 것(공개).
+  새로고침 버튼이 화면 바닥의 각주에서 <b>공개 카드 안</b>으로 들어간 게 그 결과입니다 — 그 버튼이 하는 일이
+  바로 위 세 숫자를 다시 세는 것이니까요.<br />
+  <b>강조는 왼쪽 3px 막대와 옅은 배경으로만</b> 합니다. 할 일이 있으면 초록, 봐야 할 것이 있으면 금색,
+  평소엔 아무 색도 없습니다. 숫자 크기도 역할대로입니다 — 처리할 일 26px, 수집 시각 22px, 공개 수치 21px.
+</p>
+
+<p class="note">
+  <b>말은 크롤러와 맞춥니다.</b> <code>sources_ok</code>는 "정상"이 아니라 <b>예외를 던지지 않은 게시판 수</b>라,
+  목록을 0행 받은 게시판(크롤러가 두 번 연속이면 경보를 내는 상태)도 거기 들어갑니다. "모두 정상"이라고 쓰면
+  <code>minjob-ingest status</code>가 경보를 띄우는 순간에 이 화면이 반대말을 하게 됩니다. 같은 이유로
+  <code>new_count</code>는 <b>새로 저장된 원문 수</b>여서 "새 공고"가 아니라 <b>"새로 수집"</b>입니다 —
+  구조화·검수·공개는 그다음이고, 바로 아래 "공개 대기"와 섞여 읽히면 안 됩니다.
+</p>
+
+<hr class="cut" />
+
+<!-- ═══ 상태 2 ═══ -->
+<p class="screencap">상태 2 — 할 일 없음 <i>(가장 자주 보게 될 화면 · 색이 하나도 없다)</i></p>
+<div class="shell">
+  <aside class="side">
+    <div class="logo"><span>Min</span>Job <em>admin</em></div>
+    <nav class="nav"><a class="on" href="#">홈</a><a href="#">수집 검수</a>
+      <a href="#">공고 관리</a><a href="#">교회 인증</a></nav>
+  </aside>
+  <main class="main">
+    <h1>운영자 홈</h1>
+    <p class="sub">처리할 일과 지금 상태.</p>
+
+    <section>
+      <h2>처리할 일</h2>
+      <div class="todo">
+        <div class="card off"><a class="task" href="#">
+          <div class="top"><span class="lab">수집 검수</span><span class="go">→</span></div>
+          <div class="val"><span class="n">없음</span></div>
+          <div class="hint">검수 큐가 비어 있습니다</div>
+        </a></div>
+        <div class="card off"><a class="task" href="#">
+          <div class="top"><span class="lab">교회 인증</span><span class="go">→</span></div>
+          <div class="val"><span class="n">없음</span></div>
+          <div class="hint">대기 중인 신청이 없습니다</div>
+        </a></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>수집</h2>
+      <div class="card"><div class="crawl">
+        <div class="k">마지막 수집</div>
+        <div class="when">오늘 06:02</div>
+        <div class="res">새로 수집 <b>12건</b> · 게시판 <b>30곳</b> 성공</div>
+        <div class="cli">게시판별 상태·경보는 <code>minjob-ingest status</code></div>
+      </div></div>
+    </section>
+
+    <section>
+      <h2>공개</h2>
+      <div class="card"><div class="pub">
+        <div class="pubrow">
+          <a class="cell" href="#"><div class="l">공개 중</div><div class="v num">273</div></a>
+          <a class="cell" href="#"><div class="l">내려감</div><div class="v num">4</div></a>
+          <div class="cell"><div class="l">공개 대기</div><div class="v num">0</div></div>
+        </div>
+        <div class="pubfoot">
+          <button class="btn">공개 목록 새로고침</button>
+          <p>공개 목록은 한 시간마다 스스로 갱신됩니다. 지금 바로 반영하려면 누르세요.</p>
+        </div>
+      </div></div>
+    </section>
+  </main>
+</div>
+<p class="note">
+  <b>정상은 무채색입니다.</b> 색이 하나도 없으면 넘어가도 된다는 뜻 — 색이 의미를 가지려면
+  평소엔 없어야 합니다. 이 화면에서 확인할 것은 딱 하나, <b>마지막 수집이 오늘인가</b>입니다.
+</p>
+
+<hr class="cut" />
+
+<!-- ═══ 상태 3 ═══ -->
+<p class="screencap">상태 3 — 신호가 있을 때 <i>(경보 문구 없이, 사실과 색만으로)</i></p>
+<div class="shell">
+  <aside class="side">
+    <div class="logo"><span>Min</span>Job <em>admin</em></div>
+    <nav class="nav"><a class="on" href="#">홈</a><a href="#">수집 검수</a>
+      <a href="#">공고 관리</a><a href="#">교회 인증</a></nav>
+  </aside>
+  <main class="main">
+    <h1>운영자 홈</h1>
+    <p class="sub">처리할 일과 지금 상태.</p>
+
+    <section>
+      <h2>처리할 일</h2>
+      <div class="todo">
+        <div class="card on"><a class="task" href="#">
+          <div class="top"><span class="lab">수집 검수</span><span class="go">→</span></div>
+          <div class="val"><span class="n num">12</span><span class="unit">건 대기</span></div>
+          <div class="hint">가장 오래 기다린 건 3일 · 묶음 판정 2건</div>
+        </a></div>
+        <div class="card on"><a class="task" href="#">
+          <div class="top"><span class="lab">교회 인증</span><span class="go">→</span></div>
+          <div class="val"><span class="n num">1</span><span class="unit">건 대기</span></div>
+          <div class="hint">가장 오래 기다린 신청 2일</div>
+        </a></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>수집</h2>
+      <div class="card warn"><div class="crawl">
+        <div class="k">마지막 수집</div>
+        <div class="when">3일 전 17:01</div>
+        <div class="res">종료 기록 없음</div>
+        <div class="cli">게시판별 상태·경보는 <code>minjob-ingest status</code></div>
+      </div></div>
+    </section>
+
+    <section>
+      <h2>공개</h2>
+      <div class="card"><div class="pub">
+        <div class="pubrow">
+          <a class="cell" href="#"><div class="l">공개 중</div><div class="v num">261</div></a>
+          <a class="cell" href="#"><div class="l">내려감</div><div class="v num">18</div></a>
+          <div class="cell gold"><div class="l">공개 대기</div><div class="v num">3</div></div>
+        </div>
+        <div class="pubfoot">
+          <button class="btn">공개 목록 새로고침</button>
+          <p>공개 목록은 한 시간마다 스스로 갱신됩니다. 지금 바로 반영하려면 누르세요.</p>
+        </div>
+      </div></div>
+    </section>
+  </main>
+</div>
+<p class="note">
+  <b>여기서도 "크롤러가 죽었습니다"라고 쓰지 않습니다.</b> <code>3일 전</code>과 <code>끝나지 않음</code>이
+  저장된 사실 그대로이고, 금색은 <b>"오늘 것이 아니다"</b>만 말합니다. 죽음 판정(3시간)과 게시판 경보(연속 2회)는
+  크롤러 <code>alerts_for</code>가 정본이라 여기서 다시 쓰지 않습니다 — 임계값이 두 벌이 되면 언젠가 갈립니다.<br />
+  <b>공개 대기</b>는 승인했지만 아직 <code>jobs</code>에 올라가지 않은 건입니다. <b>승인이 조용히 증발하는
+  유일한 경로</b>라 0보다 크면 금색이 됩니다. 링크는 걸지 않았습니다 — 그것만 걸러 보는 화면이 없어서,
+  필터 없는 목록으로 보내는 링크는 없는 것만 못합니다.
+</p>
+
+</div>
+</body>
+</html>

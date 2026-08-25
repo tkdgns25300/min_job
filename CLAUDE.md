@@ -35,7 +35,8 @@
 |---|---|---|
 | `/`, `/jobs`, `/jobs/[id]`, `/churches/[id]` | `'use cache'` 데이터 + **◐ PPR** | 공고 데이터는 캐시·모든 방문자 동일 뷰. 단 **헤더 계정 영역이 세션 의존 dynamic hole**이라 문서 응답은 `no-store`(셸은 계속 prerender·엣지 스트리밍) |
 | `/jobs`의 검색·필터·정렬·페이지 | **서버는 관여 안 함** | 필터는 **100% 클라이언트 상태**(URL은 시드·반영만). 쿼리가 달라도 서버 HTML이 같아서 `/jobs`는 캐시된 전체 카드만 내려준다 → canonical도 `/jobs` 하나. ⚠️ 서버 필터링(지역·직분 랜딩 라우트)을 만들면 이 전제와 canonical을 함께 재검토 |
-| `/admin`, `/admin/jobs` | `'use cache'` (non-PII read) | 운영자 도구지만 공개·비개인 데이터(공고 집계·목록) — 모든 운영자 동일 뷰. 공개 헤더를 안 써서 ○ Static 유지. **접근 판정은 proxy가 담당** |
+| `/admin/jobs` | `'use cache'` (non-PII read) | 목록은 공개·비개인 데이터(공고 집계) — 모든 운영자 동일 뷰. 공개 헤더를 안 써서 ○ Static 유지. **접근 판정은 proxy가 담당** |
+| `/admin` | dynamic (`<Suspense>` + `requireOperator`) | 홈이 그리는 다섯 수치 중 넷이 캐시 불가(검수·인증 큐는 판정하면 바뀌고 `crawl_run`은 크롤러가 밖에서 쓴다) → `◐`. 셸은 계속 프리렌더되고, dynamic이 된 덕에 **페이지에서도 게이트를 확인**한다 |
 | `/admin/jobs/[id]` | dynamic (`<Suspense>` + `requireOperator`) | 공개 공고 편집 — 쓰기 화면이라 게이트를 페이지에서도 확인한다. 값은 캐시된 seam(`getJobForEdit`)에서 오고 저장 액션이 `updateTag("jobs")`로 비운다 |
 | `/admin/review/**` | dynamic (`<Suspense>` + `requireOperator`) | **미검수 크롤 데이터**(`review_data`) — 캐시 금지(판정하는 순간 바뀐다). 포스터는 Storage signed URL이라 만료가 있어 요청마다 만든다 |
 | `/admin/verify` | dynamic (`<Suspense>` + `requireOperator`) | 인증 신청 PII(담당자 실명·직분·이메일 + 증빙 서류) — 캐시 금지 + 페이지에서도 운영자 재확인 |
@@ -104,8 +105,9 @@ src/
 │   │   │   └── verify/            교회 인증 신청 (온라인 접수 미구현 — 안내 + 운영자 메일)
 │   │   └── jobs/                  job-form·job-wizard 등 등록/수정 공용 + new/ · [id]/edit/
 │   ├── admin/                     운영자 전용 — 접근 판정은 proxy(.env ADMIN_EMAILS)
-│   │   ├── layout.tsx · admin-sidebar     admin shell (noindex) — page.tsx·jobs/만 ○ Static
-│   │   ├── page.tsx · refresh-button · actions.ts(공개 목록 새로고침)
+│   │   ├── layout.tsx · admin-sidebar     admin shell (noindex) — jobs/ 목록만 ○ Static
+│   │   ├── page.tsx(셸) · admin-status(조회·조합) · status-cards(순수) ·
+│   │   │                          refresh-button · actions.ts(공개 목록 새로고침)
 │   │   ├── verify/                교회 인증 — page · admin-verify-view ·
 │   │   │                          verification-row · verification-sheet (PII — 페이지에서도 requireOperator)
 │   │   ├── jobs/                  공고 관리 — page(목록) · admin-jobs-view · job-row ·
@@ -149,6 +151,7 @@ src/
 │   │                              + row-map.ts(DB 행 → 도메인 타입) · fetch-all.ts(1,000행 상한 페이징)
 │   │                              둘 다 queries 내부 전용
 │   ├── domain-enum.ts             닫힌 라벨 맵 ↔ DB 문자열(keyOf·keysOf·enumLabel) — 캐스트를 한 곳에 가둔다
+│   ├── queries/crawl.ts           마지막 수집 실행 — 크롤러 소유 표를 **읽기만**(경보 판정 X)
 │   ├── review-flags.ts            검수 "확인할 것"·승격 필수 6칸 판정(순수) — 목록·필터·단건이 한 답을 쓴다
 │   ├── review-edits.ts            검수가 고칠 수 있는 칸 + CHECK 짝 규칙(순수) — 화면·액션 공용
 │   ├── job-edits.ts               공개된 공고를 고칠 수 있는 칸 + `jobs` CHECK 짝 규칙(순수)
@@ -202,6 +205,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
   - `users.ts` **전체**(`getCurrentUser`·`getChurchDashboard`·`getEditableJob`) — 모두 로그인 사용자에 종속돼 방문자마다 결과가 다르다. `getCurrentUser`는 `server.ts`(쿠키 세션)를 쓰고 `React.cache`로 요청당 1회만 왕복한다 — 신원은 `auth.users`(Auth API), 소속·인증상태는 **`public.users` + `churches` 조인**에서 온다(`auth` 스키마는 PostgREST JOIN이 안 돼 프로필을 복제해 둔다).
   - `verifications.ts` — 인증 신청 PII(가드레일 #3). `server.ts`. ⚠️ **`church_verifications` 테이블은 없다** — 신청은 `users.verification_*` + `churches` 행에 나뉘어 있고 이 함수가 조인해 조립한다(DATA §3).
   - `review.ts` — **미검수 크롤 데이터**(`review_data`). 판정하는 순간 바뀌므로 캐시하면 방금 처리한 건이 큐에 남는다. 컬럼명도 여기만 snake_case를 유지한다(크롤러 소유 테이블을 직접 편집하는 도구라 명세와 1:1로 대조해야 한다).
+  - `crawl.ts` — **크롤 실행 기록**(`crawl_run`). 크롤러가 우리 앱 밖에서 쓰므로 무효화할 방법이 없고, "마지막 수집이 언제인가"는 캐시된 답이 무의미한 질문이다. 같은 이유로 snake_case 유지. ⛔ **경보 판정을 옮겨오지 않는다** — 죽음(3시간)·연속 실패(2회)·빈 목록(2회)은 크롤러 `alerts_for`가 정본이고, 사본을 만들면 두 화면이 다른 말을 한다(`isPubliclyOpen`과 같은 이유).
   - 이 함수들은 **dynamic 페이지의 `<Suspense>` 안·Server Action·route handler에서만** 호출한다(cached scope에서 부르면 빌드가 깨진다).
 
 ### Auth (`lib/auth.ts` · `lib/auth-guard.ts`)
@@ -210,8 +214,8 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
   - **복귀 경로(`?next=`)는 `proxy.ts`가 `x-pathname` 요청 헤더로 넘겨준다** — 페이지는 자기 경로를 적지 않는다. 덕분에 **경로 지식이 `proxy.ts` 한 곳**에만 있고 쿼리스트링도 보존된다. 헤더 값은 `safeInternalPath`로 검증해 쓰고, 없으면 기본값으로 폴백한다.
 - `operator.ts` = `isOperatorEmail(email)` — `.env` `ADMIN_EMAILS`(쉼표 구분) 대조. **목록이 비면 아무도 운영자가 아니다(fail-closed).**
 - **2단 방어**: `proxy.ts`가 렌더 전에 진짜 307/리다이렉트로 1차 차단(비로그인 → `/login`, 운영자 아닌데 `/admin` → `/`), 페이지 게이트가 최종 판단. `(authed)` 페이지는 proxy 목록에서 빠져도 데이터가 새지 않는다.
-  - ⚠️ **예외 = `/admin`·`/admin/jobs`** — `○ Static` 유지 목적상 페이지 게이트가 없어 **proxy가 유일한 관문**이다. 그래서 proxy는 Auth 장애로 판정이 안 될 때도 admin만은 **fail-closed**(홈으로)로 막는다.
-  - `/admin/*` 중 **dynamic인 `/admin/verify`(PII)·`/admin/review/**`(미검수 데이터)·`/admin/jobs/[id]`(쓰기)** 는 페이지에서도 `requireOperator`를 다시 부른다. `/admin`·`/admin/jobs`(목록)는 정적 유지 목적상 proxy 판정에 의존한다.
+  - ⚠️ **예외 = `/admin/jobs`(목록)** — `○ Static` 유지 목적상 페이지 게이트가 없어 **proxy가 유일한 관문**이다. 그래서 proxy는 Auth 장애로 판정이 안 될 때도 admin만은 **fail-closed**(홈으로)로 막는다. (`/admin` 홈은 2026-08-25에 dynamic이 되면서 이 예외에서 빠졌다)
+  - 나머지 `/admin/*`은 **페이지에서도 `requireOperator`를 다시 부른다** — `/admin`(홈) · `/admin/verify`(PII) · `/admin/review/**`(미검수 데이터) · `/admin/jobs/[id]`(쓰기).
 
 ### View (`app/**/*-view.tsx`)
 - 페이지의 **프레젠테이션 뷰**. `page.tsx`는 데이터·조합만, 화면 구성은 여기로 위임.
