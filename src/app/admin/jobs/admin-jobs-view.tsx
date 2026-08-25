@@ -7,11 +7,9 @@ import { TabBar } from "@/components/tab-bar";
 import { EnumFilterSelect } from "@/components/enum-filter-select";
 import {
   DENOMINATIONS,
-  FEATURED_TIERS,
   JOB_STATUSES,
   REGIONS,
   type Denomination,
-  type FeaturedTier,
   type Region,
 } from "@/constants/domain";
 import type { AdminJob } from "@/types/domain";
@@ -21,9 +19,6 @@ import { JobRow } from "./job-row";
 // "내려감" = status는 OPEN인데 공개 목록에서 빠진 것(마감일 경과·상시모집 90일 초과, DATA §6-1).
 // 운영자가 마감일을 늘릴지 교회에 연락할지 판단하려면 이것만 골라볼 수 있어야 한다.
 type Tab = "all" | "OPEN" | "HIDDEN" | "CLOSED";
-
-// 노출 필터 — 홈 "노출중(유료)" 카드가 딥링크하는 축. paid = 유료노출 전체(featuredTier≠NONE)
-type FeaturedFilter = "all" | "paid" | FeaturedTier;
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "all", label: "전체" },
@@ -38,14 +33,10 @@ function seedFilters(sp: ReadonlyURLSearchParams) {
   const isKey = <T extends string>(map: Record<T, unknown>, v: string | null): v is T =>
     v !== null && v in map;
   const tab = sp.get("tab");
-  const featured = sp.get("featured");
   const denom = sp.get("denom");
   const region = sp.get("region");
   return {
     tab: (tab === "OPEN" || tab === "HIDDEN" || tab === "CLOSED" ? tab : "all") as Tab,
-    featured: (featured === "paid" || isKey(FEATURED_TIERS, featured)
-      ? featured
-      : "all") as FeaturedFilter,
     denom: (isKey(DENOMINATIONS, denom) ? denom : "all") as "all" | Denomination,
     region: (isKey(REGIONS, region) ? region : "all") as "all" | Region,
   };
@@ -58,7 +49,6 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
   const [tab, setTab] = useState<Tab>(seed.tab);
   const [denom, setDenom] = useState<"all" | Denomination>(seed.denom);
   const [region, setRegion] = useState<"all" | Region>(seed.region);
-  const [featured, setFeatured] = useState<FeaturedFilter>(seed.featured);
   const [q, setQ] = useState("");
 
   const counts = useMemo(
@@ -77,14 +67,12 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
       if (tab === "OPEN" && !j.isPubliclyOpen) return false;
       if (tab === "HIDDEN" && j.hiddenReason === null) return false;
       if (tab === "CLOSED" && j.status !== "CLOSED") return false;
-      if (featured === "paid" && j.featuredTier === "NONE") return false;
-      if (featured !== "all" && featured !== "paid" && j.featuredTier !== featured) return false;
       if (denom !== "all" && j.church.denomination !== denom) return false;
       if (region !== "all" && j.church.region !== region) return false;
       if (query && !`${j.title} ${j.church.name}`.toLowerCase().includes(query)) return false;
       return true;
     });
-  }, [jobs, tab, featured, denom, region, q]);
+  }, [jobs, tab, denom, region, q]);
 
   return (
     <div>
@@ -95,13 +83,6 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <EnumFilterSelect label="교단" labels={DENOMINATIONS} value={denom} onChange={setDenom} />
         <EnumFilterSelect label="지역" labels={REGIONS} value={region} onChange={setRegion} />
-        <EnumFilterSelect
-          label="노출"
-          labels={FEATURED_TIERS}
-          value={featured}
-          onChange={setFeatured}
-          extraOptions={<option value="paid">유료노출만</option>}
-        />
         <Input
           className="h-9 min-w-40 flex-1"
           placeholder="제목·교회 검색"

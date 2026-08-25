@@ -15,6 +15,8 @@ import type { Job, JobCard, JobChurchRef } from "@/types/domain";
 // 도메인 값 표시 포매터
 
 const KRW_PER_MAN = 10000; // 원 → 만원
+const DAY_MS = 86_400_000;
+const WEEK_DAYS = 7; // 여기부터는 "N일 전"이 날짜보다 읽기 어렵다(7일째가 곧 날짜 표기)
 
 // 천 단위 구분 — 연 금액은 네 자리(4,140만원)라 없으면 읽히지 않는다.
 const comma = (value: number) => value.toLocaleString("ko-KR");
@@ -78,6 +80,37 @@ export function formatKstDate(iso: string | null): string | null {
   if (Number.isNaN(at.getTime())) return null; // 깨진 값에 "Invalid Date"를 그리지 않는다
   // en-CA가 YYYY-MM-DD를 준다 — 수동 조립보다 짧고 자릿수 패딩 실수가 없다(todayInSeoul과 같은 관용구)
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(at);
+}
+
+/**
+ * 운영 화면의 시각 표시 — `오늘 06:02` · `어제 18:04` · `3일 전 17:01`.
+ *
+ * 상대 시간("15시간 전")이 아닌 이유는 이 값이 답해야 하는 질문이 "얼마나 지났나"가 아니라
+ * **"오늘 것인가"**여서다(운영자 홈의 마지막 수집 — 크롤러를 오늘 돌렸는지 본다).
+ * 이레째부터, 그리고 미래 시각이면 날짜를 그대로 쓴다 — "-3일 전"을 만들지 않는다.
+ *
+ * `todayKst`를 **인자로 받는다**: "오늘이 며칠인가"의 단일 소스는 `todayInSeoul()`이고(job-visibility),
+ * 여기서 다시 구하면 사본이 된다. 순수 함수라 호출부가 캐시 안팎을 스스로 정한다.
+ */
+export function formatKstDayTime(iso: string, todayKst: string): string {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return "";
+  const time = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(at);
+  const day = formatKstDate(iso);
+  if (!day) return "";
+  // 날짜 문자열끼리의 뺄셈 — 둘 다 KST 자정 기준이라 시간대 계산이 끼어들지 않는다
+  const days = Math.round(
+    (Date.parse(`${todayKst}T00:00:00Z`) - Date.parse(`${day}T00:00:00Z`)) / DAY_MS,
+  );
+  if (days === 0) return `오늘 ${time}`;
+  if (days === 1) return `어제 ${time}`;
+  if (days > 1 && days < WEEK_DAYS) return `${days}일 전 ${time}`;
+  return `${day} ${time}`;
 }
 
 // 교회 위치: 지역(+시). 모르는 조각은 **생략**한다 — 방문자에게 "미상"은 정보가 아니라 잡음이고,

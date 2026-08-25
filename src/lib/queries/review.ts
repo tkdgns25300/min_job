@@ -15,6 +15,7 @@ import {
   type PromotionField,
 } from "@/lib/review-flags";
 import type { Json, Tables } from "@/types/database";
+import type { QueueSummary } from "@/types/domain";
 
 // 데이터 소스 seam (수집 검수) — `/admin/review**`만 쓴다.
 //
@@ -206,7 +207,7 @@ function isReadable(name: string): boolean {
  * ⚠️ **상한이 있다.** 첫 수집 때 큐에 554건이 쌓일 수 있고(SPEC), 판정에 원문 길이·첨부 수가 필요해
  *    **한 행마다 원문 텍스트와 배열 다섯 개를 DB에서 읽는다**(화면으로 나가지는 않는다 ·
  *    `ReviewSourceRef`). 오래된 것부터라 **먼저 처리할 것이 먼저 온다** — 큐를 굴리는 데 지장이 없다.
- *    탭에 쓸 **전체 수는 `getPendingCount()`** 가 따로 센다(`length`를 쓰면 100에서 멈춘다).
+ *    탭에 쓸 **전체 수는 `getPendingSummary()`** 가 따로 센다(`length`를 쓰면 100에서 멈춘다).
  */
 const REVIEW_QUEUE_LIMIT = 100;
 
@@ -261,15 +262,43 @@ export async function getReviewDoneCount(): Promise<number> {
   return count ?? 0;
 }
 
-/** 큐 크기 — 화면 상단의 "남은 것". 끝이 보이지 않으면 손을 못 댄다(SPEC §4.5) */
-export async function getPendingCount(): Promise<number> {
+/**
+ * 큐 크기 + 가장 오래 기다린 건 — 검수 화면 상단의 "남은 것"(끝이 보이지 않으면 손을 못 댄다 ·
+ * SPEC §4.5)과 운영자 홈의 적체 신호가 **같은 한 번의 조회**를 쓴다.
+ *
+ * ⚠️ 정렬 마지막 키를 `id`로 못 박는다 — 크롤러가 한 트랜잭션으로 넣으면 `created_at`이 같아지고
+ *    (`now()`가 고정된다) 그러면 "가장 오래된 건"이 요청마다 바뀐다. 큐 목록의 정렬 규칙과 같다.
+ */
+export async function getPendingSummary(): Promise<QueueSummary> {
+  const supabase = await createClient();
+  const { data, count, error } = await supabase
+    .from("review_data")
+    .select("created_at", { count: "exact" })
+    .eq("review_status", "PENDING")
+    .order("created_at")
+    .order("id")
+    .limit(1);
+
+  if (error) throw new Error(`큐 크기 조회 실패: ${error.message}`);
+  return { count: count ?? 0, oldestAt: data[0]?.created_at ?? null };
+}
+
+/**
+ * 승인했지만 아직 공개되지 않은 건 — **승인이 조용히 증발하는 유일한 경로**다.
+ *
+ * 검수 승인은 `review_status`만 바꾸고 `jobs` 공개는 **크롤러의 다음 실행**이 한다
+ * (중복 판정이 끝난 뒤에만 안전하므로 · min_job_agent SPEC §4.3). 크롤러가 멈춰 있으면 여기 쌓이고,
+ * 그 사실을 아무도 말해 주지 않으면 승인한 공고가 영영 올라오지 않는다.
+ */
+export async function getPublishBacklogCount(): Promise<number> {
   const supabase = await createClient();
   const { count, error } = await supabase
     .from("review_data")
     .select("id", { count: "exact", head: true })
-    .eq("review_status", "PENDING");
+    .eq("review_status", "APPROVED")
+    .is("published_job_id", null);
 
-  if (error) throw new Error(`큐 크기 조회 실패: ${error.message}`);
+  if (error) throw new Error(`공개 대기 조회 실패: ${error.message}`);
   return count ?? 0;
 }
 

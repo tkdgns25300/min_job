@@ -1,5 +1,6 @@
 import {
   CHURCH_VERIFICATION_STATUSES,
+  type ChurchVerificationStatus,
   DENOMINATIONS,
   POSITIONS,
   REGIONS,
@@ -8,7 +9,7 @@ import { keyOf } from "@/lib/domain-enum";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "./fetch-all";
 import type { Tables } from "@/types/database";
-import type { ChurchVerification } from "@/types/domain";
+import type { ChurchVerification, QueueSummary } from "@/types/domain";
 
 // 데이터 소스 seam (교회 인증) — 페이지는 여기서만 가져온다.
 //
@@ -71,6 +72,48 @@ export async function getVerifications(): Promise<ChurchVerification[]> {
   return rows.map(toVerification).sort(byReviewQueue);
 }
 
+/**
+ * 신청 상태 — **`church_verification_status`는 nullable이다**(마이그레이션). 로그인만 한 계정은
+ * 비어 있고, 제출은 됐는데 상태가 비어 있으면 **아직 판정 전**으로 읽는다. 목록·요약이 같은 답을
+ * 써야 홈의 "N건 대기"와 검수 화면의 대기 탭이 어긋나지 않는다.
+ */
+function applicationStatus(value: string | null): ChurchVerificationStatus {
+  return keyOf(CHURCH_VERIFICATION_STATUSES, value) ?? "PENDING";
+}
+
+type QueueRow = Pick<Tables<"users">, "verification_submitted_at" | "church_verification_status">;
+
+/**
+ * 인증 검수 큐 — 대기 건수와 가장 오래 기다린 신청(운영자 홈).
+ *
+ * ⚠️ **`getVerifications()`가 세는 것과 같은 행을 세야 한다** — 조건이 갈리면 "1건 대기"를 눌렀는데
+ *    아무것도 없는 화면이 나온다. 그래서 필터(제출 시각 + `churches!inner`)와 상태 판정
+ *    (`applicationStatus`)을 **그대로 공유**하고, 세는 일만 JS에서 한다.
+ * ⚠️ 담당자 실명·연락처는 **읽지 않는다** — 숫자 둘 때문에 PII를 가져올 이유가 없다(가드레일 #3).
+ */
+export async function getVerificationQueueSummary(): Promise<QueueSummary> {
+  const supabase = await createClient();
+  const rows = await fetchAllRows<QueueRow>("인증 검수 큐", (from, to) =>
+    supabase
+      .from("users")
+      .select("verification_submitted_at, church_verification_status, churches!inner(id)", {
+        count: "exact",
+      })
+      .not("verification_submitted_at", "is", null)
+      .order("id")
+      .range(from, to),
+  );
+  // 제출 시각은 SQL이 이미 걸렀지만 생성 타입은 nullable이라 가드로 좁힌다
+  const waiting = rows
+    .filter((row) => applicationStatus(row.church_verification_status) === "PENDING")
+    .map((row) => row.verification_submitted_at)
+    .filter((at): at is string => at !== null);
+  return {
+    count: waiting.length,
+    oldestAt: waiting.reduce<string | null>((a, b) => (a === null || b < a ? b : a), null),
+  };
+}
+
 function toVerification(row: ApplicantRow): ChurchVerification {
   const church = row.churches;
   return {
@@ -84,8 +127,7 @@ function toVerification(row: ApplicantRow): ChurchVerification {
     },
     church: {
       id: church.id,
-      verificationStatus:
-        keyOf(CHURCH_VERIFICATION_STATUSES, church.verification_status) ?? "PENDING",
+      verificationStatus: applicationStatus(church.verification_status),
       name: church.name,
       denomination: keyOf(DENOMINATIONS, church.denomination),
       region: keyOf(REGIONS, church.region),
@@ -98,7 +140,7 @@ function toVerification(row: ApplicantRow): ChurchVerification {
     // 경로만 저장하고 파일명을 따로 두지 않는다 — 경로의 마지막 조각이 곧 파일명이다.
     // `null` = 파기 완료(처리 끝난 신청은 서류를 다시 열 수 없다 · 개인정보처리방침).
     docFileName: row.verification_doc_path?.split("/").at(-1) ?? null,
-    status: keyOf(CHURCH_VERIFICATION_STATUSES, row.church_verification_status) ?? "PENDING",
+    status: applicationStatus(row.church_verification_status),
     // 위 쿼리가 null을 걸러냈으므로 값이 있다 — 타입만 nullable이다
     submittedAt: row.verification_submitted_at ?? "",
     reviewedAt: row.verification_reviewed_at,

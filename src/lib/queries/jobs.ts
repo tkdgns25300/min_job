@@ -253,22 +253,19 @@ export async function getJobForEdit(id: string): Promise<Tables<"jobs"> | null> 
   return data;
 }
 
-/** 운영자 홈 요약 — 노출중(유료 OPEN)·이번주 등록·전체 공고. admin 홈 전용 */
+/** 운영자 홈의 공고 수치 — 공개 중 / 내려감. admin 홈 전용 */
 export async function getAdminOverview(): Promise<AdminOverview> {
   "use cache";
-  // 〃 — 요약 수치 넷 다 `jobs` 컬럼에서만 나온다
+  // 〃 — 요약 수치 둘 다 `jobs` 컬럼에서만 나온다
   cacheTag("jobs");
   cacheLife("hours");
   const today = todayInSeoul();
   const all = (await fetchAllCards()).map((e) => toAdminRow(e, today));
-  // "노출중" = **실제로 공개 목록에 뜨는** 유료 공고. status만 보면 만료돼 숨겨진 유료 공고까지
-  // 세어 운영자에게 부풀린 수치를 보여준다.
+  // 두 수치가 짝이다 — "게재중(OPEN)"은 같은데 하나는 뜨고 하나는 안 뜬다. 그 차이를 만드는 것이
+  // 만료 판정이라(`hiddenReason`) `status`만 세면 운영자가 부풀린 수치를 본다.
   return {
-    featuredCount: all.filter((j) => j.featuredTier !== "NONE" && j.isPubliclyOpen).length,
-    // 이번 주 = 오늘 기준 7일 내 — getJobStats와 같은 기준(둘이 갈리면 홈/admin 숫자가 어긋난다)
-    weekCount: all.filter((j) => j.postedAt >= addDays(today, -RECENT_WINDOW_DAYS)).length,
+    visibleCount: all.filter((j) => j.isPubliclyOpen).length,
     hiddenCount: all.filter((j) => j.hiddenReason !== null).length,
-    totalCount: all.length,
   };
 }
 

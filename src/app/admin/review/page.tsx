@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { requireOperator } from "@/lib/auth-guard";
 import { todayInSeoul } from "@/lib/job-visibility";
 import {
-  getPendingCount,
+  getPendingSummary,
   getReviewDone,
   getReviewDoneCount,
   getReviewQueue,
@@ -38,11 +38,11 @@ async function QueueContent() {
   await requireOperator();
 
   // 서로를 기다릴 이유가 없다 — 순서대로 await하면 왕복이 직렬로 쌓인다.
-  const [queue, done, doneTotal, pending, reviewedToday] = await Promise.all([
+  const [queue, done, doneTotal, pendingQueue, reviewedToday] = await Promise.all([
     getReviewQueue(),
     getReviewDone(),
     getReviewDoneCount(),
-    getPendingCount(),
+    getPendingSummary(),
     getReviewedTodayCount(todayInSeoul()),
   ]);
 
@@ -51,7 +51,7 @@ async function QueueContent() {
       queue={queue}
       done={done}
       doneTotal={doneTotal}
-      pending={pending}
+      pending={pendingQueue.count}
       reviewedToday={reviewedToday}
     />
   );

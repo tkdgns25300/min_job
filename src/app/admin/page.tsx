@@ -1,77 +1,52 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { getAdminOverview } from "@/lib/queries/jobs";
-import { RefreshButton } from "./refresh-button";
+import { Suspense } from "react";
+import { AdminStatus } from "./admin-status";
+import { STATUS_SECTIONS, StatusSection } from "./status-cards";
 
 export const metadata: Metadata = { title: "운영자 홈 | 민잡 운영자" };
 
-// 운영자 홈 — 요약 + 빠른 작업 랜딩. 요약 수치는 getAdminOverview('use cache').
-// (공고 검수 제거 — 교회 인증이 유일 게이트. 인증 검수는 /admin/verify에서.)
-export default async function AdminHomePage() {
-  const { featuredCount, hiddenCount, weekCount, totalCount } = await getAdminOverview();
-
-  // href = 각 수치에 대응하는 필터된 공고 관리 뷰로 딥링크.
-  // 노출중(유료) = OPEN + 유료노출(featuredTier≠NONE). "이번 주 등록"은 대응 필터가 없어 전체 목록으로.
-  const stats = [
-    { label: "노출중(유료)", value: featuredCount, href: "/admin/jobs?tab=OPEN&featured=paid" },
-    // 내려감 = 게재중인데 공개 목록에 안 뜨는 것(DATA §6-1) — 운영자가 손봐야 할 대상
-    { label: "내려감", value: hiddenCount, href: "/admin/jobs?tab=HIDDEN" },
-    { label: "이번 주 등록", value: weekCount, href: "/admin/jobs" },
-    { label: "전체 공고", value: totalCount, href: "/admin/jobs" },
-  ];
-
+// 운영자 홈 — **"지금 손댈 게 있나"에 답하는 화면**. 하루 한두 번 열어 대부분은 "이상 없음"만
+// 확인하고 닫으므로, 평상시엔 조용하고 이상이 있을 때만 눈에 띄게 만든다(색은 그때만 쓴다).
+//
+// ⛔ **크롤 경보를 여기서 판정하지 않는다** — 게시판 건강·죽음 판정은 크롤러 `alerts_for`가 정본이고
+//    `minjob-ingest status`가 보여준다. 이 화면은 웹에서만 알 수 있는 것을 맡는다: 우리 검수·인증 큐,
+//    `isPubliclyOpen`으로 갈리는 공개/내려감, 그리고 웹에서만 누를 수 있는 캐시 새로고침.
+//    수집은 **마지막 실행 시각 한 줄**만 —"할 일 없음"과 "며칠째 안 돌렸음"이 웹에서 구별되지 않아서다.
+//
+// 본문이 dynamic이라 페이지는 `◐`다(셸은 계속 프리렌더). 사이드바에 대기 건수 배지를 달지 않는
+// 이유가 여기 있다 — 셸은 레이아웃이고, 거기에 캐시 못 하는 값을 넣으면 `/admin/jobs`의 `○`까지 잃는다.
+export default function AdminHomePage() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8">
+    <div className="mx-auto w-full max-w-3xl px-4 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold">운영자 홈</h1>
-        <p className="mt-1 text-sm text-muted-foreground">공고 현황 요약과 빠른 작업.</p>
+        <h1 className="text-xl font-bold">운영자 홈</h1>
+        <p className="mt-1 text-xs text-muted-foreground">처리할 일과 지금 상태.</p>
       </header>
 
-      {/* 요약 카드 — 클릭 시 대응 필터 뷰로 딥링크 */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {stats.map((s) => (
-          <Link
-            key={s.label}
-            href={s.href}
-            className="rounded-2xl border bg-card p-4 transition-colors hover:border-primary/40"
-          >
-            <div className="text-xs text-muted-foreground">{s.label}</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums">{s.value}</div>
-          </Link>
-        ))}
-      </div>
+      <Suspense fallback={<StatusSkeleton />}>
+        <AdminStatus />
+      </Suspense>
+    </div>
+  );
+}
 
-      {/* 빠른 작업 */}
-      <section className="mt-6">
-        <h2 className="mb-2 text-sm font-bold">빠른 작업</h2>
-        <div className="flex flex-wrap items-start gap-2">
-          {/* 건수를 여기 붙이지 않는다 — 미검수 데이터는 캐시할 수 없어 이 페이지가 ○ Static을 잃는다 */}
-          <Link href="/admin/review" className={cn(buttonVariants())}>
-            수집 검수
-          </Link>
-          <Link href="/admin/jobs" className={cn(buttonVariants({ variant: "outline" }))}>
-            공고 관리
-          </Link>
-          <RefreshButton />
+// 값이 도착할 때 화면이 밀리지 않게 — **구획 제목까지 그대로** 그린다(제목은 `STATUS_SECTIONS` 공유).
+// 높이는 실제 카드에 맞춘 것이다: 처리할 일 96px · 수집 112px · 공개 120px.
+function StatusSkeleton() {
+  return (
+    <div className="space-y-6">
+      <StatusSection title={STATUS_SECTIONS.tasks}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="h-24 animate-pulse rounded-2xl bg-muted" />
+          <div className="h-24 animate-pulse rounded-2xl bg-muted" />
         </div>
-        <p className="mt-2 text-xs leading-relaxed break-keep text-muted-foreground">
-          공개 목록은 <b>한 시간마다</b> 스스로 갱신됩니다. 크롤러가 새 공고를 공개한 뒤 바로 보이게
-          하려면 <b>공개 목록 새로고침</b>을 눌러 주세요 — 누르지 않아도 한 시간 안에 반영됩니다.
-        </p>
-      </section>
-
-      {/* 교회 인증 검수 — 유일한 검수 게이트(다음 단계 /admin/verify) */}
-      <Link
-        href="/admin/verify"
-        className="mt-4 flex items-center justify-between rounded-2xl border border-dashed px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
-      >
-        <span>
-          교회 인증 검수 <span className="text-xs">(다음 단계)</span>
-        </span>
-        <span aria-hidden>→</span>
-      </Link>
+      </StatusSection>
+      <StatusSection title={STATUS_SECTIONS.crawl}>
+        <div className="h-28 animate-pulse rounded-2xl bg-muted" />
+      </StatusSection>
+      <StatusSection title={STATUS_SECTIONS.publish}>
+        <div className="h-30 animate-pulse rounded-2xl bg-muted" />
+      </StatusSection>
     </div>
   );
 }

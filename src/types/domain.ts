@@ -268,12 +268,18 @@ export interface AdminJob {
   deadline: string | null;
 }
 
-// 운영자 홈 요약 — 요약 수치. (admin 홈) ※ 공고 검수 제거 — 교회 인증이 유일 게이트
+// 운영자 홈의 공고 수치 — 공개 목록에 실제로 뜨는 것과, 게재중인데 안 뜨는 것.
+// 둘 다 `isPubliclyOpen` 판정이 필요해 SQL이 아니라 JS가 센다(job-visibility가 단일 소스). (admin 홈)
 export interface AdminOverview {
-  featuredCount: number; // 노출중(유료) — 실제 공개 노출 기준(DATA §6-1)
-  weekCount: number; // 이번 주 등록(오늘 기준 RECENT_WINDOW_DAYS)
+  visibleCount: number; // 공개 목록에 실제로 뜨는 공고
   hiddenCount: number; // 게재중이나 공개 목록에서 내려간 건수 — 운영자가 손봐야 할 대상
-  totalCount: number; // 전체 공고
+}
+
+// 운영자가 처리해야 할 큐 하나의 상태 — 수집 검수·교회 인증이 같은 모양을 쓴다(홈이 한 컴포넌트로 그린다).
+// `oldestAt`은 **적체 신호**다: 건수가 적어도 오래 묵은 건이 있으면 손대야 한다. (admin 홈)
+export interface QueueSummary {
+  count: number;
+  oldestAt: string | null; // 가장 오래 기다린 건의 접수 시각(timestamptz) — 비었으면 큐가 비어 있다
 }
 
 // 교회 인증 신청 — 운영자 검수용 projection. 실구현은 users(담당자) + churches(교회) + 증빙 조인.
