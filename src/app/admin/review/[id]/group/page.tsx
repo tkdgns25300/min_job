@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { seatLabel } from "@/components/admin/review-row";
+import { seatLabel } from "../../review-row";
 import { DEPARTMENTS } from "@/constants/domain";
 import { requireOperator } from "@/lib/auth-guard";
 import { enumLabel } from "@/lib/domain-enum";

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { AttentionLine, reviewHref } from "@/components/admin/review-row";
+import { AttentionLine, reviewHref } from "../review-row";
 import { CONFIDENCE_LEVELS } from "@/constants/review";
 import { requireOperator } from "@/lib/auth-guard";
 import { enumLabel } from "@/lib/domain-enum";

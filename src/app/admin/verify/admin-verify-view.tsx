@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { VerificationRow } from "@/components/admin/verification-row";
-import { VerificationSheet, type SheetState } from "@/components/admin/verification-sheet";
+import { VerificationRow } from "./verification-row";
+import { VerificationSheet, type SheetState } from "./verification-sheet";
 import { TabBar } from "@/components/tab-bar";
 import { EnumFilterSelect } from "@/components/enum-filter-select";
 import {

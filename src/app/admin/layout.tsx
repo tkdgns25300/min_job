@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { AdminSidebar, AdminSidebarFallback } from "@/components/admin/admin-sidebar";
+import { AdminSidebar, AdminSidebarFallback } from "./admin-sidebar";
 
 // 운영자 전체 색인 제외 — 하위 admin 페이지가 상속(개별 noindex 불필요).
 export const metadata: Metadata = { robots: { index: false } };

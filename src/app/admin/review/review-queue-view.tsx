@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { TabBar } from "@/components/tab-bar";
 import { NativeSelect } from "@/components/ui/native-select";
-import { ReviewRowItem } from "@/components/admin/review-row";
+import { ReviewRowItem } from "./review-row";
 import { boardLabel } from "@/constants/review";
 import { ATTENTION_KINDS, type AttentionKind } from "@/lib/review-flags";
 import type { ReviewRow } from "@/lib/queries/review";

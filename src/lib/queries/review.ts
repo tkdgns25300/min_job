@@ -100,7 +100,7 @@ export interface ReviewDetail extends ReviewRow {
   posters: ReviewPoster[];
 }
 
-/** 큐 안의 앞뒤 건 — 링크를 만드는 규칙은 `reviewHref`(components/admin/review-row) 한 곳에 있다 */
+/** 큐 안의 앞뒤 건 — 링크를 만드는 규칙은 `reviewHref`(app/admin/review/review-row) 한 곳에 있다 */
 export type QueueNeighbor = Pick<Tables<"review_data">, "id" | "dedup_state" | "dedup_key">;
 
 /** 큐에서 이 건이 몇 번째인가 + 앞뒤. `position`이 0이면 큐에 없는 건(이미 처리됨) */

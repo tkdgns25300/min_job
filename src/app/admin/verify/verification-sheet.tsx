@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { VERIFICATION_STATUS_VARIANT } from "@/components/admin/verification-row";
+import { VERIFICATION_STATUS_VARIANT } from "./verification-row";
 import {
   CHURCH_VERIFICATION_STATUSES,
   DENOMINATIONS,
