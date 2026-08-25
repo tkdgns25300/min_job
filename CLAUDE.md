@@ -36,6 +36,7 @@
 | `/`, `/jobs`, `/jobs/[id]`, `/churches/[id]` | `'use cache'` 데이터 + **◐ PPR** | 공고 데이터는 캐시·모든 방문자 동일 뷰. 단 **헤더 계정 영역이 세션 의존 dynamic hole**이라 문서 응답은 `no-store`(셸은 계속 prerender·엣지 스트리밍) |
 | `/jobs`의 검색·필터·정렬·페이지 | **서버는 관여 안 함** | 필터는 **100% 클라이언트 상태**(URL은 시드·반영만). 쿼리가 달라도 서버 HTML이 같아서 `/jobs`는 캐시된 전체 카드만 내려준다 → canonical도 `/jobs` 하나. ⚠️ 서버 필터링(지역·직분 랜딩 라우트)을 만들면 이 전제와 canonical을 함께 재검토 |
 | `/admin`, `/admin/jobs` | `'use cache'` (non-PII read) | 운영자 도구지만 공개·비개인 데이터(공고 집계·목록) — 모든 운영자 동일 뷰. 공개 헤더를 안 써서 ○ Static 유지. **접근 판정은 proxy가 담당** |
+| `/admin/jobs/[id]` | dynamic (`<Suspense>` + `requireOperator`) | 공개 공고 편집 — 쓰기 화면이라 게이트를 페이지에서도 확인한다. 값은 캐시된 seam(`getJobForEdit`)에서 오고 저장 액션이 `updateTag("jobs")`로 비운다 |
 | `/admin/review/**` | dynamic (`<Suspense>` + `requireOperator`) | **미검수 크롤 데이터**(`review_data`) — 캐시 금지(판정하는 순간 바뀐다). 포스터는 Storage signed URL이라 만료가 있어 요청마다 만든다 |
 | `/admin/verify` | dynamic (`<Suspense>` + `requireOperator`) | 인증 신청 PII(담당자 실명·직분·이메일 + 증빙 서류) — 캐시 금지 + 페이지에서도 운영자 재확인 |
 | `sitemap.xml` | **dynamic (`ƒ`) — 의도적** | 순수 정적 렌더에서는 Supabase 클라이언트의 인증 경로가 부르는 `Date.now()`가 금지돼, 캐시 무효화 뒤 **가장 먼저 재생성될 때 500 + 빈 sitemap**이 나간다(실측 2026-08-22). `connection()`으로 dynamic을 선언해 그 금지를 벗는다 — **데이터는 계속 `'use cache'`에서** 오고 요청마다 하는 일은 XML 조립뿐이다 |
@@ -103,9 +104,15 @@ src/
 │   │   │   └── verify/            교회 인증 신청 (온라인 접수 미구현 — 안내 + 운영자 메일)
 │   │   └── jobs/                  job-form·job-wizard 등 등록/수정 공용 + new/ · [id]/edit/
 │   ├── admin/                     운영자 전용 — 접근 판정은 proxy(.env ADMIN_EMAILS)
-│   │   ├── layout.tsx             admin shell (noindex) — page.tsx·jobs/만 ○ Static
-│   │   ├── page.tsx · jobs/ · verify/(PII — 페이지에서도 requireOperator)
-│   │   └── review/                수집 검수 — page(큐) · review-queue-view · actions.ts(공용) ·
+│   │   ├── layout.tsx · admin-sidebar     admin shell (noindex) — page.tsx·jobs/만 ○ Static
+│   │   ├── page.tsx · refresh-button · actions.ts(공개 목록 새로고침)
+│   │   ├── verify/                교회 인증 — page · admin-verify-view ·
+│   │   │                          verification-row · verification-sheet (PII — 페이지에서도 requireOperator)
+│   │   ├── jobs/                  공고 관리 — page(목록) · admin-jobs-view · job-row ·
+│   │   │                          actions.ts(저장·마감·다시 모집) ·
+│   │   │                          [id]/(편집: job-edit-form · job-value-list)
+│   │   └── review/                수집 검수 — page(큐) · review-queue-view · review-row(큐 한 줄·판정 표시) ·
+│   │                              actions.ts(공용) ·
 │   │                              [id]/(단건: review-form(상태·판정 바·탭) · value-list(공개 상세와 같은 구획) ·
 │   │                                    value-rows(키·라벨·개수 단일 소스) · value-row(줄·펼침·확인) ·
 │   │                                    source-pane · poster-view · public-preview) ·
@@ -122,7 +129,11 @@ src/
 │   ├── ui/                        shadcn 원본 (button·card·input·textarea·native-select·sheet·badge)
 │   ├── layout/                    헤더(계정 영역 포함)·푸터·모바일 네비·법률문서 셸
 │   ├── job/ church/ admin/ home/ pricing/ search/   각 도메인 표시 컴포넌트
+│   │                              ⚠️ admin/은 **검수·공고 관리 둘 다 쓰는 것만** — 한쪽 전용은 그 라우트 폴더에
 │   ├── field.tsx                  폼 입력 한 칸(라벨·선택·필수·힌트·에러) — 5개 폼 파일 48곳 공용
+│   ├── admin/value-row.tsx        값 한 줄(읽기 우선·펼쳐 고치기) + 구획 — 수집 검수·공고 관리 공용
+│   ├── admin/confirm-button.tsx   되돌리기 어려운 동작에 한 번 더 묻는 버튼(그 자리에서 확인)
+│   ├── admin/value-fields.tsx     두 값 화면이 같이 쓰는 칸 — 사택 3상태·연락처 4칸·금액 파서
 │   ├── tab-bar.tsx                상태 탭 + 건수 배지 — 공고·검수 목록 3곳 공용(제네릭 key)
 │   ├── enum-filter-select.tsx     "○○ 전체" + 도메인 라벨 맵 필터 select — admin 6곳 공용
 │   └── relative-time.tsx          시간 표시(클라이언트 계산)
@@ -140,6 +151,8 @@ src/
 │   ├── domain-enum.ts             닫힌 라벨 맵 ↔ DB 문자열(keyOf·keysOf·enumLabel) — 캐스트를 한 곳에 가둔다
 │   ├── review-flags.ts            검수 "확인할 것"·승격 필수 6칸 판정(순수) — 목록·필터·단건이 한 답을 쓴다
 │   ├── review-edits.ts            검수가 고칠 수 있는 칸 + CHECK 짝 규칙(순수) — 화면·액션 공용
+│   ├── job-edits.ts               공개된 공고를 고칠 수 있는 칸 + `jobs` CHECK 짝 규칙(순수)
+│   │                              ⚠️ review-edits와 합치지 않는다 — 제약이 다르다(그 파일 머리말)
 │   ├── job-visibility.ts          만료 판정 단일 소스(todayInSeoul·isPubliclyOpen·hiddenReason)
 │   ├── job-church.ts              공고↔교회 파생 — church_id가 null일 수 있어 생긴 로직
 │   │                              (jobChurchRef=표시값 규칙 · churchIdentityKey=교회 수 집계)
@@ -157,8 +170,8 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 
 > **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
 >
-> **배치 규칙**: 한 페이지 전용 뷰·폼·헬퍼는 **그 페이지 폴더에** 둔다(`jobs-view.tsx`·`job-form.tsx`). 두 곳 이상에서 쓰면 `components/`로 올린다. mutation은 그 라우트의 `actions.ts`.
-> **mutation `actions.ts`는 login·mypage(로그아웃)·admin(캐시 새로고침)·admin/review(검수 판정)** — 공고 등록·수정은 Phase 1에서 각 라우트에 추가한다.
+> **배치 규칙**: 한 페이지 전용 뷰·폼·헬퍼는 **그 페이지 폴더에** 둔다(`jobs-view.tsx`·`job-form.tsx`). **두 라우트 기능 이상**이 쓰면 `components/`로 올린다 — 한 기능 안에서 여러 페이지가 나눠 쓰는 것은 그 기능 폴더의 공용 파일로 둔다(`admin/review/review-row.tsx`를 `[id]/`가 `../review-row`로 쓴다). ⚠️ 기준은 **쓰는 파일 수가 아니라 라우트 기능 수**다 — 파일 수로 세면 한 화면 전용이 `components/`로 올라간다(실제로 그렇게 넷이 올라가 있었다 · 2026-08-24 되돌림). mutation은 그 라우트의 `actions.ts`.
+> **mutation `actions.ts`는 login·mypage(로그아웃)·admin(캐시 새로고침)·admin/review(검수 판정)·admin/jobs(공개 공고 저장·마감)** — 교회의 공고 등록·수정은 아직 없다.
 
 ## Layer Responsibilities
 
@@ -198,7 +211,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 - `operator.ts` = `isOperatorEmail(email)` — `.env` `ADMIN_EMAILS`(쉼표 구분) 대조. **목록이 비면 아무도 운영자가 아니다(fail-closed).**
 - **2단 방어**: `proxy.ts`가 렌더 전에 진짜 307/리다이렉트로 1차 차단(비로그인 → `/login`, 운영자 아닌데 `/admin` → `/`), 페이지 게이트가 최종 판단. `(authed)` 페이지는 proxy 목록에서 빠져도 데이터가 새지 않는다.
   - ⚠️ **예외 = `/admin`·`/admin/jobs`** — `○ Static` 유지 목적상 페이지 게이트가 없어 **proxy가 유일한 관문**이다. 그래서 proxy는 Auth 장애로 판정이 안 될 때도 admin만은 **fail-closed**(홈으로)로 막는다.
-  - `/admin/*` 중 **dynamic인 `/admin/verify`(PII)·`/admin/review/**`(미검수 데이터)** 는 페이지에서도 `requireOperator`를 다시 부른다. `/admin`·`/admin/jobs`는 정적 유지 목적상 proxy 판정에 의존한다(실 데이터 연결 시 재검토).
+  - `/admin/*` 중 **dynamic인 `/admin/verify`(PII)·`/admin/review/**`(미검수 데이터)·`/admin/jobs/[id]`(쓰기)** 는 페이지에서도 `requireOperator`를 다시 부른다. `/admin`·`/admin/jobs`(목록)는 정적 유지 목적상 proxy 판정에 의존한다.
 
 ### View (`app/**/*-view.tsx`)
 - 페이지의 **프레젠테이션 뷰**. `page.tsx`는 데이터·조합만, 화면 구성은 여기로 위임.
