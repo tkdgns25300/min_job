@@ -61,6 +61,7 @@
 |---|---|---|
 | `id` | uuid PK, `gen_random_uuid()` | |
 | `name` | text NOT NULL | 교회명 |
+| `registration_no` | text **NOT NULL** UNIQUE (CHECK `^[0-9]{10}$`) | **교회 고유번호**(고유번호증) 또는 사업자등록번호. **이 표의 유일한 자연키** — 같은 교회에 담당자가 여럿 붙으므로(§3 users) 두 번째 담당자가 기존 행에 붙지 못하면 공고가 두 교회로 갈린다. 이름으로 묶는 길은 막혀 있다(2026-08-06 실측: 검증 불가 67개 · 같은 연락처 다른 교회명 83건). **하이픈 없이 숫자 10자리만** 저장한다 — `123-45-67890`과 `1234567890`이 다른 행이 되면 UNIQUE가 무의미해진다. 체크섬은 검사하지 않는다(비영리 고유번호에 사업자등록번호 규칙이 그대로 들어맞지 않아 진짜 교회를 막을 수 있다) — 대조는 운영자가 증빙 서류로 한다. 마이그레이션 `20260825063700` |
 | `denomination` | text **NULL** (CHECK) | 교단. **NULL = 미상 또는 무소속·독립교회.** `ETC`와 구분할 것 — `ETC`는 "소속은 있고 우리 9키에 없는 교단"(기장 등)이라 미상을 섞으면 필터·거점 판정이 오염된다 |
 | `region` | text **NULL** (CHECK) | 광역 (필터). **NULL = 미상** (실측 원문 명시 81%). ⚠️ NULL이면 **지역 필터에서 무조건 탈락**해 사실상 안 보이는 공고가 된다 — 검수에서 교단보다 먼저 채울 값 |
 | `city` | text NULL | 시·군·구 (표시용 자유 텍스트) |
@@ -331,7 +332,7 @@ CHECK ( source_url IS NULL OR length(btrim(source_url)) > 0 )
 | `email` | text **NOT NULL** | `auth.users`에서 복제. `auth` 스키마는 PostgREST로 JOIN하기 어려워 표시·운영자 조회용으로 둔다 |
 | `church_id` | uuid FK→churches NULL | 이 계정이 관리하는 교회(인증 후 연결). NULL=일반 사역자 |
 | `church_verification_status` | text NULL (CHECK) | PENDING/APPROVED/REJECTED. NULL=미신청 |
-| `verification_doc_path` | text NULL | 증빙(고유번호증/사업자등록증) **비공개 Storage 경로**. ⚠️ 서류에 적힌 **등록번호·서류 종류는 저장하지 않는다** — 운영자가 파일을 열어 확인하면 되고, 저장하면 사업자번호 보관 부담만 진다. 보관·파기 정책은 §11 |
+| `verification_doc_path` | text NULL | 증빙(고유번호증/사업자등록증) **비공개 Storage 경로**. ⚠️ 서류에 적힌 **서류 종류는 저장하지 않는다**(운영자가 파일을 열어 확인한다). **고유번호는 2026-08-25부터 `churches.registration_no`에 저장한다** — 저장하지 않기로 했던 근거가 "보관 부담만 진다"였는데, 증빙 서류 자체를 인증 자격이 유지되는 동안 보관하기로 하면서 그 번호는 어차피 보관 대상이 됐다. 보관·파기 정책은 §11 |
 | `verification_applicant_name` | text NULL | 신청자 **실명**. Google 표시명은 닉네임일 수 있어 따로 받는다 |
 | `verification_applicant_position` | text NULL (CHECK: position) | 신청자 직분 — 담임이 신청했는지가 검수 신뢰도 판단에 쓰인다 |
 | `verification_contact_tel` | text NULL | 신청자가 적어낸 **교회 사무용 전화**(신청 필수). **`churches.contact_tel`에 바로 쓰지 않는다** — 미승인 신청자가 이미 인증된 교회의 대표 연락처를 덮어쓸 수 있기 때문. 승인 시 `churches`로 옮긴다. 검수는 이 값을 공개 게시판 공고·홈페이지와 **대조**하고, 기존 교회면 `churches.contact_tel`과도 비교한다(어긋나면 반려 근거) |
@@ -550,7 +551,7 @@ users ──▶ bookmarks ──▶ jobs     (Phase 1)
 - **자동 결제 연동** (Phase 3)
 - **인재 DB**(`minister_profiles`, 계정에 1:1) — 사역자 프로필 (Phase 3, 개인정보 동의). "구직 중" opt-in 노출 + "제외 교회"(자기 교회엔 숨김)
 - **관심 교회 팔로우**(`church_follows`) + 새 공고 알림 (Phase 2, 사역자 view)
-- **교회 인증 증빙 문서 보관·파기 정책** (`users.verification_doc_path` + `verification_applicant_name`·`position`). 파일은 **비공개 Storage 버킷 + operator만 읽기**. ⚠️ **공개 개인정보처리방침이 이미 "인증 처리 완료 후 지체 없이 파기"를 약속**했으므로(`/privacy`), 승인·반려 Server Action이 **처리 직후 파일을 지우고 `verification_doc_path`를 NULL로** 돌려야 한다. 보관 기간을 두려면 방침 문구부터 바꿔야 한다(법률 검토와 함께)
+- **교회 인증 증빙 문서 보관·파기** (`users.verification_doc_path`). 파일은 **비공개 Storage 버킷 `verification-docs`**(2026-08-25 생성 · 10MB · pdf/jpeg/png/webp/heic/heif). **파기 시점이 바뀌었다(2026-08-25)**: `/privacy` §3이 "인증 처리 완료 후 지체 없이 파기"에서 **"인증 자격이 유지되는 동안 보관 · 회원 탈퇴 또는 인증 해지 시 파기"**로 개정됐다 — 판정을 사람이 직접 하고 근거 자료를 들고 있어야 해서다. ⬜ **탈퇴·인증 해지 시 파일을 지우는 경로는 아직 없다**(탈퇴 기능 자체가 미구현). ⬜ 방침 **시행일**(`LEGAL_EFFECTIVE_DATE`)은 아직 `2026-07-20` — 개정분 공지·시행일 갱신은 법률 검토와 함께
 
 ---
 
