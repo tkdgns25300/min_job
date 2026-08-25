@@ -31,7 +31,8 @@ export default function AdminHomePage() {
 }
 
 // 값이 도착할 때 화면이 밀리지 않게 — **구획 제목까지 그대로** 그린다(제목은 `STATUS_SECTIONS` 공유).
-// 높이는 실제 카드에 맞춘 것이다: 처리할 일 96px · 수집 112px · 공개 120px.
+// 높이는 실제 카드에 맞춘 **근사치**다. 정확히 맞출 수는 없다 — 수집 카드의 결과 줄은 실패한 게시판
+// 이름이 붙으면 좁은 화면에서 두 줄이 된다. 제목이 먼저 자리를 잡으므로 남는 어긋남은 카드 안쪽뿐이다.
 function StatusSkeleton() {
   return (
     <div className="space-y-6">

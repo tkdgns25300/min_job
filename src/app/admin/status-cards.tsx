@@ -1,12 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { formatKstDate, formatKstDayTime } from "@/lib/format";
+import { boardLabel, CRAWL_OVERDUE_HOURS } from "@/constants/review";
+import { formatKstDayTime } from "@/lib/format";
 import type { CrawlRun } from "@/lib/queries/crawl";
 import type { AdminOverview, QueueSummary } from "@/types/domain";
 
-// 운영자 홈의 카드 셋 — **순수 프레젠테이션**. 값을 받아 그리기만 하고 조회·판정을 하지 않는다.
-// 그래야 세 상태(평상시·빈 큐·신호)를 DB 없이 값만 바꿔 렌더해 볼 수 있다.
+// 운영자 홈의 카드 셋 — **순수 프레젠테이션**. 값을 받아 그리기만 하고 **조회를 하지 않는다**(그래야
+// 상태들을 DB 없이 값만 바꿔 렌더해 볼 수 있다). "0보다 큰가"·"한 주기를 넘겼나" 같은 **표시 규칙은
+// 여기서** 정한다 — 무엇을 진하게·무슨 색으로 그릴지는 그리는 쪽의 일이다. 도메인 판정은 하지 않는다.
 //
 // 카드마다 주제가 하나다: **들어오는 것**(수집) · **내가 손댈 것**(처리할 일) · **나가는 것**(공개).
 // 새로고침 버튼이 화면 바닥이 아니라 공개 카드 안에 있는 이유 — 그 버튼이 다시 세게 만드는 것이
@@ -38,17 +40,24 @@ export function StatusSection({ title, children }: { title: string; children: Re
  * 색은 **행동이 다르다는 표시**다(검수 큐의 판정 색과 같은 규칙).
  * `quiet` 넘어가도 된다 · `active` 내가 처리할 것이 있다 · `watch` 봐야 할 것이 있다.
  *
- * ⛔ `watch`는 **경보가 아니다.** "오늘 것이 아니다"·"0보다 크다" 같은 표시 규칙일 뿐이고,
- *    수집이 죽었나(3시간)·게시판이 망가졌나(연속 2회)는 크롤러 `alerts_for`가 정본이다(queries/crawl).
+ * ⛔ `watch`는 **경보가 아니다.** "마지막 수집이 한 주기를 넘겼다"는 표시 규칙일 뿐이고, 수집이
+ *    죽었나(3시간)·게시판이 망가졌나(연속 2회)는 크롤러 `alerts_for`가 정본이다(queries/crawl).
+ *    지금 `watch`를 쓰는 곳은 수집 카드 하나다 — 공개 대기의 금색은 카드가 아니라 그 칸이 든다.
  *
- * 수집의 `watch`는 **달력 날짜**로 가른다("오늘 돌렸나"). 경과 시간으로 재면 몇 시간이 오래된
- * 것인지 우리가 정해야 하고 그게 곧 임계값이다. 대신 23:50 실행이 00:10에 금색이 되는데,
- * 그때 화면이 말하는 것은 "어제 23:50"이라 라벨과 색이 서로 어긋나지 않는다.
+ * 수집의 `watch`는 **`CRAWL_OVERDUE_HOURS`를 넘겼나**로 가른다. 처음엔 달력 날짜로 갈랐는데
+ * (`오늘 돌렸나`) 수집이 저녁에 도는 동안 **하루 18~20시간이 금색**이었다 — 색이 상시로 켜져 있으면
+ * 처리할 일의 초록까지 같이 안 보이게 된다(운영자 지적 2026-08-25). 그 값이 크롤 주기 한 번이고
+ * 여유를 두지 않은 이유는 그 상수 주석에 있다.
  */
 type Tone = "quiet" | "active" | "watch";
 
 /** 크롤러의 상태·경보 화면 — 판정의 정본이라 우리 화면은 여기로 넘긴다(queries/crawl 머리말) */
 const CRAWL_STATUS_COMMAND = "minjob-ingest status";
+
+const MS_PER_HOUR = 3_600_000;
+
+/** 실패한 게시판 이름 — 셋부터는 접는다(한 줄 안에 들어가야 읽힌다) */
+const FAILED_NAMES_SHOWN = 2;
 
 const TONE_SKIN: Record<Tone, string> = {
   quiet: "",
@@ -134,23 +143,29 @@ export function TaskCard({
 
 /**
  * 마지막 수집 — **저장된 사실만** 그린다. "크롤러가 죽었습니다"라고 쓰지 않는 이유는 queries/crawl 머리말에.
- *
- * ⚠️ `finished_at`이 비면 **"끝나지 않음"이 아니라 "종료 기록 없음"**이다 — 지금 돌고 있는 중일 수도
- *    있다. 그때는 게시판 수치도 쓰지 않는다(집계가 끝나지 않아 0/0으로 남는다 · 실측 08-24 17:01).
+ * 실행 결과 한 줄은 `RunResult`가 맡는다(무엇을 쓰고 무엇을 안 쓰는지는 그쪽 머리말에).
  */
-export function CrawlCard({ run, todayKst }: { run: CrawlRun | null; todayKst: string }) {
-  // 기록이 없으면 시각 자리에 그 사실을 쓴다 — 라벨이 바로 위에 있으므로 "수집"을 되풀이하지 않는다
-  const ranToday = run !== null && formatKstDate(run.started_at) === todayKst;
+export function CrawlCard({
+  run,
+  todayKst,
+  nowMs,
+}: {
+  run: CrawlRun | null;
+  todayKst: string;
+  nowMs: number;
+}) {
+  // 기록이 아예 없는 것도 "한 주기를 넘겼다"와 같은 뜻이다 — 들어오는 것이 없다
+  const overdue =
+    run === null || nowMs - Date.parse(run.started_at) > CRAWL_OVERDUE_HOURS * MS_PER_HOUR;
   return (
-    <StatusCard tone={run === null || ranToday ? "quiet" : "watch"}>
+    <StatusCard tone={overdue ? "watch" : "quiet"}>
       <div className="px-4 py-3.5">
         <CardLabel>마지막 수집</CardLabel>
         <p
           className={cn(
             "mt-1 leading-tight font-extrabold",
-            run === null
-              ? "text-[19px] text-muted-foreground"
-              : cn("text-[22px]", !ranToday && "text-gold-ink"),
+            run === null ? "text-[19px]" : "text-[22px]",
+            overdue && "text-gold-ink",
           )}
         >
           {run === null ? "아직 없음" : formatKstDayTime(run.started_at, todayKst)}
@@ -169,6 +184,12 @@ export function CrawlCard({ run, todayKst }: { run: CrawlRun | null; todayKst: s
   );
 }
 
+function failedLabel(keys: string[]): string {
+  const shown = keys.slice(0, FAILED_NAMES_SHOWN).map(boardLabel).join(" · ");
+  const rest = keys.length - FAILED_NAMES_SHOWN;
+  return rest > 0 ? `${shown} 외 ${rest}` : shown;
+}
+
 /**
  * 실행 결과 한 줄 — 끝난 실행만 수치를 말한다. **말을 크롤러와 맞춘다**(`cli.py`의 실행 요약과 같은 단어).
  *
@@ -176,12 +197,18 @@ export function CrawlCard({ run, todayKst }: { run: CrawlRun | null; todayKst: s
  *    목록을 0행 받은 게시판도 여기 포함된다 — 그건 크롤러가 `EMPTY`로 기록해 두 번 연속이면
  *    `LISTING_EMPTY` 경보를 내는 상태다(셀렉터 깨짐·로그인벽). "모두 정상"이라고 쓰면
  *    `minjob-ingest status`가 경보를 띄우는 바로 그 순간에 이 화면이 반대말을 하게 된다.
+ * **실패한 게시판 이름은 사실이므로 보여준다** — 경보(연속 2회)는 크롤러 판정이지만, "이번 실행에서
+ *    이 게시판이 실패했다"는 저장된 값이다(`error_detail`의 키). 개수까지만 말하면 어디가 깨졌는지
+ *    알려고 터미널을 여는 수밖에 없어 이 줄이 있으나 없으나 같아진다.
  * ⚠️ **"새 공고"가 아니라 "새로 수집"이다.** `new_count`는 새로 저장된 **원문(`source_data`) 행 수**로,
  *    AI 구조화·검수·공개 이전의 숫자다(그중 17%는 검수 큐에 남고 2%는 자동 거절된다).
  *    같은 카드에 "공개 대기"가 있어서 "공고 N건이 올라갔다"로 읽히면 안 된다.
  * ⚠️ `finished_at`이 비면 **"끝나지 않음"이 아니라 "종료 기록 없음"**이다: 지금 돌고 있는 중일 수도
  *    있고, 그 둘을 가르는 판정은 크롤러 것이다. 그때는 게시판 수치도 쓰지 않는다 — 집계가 끝나지
  *    않아 0/0으로 남아서, 그리면 없는 사실을 말하게 된다(실측 08-24 17:01).
+ * ⚠️ **끊긴 실행도 게시판 수치를 쓰지 않는다.** 크롤러는 예외를 잡고 실행을 닫으므로 `finished_at`이
+ *    채워지고, `sources_ok`는 손대지 않은 게시판까지 센다 — 3번째에서 죽은 실행이 "전부 성공"으로
+ *    나가게 된다. 대신 그 사실("실행이 중단됨")만 말한다.
  */
 function RunResult({ run }: { run: CrawlRun }) {
   if (run.finished_at === null) return <>종료 기록 없음</>;
@@ -189,7 +216,13 @@ function RunResult({ run }: { run: CrawlRun }) {
   return (
     <>
       새로 수집 <b className="font-bold text-foreground">{run.new_count}건</b>
-      {boardCount > 0 &&
+      {run.aborted ? (
+        <>
+          {" · "}
+          <b className="font-bold text-foreground">실행이 중단됨</b>
+        </>
+      ) : (
+        boardCount > 0 &&
         (run.sources_failed === 0 ? (
           <>
             {" · "}게시판 <b className="font-bold text-foreground">{boardCount}곳</b> 성공
@@ -198,8 +231,11 @@ function RunResult({ run }: { run: CrawlRun }) {
           <>
             {" · "}게시판 {boardCount}곳 중{" "}
             <b className="font-bold text-foreground">{run.sources_failed}곳 실패</b>
+            {/* 개수와 이름은 크롤러가 같은 dict에서 같이 쓰므로 어긋날 수 없다 — 방어로만 둔다 */}
+            {run.failed_sources.length > 0 && ` — ${failedLabel(run.failed_sources)}`}
           </>
-        ))}
+        ))
+      )}
     </>
   );
 }
@@ -243,6 +279,7 @@ function Cell({
  *
  * **공개 대기는 링크하지 않는다**: "승인됐지만 아직 안 올라간 건"만 걸러 보는 화면이 없어서,
  * 필터 없는 목록으로 보내는 링크는 없는 것만 못하다. 숫자와 색까지가 이 자리의 몫이다.
+ * 그 색도 **그 칸에만** 준다 — 카드째 물들이면 옆의 공개 중·내려감까지 봐야 할 것처럼 보인다.
  */
 export function PublicCard({
   overview,
@@ -254,7 +291,7 @@ export function PublicCard({
   action: ReactNode;
 }) {
   return (
-    <StatusCard tone={publishBacklog > 0 ? "watch" : "quiet"}>
+    <StatusCard tone="quiet">
       {/* 좁은 화면에서도 3열을 유지한다 — 2열로 접으면 오른쪽 칸의 세로선이 카드 가장자리에 남는다 */}
       <div className="grid grid-cols-3">
         <Cell label="공개 중" value={overview.visibleCount} href="/admin/jobs?tab=OPEN" />

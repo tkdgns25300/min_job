@@ -28,8 +28,10 @@ export async function AdminStatus() {
     getPublishBacklogCount(),
   ]);
 
-  // dynamic 스코프라 "오늘"이 요청 시각 기준으로 정확하다(캐시 안에서 부르면 엔트리 수명만큼 굳는다)
+  // dynamic 스코프라 시각이 **요청 시점**으로 정확하다 — 캐시 안에서 부르면 엔트리 수명만큼 굳는다.
+  // `nowMs`는 "마지막 수집이 한 주기를 넘겼나"에 쓰고, `today`는 날짜 표기(오늘/어제)에 쓴다.
   const today = todayInSeoul();
+  const nowMs = Date.now();
 
   return (
     <div className="space-y-6">
@@ -55,7 +57,7 @@ export async function AdminStatus() {
       </StatusSection>
 
       <StatusSection title={STATUS_SECTIONS.crawl}>
-        <CrawlCard run={crawl} todayKst={today} />
+        <CrawlCard run={crawl} todayKst={today} nowMs={nowMs} />
       </StatusSection>
 
       <StatusSection title={STATUS_SECTIONS.publish}>
