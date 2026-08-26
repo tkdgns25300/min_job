@@ -8,6 +8,7 @@ import {
   applicantDraftErrors,
   blankToNull,
   churchDraftErrors,
+  DOC_BUCKET,
   docError,
   docExtension,
   docMime,
@@ -35,8 +36,6 @@ import { createServiceClient } from "@/lib/supabase/service";
 //    돌려주면 **입력이 통째로 비워진 채 오류만 남는다** — 고른 파일까지 사라진다. 그래서 폼은
 //    `onSubmit`에서 `FormData`를 만들어 이 함수를 부르고, 결과를 자기 state로 받는다.
 //    (JS 없는 제출은 어차피 불가능하다 — 2·3·4단계 게이트가 고유번호 확인 결과에 걸려 있다.)
-
-const DOC_BUCKET = "verification-docs";
 
 export type LookupResult =
   { kind: "new" } | { kind: "existing"; churchName: string } | { kind: "error"; message: string };
@@ -144,7 +143,7 @@ export async function applyChurchVerification(form: FormData): Promise<ApplyResu
   if (Object.keys(errors).length > 0) return { errors };
 
   // 파일부터 올린다 — DB를 먼저 쓰면 업로드 실패 시 경로만 남은 행이 생긴다.
-  // ⚠️ MIME은 `docMime`이 정한다 — 브라우저가 HEIC에 빈 `type`을 주는 경우가 있고, 버킷
+  // ⚠️ MIME은 `docMime`이 정한다 — 브라우저가 빈 `type`을 주는 경우가 있고, 버킷
   //    `allowed_mime_types`는 그 빈 값을 `application/octet-stream`으로 보고 거부한다
   //    (`docError`가 이미 통과시켰으므로 여기서 null이 아니다).
   // ⚠️ **`contentType` 옵션으로는 안 고쳐진다** — supabase-js는 본문이 `Blob`/`File`이면 그것을

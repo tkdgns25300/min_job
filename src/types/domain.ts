@@ -305,11 +305,18 @@ export interface ChurchVerification {
     /** 그 교회 행의 검증 상태(조인) — `PENDING`이면 실재 여부부터 확인해야 할 교회다 */
     verificationStatus: ChurchStatus;
     name: string;
+    /**
+     * 고유번호 — **검수의 1번 대조값**이다. 운영자가 하는 일이 곧 "서류에 적힌 번호가 이 번호인가"라,
+     * 화면에 없으면 서류를 열어도 맞춰 볼 것이 없다(2026-08-26에 빠져 있었다).
+     */
+    registrationNo: string;
     // 신규 등록 분기에서만 입력받는다(`verify-form`) — 기존 교회를 골랐으면 조인해 온
     // `churches` 값이고 그건 미상일 수 있다. 그래서 `Church`와 같이 nullable이다.
     denomination: Denomination | null;
     region: Region | null;
     city: string | null;
+    /** 상세 주소 — 서류(고유번호증)에 소재지가 적혀 있어 대조에 쓴다. `Church.address`와 같은 값 */
+    address: string | null;
     /**
      * 사무용 연락처 — **검증의 축**. 운영자가 공개 게시판 공고(`jobs.contact_*`)·홈페이지와 대조한다.
      * ⚠️ 신청자 개인 전화는 받지 않는다 — 사칭자가 자기 번호를 적고 자기가 받으므로 검증이 안 된다.
@@ -319,13 +326,6 @@ export interface ChurchVerification {
     contactEmail: string | null;
     contactTel: string | null;
   };
-  /**
-   * 증빙 서류 — 등록번호·서류 종류는 **저장하지 않는다**(서류를 열면 보이고, 저장하면 보관 부담만).
-   * 실구현은 비공개 Storage 경로(DATA §3 `users.verification_doc_path`).
-   * ⚠️ `null` = **파기 완료**. 개인정보처리방침이 "인증 처리 완료 후 지체 없이 파기"를 약속하므로
-   * 승인·반려 처리가 파일을 지우고 경로를 NULL로 돌린다 — 처리된 신청은 서류를 다시 열 수 없다.
-   */
-  docFileName: string | null;
   status: ChurchVerificationStatus; // PENDING / APPROVED / REJECTED
   /**
    * 제출 시각 — **오프셋 있는 ISO8601**(`users.verification_submitted_at`은 `timestamptz`).
@@ -336,4 +336,24 @@ export interface ChurchVerification {
   /** 검수 시각(승인·반려 시) — 위와 같다. `null` = 아직 검수 전 */
   reviewedAt: string | null;
   rejectionReason: string | null; // 반려 사유 (REJECTED만)
+}
+
+/**
+ * 판정 화면이 쓰는 신청 — 목록에 **증빙 서류를 싣지 않으려고** 나눈 타입이다.
+ * ⚠️ 서류 URL은 30분 signed URL이라 목록에 실으면 ① 렌더마다 Storage 왕복이 한 번 늘고
+ *    ② 목록 뷰가 client 컴포넌트라 **모든 신청자의 증빙 URL이 브라우저 페이로드로 나간다** —
+ *    그릴 곳도 없는데. 서명은 상세에서만 한다(수집 검수도 `getReviewDetail`에서만 서명한다).
+ */
+export interface ChurchVerificationDetail extends ChurchVerification {
+  /**
+   * 증빙 서류. 저장하는 것은 **비공개 Storage 경로 하나**뿐이고(DATA §3 `users.verification_doc_path`)
+   * 서류 종류·등록번호는 저장하지 않는다 — 열면 보이고, 저장하면 보관 부담만 진다.
+   *
+   * ⚠️ 파일명을 싣지 않는다 — 경로가 `{uid}/{uuid}.{ext}`라 **UUID는 사람에게 뜻이 없다**.
+   *    화면이 알아야 하는 것은 "무엇으로 열리나"(`kind`)뿐이다.
+   * ⚠️ `null` = 파기됨. **반려 처리가 파일을 지운다** — 자격 없는 신청의 증빙을 들고 있을 근거가 없다.
+   *    승인분은 반대로 **자격이 유지되는 동안 보관**한다(2026-08-25 방침 개정 · `/privacy` §3).
+   * ⚠️ `url === null` = 경로는 있는데 **서명에 실패**했다. 파기와 뜻이 달라 따로 둔다.
+   */
+  doc: { kind: "pdf" | "image"; url: string | null } | null;
 }

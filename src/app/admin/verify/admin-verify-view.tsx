@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { VerificationRow } from "./verification-row";
-import { VerificationSheet, type SheetState } from "./verification-sheet";
 import { TabBar } from "@/components/tab-bar";
 import { EnumFilterSelect } from "@/components/enum-filter-select";
 import {
@@ -31,7 +30,6 @@ export function AdminVerifyView({ verifications }: { verifications: ChurchVerifi
   const [denom, setDenom] = useState<"all" | Denomination>("all");
   const [region, setRegion] = useState<"all" | Region>("all");
   const [q, setQ] = useState("");
-  const [sheet, setSheet] = useState<SheetState>(null);
 
   const counts = useMemo(
     () => ({
@@ -93,14 +91,12 @@ export function AdminVerifyView({ verifications }: { verifications: ChurchVerifi
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((v) => (
-                <VerificationRow key={v.id} verification={v} onReview={() => setSheet(v)} />
+                <VerificationRow key={v.id} verification={v} />
               ))}
             </tbody>
           </table>
         )}
       </div>
-
-      <VerificationSheet state={sheet} onClose={() => setSheet(null)} />
     </div>
   );
 }

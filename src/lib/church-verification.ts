@@ -22,6 +22,22 @@ export const REGISTRATION_NO_LENGTH = 10;
  * 10MB를 정말 받으려면 업로드를 **브라우저 → Storage 직행(signed upload URL)**으로 옮겨야 한다.
  *    그러면 함수 본문을 지나지 않으므로 버킷 한도가 유일한 상한이 된다.
  */
+/**
+ * 증빙 서류 비공개 버킷 — 신청(업로드)과 검수(서명 열람·반려 시 파기)가 **같은 이름을 써야** 한다.
+ * 서류에 관한 사실(상한·허용 형식·확장자·버킷·수명)을 이 파일 하나에 모아 둔다.
+ */
+export const DOC_BUCKET = "verification-docs";
+
+/** 검수 화면이 서류를 여는 signed URL 수명 — 포스터와 같은 30분(운영자가 한 건 보는 시간) */
+export const DOC_URL_TTL_SECONDS = 60 * 30;
+
+/**
+ * 반려 사유 상한 — 신청자에게 그대로 보여 주는 글이라 화면에 담길 만큼만 받는다.
+ * ⚠️ **검수 화면이 쓰는 값인데 여기 있다**: `"use server"` 파일은 async 함수만 내보낼 수 있어
+ *    (실측 2026-08-25 · 빌드는 통과하고 요청에서 터진다) 액션 옆에 둘 수 없다.
+ */
+export const REJECTION_REASON_MAX = 200;
+
 export const DOC_MAX_BYTES = 4 * 1024 * 1024;
 
 /**
@@ -143,15 +159,18 @@ export function applicantDraftErrors(input: {
   return errors;
 }
 
-/** 버킷 `allowed_mime_types`와 같은 목록 — 어긋나면 업로드가 서버에서 조용히 거부된다 */
-const DOC_MIME_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-] as const;
+/**
+ * 받는 형식 — **운영자가 화면에서 읽을 수 있는 것만** 둔다. 검수는 서류를 띄워 놓고 값과
+ * 대조하는 일이라, 못 띄우는 형식을 받으면 신청자는 올렸는데 판정이 막히고 결국
+ * 반려 → 재신청 한 바퀴를 돌게 된다.
+ *
+ * ⛔ **HEIC·HEIF를 뺐다**(2026-08-26) — Chrome·Firefox가 렌더링하지 못한다. 아이폰은 대체로
+ *    영향이 없다(iOS가 `<input type="file">` 업로드에서 JPEG로 바꿔 보낸다); 걸리는 쪽은 맥에서
+ *    `.heic`를 직접 고르는 경우고, 그때는 `docError`가 사람 말로 거절한다.
+ * ⚠️ 버킷 `allowed_mime_types`는 이보다 넓어도 된다(우리가 먼저 거른다). 좁으면 업로드가
+ *    서버에서 조용히 거부된다.
+ */
+const DOC_MIME_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
 
 type DocMime = (typeof DOC_MIME_TYPES)[number];
 
@@ -162,8 +181,6 @@ const EXTENSION_MIME: Record<string, DocMime> = {
   jpeg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
-  heic: "image/heic",
-  heif: "image/heif",
 };
 
 /**
@@ -174,6 +191,14 @@ export const DOC_ACCEPT = Object.keys(EXTENSION_MIME)
   .map((extension) => `.${extension}`)
   .join(",");
 
+/**
+ * 화면에 적는 형식 목록("PDF · JPG · PNG · WEBP") — **MIME 목록에서 파생한다.**
+ * 폼이 손으로 적고 있어서 HEIC를 뺀 뒤에도 `HEIC`가 남아 있었다: 못 받는 형식을 초대하는 안내다.
+ */
+export const DOC_FORMATS_LABEL = DOC_MIME_TYPES.map((mime) =>
+  docExtension(mime).toUpperCase(),
+).join(" · ");
+
 export interface DocInput {
   size: number;
   type: string;
@@ -183,9 +208,10 @@ export interface DocInput {
 /**
  * 증빙 서류의 MIME — **파일명 확장자로 폴백한다.**
  *
- * ⚠️ Windows·Android Chrome은 `.heic`/`.heif`에 `file.type`을 **빈 문자열**로 준다. 폴백 없이
- *    MIME만 보면 우리가 `accept`로 초대해 놓고 거절하는 모양이 된다. 업로드할 때도 이 값을
- *    `contentType`으로 넘겨야 한다 — 버킷 `allowed_mime_types` 안의 값이어야 통과한다.
+ * ⚠️ **브라우저가 `file.type`을 빈 문자열로 주는 경우가 있다**(OS·확장자 등록 상태에 따라).
+ *    폴백 없이 MIME만 보면 우리가 `accept`로 초대해 놓고 거절하는 모양이 된다. HEIC를 받던 동안
+ *    그게 흔한 경우였고(2026-08-26에 형식에서 뺐다), 드물게 다른 형식에서도 나므로 폴백은 남긴다.
+ *    업로드할 때도 이 값을 `contentType`으로 넘겨야 한다 — 버킷 `allowed_mime_types` 안이어야 통과한다.
  * 모르는 형식이면 `null`(호출부가 사람 말로 거절한다).
  */
 export function docMime(file: DocInput): DocMime | null {

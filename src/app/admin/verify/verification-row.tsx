@@ -1,7 +1,6 @@
-"use client";
-
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   CHURCH_STATUSES,
   CHURCH_VERIFICATION_STATUSES,
@@ -13,7 +12,8 @@ import {
 import { formatKstDate } from "@/lib/format";
 import type { ChurchVerification } from "@/types/domain";
 
-// 인증 상태 → Badge variant. sheet와 공유(단일 정의) — 표시 로직이라 도메인 enum과 분리.
+// 인증 상태 → Badge variant. 판정 페이지(`[id]/page.tsx`)와 공유(단일 정의) — 표시 로직이라
+// 도메인 enum과 분리한다.
 export const VERIFICATION_STATUS_VARIANT: Record<
   ChurchVerificationStatus,
   "default" | "outline" | "destructive"
@@ -23,13 +23,7 @@ export const VERIFICATION_STATUS_VARIANT: Record<
   REJECTED: "destructive",
 };
 
-export function VerificationRow({
-  verification,
-  onReview,
-}: {
-  verification: ChurchVerification;
-  onReview: () => void;
-}) {
+export function VerificationRow({ verification }: { verification: ChurchVerification }) {
   const { applicant, church, status } = verification;
   // 기존 교회를 고른 신청은 교단·지역이 미상일 수 있다 — 아는 조각만 잇는다
   const location = [
@@ -75,14 +69,17 @@ export function VerificationRow({
         </Badge>
       </td>
       <td className="px-4 py-3 align-middle">
+        {/* 시트가 아니라 판정 페이지로 간다 — 증빙 서류를 읽을 폭이 필요해서다(그 페이지 머리말) */}
         <div className="flex justify-end">
-          <Button
-            variant={status === "PENDING" ? "default" : "outline"}
-            size="sm"
-            onClick={onReview}
+          <Link
+            href={`/admin/verify/${verification.id}`}
+            className={buttonVariants({
+              variant: status === "PENDING" ? "default" : "outline",
+              size: "sm",
+            })}
           >
             {status === "PENDING" ? "검토" : "상세"}
-          </Button>
+          </Link>
         </div>
       </td>
     </tr>

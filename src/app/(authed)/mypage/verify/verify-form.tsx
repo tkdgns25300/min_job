@@ -17,6 +17,7 @@ import { PRIVACY_EFFECTIVE_DATE } from "@/constants/business";
 import {
   DENOMINATION_INDEPENDENT,
   DOC_ACCEPT,
+  DOC_FORMATS_LABEL,
   DOC_MAX_BYTES,
   docError,
   MAX_LENGTHS,
@@ -198,7 +199,7 @@ export function VerifyForm({
             <span className="text-xs">
               {doc
                 ? `${doc.name} · ${(doc.size / 1024 / 1024).toFixed(1)}MB`
-                : `PDF · JPG · PNG · WEBP · HEIC · ${DOC_MAX_BYTES / 1024 / 1024}MB 이하`}
+                : `${DOC_FORMATS_LABEL} · ${DOC_MAX_BYTES / 1024 / 1024}MB 이하`}
             </span>
             <input
               type="file"

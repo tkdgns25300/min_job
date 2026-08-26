@@ -164,7 +164,9 @@ function ChurchGate({ user }: { user: CurrentUser }) {
 
       {/* 사람은 승인됐는데 교회가 아직 검수 중인 상태 — `hasChurchAccess`가 양쪽을 보므로 여기로 온다.
           세 분기(null·PENDING·REJECTED) 어디에도 안 걸려 **빈 화면**이 되던 자리다.
-          승인이 두 테이블을 함께 바꾸다 한쪽만 성공해도 이 상태가 된다(SPEC 교회 인증). */}
+          ⚠️ 판정 액션은 **교회를 먼저** 승인하므로 그 부분 실패로는 이 상태가 되지 않는다
+          (그쪽은 사람이 `PENDING`으로 남아 위의 "검수중" 카드를 본다 · `admin/verify/actions.ts`).
+          DB를 직접 고쳤거나 교회만 되돌린 경우에 도달한다 — 그래서 문의 수단만 둔다. */}
       {status === "APPROVED" && (
         <GateCard>
           <Badge variant="outline" className="mb-3">

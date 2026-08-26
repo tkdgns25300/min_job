@@ -7,11 +7,13 @@ import {
   POSITIONS,
   REGIONS,
 } from "@/constants/domain";
+import { DOC_BUCKET, DOC_URL_TTL_SECONDS } from "@/lib/church-verification";
 import { keyOf } from "@/lib/domain-enum";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { fetchAllRows } from "./fetch-all";
 import type { Tables } from "@/types/database";
-import type { ChurchVerification, QueueSummary } from "@/types/domain";
+import type { ChurchVerification, ChurchVerificationDetail, QueueSummary } from "@/types/domain";
 
 // 데이터 소스 seam (교회 인증) — 페이지는 여기서만 가져온다.
 //
@@ -29,7 +31,7 @@ const SELECT = `
   verification_contact_tel, verification_contact_email, verification_doc_path,
   verification_submitted_at, verification_reviewed_at, verification_rejection_reason,
   church_verification_status,
-  churches!inner(id, name, denomination, region, city, verification_status)
+  churches!inner(id, name, registration_no, denomination, region, city, address, verification_status)
 `;
 
 type ApplicantRow = Pick<
@@ -48,7 +50,14 @@ type ApplicantRow = Pick<
 > & {
   churches: Pick<
     Tables<"churches">,
-    "id" | "name" | "denomination" | "region" | "city" | "verification_status"
+    | "id"
+    | "name"
+    | "registration_no"
+    | "denomination"
+    | "region"
+    | "city"
+    | "address"
+    | "verification_status"
   >;
 };
 
@@ -71,7 +80,69 @@ export async function getVerifications(): Promise<ChurchVerification[]> {
       .order("id")
       .range(from, to),
   );
+  // ⛔ **여기서 서류를 서명하지 않는다** — 목록은 `doc`을 그리지 않고, 목록 뷰가 client라
+  //    서명했다면 모든 신청자의 증빙 URL이 브라우저 페이로드로 나갔다. 서명은 상세에서만 한다.
   return rows.map(toVerification).sort(byReviewQueue);
+}
+
+/**
+ * 신청 한 건 — 판정 화면(`/admin/verify/[id]`)용. `id`는 사용자 id다(신청 = 사용자 한 명).
+ *
+ * ⚠️ **목록과 같은 조건을 봐야 한다** — 제출 시각 필터와 `churches!inner`를 빼면 **목록엔 없는데
+ *    상세는 열리는** 건이 생긴다(홈 요약과 목록이 갈렸던 전례가 있다 · ROADMAP 2026-08-24).
+ *    그래서 `SELECT`·조건·`toVerification`을 목록과 그대로 공유한다.
+ */
+export async function getVerification(id: string): Promise<ChurchVerificationDetail | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("users")
+    .select(SELECT)
+    .eq("id", id)
+    .not("verification_submitted_at", "is", null)
+    .maybeSingle<ApplicantRow>();
+
+  if (error) {
+    console.error("[verifications] 신청 조회 실패", id, error);
+    return null;
+  }
+  if (data === null) return null;
+
+  const docPath = data.verification_doc_path;
+  const url = docPath === null ? null : await signDoc(docPath);
+  return {
+    ...toVerification(data),
+    // `null` = 파기됨(반려 처리가 지운다). 경로는 있는데 URL이 없으면 **서명 실패**라 뜻이 다르다.
+    doc: docPath === null ? null : { kind: docKind(docPath), url },
+  };
+}
+
+/**
+ * 증빙 서류 signed URL — **`service.ts`를 쓴다.** `storage.objects`는 RLS가 항상 켜져 있고
+ * `verification-docs` 버킷엔 정책이 없어(RLS 유예) publishable 키로는 조용히 빈 URL이 온다
+ * (포스터에서 실측 2026-08-22). 호출부는 `requireOperator()` 뒤이고 나가는 것은 개체 하나에
+ * 묶인 30분 URL이다. **이 예외를 늘리지 말 것**(CLAUDE.md Storage 예외와 같은 근거).
+ *
+ * 실패해도 화면을 버리지 않는다 — `null`을 돌려 서류만 못 여는 상태로 나머지 검수 정보는 보여준다.
+ */
+async function signDoc(path: string): Promise<string | null> {
+  const { data, error } = await createServiceClient()
+    .storage.from(DOC_BUCKET)
+    .createSignedUrl(path, DOC_URL_TTL_SECONDS);
+  if (error || !data?.signedUrl) {
+    console.error("[verifications] 증빙 서명 실패 — 서류 없이 그린다", path, error);
+    return null;
+  }
+  return data.signedUrl;
+}
+
+/**
+ * 확장자로만 판단한다 — Storage는 content-type을 되돌려주지 않고, 경로는 우리가 만들어 늘 확장자가 있다.
+ * 받는 형식이 pdf 아니면 브라우저가 그릴 수 있는 이미지뿐이라(`DOC_MIME_TYPES`) 두 갈래로 끝난다.
+ * ⚠️ HEIC를 받던 동안 올라온 파일이 있으면 `"image"`로 분류돼 `<img>`가 조용히 깨진다 —
+ *    2026-08-26에 형식에서 뺐고 그 시점 버킷에 남은 파일이 없어(실측) 세 번째 갈래를 두지 않았다.
+ */
+function docKind(path: string): "pdf" | "image" {
+  return path.split(".").pop()?.toLowerCase() === "pdf" ? "pdf" : "image";
 }
 
 /**
@@ -139,17 +210,16 @@ function toVerification(row: ApplicantRow): ChurchVerification {
       id: church.id,
       verificationStatus: churchStatus(church.verification_status),
       name: church.name,
+      registrationNo: church.registration_no,
       denomination: keyOf(DENOMINATIONS, church.denomination),
       region: keyOf(REGIONS, church.region),
       city: church.city,
+      address: church.address,
       // ⚠️ **신청자가 적어낸 사무용 연락처**다 — `churches`에서 조인한 값이 아니다.
       //    기존 교회 신청이면 교회 행의 값과 다를 수 있고, 그 차이가 곧 반려 근거다(DATA §3).
       contactEmail: row.verification_contact_email,
       contactTel: row.verification_contact_tel,
     },
-    // 경로만 저장하고 파일명을 따로 두지 않는다 — 경로의 마지막 조각이 곧 파일명이다.
-    // `null` = 파기 완료(처리 끝난 신청은 서류를 다시 열 수 없다 · 개인정보처리방침).
-    docFileName: row.verification_doc_path?.split("/").at(-1) ?? null,
     status: applicationStatus(row.church_verification_status),
     // 위 쿼리가 null을 걸러냈으므로 값이 있다 — 타입만 nullable이다
     submittedAt: row.verification_submitted_at ?? "",
