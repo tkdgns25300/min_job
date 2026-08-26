@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>[시안] 교회 인증 신청</title>
+<style>
+  :root{
+    --brand-900:#15332a;--brand-700:#234f41;--primary:#2f5d50;
+    --gold:#d3ad63;--gold-ink:#8a6d2f;
+    --card:#fff;--bg:#f4f6f5;--border:#e3e7e6;--fg:#1a201e;--muted:#6b7674;
+    --destructive:#c0392b;--tint:rgba(47,93,80,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+       background:var(--bg);color:var(--fg);line-height:1.5;padding:28px 20px 90px;font-size:14px}
+  .wrap{max-width:1200px;margin:0 auto}
+  .screencap{font-size:12px;font-weight:800;color:var(--primary);background:var(--tint);
+       border:1px solid rgba(47,93,80,.15);border-radius:8px;padding:9px 12px;margin:44px 0 14px}
+  .screencap:first-of-type{margin-top:0}
+  .screencap i{font-style:normal;color:var(--muted);font-weight:600}
+  .note{font-size:12.5px;color:var(--muted);margin:12px 2px 0;line-height:1.75;max-width:780px}
+  .note b{color:var(--fg)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+       background:#eceeed;border-radius:4px;padding:1px 5px}
+  .cut{margin:38px 0 0;border:0;border-top:1px dashed var(--border)}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:22px;align-items:start}
+
+  .page{max-width:600px;border:1px solid var(--border);border-radius:14px;background:var(--bg);padding:22px 20px 26px}
+  .back{font-size:13px;color:var(--muted);text-decoration:none}
+  h1{margin-top:10px;font-size:22px;font-weight:800}
+  .lead{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.65}
+  .lead b{color:var(--fg)}
+
+  .form{margin-top:16px;border:1px solid var(--border);border-radius:16px;background:var(--card);padding:20px}
+  section.step{border-top:1px solid var(--border);padding:18px 0}
+  section.step:first-of-type{border-top:0;padding-top:0}
+  section.step.off{opacity:.42}
+  .steptitle{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800}
+  .num{width:20px;height:20px;border-radius:6px;background:var(--primary);color:#fff;
+       font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
+  section.step.off .num{background:#b9c3c0}
+  .stephint{margin:5px 0 0 28px;font-size:12px;color:var(--muted);line-height:1.65}
+  .fields{margin-top:13px;display:flex;flex-direction:column;gap:12px}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  label.f{display:block}
+  label.f .lab{display:block;margin-bottom:6px;font-size:13px;font-weight:500}
+  label.f .req{color:var(--destructive);margin-left:2px}
+  label.f .opt{margin-left:6px;font-size:11.5px;font-weight:400;color:var(--muted)}
+  input.i,select.i{width:100%;height:42px;padding:0 11px;border:1px solid var(--border);
+       border-radius:10px;background:#fff;font-family:inherit;font-size:14px;color:var(--fg)}
+  select.i{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
+       linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+       background-position:calc(100% - 16px) 18px,calc(100% - 11px) 18px;
+       background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  input.i::placeholder{color:#b3bab8}
+  input.i:disabled,select.i:disabled{background:#f3f5f4;color:var(--muted)}
+  .hint{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.6}
+  .num10{font-variant-numeric:tabular-nums;letter-spacing:.04em}
+
+  /* 고유번호 + 확인 */
+  .lookup{display:flex;gap:8px}
+  .lookup input{flex:1;min-width:0}
+  .btn-check{flex:none;height:42px;padding:0 16px;border:1px solid var(--primary);border-radius:10px;
+       background:#fff;color:var(--primary);font-family:inherit;font-size:13px;font-weight:800;cursor:pointer}
+  .btn-check.done{border-color:var(--border);color:var(--muted);font-weight:600}
+  .result{margin-top:8px;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6}
+  .result.new{border:1px solid rgba(47,93,80,.3);background:var(--tint)}
+  .result.new b{color:var(--primary)}
+  .result.old{border:1px solid rgba(47,93,80,.3);background:var(--tint)}
+  .result.old .name{font-size:14px;font-weight:800;color:var(--primary)}
+  .result.bad{border:1px solid rgba(192,57,43,.3);background:rgba(192,57,43,.05);color:var(--destructive);font-weight:600}
+
+  .bad-f input.i,.bad-f select.i{border-color:rgba(192,57,43,.55);background:rgba(192,57,43,.04)}
+  .err{margin-top:6px;font-size:11.5px;color:var(--destructive);font-weight:600}
+
+  .file{display:flex;flex-direction:column;align-items:center;gap:5px;border:1px dashed var(--border);
+        border-radius:12px;background:#fafbfa;padding:20px 14px;text-align:center;font-size:13px;color:var(--muted)}
+  .file b{color:var(--primary)}
+  .file .sub{font-size:11.5px}
+  .file.has{border-style:solid;border-color:rgba(47,93,80,.35);background:var(--tint);color:var(--fg)}
+
+  .consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.6}
+  .consent input{margin-top:2px;width:17px;height:17px;flex:none;accent-color:var(--primary)}
+  .consent .ver{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+
+  .submit{margin-top:18px;width:100%;height:48px;border:0;border-radius:12px;background:var(--primary);
+          color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer}
+  .submit:disabled{background:#a9bab4;cursor:default}
+  .foot{margin-top:11px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.65}
+
+  .panel{border-radius:16px;padding:22px;text-align:center}
+  .panel.gold{border:1px solid rgba(211,173,99,.5);background:rgba(211,173,99,.12)}
+  .panel.green{border:1px solid rgba(47,93,80,.3);background:var(--tint)}
+  .panel .t{font-size:15px;font-weight:800}
+  .panel.gold .t{color:var(--gold-ink)}
+  .panel.green .t{color:var(--primary)}
+  .panel .d{margin-top:8px;font-size:13px;color:var(--muted);line-height:1.75}
+  .panel .go{display:inline-block;margin-top:14px;font-size:13px;font-weight:700;color:var(--primary);text-decoration:none}
+  .banner{border:1px solid rgba(192,57,43,.3);background:rgba(192,57,43,.05);border-radius:12px;
+          padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:var(--destructive);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ══════════ A ══════════ -->
+<p class="screencap">A. 확인 전 <i>(처음 열었을 때 — 고유번호를 확인해야 나머지가 열린다)</i></p>
+<div class="page">
+  <a class="back" href="#">← 마이페이지</a>
+  <h1>교회 인증</h1>
+  <p class="lead">공고를 직접 등록·관리하려면 교회 인증이 필요해요. <b>고유번호증 또는 사업자등록증</b>이 있는 교회만 신청할 수 있어요.</p>
+
+  <div class="form">
+    <section class="step">
+      <div class="steptitle"><span class="num">1</span>교회 확인</div>
+      <p class="stephint">고유번호로 교회를 찾아요. 이미 등록된 교회면 그 교회의 담당자로 신청됩니다 — 한 교회에 담당자가 여러 명일 수 있어요.</p>
+      <div class="fields">
+        <label class="f"><span class="lab">고유번호<span class="req">*</span></span>
+          <span class="lookup">
+            <input class="i num10" placeholder="숫자 10자리" inputmode="numeric" maxlength="10" />
+            <button class="btn-check">확인</button>
+          </span>
+          <p class="hint">고유번호증·사업자등록증에 적힌 번호예요. 하이픈은 빼고 숫자만 입력돼요.</p>
+        </label>
+      </div>
+    </section>
+
+    <section class="step off">
+      <div class="steptitle"><span class="num">2</span>교회 증빙</div>
+      <p class="stephint">고유번호를 먼저 확인해 주세요.</p>
+    </section>
+    <section class="step off">
+      <div class="steptitle"><span class="num">3</span>담당자</div>
+    </section>
+    <section class="step off">
+      <div class="steptitle"><span class="num">4</span>동의</div>
+    </section>
+
+    <button class="submit" disabled>인증 신청</button>
+    <p class="foot">고유번호를 확인하면 나머지 항목이 열려요.</p>
+  </div>
+</div>
+<p class="note">
+  <b>확인 버튼은 명시적입니다.</b> 10자리를 채우면 자동 조회하는 방식은 오타로 10자리가 됐을 때
+  "처음 등록"으로 판정돼 칸이 펼쳐지고, 고치면 다시 접히며 <b>깜빡입니다.</b> 버튼은 사용자가 확인 의사를
+  밝히므로 상태 전환이 예측 가능하고 서버 호출도 통제됩니다(사업자번호 확인이 업계 관례이기도 합니다).<br />
+  <b>확인 전에는 제출이 잠깁니다</b> — 신규인지 기존인지가 정해지지 않으면 무엇을 저장할지 알 수 없습니다.
+  직접 POST로 건너뛰어도 서버가 같은 조회를 다시 하므로 안전합니다.<br />
+  <b>입력 중 숫자만 남습니다.</b> <code>123-45-67890</code>을 붙여넣어도 <code>1234567890</code>이 되고 10자리에서 끊깁니다 —
+  하이픈이 섞이면 <code>UNIQUE</code>가 무의미해지기 때문입니다.
+</p>
+
+<hr class="cut" />
+
+<!-- ══════════ B · C ══════════ -->
+<p class="screencap">B. 처음 등록하는 교회 · C. 이미 등록된 교회 <i>(확인 결과로 갈린다)</i></p>
+<div class="cols">
+  <div>
+    <div class="page">
+      <div class="form" style="margin-top:0">
+        <section class="step">
+          <div class="steptitle"><span class="num">1</span>교회 확인</div>
+          <div class="fields">
+            <label class="f"><span class="lab">고유번호<span class="req">*</span></span>
+              <span class="lookup">
+                <input class="i num10" value="1234567890" />
+                <button class="btn-check done">다시 확인</button>
+              </span>
+              <span class="result new">✓ <b>처음 등록하는 교회예요.</b> 아래에 교회 정보를 적어 주세요.</span>
+            </label>
+            <label class="f"><span class="lab">교회명<span class="req">*</span></span>
+              <input class="i" placeholder="○○교회" maxlength="60" />
+            </label>
+            <div class="pair">
+              <label class="f"><span class="lab">교단<span class="req">*</span></span>
+                <select class="i"><option>선택하세요</option><option>예장합동</option><option>예장통합</option>
+                  <option>예장백석</option><option>예장고신</option><option>예장합신</option><option>감리교</option>
+                  <option>성결교</option><option>침례교</option><option>순복음</option><option>기타 교단</option>
+                  <option>무소속·독립교회</option></select>
+              </label>
+              <label class="f"><span class="lab">지역<span class="req">*</span></span>
+                <select class="i"><option>선택하세요</option><option>서울</option><option>경기</option><option>…</option></select>
+              </label>
+            </div>
+            <div class="pair">
+              <label class="f"><span class="lab">시·군·구<span class="req">*</span></span>
+                <input class="i" placeholder="강남구" maxlength="30" />
+              </label>
+              <label class="f"><span class="lab">주소<span class="opt">선택</span></span>
+                <input class="i" placeholder="서울 강남구 테헤란로 1" maxlength="120" />
+              </label>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <p class="note"><b>교단에 "무소속·독립교회"가 있습니다</b> — DB에서 <code>NULL</code>로 저장됩니다.
+      <code>기타 교단</code>은 "소속은 있고 우리 9키에 없는 교단"이라 뜻이 달라, 섞으면 필터·거점 판정이 오염됩니다.
+      신청서가 교단을 필수로 받으므로 <b><code>churches</code>의 <code>NULL</code>은 늘 "무소속" 하나</b>입니다
+      (<code>jobs</code>의 <code>NULL</code>은 "원문에 없음 = 미상"으로 뜻이 다릅니다).</p>
+  </div>
+  <div>
+    <div class="page">
+      <div class="form" style="margin-top:0">
+        <section class="step">
+          <div class="steptitle"><span class="num">1</span>교회 확인</div>
+          <div class="fields">
+            <label class="f"><span class="lab">고유번호<span class="req">*</span></span>
+              <span class="lookup">
+                <input class="i num10" value="8765432109" />
+                <button class="btn-check done">다시 확인</button>
+              </span>
+              <span class="result old">✓ <span class="name">은혜로교회</span><br />
+                이 교회의 담당자로 신청합니다. 교회 정보는 이미 등록돼 있어 다시 적지 않아요.</span>
+            </label>
+          </div>
+        </section>
+        <section class="step">
+          <div class="steptitle"><span class="num">2</span>교회 증빙</div>
+          <p class="stephint">담당자 확인을 위해 증빙 서류와 사무용 연락처가 필요해요.</p>
+        </section>
+      </div>
+    </div>
+    <p class="note"><b>교회명 하나만 보여줍니다.</b> 교단·지역·주소까지 채워 보여주면 ① 사용자가 고칠 수 있다고
+      오해하고(미승인자는 인증된 교회 값을 덮어쓸 수 없습니다) ② 우리가 가진 교회 정보를 로그인한 아무에게나
+      노출합니다. 이름은 <b>"이 교회 맞나요?"</b> 확인 용도로만 필요합니다.<br />
+      <b>검증 상태(미검증·인증 완료)는 알려주지 않습니다</b> — "등록되어 있다"까지입니다.
+      그 이상은 운영자 판단이고 사용자가 알 필요가 없습니다.<br />
+      <b>버려지는 입력이 0이 됩니다</b> — 기존 교회면 그 칸을 보여주지도 않습니다.</p>
+  </div>
+</div>
+
+<hr class="cut" />
+
+<!-- ══════════ D 나머지 단계 ══════════ -->
+<p class="screencap">D. 확인 뒤 나머지 <i>(증빙 · 담당자 · 동의)</i></p>
+<div class="page">
+  <div class="form" style="margin-top:0">
+    <section class="step">
+      <div class="steptitle"><span class="num">2</span>교회 증빙</div>
+      <p class="stephint">고유번호증 또는 사업자등록증만 인정해요(교회 사칭 방지). 사무용 연락처는 교회 공식 정보와 대조합니다.</p>
+      <div class="fields">
+        <label class="f"><span class="lab">증빙 서류<span class="req">*</span></span>
+          <span class="file has"><span>고유번호증.pdf</span><span class="sub">2.4MB · 다시 고르려면 눌러 주세요</span></span>
+        </label>
+        <div class="pair">
+          <label class="f"><span class="lab">사무용 전화<span class="req">*</span></span>
+            <input class="i" value="02-000-0000" inputmode="tel" />
+          </label>
+          <label class="f"><span class="lab">사무용 이메일<span class="opt">선택</span></span>
+            <input class="i" type="email" placeholder="office@church.or.kr" />
+          </label>
+        </div>
+      </div>
+    </section>
+    <section class="step">
+      <div class="steptitle"><span class="num">3</span>담당자</div>
+      <p class="stephint">확인이 필요하면 교회 사무실로 연락해 여쭤봐요. 담당자는 여러 명일 수 있고 각자 인증합니다.</p>
+      <div class="fields">
+        <div class="pair">
+          <label class="f"><span class="lab">이름<span class="req">*</span></span>
+            <input class="i" value="이상훈" maxlength="30" />
+          </label>
+          <label class="f"><span class="lab">직분<span class="req">*</span></span>
+            <select class="i"><option>선택하세요</option><option>담임목사</option><option>부목사</option>
+              <option>전도사</option><option>강도사</option><option>기타</option></select>
+          </label>
+        </div>
+        <label class="f"><span class="lab">이메일</span>
+          <input class="i" value="tkdgns25300@naver.com" disabled />
+          <p class="hint">로그인 계정 이메일이에요. 결과를 이 주소로 알려드려요.</p>
+        </label>
+      </div>
+    </section>
+    <section class="step">
+      <div class="steptitle"><span class="num">4</span>동의</div>
+      <div class="fields">
+        <label class="consent"><input type="checkbox" />
+          <span>(필수) <a href="/terms">이용약관</a> 및 <a href="/privacy">개인정보 수집·이용</a>에 동의합니다.
+            제출 서류·담당자 정보는 <b>인증 확인 목적으로만</b> 사용하고, 인증 자격이 유지되는 동안 비공개로 보관해요.
+            <span class="ver">개인정보처리방침 2026-08-25 시행분</span></span>
+        </label>
+      </div>
+    </section>
+    <button class="submit">인증 신청</button>
+    <p class="foot">신청 후에는 내용을 수정할 수 없어요. 반려되면 사유와 함께 다시 신청할 수 있어요.</p>
+  </div>
+</div>
+<p class="note">
+  <b>동의에 방침 시행일이 찍혀 있습니다</b> — 그 값이 <code>verification_consent_version</code>에 그대로 저장됩니다.
+  무엇에 동의하는지가 화면에 보여야 기록이 의미를 갖습니다.<br />
+  <b>4MB 초과 파일은 고르는 순간 안내하고 제출을 막습니다</b> — 서버까지 보내고 거부하면 큰 파일을 헛업로드하고,
+  <b>Vercel Function 본문 한도(4.5MB)</b>를 넘기면 칸 오류가 아니라 에러 화면으로 떨어집니다(버킷은 10MB를 허용하지만 그쪽이 실효 상한입니다).<br />
+  <b>사무용 전화는 형식을 막지 않습니다</b> — <code>02)000-0000</code>·내선 표기를 막으면 진짜 교회가 못 들어옵니다.
+</p>
+
+<hr class="cut" />
+
+<!-- ══════════ E 오류 · 제출 중 ══════════ -->
+<p class="screencap">E. 오류와 제출 중</p>
+<div class="cols">
+  <div>
+    <div class="page" style="padding-bottom:20px">
+      <div class="form" style="margin-top:0">
+        <section class="step">
+          <div class="steptitle"><span class="num">1</span>교회 확인</div>
+          <div class="fields">
+            <label class="f bad-f"><span class="lab">고유번호<span class="req">*</span></span>
+              <span class="lookup"><input class="i num10" value="12345" /><button class="btn-check">확인</button></span>
+              <span class="result bad">숫자 10자리로 적어 주세요.</span>
+            </label>
+          </div>
+        </section>
+      </div>
+    </div>
+    <p class="note"><b>확인 단계의 오류는 그 자리에서</b> 말합니다 — 아래 칸이 아직 열리지도 않았습니다.</p>
+  </div>
+  <div>
+    <div class="page" style="padding-bottom:20px">
+      <div class="form" style="margin-top:0">
+        <div class="banner">입력을 확인해 주세요 — 2곳</div>
+        <section class="step">
+          <div class="steptitle"><span class="num">1</span>교회 확인</div>
+          <div class="fields">
+            <label class="f bad-f"><span class="lab">교회명<span class="req">*</span></span>
+              <input class="i" value="   " />
+              <p class="err">교회명을 적어 주세요.</p>
+            </label>
+            <div class="pair">
+              <label class="f bad-f"><span class="lab">교단<span class="req">*</span></span>
+                <select class="i"><option>선택하세요</option></select>
+                <p class="err">교단을 골라 주세요.</p>
+              </label>
+              <label class="f"><span class="lab">지역<span class="req">*</span></span>
+                <select class="i"><option>서울</option></select>
+              </label>
+            </div>
+          </div>
+        </section>
+        <button class="submit" disabled>제출 중…</button>
+        <p class="foot">서류를 올리는 중이에요. 창을 닫지 말아 주세요.</p>
+      </div>
+    </div>
+    <p class="note"><b>공백만 넣은 교회명이 걸립니다</b> — <code>NOT NULL</code>이 못 막는 값이라 액션과 DB CHECK가 함께 막습니다.
+      제출 중에는 버튼이 잠깁니다(두 번 눌러 두 번 접수되는 것을 막습니다).</p>
+  </div>
+</div>
+
+<hr class="cut" />
+
+<!-- ══════════ F 결과 ══════════ -->
+<p class="screencap">F. 접수 완료 · 검토 중 · 반려 <i>(재방문 시 폼이 아니라 상태를 본다)</i></p>
+<div class="cols">
+  <div>
+    <div class="page">
+      <a class="back" href="#">← 마이페이지</a><h1>교회 인증</h1>
+      <div class="panel green" style="margin-top:16px">
+        <p class="t">인증 신청이 접수됐어요</p>
+        <p class="d"><b>은혜로교회</b> 신청을 운영자가 확인하고 있어요(영업일 1~2일).<br />
+          결과는 <b>tkdgns25300@naver.com</b>로 알려드려요.</p>
+        <a class="go" href="#">마이페이지로 →</a>
+      </div>
+    </div>
+    <p class="note"><b>"저장되지 않았어요"가 사라집니다.</b> 지금 화면은 온라인 접수가 없어서 그렇게 말하고 있었습니다.</p>
+  </div>
+  <div>
+    <div class="page">
+      <a class="back" href="#">← 마이페이지</a><h1>교회 인증</h1>
+      <div class="panel gold" style="margin-top:16px">
+        <p class="t">인증 검토 중이에요</p>
+        <p class="d"><b>은혜로교회</b> 인증 서류를 운영자가 확인하고 있어요.<br />승인되면 공고를 등록·게재할 수 있어요.</p>
+        <a class="go" href="#">마이페이지로 →</a>
+      </div>
+    </div>
+    <p class="note"><b>이미 있는 화면입니다</b>(<code>PendingNotice</code>). 폼을 다시 보여주지 않아 이중 접수가 막히고,
+      액션도 같은 판정을 해서 직접 POST를 보내도 거부합니다.</p>
+  </div>
+  <div>
+    <div class="page">
+      <a class="back" href="#">← 마이페이지</a><h1>교회 인증</h1>
+      <div class="panel gold" style="margin-top:16px;text-align:left">
+        <p class="t">인증이 반려됐어요</p>
+        <p class="d" style="margin-top:6px">사무용 전화가 교회 공식 정보와 달라 확인하지 못했어요. 교회 대표번호로 다시 적어 주세요.</p>
+      </div>
+      <p class="lead" style="margin-top:14px">사유를 확인하고 다시 신청해 주세요. 아래 폼이 이전 신청을 대체해요.</p>
+      <div class="form" style="margin-top:12px">
+        <section class="step"><div class="steptitle"><span class="num">1</span>교회 확인</div>
+          <p class="stephint">고유번호부터 다시 확인해요.</p></section>
+      </div>
+    </div>
+    <p class="note"><b>지금 코드에 없는 분기입니다</b> — <code>page.tsx</code>가 <code>PENDING</code>과 그 외만 갈라서,
+      반려된 사용자가 오면 사유 없이 빈 폼을 봅니다. 이 화면을 만들어야 합니다.<br />
+      <b>재신청은 같은 행을 덮어씁니다</b> — 이전 신청 기록은 남지 않습니다(<code>church_verifications</code> 테이블이 없습니다).
+      <b>옛 증빙 파일은 새 파일을 올리기 전에 지웁니다</b> — 안 지우면 파기 경로 없는 개인정보가 쌓여
+      방침("인증 자격 유지 동안 보관, 탈퇴·해지 시 파기")과 어긋납니다.<br />
+      <b>거부는 사람 쪽에만 있습니다</b> — 신청이 반려되면 <code>users</code>가 <code>REJECTED</code>가 되고
+      교회 행은 <code>PENDING</code>으로 남아 재신청이 같은 행을 다시 씁니다.
+      <code>churches</code>에는 <code>REJECTED</code>가 없어졌습니다(마이그레이션 <code>20260825081000</code>).</p>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

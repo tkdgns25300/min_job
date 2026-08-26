@@ -44,7 +44,7 @@
 | **job_status** | `jobs.status` | OPEN(기본) · CLOSED. ⚠️ ~~PENDING(검수중)~~은 **제거**(2026-08-21 · 마이그레이션 `20260821051500`) — 공고 전수 검수를 하지 않는다 |
 | **job_source** (출처) | `jobs.source` | OPERATOR · CHURCH |
 | **featured_tier** (노출) | `jobs.featured_tier` | NONE(기본) · PREMIUM · HERO(=대표광고) |
-| **verification_status** (인증 상태) | `users.church_verification_status` · **`churches.verification_status`** | PENDING · APPROVED · REJECTED. `users`는 `NULL`(=미신청) 허용, `churches`는 NOT NULL(행을 만드는 쪽이 항상 상태를 정한다 — §3). **두 컬럼은 다른 사실이다** — `users`=이 사람이 그 교회 관리자로 인정됐나, `churches`=이 교회가 검증됐나 |
+| **verification_status** (인증 상태) | `users.church_verification_status` **3값** · `churches.verification_status` **2값** | ⚠️ **키 집합이 다르다.** 사람: `PENDING`·`APPROVED`·`REJECTED` + `NULL`(=미신청). 교회: `PENDING`·`APPROVED` (NOT NULL · DEFAULT `PENDING`). **거부는 사람 쪽에만 있다** — 교회를 내리는 것은 `PENDING`으로 되돌리기이고 공개 조회가 `APPROVED`만 보므로 그 순간 내려간다(마이그레이션 `20260825081000`). 라벨 맵도 둘이다(`CHURCH_VERIFICATION_STATUSES` · `CHURCH_STATUSES`) |
 
 > **역할 enum 없음**: 모든 계정은 기본 **사역자(MINISTER)**. 교회(CHURCH)는 저장된 role이 아니라 **인증으로 열리는 view/능력**(§3 users). MINISTER/CHURCH는 화면 라벨.
 
@@ -62,15 +62,17 @@
 | `id` | uuid PK, `gen_random_uuid()` | |
 | `name` | text NOT NULL | 교회명 |
 | `registration_no` | text **NOT NULL** UNIQUE (CHECK `^[0-9]{10}$`) | **교회 고유번호**(고유번호증) 또는 사업자등록번호. **이 표의 유일한 자연키** — 같은 교회에 담당자가 여럿 붙으므로(§3 users) 두 번째 담당자가 기존 행에 붙지 못하면 공고가 두 교회로 갈린다. 이름으로 묶는 길은 막혀 있다(2026-08-06 실측: 검증 불가 67개 · 같은 연락처 다른 교회명 83건). **하이픈 없이 숫자 10자리만** 저장한다 — `123-45-67890`과 `1234567890`이 다른 행이 되면 UNIQUE가 무의미해진다. 체크섬은 검사하지 않는다(비영리 고유번호에 사업자등록번호 규칙이 그대로 들어맞지 않아 진짜 교회를 막을 수 있다) — 대조는 운영자가 증빙 서류로 한다. 마이그레이션 `20260825063700` |
-| `denomination` | text **NULL** (CHECK) | 교단. **NULL = 미상 또는 무소속·독립교회.** `ETC`와 구분할 것 — `ETC`는 "소속은 있고 우리 9키에 없는 교단"(기장 등)이라 미상을 섞으면 필터·거점 판정이 오염된다 |
+| `denomination` | text **NULL** (CHECK) | 교단. `ETC`와 구분할 것 — `ETC`는 "소속은 있고 우리 9키에 없는 교단"(기장 등)이다. ⚠️ **이 표에서 `NULL`은 "무소속·독립교회" 하나를 뜻한다** — 행이 생기는 경로가 인증 신청뿐이고 그 폼이 교단을 **필수 선택**으로 받아 "모른다"가 들어올 길이 없다(선택지의 "무소속·독립교회"가 `NULL`이다). `jobs.denomination`의 `NULL`은 "원문에 없음 = 미상"이라 **뜻이 다르다** |
 | `region` | text **NULL** (CHECK) | 광역. **NULL = 미상.** ⚠️ **공고 목록·필터는 이 컬럼을 쓰지 않는다** — `jobChurchRef`가 표시값을 전부 `jobs`에서 가져오고 `churches`에서는 `id`만 읽는다(§1 예외 3). 비면 **교회 상세 화면의 위치만** 빈다. (지역 필터 탈락 경고는 `jobs.region` 쪽 이야기다) |
 | `city` | text NULL | 시·군·구 (표시용 자유 텍스트). **교회 상세 전용** — 공고 카드·목록은 `jobs.city`를 쓴다 |
 | `address` | text NULL | 주소 **원문 그대로** — 도로명/지번을 나누지 않는다(지도 검색은 둘 다 되고, 나누면 어느 체계인지 판별하는 일이 늘고 오분류가 생긴다). **교회 상세 지도 전용**(공고 상세 지도는 `jobs.address`). ⚠️ `naverMapUrl`이 **주소가 있으면 주소만 쓴다**(지역+교회명 폴백을 안 쓴다) → **오타 주소는 빈 값보다 나쁘다.** 신청서에서 선택으로 받되 승인 전에 증빙 서류의 주소와 대조해야 한다. 주소 검색 도구(카카오)는 교회 정보 관리에 붙일 때 |
 | `founded_year` | int NULL | 창립 연도 |
-| `verification_status` | text **NOT NULL** DEFAULT 'PENDING' (CHECK) | **이 교회가 검증됐나.** 행이 생기는 경로는 **하나뿐이다**: **교회 인증 신청에서 신규 교회로 적어낸 순간** → `PENDING`(운영자 승인 시 `APPROVED`). 신청서에 적힌 교회명·교단·지역을 담을 곳이 `users`에 없으므로 **행을 먼저 만들어 `users.church_id`로 가리킨다**. ⚠️ **크롤 공고는 교회 행을 만들지 않는다**(§10) — `church_id=NULL`로 들어가고, 교회가 claim할 때 이미 있는 행에 연결된다. DEFAULT가 `'PENDING'`인 건 상태를 정하지 않고 만든 행을 **비공개 쪽으로 넘어뜨리기 위해서다**(fail-closed). 반려해도 행은 `PENDING`으로 남는다 — 공개되지 않고, 재신청이 같은 행을 다시 쓴다. `REJECTED`는 이미 공개된 교회를 허위 판명·opt-out으로 **내릴 때**. 공개 조회는 `APPROVED`만(§9) |
+| `verification_status` | text **NOT NULL** DEFAULT 'PENDING' (CHECK: `PENDING`·`APPROVED` **2값**) | **이 교회가 검증됐나.** 행이 생기는 경로는 **하나뿐이다**: **교회 인증 신청에서 신규 교회로 적어낸 순간** → `PENDING`(운영자 승인 시 `APPROVED`). 신청서에 적힌 교회명·교단·지역을 담을 곳이 `users`에 없으므로 **행을 먼저 만들어 `users.church_id`로 가리킨다**. ⚠️ **크롤 공고는 교회 행을 만들지 않는다**(§10) — `church_id=NULL`로 들어가고, 교회가 claim할 때 이미 있는 행에 연결된다. DEFAULT가 `'PENDING'`인 건 상태를 정하지 않고 만든 행을 **비공개 쪽으로 넘어뜨리기 위해서다**(fail-closed). 반려해도 행은 `PENDING`으로 남는다 — 공개되지 않고, 재신청이 같은 행을 다시 쓴다. ⚠️ **`REJECTED`는 없다**(마이그레이션 `20260825081000`): 같은 이름이 `users.church_verification_status`에서는 "이 **사람의** 신청 반려"를 뜻해 읽는 사람이 섞었고, 기능적으로도 남는 것이 없었다 — 교회를 내리는 것은 `PENDING`으로 되돌리기이고 그러면 공개 조회에서 그 순간 내려간다. **거부는 사람 쪽에만 있다.** 공개 조회는 `APPROVED`만(§9) |
 | `contact_email` | text NULL | **사무용** 이메일. 인증 검수 때 **공개 게시판 공고(`jobs.contact_email`)·홈페이지와 대조**하는 근거. 승인 후엔 교회 대표 연락처로 그대로 남아 교회 정보 관리(`/mypage/church/info`)에서 수정한다. ⚠️ **공개 화면에는 렌더하지 않는다** — 검수 대조용으로 받은 값이라 지금은 교회 상세에 노출하지 않는다(공개하려면 수집 고지부터 다시 본다) |
 | `contact_tel` | text NULL | 〃 사무용 전화. 공고에 전화만 공개된 교회가 흔해 대조 수단이 하나뿐이면 못 맞춘다 |
 | `created_at` | timestamptz DEFAULT now() | |
+
+> **행을 만드는 코드는 하나다** — `mypage/verify/actions.ts`의 신청 접수(2026-08-25). 쓰는 칸은 **6개**(`registration_no`·`name`·`denomination`·`region`·`city`·`address`)이고 `verification_status`는 DEFAULT가 맡는다. ⚠️ **고유번호로 조회해 기존 행이 있으면 한 칸도 쓰지 않는다** — 미승인 신청자가 인증된 교회의 값을 덮어쓸 수 없다. `contact_email`·`contact_tel`·`founded_year`는 이 경로가 채우지 않는다(승인·교회 정보 관리의 몫).
 
 ### `church_links` — 교회 채널 (1 church : N links)
 | 컬럼 | 타입 | 비고 |
@@ -338,7 +340,7 @@ CHECK ( source_url IS NULL OR length(btrim(source_url)) > 0 )
 | `verification_contact_tel` | text NULL | 신청자가 적어낸 **교회 사무용 전화**(신청 필수). **`churches.contact_tel`에 바로 쓰지 않는다** — 미승인 신청자가 이미 인증된 교회의 대표 연락처를 덮어쓸 수 있기 때문. 승인 시 `churches`로 옮긴다. 검수는 이 값을 공개 게시판 공고·홈페이지와 **대조**하고, 기존 교회면 `churches.contact_tel`과도 비교한다(어긋나면 반려 근거) |
 | `verification_contact_email` | text NULL | 〃 사무용 이메일(신청 선택 — 이메일 없는 작은 교회가 실재) |
 | `verification_consent_at` | timestamptz NULL | **인증 신청 동의 일시.** 로그인 시점 동의(로그인 페이지 고지)와 **별개** — 증빙 서류·담당자 실명 같은 추가 개인정보를 받는 자리라 따로 받고 따로 남긴다. ⚠️ `verification_submitted_at`으로 겸용하지 않는다: 겸용하면 "접수됐으니 동의했다"는 **추론**이 되고, 접수 없이 동의만 받는 흐름(방침 개정 후 재동의)이 생기면 무너진다 |
-| `verification_consent_version` | text NULL (CHECK `^[0-9]{4}-[0-9]{2}-[0-9]{2}$`) | **동의 당시 방침 시행일**(`constants/business.ts`의 `LEGAL_EFFECTIVE_DATE`). 분쟁에 필요한 것은 "언제"만이 아니라 **"무엇에"**이고, 방침 내용은 시행일로 고정된다. 방침 개정 시 **재동의가 필요한 신청을 이 값으로 골라낸다** |
+| `verification_consent_version` | text NULL (CHECK `^[0-9]{4}-[0-9]{2}-[0-9]{2}$`) | **동의 당시 방침 시행일**(`constants/business.ts`의 `PRIVACY_EFFECTIVE_DATE` — 약관 시행일과 **별 상수**다). 분쟁에 필요한 것은 "언제"만이 아니라 **"무엇에"**이고, 방침 내용은 시행일로 고정된다. 방침 개정 시 **재동의가 필요한 신청을 이 값으로 골라낸다** |
 | `verification_submitted_at` | timestamptz NULL | 검수 큐 정렬(오래된 신청 우선). ⚠️ 이 값이 **"신청인가"의 판정 기준**이다 — 로그인만 한 계정도 `users` 행을 갖기 때문에, 이걸로 안 걸면 검수 큐가 전체 회원 목록이 된다 |
 | `verification_reviewed_at` | timestamptz NULL | 승인·반려 시각 |
 | `verification_rejection_reason` | text NULL | 반려 사유. 없으면 신청자가 **뭘 고쳐야 할지 모른다** |
@@ -559,7 +561,7 @@ users ──▶ bookmarks ──▶ jobs     (Phase 1)
 - **자동 결제 연동** (Phase 3)
 - **인재 DB**(`minister_profiles`, 계정에 1:1) — 사역자 프로필 (Phase 3, 개인정보 동의). "구직 중" opt-in 노출 + "제외 교회"(자기 교회엔 숨김)
 - **관심 교회 팔로우**(`church_follows`) + 새 공고 알림 (Phase 2, 사역자 view)
-- **교회 인증 증빙 문서 보관·파기** (`users.verification_doc_path`). 파일은 **비공개 Storage 버킷 `verification-docs`**(2026-08-25 생성 · 10MB · pdf/jpeg/png/webp/heic/heif). **파기 시점이 바뀌었다(2026-08-25)**: `/privacy` §3이 "인증 처리 완료 후 지체 없이 파기"에서 **"인증 자격이 유지되는 동안 보관 · 회원 탈퇴 또는 인증 해지 시 파기"**로 개정됐다 — 판정을 사람이 직접 하고 근거 자료를 들고 있어야 해서다. ⬜ **탈퇴·인증 해지 시 파일을 지우는 경로는 아직 없다**(탈퇴 기능 자체가 미구현). ⬜ 방침 **시행일**(`LEGAL_EFFECTIVE_DATE`)은 아직 `2026-07-20` — 개정분 공지·시행일 갱신은 법률 검토와 함께
+- **교회 인증 증빙 문서 보관·파기** (`users.verification_doc_path`). 파일은 **비공개 Storage 버킷 `verification-docs`**(2026-08-25 생성 · 버킷 상한 10MB · pdf/jpeg/png/webp/heic/heif). ⚠️ **실제 업로드 한도는 4MB**다 — 파일이 Server Action 본문으로 오고 **Vercel Function 요청 본문 한도가 4.5MB**여서(초과 시 플랫폼이 `413`) 버킷 상한이 아니라 그쪽이 실효 상한이다. 10MB를 받으려면 업로드를 브라우저 → Storage 직행(signed upload URL)으로 옮겨야 한다. **파기 시점이 바뀌었다(2026-08-25)**: `/privacy` §3이 "인증 처리 완료 후 지체 없이 파기"에서 **"인증 자격이 유지되는 동안 보관 · 회원 탈퇴 또는 인증 해지 시 파기"**로 개정됐다 — 판정을 사람이 직접 하고 근거 자료를 들고 있어야 해서다. ⬜ **탈퇴·인증 해지 시 파일을 지우는 경로는 아직 없다**(탈퇴 기능 자체가 미구현). ✅ 방침 **시행일은 `PRIVACY_EFFECTIVE_DATE = 2026-08-25`**로 올리고 §12에 개정 이력을 적었다(2026-08-25). 약관 시행일과 **별 상수**다 — 하나로 묶으면 방침만 고쳤을 때 바뀌지 않은 약관까지 새로 시행된 것처럼 보인다. ⚠️ **방침 본문을 고치면 이 날짜도 함께 올린다** — 안 올리면 새 문구에 대한 동의가 `verification_consent_version`에 **옛 텍스트로 기록된다**. ⬜ 정식 법률 검토는 아직(§11 위)
 
 ---
 

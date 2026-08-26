@@ -102,7 +102,8 @@ src/
 │   │   ├── layout.tsx             인증 shell — robots noindex를 하위에 상속
 │   │   ├── mypage/                사역자 view · minister-activity · account-actions · actions.ts(signOut)
 │   │   │   ├── church/            교회 대시보드 + info/(정보 관리) + promote/(PortOne 노출 결제)
-│   │   │   └── verify/            교회 인증 신청 (온라인 접수 미구현 — 안내 + 운영자 메일)
+│   │   │   └── verify/            교회 인증 신청 — page(상태 3갈래) · verify-form(확인 단계) ·
+│   │   │                          actions.ts(lookupChurch · 신청 접수). 판정은 운영자가 DB에서 직접
 │   │   └── jobs/                  job-form·job-wizard 등 등록/수정 공용 + new/ · [id]/edit/
 │   ├── admin/                     운영자 전용 — 접근 판정은 proxy(.env ADMIN_EMAILS)
 │   │   ├── layout.tsx · admin-sidebar     admin shell (noindex) — jobs/ 목록만 ○ Static
@@ -152,6 +153,7 @@ src/
 │   │                              둘 다 queries 내부 전용
 │   ├── domain-enum.ts             닫힌 라벨 맵 ↔ DB 문자열(keyOf·keysOf·enumLabel) — 캐스트를 한 곳에 가둔다
 │   ├── queries/crawl.ts           마지막 수집 실행 + 실패 게시판 키 — 크롤러 소유 표를 **읽기만**(경보 판정 X)
+│   ├── church-verification.ts     인증 신청 규칙(순수) — 고유번호 정규화·칸 검증·서류 제약
 │   ├── review-flags.ts            검수 "확인할 것"·승격 필수 6칸 판정(순수) — 목록·필터·단건이 한 답을 쓴다
 │   ├── review-edits.ts            검수가 고칠 수 있는 칸 + CHECK 짝 규칙(순수) — 화면·액션 공용
 │   ├── job-edits.ts               공개된 공고를 고칠 수 있는 칸 + `jobs` CHECK 짝 규칙(순수)
@@ -174,7 +176,8 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 > **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
 >
 > **배치 규칙**: 한 페이지 전용 뷰·폼·헬퍼는 **그 페이지 폴더에** 둔다(`jobs-view.tsx`·`job-form.tsx`). **두 라우트 기능 이상**이 쓰면 `components/`로 올린다 — 한 기능 안에서 여러 페이지가 나눠 쓰는 것은 그 기능 폴더의 공용 파일로 둔다(`admin/review/review-row.tsx`를 `[id]/`가 `../review-row`로 쓴다). ⚠️ 기준은 **쓰는 파일 수가 아니라 라우트 기능 수**다 — 파일 수로 세면 한 화면 전용이 `components/`로 올라간다(실제로 그렇게 넷이 올라가 있었다 · 2026-08-24 되돌림). mutation은 그 라우트의 `actions.ts`.
-> **mutation `actions.ts`는 login·mypage(로그아웃)·admin(캐시 새로고침)·admin/review(검수 판정)·admin/jobs(공개 공고 저장·마감)** — 교회의 공고 등록·수정은 아직 없다.
+> **mutation `actions.ts`는 login·mypage(로그아웃)·mypage/verify(교회 인증 신청)·admin(캐시 새로고침)·admin/review(검수 판정)·admin/jobs(공개 공고 저장·마감)** — 교회의 공고 등록·수정은 아직 없다.
+> ⚠️ `mypage/verify/actions.ts`의 **`lookupChurch`는 mutation이 아니다** — 클라이언트가 제출 전에 "처음인가 기존인가"를 물어야 하는데 데이터 조회용 route handler가 금지되어 있어(아래) **Server Action이 규칙이 남긴 유일한 경로**다.
 
 ## Layer Responsibilities
 
@@ -240,9 +243,11 @@ DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. �
 
 - 키: **publishable**(구 anon, RLS 적용, `NEXT_PUBLIC_*`) / **secret**(구 service_role, RLS 우회, 서버 전용). env 이름은 README의 환경 변수 절 참조(`.env.example`은 삭제됨).
 - 세션 쿠키 정책은 `lib/supabase/cookie-options.ts` 한 곳 — `httpOnly`(브라우저 클라이언트를 안 쓰므로 JS 접근 불필요) + 배포 시 `secure`. ⚠️ 로컬에서 `next start`(NODE_ENV=production)를 http로 띄우면 `secure` 때문에 로그인이 안 된다 — 로컬 로그인 테스트는 `npm run dev`로.
-- **예외 1개 — 비공개 Storage 서명**: `lib/queries/review.ts`의 포스터 signed URL은 `service.ts`를 쓴다. `storage.objects`는 RLS가 **항상** 켜져 있고 `postings` 버킷엔 정책이 없어(RLS 유예) publishable 키로는 서명이 조용히 빈 URL을 돌려준다(실측 2026-08-22). 정책을 만들면 로그인한 아무나 포스터를 읽게 되고, 운영자만 허용하려면 `.env ADMIN_EMAILS` 판정을 DB에 넣어야 해 "DB는 저장 전용"과 부딪힌다. 호출은 `requireOperator()` 뒤에서만 일어나고 나가는 것은 개체 하나에 묶인 30분 URL이다. **이 예외를 늘리지 말 것.**
+- **예외 2개 — 비공개 Storage.** `storage.objects`는 RLS가 **항상** 켜져 있고 우리 버킷엔 정책이 없어(RLS 유예) publishable 키로는 서명·업로드가 **조용히 실패**한다(실측 2026-08-22). 정책을 만들면 로그인한 아무나 파일을 읽게 되고, 운영자만 허용하려면 `.env ADMIN_EMAILS` 판정을 DB에 넣어야 해 "DB는 저장 전용"과 부딪힌다. **이 예외를 늘리지 말 것.**
+  - ② **증빙 서류 업로드·삭제**(`mypage/verify/actions.ts`) — ⚠️ 아래 ①과 **성격이 다르다**: 그건 운영자 게이트 뒤의 **읽기**, 이건 **일반 로그인 사용자가 트리거하는 쓰기**다. 그래서 방어를 코드로 만든다 — **경로에 사용자 입력을 넣지 않고**(`{user.id}/{uuid}.{ext}`) `upsert:false`로 덮어쓰기를 막으며, 크기·MIME은 버킷 설정이 한 번 더 거른다.
+  - ① **포스터 signed URL**: `lib/queries/review.ts`의 포스터 signed URL은 `service.ts`를 쓴다. `storage.objects`는 RLS가 **항상** 켜져 있고 `postings` 버킷엔 정책이 없어(RLS 유예) publishable 키로는 서명이 조용히 빈 URL을 돌려준다(실측 2026-08-22). 정책을 만들면 로그인한 아무나 포스터를 읽게 되고, 운영자만 허용하려면 `.env ADMIN_EMAILS` 판정을 DB에 넣어야 해 "DB는 저장 전용"과 부딪힌다. 호출은 `requireOperator()` 뒤에서만 일어나고 나가는 것은 개체 하나에 묶인 30분 URL이다. **이 예외를 늘리지 말 것.**
 - `service.ts`가 RLS를 우회하므로 cached read(공개·비개인 조회 — 공고·교회·운영자 목록 등) 전용으로만. **인증 의존·PII read(예: 교회 인증 신청)와 모든 인증·권한 작업은 반드시 `server.ts`**(cached 금지).
-- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 남은 것은 **쓰기**다 — 공고 등록·수정, 교회 정보 저장, 인증 신청 접수·판정, 클레임은 아직 Server Action이 없다(화면만 있다).
+- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 쓰기는 **수집 검수 판정 · 공개 공고 저장·마감 · 교회 인증 신청 접수**까지 왔다(2026-08-25). 남은 것 — 공고 등록·수정, 교회 정보 저장, 클레임은 아직 Server Action이 없다(화면만 있다). 인증 **판정**은 의도적으로 만들지 않았다: 운영자가 DB에서 직접 한다.
 
 ## `'use cache'` 제약 (필수 준수)
 

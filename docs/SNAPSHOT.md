@@ -67,7 +67,7 @@
 | `/pricing` 노출 안내 | ✅ | ✅ | ✅ | ✅ `e35fcb8`·`59c7aa6`·`a0d4cdd` | 정적(+실집계) |
 | `/login` | ✅ | ✅ | ✅ | ✅ `c517faf`·`a79692d` | **Google OAuth 실 로그인**(2026-07-29 — 서버 렌더 폼·`?next=` 복귀·`?error=oauth`) |
 | `/mypage` 사역자 view | ✅ | ✅ | ✅ | ✅ `8ded8d3`·`84d6b36` | **실 DB**(북마크·최근본은 여전히 localStorage) + 하단 교회 CTA·계정(로그아웃 **실동작**·회원탈퇴 안내) |
-| `/mypage/verify` 교회 인증 폼 | ✅ | ✅ | ✅ | ✅ `8ded8d3` | 화면만(미신청 폼 / PENDING 안내 / APPROVED는 `/mypage/church`로 redirect). 실 접수·결과 알림 메일 Phase 1 |
+| `/mypage/verify` 교회 인증 | ✅ | ✅ | ✅ | ✅ `8ded8d3`+ | **접수 실 배선(2026-08-25)** — 고유번호 확인 단계로 처음/기존을 가르고, `churches` 6칸 + `users.verification_*`에 저장. 상태 3갈래(폼 / PENDING 안내 / REJECTED 사유+폼), APPROVED는 `/mypage/church`로 redirect. **판정은 운영자가 DB에서 직접** · 결과 알림 메일 미구현 |
 | `/jobs/new` 공고 등록 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | **3스텝 위저드** + **인증 게이트**(hasChurchAccess). **저장 미배선** |
 | `/jobs/[id]/edit` 수정 | ✅ | ✅ | ✅ | ✅ `c2bcb0b` | 위저드 공유(소유권 체크 有)·저장 Phase 1 |
 | `/mypage/church` 교회 관리 | ✅ | ✅ | ✅ | ✅ `e89bebd` | **읽기 실 DB**(managed/claimable 분리) — 탭·노출광고 사이드바·공고 행. mutation 미배선 |
@@ -81,7 +81,7 @@
 
 > **완료(mock) 14개** = 홈·/jobs·/jobs/[id]·/churches/[id]·/about·/pricing·/login·/mypage(사역자)·/mypage/verify·/jobs/new·/jobs/[id]/edit·**/mypage/church·/mypage/church/info·/mypage/church/promote**. **단일 계정 + Google OAuth 실 로그인**(§5 인증). **`/mypage/church/promote`는 PortOne 실결제까지 동작**(데이터·실 노출 적용만 Phase 1). **남은 것 = SEO(sitemap/robots) + terms/privacy 법률검토·실값. admin 페이지(셸·홈·공고관리·인증검수) mock 구현 완료 + **수집 검수 3화면은 실 DB 직결**.** (약관·개인정보 초안 보강·사업자정보 반영됨.) 실 mutation·백엔드 = Phase 1.
 > ⚠️ **교회 기능은 현재 전부 닫혀 있다(2026-07-29)**: 실 로그인 전환 후 `getCurrentUser`가 `churchId`·`churchName`·`churchVerificationStatus`를 **항상 null**로 주므로(교회 테이블 없음) `hasChurchAccess`가 어떤 실 계정에서도 false다 → `/jobs/new`·`/jobs/[id]/edit`·`/mypage/church`·`/mypage/church/info`·`/mypage/church/promote`·`POST /api/payments/complete` 도달 불가. 위 행의 "mock 완료"는 **화면 스캐폴드가 있다**는 뜻이며, 실제로 보려면 교회 멤버십 배선(§7 ①)이 필요하다. 상태 미리보기용 `?preview=none|pending|rejected` 어포던스는 mock 세션과 함께 제거됐다.
-> ⚠️ **`/mypage/verify`는 유일하게 도달 가능한 교회 경로**(헤더 "교회 공고 등록"·마이페이지 CTA가 여기로 보낸다) — 하지만 **온라인 접수는 미구현**이다. 폼 제출은 아무 데이터도 보내지 않으므로, 실 로그인 전환과 함께 **정직하게 고쳤다**(2026-07-29): 폼 위에 "온라인 인증 신청은 준비 중" 안내 + 운영자 메일 경로, 제출 결과는 "입력하신 내용은 저장되지 않았어요" + 메일 경로. 내부 용어(`Phase 1`)가 사용자 화면에 노출되던 문구도 제거. **실 접수(Storage 업로드·운영자 승인)는 ②트랙** — 이메일 인증은 폐기했다(2026-08-18, Google OAuth로 이미 검증된 `users.email`을 쓴다).
+> ⚠️ **`/mypage/verify`는 유일하게 도달 가능한 교회 경로**(헤더 "교회 공고 등록"·마이페이지 CTA가 여기로 보낸다). **2026-08-25 접수 실 배선** — "준비 중"·"저장되지 않았어요" 안내와 운영자 메일 샛길을 걷어내고 실제로 받는다: 고유번호 확인 → 처음이면 `churches` 생성 / 기존이면 그 행에 붙임, 증빙 서류는 비공개 버킷(`verification-docs`), 동의는 시행일과 함께 기록. **판정(승인·반려)은 운영자가 DB에서 직접** 하고 결과 알림 메일은 아직 없다. 이메일 인증은 폐기했다(2026-08-18, Google OAuth로 이미 검증된 `users.email`을 쓴다). ⬜ **승인 시 운영자가 셋을 바꾼다** — `users.church_verification_status='APPROVED'` · `churches.verification_status='APPROVED'` · `churches.contact_tel`/`contact_email`에 `users.verification_contact_*` 이관. **앞의 둘이 모두 APPROVED여야 교회 view가 열린다**(`hasChurchAccess`). 공개 교회 조회는 한 시간 캐시라 `/admin`의 **공개 목록 새로고침**을 누르면 즉시 반영된다.
 > **드롭됨**: `/churches`(교회 목록 browse), 교회 규모 필드.
 
 ---
