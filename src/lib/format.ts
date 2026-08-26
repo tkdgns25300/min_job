@@ -168,25 +168,35 @@ export function denominationLabel(denomination: Denomination | null): string | n
 type ChurchPlace = Pick<JobChurchRef, "name" | "region" | "city" | "address">;
 
 /**
- * 상세 화면의 위치 한 줄 — 주소가 있으면 주소, 없으면 지역(+시). 아무것도 모르면 "".
- * ⚠️ `??`가 아니라 falsy 검사다 — ingest 구조화는 주소를 못 뽑으면 `""`를 주는데,
- *    `??`로 받으면 그 빈 문자열이 **알고 있는 지역·시까지 가려버린다**.
+ * 상세 화면의 위치 한 줄 — 지역·시·군·구에 **상세 주소를 이어 붙인다**("서울 강남구 테헤란로 1").
+ * 아는 조각만 잇고, 아무것도 모르면 ""(호출부가 줄째로 걷어낸다).
+ *
+ * ⚠️ **`address`는 나머지 조각이지 전체 주소가 아니다**(2026-08-26 정정). 실제로 들어 있는 값은
+ *    `청수12로 29`·`신정동 311-11`처럼 **지역·시를 뺀 상세 주소**다(크롤 실데이터 · 신청 폼도
+ *    그렇게 받는다). 예전엔 주소가 있으면 그것만 써서 위치 줄이 `청수12로 29`로 끝났다.
+ * ⚠️ **지역·시가 헤더(`churchMetaLine`)에 이미 있어 한 화면에 두 번 나온다** — 그래도 잇는다.
+ *    ① 위치 칸은 그것만 읽어도 주소여야 하고 ② **바로 밑 지도 링크가 검색하는 문자열과 같아야**
+ *    한다(읽은 것과 검색되는 것이 다르면 누른 사람이 어리둥절해진다).
+ * ⚠️ `filter(Boolean)`이라 `null`과 `""`를 함께 걷어낸다 — 구조화가 주소를 못 뽑으면 `""`를 주는데,
+ *    그게 조각으로 끼면 공백이 두 칸이 된다.
  */
 export function churchPlaceLine(church: ChurchPlace): string {
-  return church.address || churchLocation(church);
+  return [churchLocation(church), church.address].filter(Boolean).join(" ");
 }
 
 /**
- * 네이버 지도 검색 링크 — 위치 한 줄이 있으면 그걸로, 주소가 아닐 땐 교회명을 앞에 붙여 좁힌다.
- * **아무것도 모르면 null** — 교회명만으로 검색하면 동명 교회의 엉뚱한 위치를 짚는다.
+ * 네이버 지도 검색 링크 — 위치 한 줄로 검색하되, **상세 주소가 없으면 교회명을 앞에 붙여** 좁힌다
+ * (지역·시만으로는 그 동네 전체가 나온다). **아무것도 모르면 null** — 교회명만으로 검색하면
+ * 동명 교회의 엉뚱한 위치를 짚는다.
  *
  * 공고 상세·교회 상세가 **같은 규칙을 써야** 해서 여기 둔다(전엔 각자 조립하다 한쪽만 고친 적 있다).
  * 실제 지도 임베드는 Phase 2(API 키) — 지금은 검색 링크까지다.
  */
 export function naverMapUrl(church: ChurchPlace): string | null {
-  const location = churchLocation(church);
-  const query = church.address || (location && `${church.name} ${location}`);
-  return query ? `${NAVER_MAP_SEARCH_URL}${encodeURIComponent(query)}` : null;
+  const place = churchPlaceLine(church);
+  if (!place) return null;
+  const query = church.address ? place : `${church.name} ${place}`;
+  return `${NAVER_MAP_SEARCH_URL}${encodeURIComponent(query)}`;
 }
 
 // 교회 요약 한 줄: 교단 · 지역. 아는 조각만 잇는다 — 전부 모르면 ""(호출부가 걷어낸다)

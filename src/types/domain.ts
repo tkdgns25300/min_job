@@ -38,7 +38,7 @@ export interface Church {
   denomination: Denomination | null;
   region: Region | null; // 광역 (필터용). null = 미상
   city: string | null; // 시·군·구 (표시용 자유 텍스트)
-  address: string | null; // 주소 원문 그대로 (도로명/지번 안 나눔). 교회 상세 지도용
+  address: string | null; // **상세 주소**(지역·시 다음 조각). 표시·지도는 churchPlaceLine이 이어 붙인다
   /**
    * 이 교회가 검증됐나 — **값은 둘뿐이다**(`ChurchStatus`). 행이 생기는 경로는 하나다(DATA §3):
    * 인증 신청에서 처음 등록하는 교회로 적어낸 순간 `PENDING`, 운영자가 승인하면 `APPROVED`.
@@ -89,7 +89,8 @@ export interface Job {
   region: Region | null;
   city: string | null; // 시·군·구 (표시용 자유 텍스트) — 〃 같은 이유로 공고가 직접 든다
   /**
-   * 주소 원문 그대로(도로명/지번 안 나눔) — 〃. 지도가 쓴다.
+   * **상세 주소** — `region`·`city` 다음 조각이다(`청수12로 29`). 도로명/지번은 안 나눈다.
+   * 표시·지도 링크는 `churchPlaceLine`이 지역·시와 이어 붙여 만든다 — 이 값만 쓰면 동네를 잃는다.
    * ⚠️ `contactPost`(우편 접수처)와 **다른 값**이다 — 이건 교회 위치다.
    */
   address: string | null;

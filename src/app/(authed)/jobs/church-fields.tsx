@@ -5,7 +5,14 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Field } from "@/components/field";
 import { churchMetaLine } from "@/lib/format";
-import { CHURCH_CHANNELS, DENOMINATIONS, REGIONS } from "@/constants/domain";
+import {
+  CHURCH_CHANNELS,
+  ADDRESS_PLACEHOLDER,
+  CITY_HINT,
+  CITY_PLACEHOLDER,
+  DENOMINATIONS,
+  REGIONS,
+} from "@/constants/domain";
 import { contactMailto } from "@/constants/business";
 import type { Church } from "@/types/domain";
 
@@ -100,11 +107,11 @@ export function ChurchFields() {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="시·군·구" optional>
+        <Field label="시·군·구" optional hint={CITY_HINT}>
           <Input
             value={draft.city}
             onChange={(e) => patch({ city: e.target.value })}
-            placeholder="예) 성남"
+            placeholder={CITY_PLACEHOLDER}
             className="h-9"
           />
         </Field>
@@ -120,11 +127,11 @@ export function ChurchFields() {
       </div>
 
       {/* 주소는 길어서 전폭 한 줄. 있으면 지도가 정확해진다 — 없으면 교회명+지역 검색이라 동명 교회를 짚는다 */}
-      <Field label="주소" optional>
+      <Field label="상세 주소" optional>
         <Input
           value={draft.address}
           onChange={(e) => patch({ address: e.target.value })}
-          placeholder="예) 경기 성남시 분당구 …"
+          placeholder={ADDRESS_PLACEHOLDER}
           className="h-9"
         />
       </Field>

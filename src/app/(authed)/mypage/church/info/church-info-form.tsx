@@ -4,7 +4,14 @@ import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
-import { CHURCH_CHANNELS, DENOMINATIONS, REGIONS } from "@/constants/domain";
+import {
+  CHURCH_CHANNELS,
+  ADDRESS_PLACEHOLDER,
+  CITY_HINT,
+  CITY_PLACEHOLDER,
+  DENOMINATIONS,
+  REGIONS,
+} from "@/constants/domain";
 import { contactMailto } from "@/constants/business";
 import { Field } from "@/components/field";
 import type { Church } from "@/types/domain";
@@ -65,8 +72,12 @@ export function ChurchInfoForm({ church }: { church: Church }) {
               ))}
             </NativeSelect>
           </Field>
-          <Field label="시·군·구" optional>
-            <Input defaultValue={church.city ?? ""} placeholder="예) 수원" className="h-10" />
+          <Field label="시·군·구" optional hint={CITY_HINT}>
+            <Input
+              defaultValue={church.city ?? ""}
+              placeholder={CITY_PLACEHOLDER}
+              className="h-10"
+            />
           </Field>
           <Field label="창립연도" optional>
             <Input
@@ -79,10 +90,10 @@ export function ChurchInfoForm({ church }: { church: Church }) {
         </div>
         {/* 주소는 길어서 전폭 한 줄. 넣으면 지도가 정확해진다 — 없으면 교회명+지역으로 검색해
             동명 교회의 엉뚱한 위치를 짚을 수 있다 */}
-        <Field label="주소" optional hint="교회 상세 지도에 정확한 위치를 보여줘요.">
+        <Field label="상세 주소" optional hint="교회 상세 지도에 정확한 위치를 보여줘요.">
           <Input
             defaultValue={church.address ?? ""}
-            placeholder="예) 경기 수원시 영통구 월드컵로 123"
+            placeholder={ADDRESS_PLACEHOLDER}
             className="h-10"
           />
         </Field>

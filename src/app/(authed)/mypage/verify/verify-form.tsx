@@ -5,7 +5,14 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/field";
-import { DENOMINATIONS, POSITIONS, REGIONS } from "@/constants/domain";
+import {
+  ADDRESS_PLACEHOLDER,
+  CITY_HINT,
+  CITY_PLACEHOLDER,
+  DENOMINATIONS,
+  POSITIONS,
+  REGIONS,
+} from "@/constants/domain";
 import { PRIVACY_EFFECTIVE_DATE } from "@/constants/business";
 import {
   DENOMINATION_INDEPENDENT,
@@ -320,19 +327,11 @@ function ChurchFields({ errors }: { errors: FieldErrors }) {
         </Field>
       </div>
       <div className="grid grid-cols-2 gap-2.5">
-        <Field label="시·군·구" required error={errors.city}>
-          <Input name="city" placeholder="강남구" maxLength={MAX_LENGTHS.city} />
+        <Field label="시·군·구" required error={errors.city} hint={CITY_HINT}>
+          <Input name="city" placeholder={CITY_PLACEHOLDER} maxLength={MAX_LENGTHS.city} />
         </Field>
-        <Field
-          label="주소"
-          optional
-          hint="증빙 서류에 적힌 주소예요. 안 적으면 승인할 때 채워 드려요."
-        >
-          <Input
-            name="address"
-            placeholder="서울 강남구 테헤란로 1"
-            maxLength={MAX_LENGTHS.address}
-          />
+        <Field label="상세 주소" optional>
+          <Input name="address" placeholder={ADDRESS_PLACEHOLDER} maxLength={MAX_LENGTHS.address} />
         </Field>
       </div>
     </>
