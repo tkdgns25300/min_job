@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalDoc, type LegalSection } from "@/components/layout/legal-doc";
-import { businessInfoLines, LEGAL_EFFECTIVE_DATE } from "@/constants/business";
+import { businessInfoLines, TERMS_EFFECTIVE_DATE } from "@/constants/business";
 
 export const metadata: Metadata = {
   title: "이용약관 | 민잡",
@@ -94,10 +94,10 @@ const SECTIONS: LegalSection[] = [
   },
   {
     title: "부칙",
-    body: `본 약관은 ${LEGAL_EFFECTIVE_DATE}부터 시행합니다.`,
+    body: `본 약관은 ${TERMS_EFFECTIVE_DATE}부터 시행합니다.`,
   },
 ];
 
 export default function TermsPage() {
-  return <LegalDoc title="이용약관" sections={SECTIONS} effectiveDate={LEGAL_EFFECTIVE_DATE} />;
+  return <LegalDoc title="이용약관" sections={SECTIONS} effectiveDate={TERMS_EFFECTIVE_DATE} />;
 }

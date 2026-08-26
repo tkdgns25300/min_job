@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalDoc, type LegalSection } from "@/components/layout/legal-doc";
-import { BUSINESS_INFO, LEGAL_EFFECTIVE_DATE } from "@/constants/business";
+import { BUSINESS_INFO, PRIVACY_EFFECTIVE_DATE } from "@/constants/business";
 
 export const metadata: Metadata = {
   title: "개인정보처리방침 | 민잡",
@@ -75,12 +75,16 @@ const SECTIONS: LegalSection[] = [
   },
   {
     title: "12. 개인정보처리방침의 변경",
-    body: `본 방침의 내용이 변경되는 경우 시행일과 변경 사항을 서비스 화면을 통해 공지합니다. 본 방침은 ${LEGAL_EFFECTIVE_DATE}부터 시행합니다.`,
+    body: [
+      `본 방침의 내용이 변경되는 경우 시행일과 변경 사항을 서비스 화면을 통해 공지합니다. 본 방침은 ${PRIVACY_EFFECTIVE_DATE}부터 시행합니다.`,
+      // 위 문장이 "변경 사항을 공지한다"고 약속하므로 개정 이력을 여기 남긴다 — 없으면 그 약속이 빈다
+      "개정 이력 — 2026-08-25: 수집 항목에 교회 고유번호 추가, 교회 인증 증빙 서류의 보유 기간을 「인증 처리 완료 후 지체 없이 파기」에서 「인증 자격이 유지되는 동안 보관, 회원 탈퇴 또는 인증 해지 시 지체 없이 파기」로 변경 (직전 시행일 2026-07-20).",
+    ],
   },
 ];
 
 export default function PrivacyPage() {
   return (
-    <LegalDoc title="개인정보처리방침" sections={SECTIONS} effectiveDate={LEGAL_EFFECTIVE_DATE} />
+    <LegalDoc title="개인정보처리방침" sections={SECTIONS} effectiveDate={PRIVACY_EFFECTIVE_DATE} />
   );
 }

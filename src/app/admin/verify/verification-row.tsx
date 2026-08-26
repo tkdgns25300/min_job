@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  CHURCH_STATUSES,
   CHURCH_VERIFICATION_STATUSES,
   DENOMINATIONS,
   POSITIONS,
@@ -48,7 +49,7 @@ export function VerificationRow({
               "신규"라고 쓰지 않는다: 반려 뒤 재신청도 같은 PENDING 행을 다시 쓰므로 처음이 아닐 수 있다 */}
           {church.verificationStatus !== "APPROVED" && (
             <Badge variant="secondary" className="font-medium">
-              미검증
+              {CHURCH_STATUSES.PENDING}
             </Badge>
           )}
         </div>

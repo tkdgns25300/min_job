@@ -12,6 +12,7 @@ import type {
   JobSource,
   JobStatus,
   ChurchChannel,
+  ChurchStatus,
   ChurchVerificationStatus,
 } from "@/constants/domain";
 
@@ -39,11 +40,13 @@ export interface Church {
   city: string | null; // 시·군·구 (표시용 자유 텍스트)
   address: string | null; // 주소 원문 그대로 (도로명/지번 안 나눔). 교회 상세 지도용
   /**
-   * 이 교회가 검증됐나 — 행이 생기는 경로가 둘이고 초기값이 다르다(DATA §3):
-   * 인증 신청에서 신규 교회로 적어내면 `PENDING`, 운영자가 검수 브릿지에서 승격하면 `APPROVED`.
+   * 이 교회가 검증됐나 — **값은 둘뿐이다**(`ChurchStatus`). 행이 생기는 경로는 하나다(DATA §3):
+   * 인증 신청에서 처음 등록하는 교회로 적어낸 순간 `PENDING`, 운영자가 승인하면 `APPROVED`.
    * ⚠️ 공개 조회는 `APPROVED`만 내려보낸다. 미승인 교회가 검수 전에 노출되면 안 된다.
+   * ⚠️ 사람의 신청 상태(`CurrentUser.churchVerificationStatus`)와 **다른 값 집합**이다 — 거부는
+   *    사람 쪽에만 있고, 교회를 내리는 것은 `PENDING`으로 되돌리기다.
    */
-  verificationStatus: ChurchVerificationStatus;
+  verificationStatus: ChurchStatus;
   contactEmail: string | null; // 사무용 — 인증 검수 때 공개 출처와 대조하는 근거
   contactTel: string | null; // 〃
   foundedYear: number | null; // 창립 연도 (null = 미상)
@@ -298,8 +301,8 @@ export interface ChurchVerification {
      * (DATA §3 경로 ①: 신청서에 적힌 교회명·교단·지역을 담을 컬럼이 `users`에 없다).
      */
     id: string;
-    /** 그 교회 행의 검수 상태(조인) — `APPROVED`가 아니면 실재 여부부터 확인해야 할 교회다 */
-    verificationStatus: ChurchVerificationStatus;
+    /** 그 교회 행의 검증 상태(조인) — `PENDING`이면 실재 여부부터 확인해야 할 교회다 */
+    verificationStatus: ChurchStatus;
     name: string;
     // 신규 등록 분기에서만 입력받는다(`verify-form`) — 기존 교회를 골랐으면 조인해 온
     // `churches` 값이고 그건 미상일 수 있다. 그래서 `Church`와 같이 nullable이다.

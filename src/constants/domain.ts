@@ -180,14 +180,25 @@ export const JOB_SOURCES = {
 } as const;
 export type JobSource = keyof typeof JOB_SOURCES;
 
-// 교회 인증 상태 — 증빙 서류(고유번호증/사업자등록증) 제출 → 운영자 승인.
-// null(미신청) = 일반 사역자, APPROVED만 공고 게재 가능. (단일 계정 모델, DATA §2·§3)
+// **사람의** 인증 신청 상태(`users.church_verification_status`) — 증빙 서류 제출 → 운영자 승인.
+// null(미신청) = 일반 사역자. 반려되면 사유와 함께 재신청한다.
 export const CHURCH_VERIFICATION_STATUSES = {
   PENDING: "검수중",
   APPROVED: "인증 완료",
   REJECTED: "반려",
 } as const;
 export type ChurchVerificationStatus = keyof typeof CHURCH_VERIFICATION_STATUSES;
+
+// **교회 행의** 검증 상태(`churches.verification_status`) — 값이 둘뿐이다(마이그레이션 20260825081000).
+// ⚠️ 위 맵과 **키 집합이 다르다**: 거부는 사람 쪽에만 있다. 교회를 내리는 것은 `PENDING`으로
+//    되돌리기이고(공개 조회가 `APPROVED`만 본다 · DATA §9), 그러면 그 순간 내려간다.
+//    한때 여기에도 `REJECTED`가 있었는데 같은 이름이 두 테이블에서 다른 뜻이라 읽는 사람이 섞었다.
+// 라벨이 "검수중"이 아니라 "미검증"인 이유: 이 값은 사람의 작업 상태가 아니라 **교회의 상태**다.
+export const CHURCH_STATUSES = {
+  PENDING: "미검증",
+  APPROVED: "인증 완료",
+} as const;
+export type ChurchStatus = keyof typeof CHURCH_STATUSES;
 
 // 사례비·급여 기간 — 금액이 월 기준인지 연 기준인지. 사역직은 월이 압도적이라 기본이 MONTH고,
 // 일반직·담임목사 공고에서 연 표기가 나온다. **표시는 이 라벨 그대로**(원문 단위 유지),

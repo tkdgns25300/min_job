@@ -1,5 +1,7 @@
 import {
+  CHURCH_STATUSES,
   CHURCH_VERIFICATION_STATUSES,
+  type ChurchStatus,
   type ChurchVerificationStatus,
   DENOMINATIONS,
   POSITIONS,
@@ -81,6 +83,14 @@ function applicationStatus(value: string | null): ChurchVerificationStatus {
   return keyOf(CHURCH_VERIFICATION_STATUSES, value) ?? "PENDING";
 }
 
+/**
+ * 교회 행의 검증 상태 — **값 집합이 위와 다르다**(거부는 사람 쪽에만 있다 · `CHURCH_STATUSES`).
+ * 좁히기 실패의 기본값은 덜 보이는 쪽이다: 모르는 값을 `APPROVED`로 읽으면 미검증 교회가 노출된다.
+ */
+function churchStatus(value: string): ChurchStatus {
+  return keyOf(CHURCH_STATUSES, value) ?? "PENDING";
+}
+
 type QueueRow = Pick<Tables<"users">, "verification_submitted_at" | "church_verification_status">;
 
 /**
@@ -127,7 +137,7 @@ function toVerification(row: ApplicantRow): ChurchVerification {
     },
     church: {
       id: church.id,
-      verificationStatus: applicationStatus(church.verification_status),
+      verificationStatus: churchStatus(church.verification_status),
       name: church.name,
       denomination: keyOf(DENOMINATIONS, church.denomination),
       region: keyOf(REGIONS, church.region),

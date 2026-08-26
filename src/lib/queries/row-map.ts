@@ -1,6 +1,6 @@
 import {
   CHURCH_CHANNELS,
-  CHURCH_VERIFICATION_STATUSES,
+  CHURCH_STATUSES,
   DENOMINATIONS,
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
@@ -176,7 +176,8 @@ export function toChurch(row: ChurchFullRow): Church {
     region: keyOf(REGIONS, row.region),
     city: row.city,
     address: row.address,
-    verificationStatus: keyOf(CHURCH_VERIFICATION_STATUSES, row.verification_status) ?? "PENDING",
+    // 좁히기 실패의 기본값은 **덜 보이는 쪽**이다 — 모르는 값을 공개로 읽으면 미검증 교회가 노출된다
+    verificationStatus: keyOf(CHURCH_STATUSES, row.verification_status) ?? "PENDING",
     contactEmail: row.contact_email,
     contactTel: row.contact_tel,
     foundedYear: row.founded_year,
