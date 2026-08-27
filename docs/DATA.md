@@ -39,7 +39,7 @@
 | **position** (직분) | `jobs.position` **`text[]`** | SENIOR_PASTOR · ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC. **배열**: 한 자리에 여러 직분 자격을 열어둔 공고("전임사역자(전도사, 강도사, 목사)")가 **826건**이라 대표 1개만 담으면 나머지로 검색한 사람에게 안 보인다. `job_kind`에 MINISTRY가 없으면 NULL (CHECK ①) |
 | **department** (부서) | `jobs.department` | INFANT · CHILDREN · YOUTH · YOUNG_ADULT · DISTRICT · WORSHIP · ADMIN · ETC · `NULL` |
 | **employment_type** (고용형태) | `jobs.employment_type` | FULL_TIME · SEMI_FULL_TIME · PART_TIME · `NULL`(=미상, 원문 언급률 51%) |
-| **qualification** (자격/경력) | `jobs.qualification` | ENTRY · EXPERIENCED · ORDAINED · SEMINARIAN · `NULL`(=무관) — ⚠️ **`ANY`는 화면에서 뺐다**(2026-08-27): `NULL`이 이미 무관이라 같은 뜻의 철자가 둘이었고, 그래서 `ANY` 행이 0건인데 필터의 "무관" 칩이 0건을 돌려줬다. DB CHECK에는 값이 남아 있고 `keyOf`가 `NULL`로 좁힌다(뜻 보존) |
+| **qualification** (자격/경력) | `jobs.qualification` | ANY · ENTRY · EXPERIENCED · ORDAINED · SEMINARIAN · `NULL` — ⚠️ **`NULL`은 "무관"이 아니라 "원문에 자격 이야기가 없다"** 이다(고침 2026-08-27). "무관이라고 **적혀 있으면**" `ANY`이고 크롤러가 둘을 갈라서 보낸다(`extraction.py`) — 사택의 `false`(명시적 미제공) vs `null`(정보 없음)과 같은 구분이다 |
 | **pay_period** (사례비·급여 기간) | `jobs.pay_period` | MONTH(기본) · YEAR |
 | **job_status** | `jobs.status` | OPEN(기본) · CLOSED. ⚠️ ~~PENDING(검수중)~~은 **제거**(2026-08-21 · 마이그레이션 `20260821051500`) — 공고 전수 검수를 하지 않는다 |
 | **job_source** (출처) | `jobs.source` | OPERATOR · CHURCH |
@@ -111,7 +111,7 @@
 | `role` | text NULL | 일반직 직무(**자유 텍스트 · 통제 목록 아님**): 방송·미디어·행정·시설 등. **단일 유지** — 통제 목록이 아니라 필터 축이 아니고, "방송·행정"을 한 문자열로 쓸 수 있다. `job_kind`에 GENERAL이 있으면 필수(CHECK ①) |
 | `department` | text NULL (CHECK) | 부서 |
 | `employment_type` | text **NULL** (CHECK) | 고용형태. **NULL=미상** — 원문 언급률 51%뿐이라 NOT NULL이면 승격 시 임의값 강요 |
-| `qualification` | text NULL (CHECK) | 자격/경력 요건 (필터). NULL=무관 |
+| `qualification` | text NULL (CHECK) | 자격/경력 요건 (필터). **NULL = 원문에 언급 없음**(무관이 아니다 — 그건 `ANY`) |
 | `headcount` | text NULL | 모집 인원 **+ 자리 구성 원문 보존**. **int 아님** — "약간명"·"1~2명" 같은 비정형이 흔함. 한 글에 여러 자리가 있으면 원문("1.부목사(전임) 2.교육목사 3.여전도사")을 **그대로** 담는다 → **Phase 2에서 자리별로 나눌 때 이 값이 근거**가 된다 |
 | `start_timing` | text NULL | 부임 시기 — "즉시"·"협의"·"2월 중" 비정형 |
 | `housing_provided` | boolean **NULL** | 사택 (필터). **NULL=정보 없음/협의 · true=제공 · false=명시적 미제공** |
@@ -301,7 +301,7 @@ CHECK ( source_url IS NULL OR length(btrim(source_url)) > 0 )
 > **nullable 원칙 — "없으면 공고가 성립하나?"** 크롤링 원문 3,051건 실측 언급률(2026-08-04): 사택 40% · 전형절차 42% · 부임시기 45% · **고용형태 51%** · 모집인원 65% · 사례비·마감일 75% · 제출서류 88% · 연락처 89% · 자격/경력 90%. 원문 중간값 506자, **11%가 200자 미만**. 따라서:
 > - **nullable로 푼다** — 원문에 없을 수 있고 없어도 공고가 성립하는 것: `employment_type`(51%) · `housing_provided`(40%) · `churches.denomination`(미상·무소속 실재) · 위 신규 컬럼 전부. **DEFAULT로 값을 지어내지 않는다** — "언급 없음"을 "미제공"으로 바꾸면 우리가 틀린 정보를 생산한다.
 > - **NOT NULL·CHECK로 조인다** — 위 "최소 조건 — 필수 5 + CHECK 2". 여기선 제약이 **품질 게이트**로 작동해 승격 판정을 DB가 대신한다.
-> - 화면에서 NULL은 **"정보 없음"** 으로 표시하고 필터에서는 제외한다(`qualification` NULL=무관과 같은 취급).
+> - 화면에서 NULL은 **"정보 없음"** 으로 표시하고 필터에서는 제외한다(`qualification`의 NULL도 같은 취급 — **언급 없음**이지 무관이 아니다).
 
 ### `job_promotions` — 노출 구매 원장 (1 job : N, append-only)
 

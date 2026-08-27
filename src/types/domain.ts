@@ -106,7 +106,12 @@ export interface Job {
   department: Department | null;
   /** 고용형태. **null = 미상** — 원문 언급률 51%뿐이라 DB도 NULL 허용이다(DATA §3). 필터에서 탈락한다 */
   employmentType: EmploymentType | null;
-  /** 자격/경력 요건 (필터 전용 — 표시하는 화면은 없다). **null = 무관** */
+  /**
+   * 자격/경력 요건 (필터 전용 — 표시하는 화면은 없다).
+   * ⚠️ **`null`은 "무관"이 아니라 "원문에 자격 이야기가 없다"** 이다. "무관이라고 적혀 있다"는
+   *    `ANY`가 따로 받는다(크롤러가 갈라서 보낸다 · `constants/domain`의 `QUALIFICATIONS`).
+   *    그래서 필터는 `null`을 어느 값에도 맞추지 않는다 — 안 적힌 것을 단정하지 않는다.
+   */
   qualification: Qualification | null;
   /**
    * 모집 인원 — **자유 텍스트**. "약간명"·"1~2명" 같은 비정형이 흔해 숫자로 담지 않는다.
