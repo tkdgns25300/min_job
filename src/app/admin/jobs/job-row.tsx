@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { unstable_rethrow, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "@/components/ui/sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/confirm-button";
@@ -37,14 +38,19 @@ export function JobRow({ job }: { job: AdminJob }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const run = (action: () => Promise<JobActionResult>) => {
+  const run = (action: () => Promise<JobActionResult>, success: string) => {
     setError(null);
     startTransition(async () => {
       try {
         const result = await action();
-        // 액션 응답에는 새 트리가 없다 — 목록을 다시 읽어야 상태가 바뀐다
-        if (result.ok) router.refresh();
-        else setError(result.message);
+        if (result.ok) {
+          // ⚠️ 배지가 바뀌긴 하지만 **넓은 표의 작은 조각**이고, 확인 버튼은 스스로 닫힌다
+          //    (`ConfirmButton`) — 눌렀는데 아무 일도 없는 것처럼 보였다.
+          //    **알리는 것이 먼저다** — 다른 판정 화면과 같은 순서로 둔다.
+          toast.success(success);
+          // 액션 응답에는 새 트리가 없다 — 목록을 다시 읽어야 상태가 바뀐다
+          router.refresh();
+        } else setError(result.message);
       } catch (thrown) {
         unstable_rethrow(thrown); // 리다이렉트 등 Next 제어 신호는 삼키지 않는다
         console.error("[admin/jobs] 처리 실패", thrown);
@@ -106,7 +112,7 @@ export function JobRow({ job }: { job: AdminJob }) {
               variant="outline"
               size="sm"
               disabled={pending}
-              onClick={() => run(() => reopenJob(job.id))}
+              onClick={() => run(() => reopenJob(job.id), "다시 모집으로 바꿨습니다.")}
             >
               다시 모집
             </Button>
@@ -118,7 +124,7 @@ export function JobRow({ job }: { job: AdminJob }) {
               confirmLabel="마감 확인"
               size="sm"
               disabled={pending}
-              onConfirm={() => run(() => closeJob(job.id))}
+              onConfirm={() => run(() => closeJob(job.id), "마감했습니다.")}
             />
           )}
         </div>

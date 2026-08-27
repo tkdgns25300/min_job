@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { requireOperator } from "@/lib/auth-guard";
 import { DOC_BUCKET, REJECTION_REASON_MAX } from "@/lib/church-verification";
@@ -29,14 +28,16 @@ import { createServiceClient } from "@/lib/supabase/service";
 //    재신청하면 된다), 승인 취소는 그 교회가 이미 올린 공고를 함께 내리는 규칙이 있어야 성립한다
 //    (공고의 공개 판정은 `jobs.status`·마감일이지 교회 검증 상태가 아니다 · ROADMAP).
 
-const QUEUE_PATH = "/admin/verify";
 const GONE = "이미 없는 신청입니다. 목록을 새로 불러 주세요.";
 const ALREADY = "이미 처리된 신청입니다. 목록을 새로 불러 주세요.";
 
 /**
- * 실패만 말이 필요하다 — 성공하면 큐로 `redirect`하므로 **돌아오는 값 자체가 실패의 표시**다.
- * ⚠️ `ok` 같은 판별자를 두지 않는다: 한 갈래뿐이라 죽은 필드가 되고, 나중에 성공 모양을 더하면
- *    호출부의 `if (result)`가 성공을 오류로 그린다.
+ * 실패의 모양 — **돌아온 값이 있으면 실패**이고, `null`이면 성공이다.
+ * ⚠️ `ok` 같은 판별자를 두지 않는다: 실패 갈래가 하나뿐이라 죽은 필드가 되고, 호출부는 이미
+ *    `if (result)`로 읽는다. 성공을 `null`로 두면 그 검사가 그대로 맞는다.
+ * ⚠️ **한때 성공이 `redirect`였다**(2026-08-27에 걷어냈다). 서버가 보내면 `await action()`이
+ *    **던지므로** 호출부의 성공 줄에 도달하지 못하고, 판정을 알리는 토스트가 죽은 코드가 된다
+ *    (실측: 큐로는 갔지만 토스트가 안 떴다). 이동은 호출부가 한다 — 알릴 말을 먼저 띄우고.
  */
 export type VerifyActionResult = { message: string };
 
@@ -72,7 +73,7 @@ type Application = {
  * ⚠️ **증빙 서류는 지우지 않는다** — 방침이 "인증 자격이 유지되는 동안 보관"이다(`/privacy` §3).
  *    판정 근거를 들고 있어야 이의가 들어왔을 때 답할 수 있다.
  */
-export async function approveVerification(userId: string): Promise<VerifyActionResult> {
+export async function approveVerification(userId: string): Promise<VerifyActionResult | null> {
   await requireOperator();
   const supabase = await createClient();
 
@@ -101,7 +102,7 @@ export async function approveVerification(userId: string): Promise<VerifyActionR
     .select("id");
   if (promoted.error || promoted.data.length === 0) {
     console.error("[verify] 교회 승인 실패", churchId, promoted.error);
-    return { message: "승인하지 못했어요. 잠시 후 다시 시도해 주세요." };
+    return { message: "승인하지 못했습니다. 잠시 후 다시 시도해 주세요." };
   }
 
   const decided = await decide(supabase, userId, application.value, {
@@ -118,7 +119,7 @@ export async function approveVerification(userId: string): Promise<VerifyActionR
   // 공개 교회 조회는 전부 `verification_status='APPROVED'`로 거르므로(lib/queries/churches.ts),
   // 방금 올린 교회는 캐시를 비워야 보인다 — 상세·sitemap이 같은 태그를 쓴다
   updateTag("churches");
-  redirect(QUEUE_PATH);
+  return null;
 }
 
 /**
@@ -133,14 +134,14 @@ export async function approveVerification(userId: string): Promise<VerifyActionR
 export async function rejectVerification(
   userId: string,
   reason: string,
-): Promise<VerifyActionResult> {
+): Promise<VerifyActionResult | null> {
   await requireOperator();
 
   // 화면도 막지만 막는 것은 서버다 — 직접 호출로 사유 없는 반려를 만들 수 없다
   const trimmed = reason.trim();
   if (trimmed.length === 0) return { message: "반려 사유를 적어 주세요." };
   if (trimmed.length > REJECTION_REASON_MAX) {
-    return { message: `반려 사유는 ${REJECTION_REASON_MAX}자까지 적을 수 있어요.` };
+    return { message: `반려 사유는 ${REJECTION_REASON_MAX}자까지 적을 수 있습니다.` };
   }
 
   const supabase = await createClient();
@@ -159,7 +160,7 @@ export async function rejectVerification(
 
   // ⛔ `updateTag`을 부르지 않는다 — 반려는 공개되는 것을 아무것도 바꾸지 않는다.
   //    교회 행은 `PENDING` 그대로라 애초에 캐시된 공개 조회에 들어 있지 않다.
-  redirect(QUEUE_PATH);
+  return null;
 }
 
 /**
@@ -178,7 +179,7 @@ async function loadPending(
 
   if (error) {
     console.error("[verify] 신청 조회 실패", userId, error);
-    return { message: "불러오지 못했어요. 잠시 후 다시 시도해 주세요." };
+    return { message: "불러오지 못했습니다. 잠시 후 다시 시도해 주세요." };
   }
   // 제출 시각이 없으면 신청이 아니다 — 로그인만 한 계정도 `users` 행을 갖는다(queries/verifications)
   if (data === null || data.verification_submitted_at === null || data.church_id === null) {
@@ -223,7 +224,7 @@ async function decide(
 
   if (error) {
     console.error("[verify] 판정 기록 실패", userId, error);
-    return { message: "처리하지 못했어요. 잠시 후 다시 시도해 주세요." };
+    return { message: "처리하지 못했습니다. 잠시 후 다시 시도해 주세요." };
   }
   // 0행 UPDATE는 PostgREST에서 성공으로 온다 — 조건에 걸린 것이지 저장된 것이 아니다
   if (data.length === 0) return { message: ALREADY };

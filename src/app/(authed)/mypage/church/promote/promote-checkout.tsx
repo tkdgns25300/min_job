@@ -286,7 +286,10 @@ export function PromoteCheckout({ jobs, payerEmail }: { jobs: JobOption[]; payer
       </label>
 
       {status === "error" && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2.5 text-sm break-keep text-destructive">
+        <p
+          className="rounded-lg bg-destructive/10 px-3 py-2.5 text-sm break-keep text-destructive"
+          role="alert"
+        >
           {message}
         </p>
       )}

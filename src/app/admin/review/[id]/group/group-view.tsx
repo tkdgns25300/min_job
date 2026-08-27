@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { unstable_rethrow } from "next/navigation";
+import { unstable_rethrow, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +12,9 @@ import { toEdits } from "@/lib/review-edits";
 import type { ReviewRow } from "@/lib/queries/review";
 import { approveReview, rejectReview, type ReviewActionResult } from "../../actions";
 import { groupDifferences, type GroupDifference } from "./group-diff";
+
+// 판정이 끝나면 돌아가는 곳 — 단건 화면과 같은 이유로 화면 쪽에 둔다(`review-form` 주석 참조).
+const QUEUE_PATH = "/admin/review";
 
 // 묶음 판정 — 크롤러가 "같은 자리인지 내가 정할 수 없다"고 넘긴 건. 한 건씩 보면 판단이 안 되므로
 // 묶음을 나란히 놓는다.
@@ -22,19 +26,26 @@ export function GroupView({ members, target }: { members: ReviewRow[]; target: R
   const [note, setNote] = useState(target.row.review_note ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   const differences = groupDifferences(members.map((m) => m.row));
   // 판정한 뒤 이 URL로 되돌아올 수 있다 — `dedup_state`는 그대로 `UNCERTAIN`이라 화면이 열린다.
   // 되돌리기는 단건 화면에 있다(판정 하나에 되돌리는 곳이 둘이면 어느 쪽이 정본인지 모른다).
   const processed = target.row.review_status !== "PENDING";
 
-  const run = (action: () => Promise<ReviewActionResult>) => {
+  const run = (action: () => Promise<ReviewActionResult>, success: string) => {
     setError(null);
     startTransition(async () => {
       try {
-        // 두 판정 모두 성공하면 서버가 큐로 보낸다 — 여기 돌아오는 것은 실패뿐이다
         const result = await action();
         if (result && !result.ok) setError(result.message);
+        else {
+          // ⚠️ **어느 쪽을 눌렀는지 말해 주는 것이 핵심**이다 — 두 버튼은 뜻이 정반대인데
+          //    판정이 끝나면 둘 다 큐로 돌아가 "그 줄이 사라졌다"만 남는다.
+          // ⚠️ **먼저 알리고 나서** 보낸다 — 액션이 `redirect`하면 이 줄에 오지 못한다(실측).
+          toast.success(success);
+          router.push(QUEUE_PATH);
+        }
       } catch (thrown) {
         unstable_rethrow(thrown); // 리다이렉트 신호는 삼키지 않는다
         console.error("[review] 묶음 판정 실패", thrown);
@@ -104,14 +115,19 @@ export function GroupView({ members, target }: { members: ReviewRow[]; target: R
             className="flex-1"
             variant="destructive"
             disabled={pending || processed}
-            onClick={() => run(() => rejectReview(target.row.id, note))}
+            onClick={() => run(() => rejectReview(target.row.id, note), "중복 처리했습니다.")}
           >
             같은 자리 — 이 건을 중복 처리
           </Button>
           <Button
             className="flex-1"
             disabled={pending || processed || target.gaps.length > 0}
-            onClick={() => run(() => approveReview(target.row.id, toEdits(target.row), note))}
+            onClick={() =>
+              run(
+                () => approveReview(target.row.id, toEdits(target.row), note),
+                "공개 대기로 승인했습니다.",
+              )
+            }
           >
             다른 자리 — 이 건도 공개
           </Button>

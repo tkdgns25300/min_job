@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { unstable_rethrow } from "next/navigation";
+import { toast } from "@/components/ui/sonner";
 import { ConfirmButton } from "@/components/confirm-button";
 import { JOB_STATUSES } from "@/constants/domain";
 import { setJobStatus } from "../../actions";
@@ -26,6 +27,10 @@ export function JobStatusPanel({ job }: { job: Job }) {
         // 성공하면 `updateTag("jobs")`가 이 페이지의 값도 새로 읽게 만든다 — 화면에 머문다
         const result = await setJobStatus(job.id, !open);
         if (result.message) setError(result.message);
+        // ⚠️ 화면에 머무니 **말해 줘야 한다.** 바뀌는 것은 위 "현재 상태" 한 줄과 버튼 라벨인데,
+        //    `ConfirmButton`이 성공하면 스스로 닫혀서 눌렀는데 아무 일도 없는 것처럼 보였다.
+        //    문구는 `/admin/jobs`의 같은 동작과 **한 글자도 다르지 않게** 둔다 — 같은 일이다.
+        else toast.success(open ? "마감했습니다." : "다시 모집으로 바꿨습니다.");
       } catch (thrown) {
         unstable_rethrow(thrown);
         console.error("[jobs] 상태 변경 실패", thrown);

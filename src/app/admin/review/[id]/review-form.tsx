@@ -2,6 +2,7 @@
 
 import { unstable_rethrow, useRouter } from "next/navigation";
 import { useMemo, useState, useTransition, type ReactNode } from "react";
+import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +20,10 @@ import { approveReview, rejectReview, undoReview, type ReviewActionResult } from
 import { PublicPreview } from "./public-preview";
 import { ValueList } from "./value-list";
 import { ROW_COUNT, type Checks, type RowKey } from "./value-rows";
+
+// 판정이 끝나면 돌아가는 곳. ⚠️ 액션 파일에서 가져올 수 없다 — `"use server"` 파일은
+// **async 함수만** 내보낼 수 있어서(상수를 내보내면 요청 때 던진다) 화면 쪽에 한 벌 둔다.
+const QUEUE_PATH = "/admin/review";
 
 // 값을 고치고 판정하는 열. 판정 규칙의 정본은 서버(actions.ts)다 — 여기 계산은 **미리 보여주기** 위한
 // 것이고 버튼을 잠그는 것도 편의다. 승인 게이트는 서버가 다시 판단한다.
@@ -38,12 +43,10 @@ export function ReviewForm({ row, today }: { row: Tables<"review_data">; today: 
   // 저장하지 않는다 — 한 건을 보는 동안 어디까지 봤는지 기억하는 용도다.
   const [checked, setChecked] = useState<ReadonlySet<RowKey>>(new Set());
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const patch = (partial: Partial<ReviewEdits>) => {
     setDraft((current) => ({ ...current, ...partial }));
-    setDone(null);
   };
 
   // 화면이 보는 값과 서버가 저장하는 값이 같아야 게이트가 거짓말을 하지 않는다(같은 함수를 쓴다)
@@ -68,17 +71,22 @@ export function ReviewForm({ row, today }: { row: Tables<"review_data">; today: 
     today,
   );
 
-  const run = (action: () => Promise<ReviewActionResult>, success: string) => {
+  /**
+   * @param goToQueue 판정(승인·거절)은 큐로 돌아간다. 되돌리기는 이 화면에 머문다.
+   * ⚠️ **이동을 여기서 한다** — 액션이 `redirect`하면 `await action()`이 던져서 이 성공 줄에
+   *    도달하지 못하고, 판정을 알리는 토스트가 죽은 코드가 된다(실측 2026-08-27).
+   */
+  const run = (action: () => Promise<ReviewActionResult>, success: string, goToQueue = false) => {
     setError(null);
-    setDone(null);
     startTransition(async () => {
       try {
         const result = await action();
-        // 승인·거절이 성공하면 서버가 큐로 보내므로 이 줄에 오지 않는다 — 되돌리기만 온다.
         if (result && !result.ok) setError(result.message);
         else {
-          setDone(success);
-          router.refresh();
+          // 큐에서는 그 줄이 사라진 것만 보인다 — 승인인지 거절인지 말해 주는 것이 이 일이다
+          toast.success(success);
+          if (goToQueue) router.push(QUEUE_PATH);
+          else router.refresh();
         }
       } catch (thrown) {
         // 리다이렉트 등 Next 제어 신호는 삼키지 않는다(login/actions.ts와 같은 관용구).
@@ -157,11 +165,6 @@ export function ReviewForm({ row, today }: { row: Tables<"review_data">; today: 
             {error}
           </p>
         )}
-        {done && (
-          <p className="mt-2 text-xs font-semibold text-primary" role="status">
-            {done}
-          </p>
-        )}
 
         {processed ? (
           <Button
@@ -182,14 +185,14 @@ export function ReviewForm({ row, today }: { row: Tables<"review_data">; today: 
                 className="flex-1"
                 variant="destructive"
                 disabled={pending}
-                onClick={() => run(() => rejectReview(row.id, note), "거절했습니다.")}
+                onClick={() => run(() => rejectReview(row.id, note), "거절했습니다.", true)}
               >
                 거절
               </Button>
               <Button
                 className="flex-1"
                 disabled={pending || gaps.length > 0 || pairError !== null}
-                onClick={() => run(() => approveReview(row.id, draft, note), "승인했습니다.")}
+                onClick={() => run(() => approveReview(row.id, draft, note), "승인했습니다.", true)}
               >
                 승인
               </Button>

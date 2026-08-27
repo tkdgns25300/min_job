@@ -163,7 +163,10 @@ export function VerifyForm({
             고유번호증·사업자등록증에 적힌 번호예요. 하이픈은 빼고 숫자만 입력돼요.
           </p>
           {lookupError && (
-            <p className="mt-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive">
+            <p
+              className="mt-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive"
+              role="alert"
+            >
               {lookupError}
             </p>
           )}

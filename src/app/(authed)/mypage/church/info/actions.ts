@@ -34,6 +34,11 @@ const SAVE_FAILED = "저장하지 못했어요. 적은 내용은 그대로 있�
  * · `save`    넣기가 실패 → 채널이 저장되지 않았다
  * · `cleanup` 넣기는 됐고 **지우기**가 실패 → 적은 것은 다 저장됐고, **비운 채널이 아직 남아 있다**
  *   (이때 "저장하지 못했어요"라고 하면 저장된 것을 안 저장됐다고 말하는 셈이다)
+ *
+ * ⚠️ **화면에서는 부분 실패도 실패와 같은 모양이다**(빨간 인라인 · `role="alert"`). 색을 따로 두는
+ *    안을 검토했지만 세 갈래 모두 **다음에 할 일이 같다**(다시 저장) — 행동이 같은 것을 색으로
+ *    나누면 신호만 늘고 판단은 안 바뀐다. 어디까지 됐는지는 위 문구가 말한다(4초 토스트가 아니라
+ *    인라인이라 읽을 시간이 있다).
  */
 const LINK_FAILURE = {
   save: "기본 정보는 저장됐지만 채널을 저장하지 못했어요. 채널만 다시 저장해 주세요.",
@@ -113,7 +118,11 @@ async function saveChannels(
   const kept = rows.map((row) => row.type);
   const remove =
     kept.length > 0
-      ? supabase.from("church_links").delete().eq("church_id", churchId).not("type", "in", `(${kept.join(",")})`)
+      ? supabase
+          .from("church_links")
+          .delete()
+          .eq("church_id", churchId)
+          .not("type", "in", `(${kept.join(",")})`)
       : supabase.from("church_links").delete().eq("church_id", churchId);
 
   const cleared = await remove;

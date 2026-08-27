@@ -2,6 +2,7 @@
 
 import { unstable_rethrow, useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
+import { toast } from "@/components/ui/sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/confirm-button";
@@ -27,12 +28,10 @@ export function JobEditForm({ row, today }: { row: Tables<"jobs">; today: string
   const original = useMemo(() => toJobEdits(row), [row]);
   const [draft, setDraft] = useState<JobEdits>(original);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const patch = (partial: Partial<JobEdits>) => {
     setDraft((current) => ({ ...current, ...partial }));
-    setDone(null);
   };
 
   // 화면이 보는 값과 서버가 저장하는 값이 같아야 막힌 이유가 거짓말을 하지 않는다(같은 함수를 쓴다)
@@ -54,13 +53,15 @@ export function JobEditForm({ row, today }: { row: Tables<"jobs">; today: string
 
   const run = (action: () => Promise<JobActionResult>, success: string) => {
     setError(null);
-    setDone(null);
     startTransition(async () => {
       try {
         const result = await action();
         if (!result.ok) setError(result.message);
         else {
-          setDone(success);
+          // ⚠️ 성공은 **토스트**로 말한다 — 이 바가 `sticky bottom-0`이라 인라인 문구를 여기 두면
+          //    버튼이 밀리고, 값이 길어 스크롤한 상태에서는 보이지도 않았다.
+          //    실패는 인라인으로 남긴다 — 운영자가 읽고 조치해야 하는 말이다.
+          toast.success(success);
           // 액션 응답에는 새 트리가 없다 — 이 화면의 값·상태를 다시 읽어야 반영된다
           router.refresh();
         }
@@ -104,12 +105,6 @@ export function JobEditForm({ row, today }: { row: Tables<"jobs">; today: string
             {error}
           </p>
         )}
-        {done && (
-          <p className="mb-2 text-xs font-semibold text-primary" role="status">
-            {done}
-          </p>
-        )}
-
         <div className="flex flex-wrap gap-2">
           <Button
             className="flex-1"
@@ -135,7 +130,7 @@ export function JobEditForm({ row, today }: { row: Tables<"jobs">; today: string
               confirmLabel="마감 확인"
               hint="목록·검색에서 빠집니다."
               disabled={pending}
-              onConfirm={() => run(() => closeJob(row.id), "마감했습니다. 목록·검색에서 빠집니다.")}
+              onConfirm={() => run(() => closeJob(row.id), "마감했습니다.")}
             />
           )}
         </div>

@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { requireOperator } from "@/lib/auth-guard";
 import { getReviewRow } from "@/lib/queries/review";
 import {
@@ -31,7 +30,6 @@ import type { TablesUpdate } from "@/types/database";
 /** 실패만 말이 필요하다 — 성공하면 화면이 이동하거나 자기 상태로 안다 */
 export type ReviewActionResult = { ok: true } | { ok: false; message: string };
 
-const QUEUE_PATH = "/admin/review";
 const GONE = "이미 없는 항목입니다. 큐를 새로 불러 주세요.";
 const ALREADY = "이미 처리된 항목입니다. 큐를 새로 불러 주세요.";
 const RACED = "다른 곳에서 먼저 처리됐습니다. 큐를 새로 불러 주세요.";
@@ -64,7 +62,10 @@ export async function approveReview(
     ...stamp(operator.email),
   });
   if (!result.ok) return result;
-  redirect(QUEUE_PATH);
+  // ⚠️ **여기서 `redirect`하지 않는다**(2026-08-27에 걷어냈다). 서버가 보내면 `await action()`이
+  //    **던지므로** 호출부의 성공 줄에 도달하지 못하고, 판정 결과를 알리는 토스트가 죽은 코드가
+  //    된다(실측: 큐로는 갔지만 토스트가 안 떴다). 이동은 호출부가 한다 — 알릴 말을 먼저 띄우고.
+  return { ok: true };
 }
 
 /**
@@ -96,7 +97,10 @@ export async function rejectReview(id: string, note: string): Promise<ReviewActi
     ...stamp(operator.email),
   });
   if (!result.ok) return result;
-  redirect(QUEUE_PATH);
+  // ⚠️ **여기서 `redirect`하지 않는다**(2026-08-27에 걷어냈다). 서버가 보내면 `await action()`이
+  //    **던지므로** 호출부의 성공 줄에 도달하지 못하고, 판정 결과를 알리는 토스트가 죽은 코드가
+  //    된다(실측: 큐로는 갔지만 토스트가 안 떴다). 이동은 호출부가 한다 — 알릴 말을 먼저 띄우고.
+  return { ok: true };
 }
 
 /**
@@ -119,11 +123,11 @@ export async function undoReview(id: string): Promise<ReviewActionResult> {
   if (!row.reviewed_by) {
     return {
       ok: false,
-      message: "크롤러 자동 판정은 되돌릴 수 없어요 — 다음 실행이 다시 판단합니다.",
+      message: "크롤러 자동 판정은 되돌릴 수 없습니다 — 다음 실행이 다시 판단합니다.",
     };
   }
   if (row.published_job_id) {
-    return { ok: false, message: "이미 공개된 공고예요 — 내리는 것은 공고 관리에서 합니다." };
+    return { ok: false, message: "이미 공개된 공고입니다 — 내리는 것은 공고 관리에서 합니다." };
   }
 
   // 읽은 뒤 쓰기 전에 크롤러가 공개할 수 있다 — 조건을 UPDATE에도 걸어 원자적으로 막는다

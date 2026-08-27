@@ -1,13 +1,18 @@
 "use client";
 
 import { useState, useTransition, type ReactNode } from "react";
-import { unstable_rethrow } from "next/navigation";
+import { unstable_rethrow, useRouter } from "next/navigation";
+import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { DENOMINATIONS, POSITIONS, REGIONS } from "@/constants/domain";
 import { REJECTION_REASON_MAX } from "@/lib/church-verification";
 import { approveVerification, rejectVerification, type VerifyActionResult } from "../actions";
 import type { ChurchVerification } from "@/types/domain";
+
+// 판정이 끝나면 돌아가는 곳. ⚠️ 액션 파일에서 가져올 수 없다 — `"use server"` 파일은
+// **async 함수만** 내보낼 수 있어서(상수를 내보내면 요청 때 던진다) 여기 한 벌 둔다.
+const QUEUE_PATH = "/admin/verify";
 
 // 판정 열 — 서류 옆에서 값을 맞춰 보고 승인·반려한다.
 //
@@ -45,6 +50,7 @@ export function DecisionPanel({ verification }: { verification: ChurchVerificati
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startDecision] = useTransition();
+  const router = useRouter();
 
   const toggle = (key: string) =>
     setChecked((current) => {
@@ -53,13 +59,20 @@ export function DecisionPanel({ verification }: { verification: ChurchVerificati
       return next;
     });
 
-  const run = (action: () => Promise<VerifyActionResult>) =>
+  const run = (action: () => Promise<VerifyActionResult | null>, success: string) =>
     startDecision(async () => {
       setError(null);
       try {
         const result = await action();
-        // 성공하면 서버가 큐로 보내므로 이 줄에 오지 않는다 — 실패 모양만 돌아온다
+        // 돌아온 값이 있으면 실패다(`VerifyActionResult`) — `null`이면 판정이 끝났다
         if (result) setError(result.message);
+        else {
+          // ⚠️ **반려는 되돌릴 수 없고 증빙 서류를 파기한다**(`actions.ts` 머리말). 그런데 판정이
+          //    끝나면 큐로 돌아가 그 줄이 사라진 것만 보였다 — 승인인지 반려인지 화면이 말하지
+          //    않았다. **먼저 알리고 나서** 큐로 보낸다(서버가 보내면 이 줄에 오지 못한다).
+          toast.success(success);
+          router.push(QUEUE_PATH);
+        }
       } catch (thrown) {
         // 리다이렉트 등 Next 제어 신호는 삼키지 않는다(admin/review와 같은 관용구)
         unstable_rethrow(thrown);
@@ -138,14 +151,14 @@ export function DecisionPanel({ verification }: { verification: ChurchVerificati
             variant="destructive"
             className="flex-1"
             disabled={pending || reason.trim().length === 0}
-            onClick={() => run(() => rejectVerification(verification.id, reason))}
+            onClick={() => run(() => rejectVerification(verification.id, reason), "반려했습니다.")}
           >
             반려
           </Button>
           <Button
             className="flex-1"
             disabled={pending}
-            onClick={() => run(() => approveVerification(verification.id))}
+            onClick={() => run(() => approveVerification(verification.id), "승인했습니다.")}
           >
             승인
           </Button>

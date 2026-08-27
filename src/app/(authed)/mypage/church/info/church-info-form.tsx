@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { unstable_rethrow } from "next/navigation";
+import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -55,13 +56,11 @@ export function ChurchInfoForm({ church }: { church: Church }) {
   const [draft, setDraft] = useState<ChurchInfoDraft>(() => toInfoDraft(church));
   const [errors, setErrors] = useState<InfoErrors>({});
   const [failure, setFailure] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const [pending, startSave] = useTransition();
 
   /** 고치기 시작한 칸의 오류·직전 결과는 지운다 — 남아 있으면 무엇이 아직 문제인지 알 수 없다 */
   const patch = (partial: Partial<ChurchInfoDraft>) => {
     setDraft((d) => ({ ...d, ...partial }));
-    setSaved(false);
     setFailure(null);
     setErrors((prev) => {
       const next = { ...prev };
@@ -72,7 +71,6 @@ export function ChurchInfoForm({ church }: { church: Church }) {
 
   const patchLink = (type: ChurchChannel, url: string) => {
     setDraft((d) => ({ ...d, links: { ...d.links, [type]: url } }));
-    setSaved(false);
     setFailure(null);
     setErrors((prev) => {
       const next = { ...prev };
@@ -86,7 +84,6 @@ export function ChurchInfoForm({ church }: { church: Church }) {
     const found = infoErrors(draft);
     if (Object.keys(found).length > 0) {
       setErrors(found);
-      setSaved(false);
       setFailure(null);
       return;
     }
@@ -96,13 +93,11 @@ export function ChurchInfoForm({ church }: { church: Church }) {
       try {
         const result = await saveChurchInfo(draft);
         // 액션이 같은 검증을 다시 돌린다(신뢰 경계는 서버다) — 걸리면 그 답을 그대로 쓴다
-        if (result.errors) {
-          setErrors(result.errors);
-          setSaved(false);
-        } else if (result.message) {
-          setFailure(result.message);
-          setSaved(false);
-        } else setSaved(true);
+        if (result.errors) setErrors(result.errors);
+        else if (result.message) setFailure(result.message);
+        // ⚠️ 성공은 **토스트**로 말한다 — 이 폼은 칸이 열다섯이라 버튼이 화면 아래에 있고,
+        //    인라인 문구는 버튼 위에 둬도 스크롤한 자리에서는 안 보였다(실측 2026-08-27).
+        else toast.success("저장했습니다.");
       } catch (thrown) {
         unstable_rethrow(thrown);
         console.error("[church-info] 저장 실패", thrown);
@@ -217,7 +212,10 @@ export function ChurchInfoForm({ church }: { church: Church }) {
 
       {/* `https://`가 자동으로 붙는 것은 **동작이지 교회가 알 일이 아니다** — 안내하지 않는다.
           비우면 사라진다는 것만 말한다(결과가 달라지므로). */}
-      <Section title="교회 채널" desc="주소만 붙여 넣으면 돼요. 비워 두면 교회 페이지에서 그 채널이 사라져요.">
+      <Section
+        title="교회 채널"
+        desc="주소만 붙여 넣으면 돼요. 비워 두면 교회 페이지에서 그 채널이 사라져요."
+      >
         {/* ⛔ **`Field`로 감싸지 않는다** — 채널 이름이 이미 줄 왼쪽에 보여서 `Field`의 라벨과
             겹치고, 여섯 칸을 세로로 쌓으면 나란한 목록이라는 성질이 사라진다. 대신 오류 자리를
             줄 안에 직접 둔다(`Field`와 같은 모양·같은 `role="alert"`). 여러 화면이 쓰는 공용
@@ -289,20 +287,9 @@ export function ChurchInfoForm({ church }: { church: Church }) {
         <p className="text-xs text-muted-foreground">사진 올리기는 준비 중이에요.</p>
       </Section>
 
-      {/* ⚠️ **안내는 버튼 위에 둔다.** 아래에 두면 폼이 길어서 누른 사람의 시선 밖에 뜬다 —
-          저장했는지 모르고 한 번 더 누르게 된다(실측 2026-08-27). 버튼 바로 위면 누른 자리에서
-          보인다.
-          ⬜ 이 자리는 결국 **토스트**로 바뀐다 — 화면에 머무는 성공 지점이 앱에 넷이고 지금
-             넷이 각자 다른 방식으로 만들어져 있다(하나는 성공을 아예 안 알린다 · ROADMAP). */}
+      {/* ⚠️ **실패·검증 안내만 인라인이다.** 고칠 곳을 가리키는 말이라 사라지면 안 된다.
+          성공은 토스트가 말한다(위 `onSubmit`). */}
       <div className="mt-6 border-t pt-6">
-        {saved && (
-          <p
-            className="mb-3.5 rounded-lg bg-primary/[0.08] px-3.5 py-2.5 text-sm break-keep text-brand-700"
-            role="status"
-          >
-            저장했어요. 교회 페이지에 반영됐어요.
-          </p>
-        )}
         {Object.keys(errors).length > 0 && (
           <p
             className="mb-3.5 rounded-lg bg-destructive/10 px-3.5 py-2.5 text-sm break-keep text-destructive"

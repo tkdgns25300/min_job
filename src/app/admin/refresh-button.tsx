@@ -2,6 +2,7 @@
 
 import { unstable_rethrow, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { refreshPublicCache } from "./actions";
 
@@ -15,18 +16,16 @@ import { refreshPublicCache } from "./actions";
 
 export function RefreshButton() {
   const router = useRouter();
-  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const run = () => {
-    setDone(false);
     setError(null);
     startTransition(async () => {
       try {
         await refreshPublicCache();
         router.refresh(); // 위 ⚠️ — 이 페이지의 요약 수치도 새로 읽는다
-        setDone(true);
+        toast.success("공개 목록을 새로 불러왔습니다.");
       } catch (thrown) {
         unstable_rethrow(thrown); // 운영자가 아니면 notFound가 온다 — 삼키지 않는다
         console.error("[admin] 캐시 새로고침 실패", thrown);
@@ -40,11 +39,6 @@ export function RefreshButton() {
       <Button variant="outline" disabled={pending} onClick={run}>
         {pending ? "새로고침 중…" : "공개 목록 새로고침"}
       </Button>
-      {done && (
-        <p className="mt-1.5 text-xs font-semibold text-primary" role="status">
-          새로고침했습니다 — 지금부터 새 공고가 보입니다.
-        </p>
-      )}
       {error && (
         <p className="mt-1.5 text-xs font-semibold text-destructive" role="alert">
           {error}
