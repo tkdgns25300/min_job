@@ -133,13 +133,14 @@ src/
 │   ├── globals.css                디자인 토큰(브랜드 색 단일 소스)
 │   └── sitemap.ts · robots.ts · opengraph-image.tsx    SEO — URL은 lib/queries seam에서(DB 전환 무관)
 ├── components/                    ⚠️ 재사용 UI만 — 도메인 로직 X
-│   ├── ui/                        shadcn 원본 (button·card·input·textarea·native-select·sheet·badge)
+│   ├── ui/                        shadcn 원본 (button·card·input·textarea·native-select·sheet·badge·sonner)
 │   ├── layout/                    헤더(계정 영역 포함)·푸터·모바일 네비·법률문서 셸
 │   ├── job/ church/ admin/ home/ pricing/ search/   각 도메인 표시 컴포넌트
 │   │                              ⚠️ admin/은 **검수·공고 관리 둘 다 쓰는 것만** — 한쪽 전용은 그 라우트 폴더에
 │   ├── field.tsx                  폼 입력 한 칸(라벨·선택·필수·힌트·에러) — 5개 폼 파일 48곳 공용
 │   ├── admin/value-row.tsx        값 한 줄(읽기 우선·펼쳐 고치기) + 구획 — 수집 검수·공고 관리 공용
-│   ├── admin/confirm-button.tsx   되돌리기 어려운 동작에 한 번 더 묻는 버튼(그 자리에서 확인)
+│   ├── confirm-button.tsx         되돌리기 어려운 동작에 한 번 더 묻는 버튼(그 자리에서 확인)
+│   │                              ⚠️ `admin/`이 아니다 — 교회의 공고 수정(`/jobs/[id]/edit`)도 쓴다
 │   ├── admin/value-fields.tsx     두 값 화면이 같이 쓰는 칸 — 사택 3상태·연락처 4칸·금액 파서
 │   ├── tab-bar.tsx                상태 탭 + 건수 배지 — 공고·검수 목록 3곳 공용(제네릭 key)
 │   ├── enum-filter-select.tsx     "○○ 전체" + 도메인 라벨 맵 필터 select — admin 6곳 공용
@@ -307,6 +308,9 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 - Tailwind 인라인. 별도 CSS 파일 X (`globals.css` 제외).
 - ⚠️ **Tailwind v4는 `button`에 `cursor: pointer`를 주지 않는다**(v3 preflight는 줬다). `globals.css`의 `@layer base`가 되돌려 놓았으니 버튼마다 `cursor-pointer`를 붙이지 않는다 — 붙이기 시작하면 새 버튼마다 기억해야 하고, 그래서 한때 54개가 전부 빠져 있었다.
 - shadcn/ui 우선. **모바일 퍼스트** (`base` → `sm` → `md` → `lg`) — 구직 교역자가 폰으로 공고를 본다. (디자인 방향은 SPEC.)
+- **알림은 성공=토스트 / 실패=인라인.** 성공은 `toast.success()`(`@/components/ui/sonner` — `sonner`를 직접 import하지 않는다), 실패는 그 화면에 남는 `role="alert"` 문구다. 실패는 **읽고 조치해야 하는 말**이라 4초 뒤 사라지면 안 되고, sonner의 라이브 영역은 polite 고정이라 assertive 안내를 잃는다. `<Toaster />`는 **루트 레이아웃에 한 벌**만 둔다(로그아웃처럼 라우트 그룹을 넘는 이동이 있어 그룹별로 두면 방금 띄운 것이 사라진다).
+  - ⚠️ **성공을 `redirect`로 알릴 수 없다** — Server Action의 `redirect`는 **던지므로** `await action()` 다음 줄이 죽은 코드가 된다. 이동이 필요한 판정 화면은 액션이 결과를 **돌려주고**, 호출부가 토스트를 띄운 뒤 `router.push`한다(2026-08-27 실측으로 걷어낸 함정).
+  - **토스트는 화면을 가리지 않고 습니다체다**(운영자 결정 2026-08-27) — 교회 화면의 토스트도 "저장했습니다."다. 반면 **인라인 문구는 그 화면의 문체를 따른다**(어드민=습니다체 / 교회·구직자=해요체) — 그래서 `church-info-form`은 토스트가 "저장했습니다."이고 실패 인라인이 "저장하지 못했어요…"다. 같은 동작이 두 화면에 있으면 **문구를 한 글자도 다르게 두지 않는다**(공고 마감은 교회·어드민 모두 "마감했습니다."). 남은 혼용은 ROADMAP 문체 항목.
 
 **Imports**
 - 항상 `@/` alias. 상대 경로는 **같은 폴더**, 그리고 **같은 라우트 기능 폴더 안의 공용 파일**까지만 허용(예: `jobs/new/page.tsx` → `../job-form`). 그 밖으로 나가면 `@/`.
