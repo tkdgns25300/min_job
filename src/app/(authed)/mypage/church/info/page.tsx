@@ -38,8 +38,8 @@ async function ChurchInfoContent() {
       <header className="mt-2.5">
         <h1 className="text-2xl font-bold">교회 정보</h1>
         <p className="mt-1.5 text-sm leading-relaxed break-keep text-muted-foreground">
-          여기에서 관리한 내용이 교회 상세 페이지(공개)에 반영돼요. 사무용 연락처만 예외로, 인증
-          검수 대조용이라 공개되지 않아요.
+          여기에서 관리한 내용이 교회 상세 페이지(공개)에 반영돼요. 사무용 연락처만 예외로,
+          운영자가 쓰는 값이라 공개되지 않아요.
         </p>
       </header>
       <div className="mt-6">
