@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-  type FormEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { unstable_rethrow } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -445,7 +438,10 @@ function stepSections(
                 아니라 같은 질문의 거친 답과 자세한 답이다.
                 ⚠️ 자격이 비면 **구직자의 자격 필터에서 통째로 빠진다**(filter-jobs.ts) — 크롤
                    공고는 70%가 값을 갖고 있어 필터가 실제로 도는 축이다. */}
-            <Field label="자격" hint="구직자의 자격 필터에 쓰여요. 다섯 값에 없는 조건은 아래 요건에 적어 주세요.">
+            <Field
+              label="자격"
+              hint="구직자의 자격 필터에 쓰여요. 다섯 값에 없는 조건은 아래 요건에 적어 주세요."
+            >
               <ChipSelect
                 options={QUALIFICATIONS}
                 value={draft.qualification}
@@ -488,14 +484,14 @@ function stepSections(
         description: "우리 교회와 사역을 소개해 주세요. 목록·검색에도 쓰이는 글이에요.",
         content: (
           <Field label="본문" required error={errorOf("description")}>
-          <Textarea
-            value={draft.description}
-            onChange={(e) => patch({ description: e.target.value })}
-            maxLength={MAX_LENGTHS.description}
-            placeholder="예) 저희 교회는 다음세대를 세우는 일에 힘쓰고 있어요. 함께 유초등부를 섬길 전도사님을 기다립니다."
-            aria-label="공고 본문"
-            className="min-h-32"
-          />
+            <Textarea
+              value={draft.description}
+              onChange={(e) => patch({ description: e.target.value })}
+              maxLength={MAX_LENGTHS.description}
+              placeholder="예) 저희 교회는 다음세대를 세우는 일에 힘쓰고 있어요. 함께 유초등부를 섬길 전도사님을 기다립니다."
+              aria-label="공고 본문"
+              className="min-h-32"
+            />
           </Field>
         ),
       },

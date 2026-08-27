@@ -172,7 +172,8 @@ export function draftErrors(draft: JobDraft, previousDeadline?: string | null): 
 
   if (!draft.employmentType) errors.employmentType = "고용형태를 골라 주세요.";
 
-  if (!draft.housing) errors.housing = "사택 제공 여부를 골라 주세요. 정해지지 않았으면 '협의'예요.";
+  if (!draft.housing)
+    errors.housing = "사택 제공 여부를 골라 주세요. 정해지지 않았으면 '협의'예요.";
 
   if (!draft.description.trim()) errors.description = "공고 본문을 적어 주세요.";
   else if (tooLong(draft.description, MAX_LENGTHS.description))

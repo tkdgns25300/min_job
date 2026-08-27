@@ -45,7 +45,9 @@ export async function createJob(draft: JobDraft): Promise<JobActionResult> {
   if (Object.keys(errors).length > 0) return { errors };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("jobs").insert(toInsert(draft, gate.church, todayInSeoul()));
+  const { error } = await supabase
+    .from("jobs")
+    .insert(toInsert(draft, gate.church, todayInSeoul()));
   if (error) {
     console.error("[jobs] 등록 실패", error);
     return { message: SAVE_FAILED };
