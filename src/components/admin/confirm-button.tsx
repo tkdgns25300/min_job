@@ -19,6 +19,7 @@ export function ConfirmButton({
   onConfirm,
   disabled,
   size = "default",
+  confirmVariant = "destructive",
   className,
 }: {
   /** 평소 버튼에 적히는 말 */
@@ -33,6 +34,11 @@ export function ConfirmButton({
   onConfirm: () => void;
   disabled?: boolean;
   size?: "default" | "sm";
+  /**
+   * 확인 단계의 색. 기본은 빨강(마감·삭제)이지만 **되돌리기 어렵다고 다 위험한 것은 아니다** —
+   * "다시 모집"은 한 번 더 물을 값어치가 있으면서도 빨강으로 경고할 동작이 아니다(2026-08-26).
+   */
+  confirmVariant?: "destructive" | "default";
   className?: string;
 }) {
   const [asking, setAsking] = useState(false);
@@ -64,7 +70,7 @@ export function ConfirmButton({
     // 기본은 글자 폭(표 한 칸) · `flex-1`을 받으면 늘어난다(편집 화면의 저장과 1:1)
     <div ref={ref} className={cn("inline-flex flex-col", className)}>
       <Button
-        variant={asking ? "destructive" : "outline"}
+        variant={asking ? confirmVariant : "outline"}
         size={size}
         disabled={disabled}
         className="w-full"

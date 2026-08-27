@@ -1,161 +1,21 @@
-"use client";
-
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Field } from "@/components/field";
 import { churchMetaLine } from "@/lib/format";
-import {
-  CHURCH_CHANNELS,
-  ADDRESS_PLACEHOLDER,
-  CITY_HINT,
-  CITY_PLACEHOLDER,
-  DENOMINATIONS,
-  REGIONS,
-} from "@/constants/domain";
-import { contactMailto } from "@/constants/business";
 import type { Church } from "@/types/domain";
 
-interface ChurchDraft {
-  name: string;
-  denomination: string;
-  region: string;
-  city: string;
-  address: string;
-  foundedYear: string;
-  channels: Record<string, string>;
-}
-
-const EMPTY_DRAFT: ChurchDraft = {
-  name: "",
-  denomination: "",
-  region: "",
-  city: "",
-  address: "",
-  foundedYear: "",
-  channels: {},
-};
-
-// 재등록 교회 — 저장된 교회 정보 요약 카드 (SPEC.md /jobs/new §2)
+// 공고 폼 위의 교회 요약 — **읽기 전용**이다.
+//
+// ⛔ **교회 정보를 여기서 고칠 수 없다.** 미검증 값이 인증된 교회를 덮어쓰면 안 된다(인증 신청에서
+//    같은 이유로 기존 교회의 칸을 아예 보여주지 않는다). 고치는 곳은 `/mypage/church/info`다.
+// ⛔ **직접 입력 칸(`ChurchFields`)을 삭제했다**(2026-08-26). `church`가 `null`일 때 쓰던 분기인데,
+//    `JobForm`을 부르는 두 페이지가 모두 `hasChurchAccess` 게이트 뒤에서 `getChurch`(APPROVED만)를
+//    넘기므로 **도달하지 않는 코드**였다. 없앤 `/admin/ingest`(운영자 붙여넣기)용 잔재다.
+// ⛔ **"정보 수정 문의" 링크도 없앴다**(2026-08-26 · 운영자 결정). 교회가 스스로 고치는 화면이
+//    이미 있어(`/mypage/church/info`) 메일로 요청할 이유가 없다.
 export function ChurchSummaryCard({ church }: { church: Church }) {
-  // 교단·지역이 전부 미상이면 ""라 빈 <p>가 여백만 차지한다
   const meta = churchMetaLine(church);
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-muted/30 p-4">
-      {/* 교회 로고/아바타 데이터 없음 — 이니셜 플레이스홀더 대신 이름·메타만 표시 */}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold">{church.name}</p>
-        {meta && <p className="mt-0.5 truncate text-xs text-muted-foreground">{meta}</p>}
-      </div>
-      {/* 교회 정보 수정 화면은 스코프 밖(별도 /admin/churches 안 만듦) — 당분간 문의로 */}
-      <a
-        href={contactMailto("교회 정보 수정 요청")}
-        className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
-      >
-        정보 수정 문의
-      </a>
-    </div>
-  );
-}
-
-// 첫 등록 교회 정보 입력 — 교단은 enum 드롭다운(자유입력 금지: 이단 1차 차단, ROADMAP 1-4).
-// 제출이 배선되기 전이라 값은 이 컴포넌트 안에만 머문다(Phase 1 Server Action).
-export function ChurchFields() {
-  const [draft, setDraft] = useState<ChurchDraft>(EMPTY_DRAFT);
-  const patch = (partial: Partial<ChurchDraft>) => setDraft((d) => ({ ...d, ...partial }));
-
-  return (
-    <div className="space-y-4">
-      <Field label="교회명">
-        <Input
-          value={draft.name}
-          onChange={(e) => patch({ name: e.target.value })}
-          placeholder="예) 새소망교회"
-          className="h-9"
-        />
-      </Field>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="교단">
-          <NativeSelect
-            aria-label="교단"
-            value={draft.denomination}
-            onChange={(e) => patch({ denomination: e.target.value })}
-          >
-            <option value="">선택</option>
-            {Object.entries(DENOMINATIONS).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
-        <Field label="지역">
-          <NativeSelect
-            aria-label="지역"
-            value={draft.region}
-            onChange={(e) => patch({ region: e.target.value })}
-          >
-            <option value="">선택</option>
-            {Object.entries(REGIONS).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="시·군·구" optional hint={CITY_HINT}>
-          <Input
-            value={draft.city}
-            onChange={(e) => patch({ city: e.target.value })}
-            placeholder={CITY_PLACEHOLDER}
-            className="h-9"
-          />
-        </Field>
-        <Field label="창립연도" optional>
-          <Input
-            inputMode="numeric"
-            value={draft.foundedYear}
-            onChange={(e) => patch({ foundedYear: e.target.value })}
-            placeholder="예) 1995"
-            className="h-9"
-          />
-        </Field>
-      </div>
-
-      {/* 주소는 길어서 전폭 한 줄. 있으면 지도가 정확해진다 — 없으면 교회명+지역 검색이라 동명 교회를 짚는다 */}
-      <Field label="상세 주소" optional>
-        <Input
-          value={draft.address}
-          onChange={(e) => patch({ address: e.target.value })}
-          placeholder={ADDRESS_PLACEHOLDER}
-          className="h-9"
-        />
-      </Field>
-
-      <Field
-        label="교회 채널"
-        optional
-        hint="홈페이지·유튜브 등 교회 공개 채널 주소만 적어 주세요."
-      >
-        <div className="space-y-2">
-          {Object.entries(CHURCH_CHANNELS).map(([key, label]) => (
-            <div key={key} className="flex items-center gap-2">
-              <span className="w-20 shrink-0 text-xs text-muted-foreground">{label}</span>
-              <Input
-                type="url"
-                value={draft.channels[key] ?? ""}
-                onChange={(e) => patch({ channels: { ...draft.channels, [key]: e.target.value } })}
-                placeholder="https://"
-                className="h-9"
-              />
-            </div>
-          ))}
-        </div>
-      </Field>
+    <div className="rounded-xl border bg-muted/30 px-4 py-3">
+      <p className="truncate text-sm font-bold">{church.name}</p>
+      {meta && <p className="mt-0.5 truncate text-xs text-muted-foreground">{meta}</p>}
     </div>
   );
 }

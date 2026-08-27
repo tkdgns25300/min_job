@@ -1,9 +1,5 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
 import { jobRoleLine } from "@/lib/format";
 import Link from "next/link";
-import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,72 +13,19 @@ const STATUS_BADGE_VARIANT: Record<JobStatus, "default" | "secondary"> = {
   CLOSED: "secondary",
 };
 
-interface MenuItem {
-  label: string;
-  destructive?: boolean;
-}
-
-// 케밥 오버플로우 메뉴 — shadcn DropdownMenu 미설치라 최소 client 구현.
-// 항목 클릭은 아직 닫기만 한다. 실제 마감·삭제(확인 다이얼로그 포함)는 Phase 1 Server Action.
-function OverflowMenu({ items, label }: { items: MenuItem[]; label: string }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onClick = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("click", onClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("click", onClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        aria-label={`${label} 더보기`}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        className="flex size-9 items-center justify-center rounded-lg border text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
-      >
-        <MoreHorizontal className="size-4" />
-      </button>
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-11 z-20 w-32 overflow-hidden rounded-xl border bg-card p-1 shadow-lg"
-        >
-          {items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className={cn(
-                "block w-full rounded-md px-2.5 py-2 text-left text-sm font-medium transition-colors hover:bg-muted",
-                item.destructive && "text-destructive",
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// 마이페이지 관리 행 — 액션은 상태별로: 게재중=수정+⋯(마감·삭제), 마감=재등록+⋯(삭제).
-// 삭제·마감은 파괴적/상태변경이라 ⋯ 뒤로(오클릭 방지). 조회·북마크 지표는 집계 준비 중.
+// 마이페이지 관리 행 — 액션은 **`수정` 하나**다. 조회·북마크 지표는 집계 준비 중.
+//
+// ⛔ **`⋯` 오버플로우 메뉴를 걷어냈다**(2026-08-27). 안에 있던 `마감`·`삭제`·`재등록`이 전부
+//    문제였다:
+//    · `마감`·`삭제` — `onClick`이 메뉴를 닫기만 했다. **누를 수 있는데 아무 일도 안 하는
+//      버튼**이라 `/admin/jobs`에서 같은 이유로 걷어낸 것들과 같은 부류다(SPEC).
+//    · `삭제` — 애초에 **안 만들기로 결정한 기능**이다(마감하면 이력이 남고 지우면 그 교회가
+//      언제 무엇을 뽑았는지가 사라진다 · `(authed)/jobs/actions.ts`).
+//    · `재등록` — 빈 `/jobs/new`로 보냈다. 수정 화면의 **"다시 모집"** 이 같은 공고를 그대로
+//      다시 여는 진짜 동작이라 두 화면이 다른 말을 하고 있었다.
+//    상태 변경은 전부 `/jobs/[id]/edit` 하단 **상태 관리**가 한다(실동작 확인 2026-08-27).
+// ⚠️ 분기도 `PENDING`이 있던 시절 모양이었다 — `JOB_STATUSES`는 `OPEN`·`CLOSED` 둘뿐이라
+//    "검수중은 삭제만" 가지는 **도달할 수 없는 코드**였다(2026-08-21에 상태가 둘로 줄었다).
 // 공개 목록에서 내려간 이유별 안내 — 판정은 lib/job-visibility, 여기는 문구만(도메인 로직 X)
 const HIDDEN_NOTICE: Record<"deadline" | "stale", string> = {
   deadline: "마감일이 지나 목록에서 내려갔어요 — 마감일을 늘리면 다시 노출돼요.",
@@ -132,36 +75,13 @@ export function MyJobRow({ job }: { job: MyJob }) {
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5">
-        {isClosed ? (
-          <>
-            {/* 재등록 = 이 공고를 다시 올리기. 지금은 새 공고 등록으로 이동(프리필은 Phase 1) */}
-            <Link
-              href="/jobs/new"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              재등록
-            </Link>
-            <OverflowMenu label={job.title} items={[{ label: "삭제", destructive: true }]} />
-          </>
-        ) : (
-          <>
-            {/* 게재중·검수중 = 수정 가능. 마감은 게재중(OPEN)만 — 검수중은 미게재라 삭제만 */}
-            <Link
-              href={`/jobs/${job.id}/edit`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              수정
-            </Link>
-            <OverflowMenu
-              label={job.title}
-              items={
-                job.status === "OPEN"
-                  ? [{ label: "마감" }, { label: "삭제", destructive: true }]
-                  : [{ label: "삭제", destructive: true }]
-              }
-            />
-          </>
-        )}
+        {/* 마감된 공고도 같은 곳으로 — 그 화면 하단에서 "다시 모집"을 누른다 */}
+        <Link
+          href={`/jobs/${job.id}/edit`}
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
+          {isClosed ? "수정 · 다시 모집" : "수정"}
+        </Link>
       </div>
     </div>
   );

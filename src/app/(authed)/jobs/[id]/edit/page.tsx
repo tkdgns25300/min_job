@@ -37,6 +37,8 @@ async function EditContent({ params }: Params) {
   // 게이트를 통과했으니 `job.churchId === user.churchId`다. nullable인 공고 쪽 대신
   // 게이트가 보장한 값을 쓴다(`job.churchId`는 미claim 공고에서 null일 수 있는 타입).
   const church = await getChurch(user.churchId);
+  // 〃 게이트를 지났으면 값이 온다. 그 사이 인증이 내려갔으면 수정도 막는다.
+  if (church === null) redirect("/mypage/verify");
 
   return (
     <>

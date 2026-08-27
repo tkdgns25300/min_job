@@ -29,6 +29,9 @@ async function NewJobFormLoader() {
   const user = await requireUser();
   if (!hasChurchAccess(user)) redirect("/mypage/verify"); // 교회 인증 관리자만 등록 (SPEC B)
   const church = await getChurch(user.churchId);
+  // 게이트를 지났으면 값이 온다(`getChurch`는 APPROVED만 돌려주고 `hasChurchAccess`가 그것을 봤다).
+  // 그 사이 인증이 내려간 경우만 여기 걸린다 — 폼을 그리지 않고 인증 화면으로 보낸다.
+  if (church === null) redirect("/mypage/verify");
 
   return <JobForm mode="create" church={church} />;
 }

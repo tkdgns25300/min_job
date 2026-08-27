@@ -4,6 +4,7 @@ import { useState, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MAX_LENGTHS } from "@/lib/job-draft";
 
 // 항목 리스트 입력(줄 추가/삭제) — 자격요건·우대사항·제출서류 공용.
 // presets = 자주 쓰는 항목 원탭 추가 칩 (추천 검색어 칩과 같은 옅은 초록 면 문법)
@@ -82,6 +83,9 @@ export function ListField({
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
+          // 상한은 `job-draft`의 `items()`가 저장 직전에도 자른다 — 여기서 막아야 그 자름이
+          // **사용자 눈앞에서** 일어난다(안 막으면 80자를 적어도 60자만 조용히 저장된다)
+          maxLength={MAX_LENGTHS.item}
           className="h-9"
         />
         <Button type="button" variant="outline" size="lg" onClick={submitDraft}>

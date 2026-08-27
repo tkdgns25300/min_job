@@ -35,6 +35,10 @@ export function formatPay(
   const unit = PAY_PERIODS[period];
   if (min !== null && max !== null && min !== max) return `${unit} ${comma(min)}~${comma(max)}만원`;
   if (min !== null) return `${unit} ${comma(min)}만원`;
+  // ⚠️ 최대만 있는 경우 — 없으면 이 줄이 "협의"로 떨어져 **적은 금액이 화면에서 사라진다**
+  //    (필터는 `payMax ?? payMin`을 보므로 걸리기는 한다 · filter-jobs.ts). 크롤은 단일 금액을
+  //    `pay_min`에 넣어 여기 오지 않지만, 등록 폼은 최대 칸만 채울 수 있다.
+  if (max !== null) return `${unit} ${comma(max)}만원 이하`;
   // 비정형 표현엔 단위를 붙이지 않는다 — "월 교회 내규에 따름"은 원문에 없는 말이 된다.
   if (note) return note;
   return "협의";

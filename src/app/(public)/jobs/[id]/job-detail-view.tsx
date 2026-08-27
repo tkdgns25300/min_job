@@ -226,9 +226,13 @@ function MainContent({
         </dl>
       </Section>
 
-      <Section title="자격 요건">
-        <BulletList items={job.requirements} />
-      </Section>
+      {/* ⚠️ **비면 구획째 뺀다** — 형제 구획은 전부 그러는데 여기만 무조건 그려서 제목만 뜬
+          빈 칸이 남아 있었다(실측 2026-08-27: 863건 중 77건이 `requirements=[]`). */}
+      {job.requirements.length > 0 && (
+        <Section title="자격 요건">
+          <BulletList items={job.requirements} />
+        </Section>
+      )}
 
       {job.preferred.length > 0 && (
         <Section title="우대 사항">
