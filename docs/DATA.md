@@ -39,7 +39,7 @@
 | **position** (직분) | `jobs.position` **`text[]`** | SENIOR_PASTOR · ASSOCIATE_PASTOR · EVANGELIST · LICENSED_MINISTER · ETC. **배열**: 한 자리에 여러 직분 자격을 열어둔 공고("전임사역자(전도사, 강도사, 목사)")가 **826건**이라 대표 1개만 담으면 나머지로 검색한 사람에게 안 보인다. `job_kind`에 MINISTRY가 없으면 NULL (CHECK ①) |
 | **department** (부서) | `jobs.department` | INFANT · CHILDREN · YOUTH · YOUNG_ADULT · DISTRICT · WORSHIP · ADMIN · ETC · `NULL` |
 | **employment_type** (고용형태) | `jobs.employment_type` | FULL_TIME · SEMI_FULL_TIME · PART_TIME · `NULL`(=미상, 원문 언급률 51%) |
-| **qualification** (자격/경력) | `jobs.qualification` | ANY · ENTRY · EXPERIENCED · ORDAINED · SEMINARIAN · `NULL`(=무관) |
+| **qualification** (자격/경력) | `jobs.qualification` | ENTRY · EXPERIENCED · ORDAINED · SEMINARIAN · `NULL`(=무관) — ⚠️ **`ANY`는 화면에서 뺐다**(2026-08-27): `NULL`이 이미 무관이라 같은 뜻의 철자가 둘이었고, 그래서 `ANY` 행이 0건인데 필터의 "무관" 칩이 0건을 돌려줬다. DB CHECK에는 값이 남아 있고 `keyOf`가 `NULL`로 좁힌다(뜻 보존) |
 | **pay_period** (사례비·급여 기간) | `jobs.pay_period` | MONTH(기본) · YEAR |
 | **job_status** | `jobs.status` | OPEN(기본) · CLOSED. ⚠️ ~~PENDING(검수중)~~은 **제거**(2026-08-21 · 마이그레이션 `20260821051500`) — 공고 전수 검수를 하지 않는다 |
 | **job_source** (출처) | `jobs.source` | OPERATOR · CHURCH |

@@ -104,7 +104,9 @@ src/
 │   │   │   ├── church/            교회 대시보드 + info/(정보 관리) + promote/(PortOne 노출 결제)
 │   │   │   └── verify/            교회 인증 신청 — page(상태 3갈래) · verify-form(확인 단계) ·
 │   │   │                          actions.ts(lookupChurch · 신청 접수). 판정은 운영자가 DB에서 직접
-│   │   └── jobs/                  job-form·job-wizard 등 등록/수정 공용 + new/ · [id]/edit/
+│   │   └── jobs/                  job-form·job-wizard·check-list·list-field 등 등록/수정 공용 ·
+│   │                              job-preview(공개 화면을 그대로 그리는 미리보기) · device-frame(iframe) ·
+│   │                              actions.ts(등록·수정·마감) + new/ · [id]/edit/(+ status-panel)
 │   ├── admin/                     운영자 전용 — 접근 판정은 proxy(.env ADMIN_EMAILS)
 │   │   ├── layout.tsx · admin-sidebar     admin shell (noindex) — jobs/ 목록만 ○ Static
 │   │   ├── page.tsx(셸) · admin-status(조회·조합) · status-cards(순수) ·
@@ -178,7 +180,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 > **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
 >
 > **배치 규칙**: 한 페이지 전용 뷰·폼·헬퍼는 **그 페이지 폴더에** 둔다(`jobs-view.tsx`·`job-form.tsx`). **두 라우트 기능 이상**이 쓰면 `components/`로 올린다 — 한 기능 안에서 여러 페이지가 나눠 쓰는 것은 그 기능 폴더의 공용 파일로 둔다(`admin/review/review-row.tsx`를 `[id]/`가 `../review-row`로 쓴다). ⚠️ 기준은 **쓰는 파일 수가 아니라 라우트 기능 수**다 — 파일 수로 세면 한 화면 전용이 `components/`로 올라간다(실제로 그렇게 넷이 올라가 있었다 · 2026-08-24 되돌림). mutation은 그 라우트의 `actions.ts`.
-> **mutation `actions.ts`는 login·mypage(로그아웃)·mypage/verify(교회 인증 신청)·admin(캐시 새로고침)·admin/review(수집 검수 판정)·admin/jobs(공개 공고 저장·마감)·admin/verify(교회 인증 판정)** — 교회의 공고 등록·수정은 아직 없다.
+> **mutation `actions.ts`는 login·mypage(로그아웃)·mypage/verify(교회 인증 신청)·(authed)/jobs(교회의 공고 등록·수정·마감)·admin(캐시 새로고침)·admin/review(수집 검수 판정)·admin/jobs(공개 공고 저장·마감)·admin/verify(교회 인증 판정)** — 교회 정보 저장·클레임은 아직 없다.
 > ⚠️ `mypage/verify/actions.ts`의 **`lookupChurch`는 mutation이 아니다** — 클라이언트가 제출 전에 "처음인가 기존인가"를 물어야 하는데 데이터 조회용 route handler가 금지되어 있어(아래) **Server Action이 규칙이 남긴 유일한 경로**다.
 
 ## Layer Responsibilities
@@ -250,7 +252,7 @@ DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. �
   - ② **증빙 서류 쓰기** — 업로드(`mypage/verify/actions.ts`)는 **일반 로그인 사용자가 트리거**하고, 파기(`admin/verify/actions.ts` 반려)는 **운영자 게이트 뒤**다. 읽기(①·③)와 달리 쓰기라 방어를 코드로 만든다 — **경로에 사용자 입력을 넣지 않고**(`{user.id}/{uuid}.{ext}`) `upsert:false`로 덮어쓰기를 막으며, 크기·MIME은 버킷 설정이 한 번 더 거른다.
   - ① **포스터 signed URL**: `lib/queries/review.ts`의 포스터 signed URL은 `service.ts`를 쓴다. `storage.objects`는 RLS가 **항상** 켜져 있고 `postings` 버킷엔 정책이 없어(RLS 유예) publishable 키로는 서명이 조용히 빈 URL을 돌려준다(실측 2026-08-22). 정책을 만들면 로그인한 아무나 포스터를 읽게 되고, 운영자만 허용하려면 `.env ADMIN_EMAILS` 판정을 DB에 넣어야 해 "DB는 저장 전용"과 부딪힌다. 호출은 `requireOperator()` 뒤에서만 일어나고 나가는 것은 개체 하나에 묶인 30분 URL이다. **이 예외를 늘리지 말 것.**
 - `service.ts`가 RLS를 우회하므로 cached read(공개·비개인 조회 — 공고·교회·운영자 목록 등) 전용으로만. **인증 의존·PII read(예: 교회 인증 신청)와 모든 인증·권한 작업은 반드시 `server.ts`**(cached 금지).
-- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 쓰기는 **수집 검수 판정 · 공개 공고 저장·마감 · 교회 인증 신청 접수 · 교회 인증 판정**까지 왔다(2026-08-26). 남은 것 — 공고 등록·수정, 교회 정보 저장, 클레임은 아직 Server Action이 없다(화면만 있다).
+- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 쓰기는 **수집 검수 판정 · 공개 공고 저장·마감 · 교회 인증 신청 접수 · 교회 인증 판정 · 교회의 공고 등록·수정·마감**까지 왔다(2026-08-27). 남은 것 — **교회 정보 저장 · 클레임 · 노출 결제 · 북마크 DB 이전**은 아직 Server Action이 없다(화면만 있다).
 
 ## `'use cache'` 제약 (필수 준수)
 
