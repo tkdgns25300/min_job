@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { unstable_rethrow } from "next/navigation";
-import { ConfirmButton } from "@/components/admin/confirm-button";
+import { ConfirmButton } from "@/components/confirm-button";
 import { JOB_STATUSES } from "@/constants/domain";
 import { setJobStatus } from "../../actions";
 import type { Job } from "@/types/domain";

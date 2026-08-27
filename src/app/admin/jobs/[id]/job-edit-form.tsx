@@ -4,7 +4,7 @@ import { unstable_rethrow, useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ConfirmButton } from "@/components/admin/confirm-button";
+import { ConfirmButton } from "@/components/confirm-button";
 import {
   changedJobEdits,
   jobEditsError,
