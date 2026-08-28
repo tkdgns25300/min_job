@@ -182,10 +182,12 @@ export async function getAllJobCards(): Promise<JobCard[]> {
 }
 
 /**
- * 저장한 공고(북마크) 해석용 카드 — **만료·마감분까지 포함**한다.
- * 북마크는 클라이언트 localStorage의 id 목록이라 서버가 전체 카드를 넘겨 매칭시킨다.
+ * 저장한 공고(북마크)·최근 본 공고 해석용 카드 — **만료·마감분까지 포함**한다.
+ * 둘 다 클라이언트 localStorage의 id 목록이라 서버가 전체 카드를 넘겨 매칭시킨다(`/mypage`).
  * 공개 목록(`getAllJobCards`)을 쓰면 만료된 순간 저장한 공고가 **아무 안내 없이 증발**한다
  * — 카드의 `isPubliclyOpen`으로 "마감" 표시를 붙여 보여준다.
+ * ⚠️ 이 함수가 공개분만 주도록 바뀌면 그 두 목록에서 마감 공고가 **조용히 빠진다** — 여기가 그 목록의
+ *    유일한 데이터 출처다. 반대로 **지워진** 공고는 여기 없는 것이 맞고, 목록도 그걸 근거로 걸러낸다.
  * ⬜ 북마크를 계정 귀속(`bookmarks` 테이블)으로 옮기면 id로 조회해 이 전체 전달을 없앤다(ROADMAP).
  */
 export async function getSavedJobCards(): Promise<JobCard[]> {
