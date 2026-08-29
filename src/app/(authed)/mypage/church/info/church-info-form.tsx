@@ -37,8 +37,8 @@ import type { Church } from "@/types/domain";
 //    "수정 문의" mailto도 없앴다(2026-08-27 · 운영자 결정): 드문 일에 상시 링크를 두는 값이
 //    낮고, 필요하면 푸터 문의로 간다. 공고 폼에서 같은 링크를 같은 이유로 없앴다(2026-08-26).
 // ⛔ **소개(한 줄·상세)는 두지 않는다** — 표시하는 화면이 없어 입력만 받는 값이 된다(2026-08-18).
-// ⬜ **사진은 아직 배선되지 않았다** — 공개 이미지라 지금 있는 비공개 버킷 둘과 성질이 반대여서
-//    공개 버킷 설계·업로드 권한을 따로 푼다(ROADMAP).
+// ⛔ **사진 구획은 뺐다**(2026-08-29 · MVP 범위 밖). 한때 `disabled` "사진 추가" 버튼과 "준비 중" 문구가
+//    자리를 차지했다 — 안 만든 기능의 자리는 두지 않는다. 표(`church_photos`)는 남아 있고 코드만 없다(ROADMAP).
 
 function Section({ title, desc, children }: { title: string; desc?: string; children: ReactNode }) {
   return (
@@ -252,39 +252,6 @@ export function ChurchInfoForm({ church }: { church: Church }) {
             </div>
           );
         })}
-      </Section>
-
-      <Section title="교회 사진" desc="첫 장이 커버로 쓰여요. 교회 페이지 갤러리에 나와요.">
-        <div className="flex flex-wrap gap-2.5">
-          {/* ⚠️ **실제 사진을 그린다** — 회색 네모에 "사진 1"이라고 적어 두면 구획 설명("갤러리에
-              나와요")이 거짓이 된다. 공개 갤러리(`church-gallery.tsx`)와 같이 `backgroundImage`를
-              쓴다: `next/image`는 `remotePatterns` 설정이 필요한데 아직 버킷이 없다.
-              ⚠️ `key`에 순번을 함께 넣는다 — 같은 URL이 두 장이면 `url`만으로는 충돌한다. */}
-          {(church.photos ?? []).map((url, i) => (
-            <div
-              key={`${url}-${i}`}
-              className="relative h-20 w-28 rounded-xl border bg-muted bg-cover bg-center"
-              style={{ backgroundImage: `url(${url})` }}
-              role="img"
-              aria-label={`교회 사진 ${i + 1}`}
-            >
-              {i === 0 && (
-                <span className="absolute top-1.5 left-1.5 rounded bg-brand-900 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                  커버
-                </span>
-              )}
-            </div>
-          ))}
-          <button
-            type="button"
-            disabled
-            className="flex h-20 w-28 flex-col items-center justify-center gap-0.5 rounded-xl border border-dashed text-xs font-semibold text-primary"
-          >
-            ＋<span>사진 추가</span>
-          </button>
-        </div>
-        {/* ⚠️ 눌러도 아무 일이 없는 버튼은 **이유를 말해야** 한다 — 안 그러면 고장으로 읽힌다 */}
-        <p className="text-xs text-muted-foreground">사진 올리기는 준비 중이에요.</p>
       </Section>
 
       {/* ⚠️ **실패·검증 안내만 인라인이다.** 고칠 곳을 가리키는 말이라 사라지면 안 된다.

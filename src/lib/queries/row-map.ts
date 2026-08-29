@@ -75,12 +75,15 @@ export const JOB_FULL_COLUMNS = "*";
 export const CHURCH_REF_EMBED = "churches(id, verification_status)";
 export type ChurchRefRow = Pick<Tables<"churches">, "id" | "verification_status">;
 
-/** 교회 상세용 — 프로필 전체 + 채널·사진(1:N) */
-export const CHURCH_FULL_COLUMNS = "*, church_links(type, url), church_photos(url, sort_order)";
+/**
+ * 교회 상세용 — 프로필 전체 + 채널(1:N).
+ * ⛔ `church_photos`는 조인하지 않는다(2026-08-29) — 사진 기능을 MVP 밖으로 미루면서 코드에서 뺐다.
+ *    표는 남아 있다. 되살릴 때 `church_photos(url, sort_order)`를 여기와 `toChurch`에 다시 붙인다.
+ */
+export const CHURCH_FULL_COLUMNS = "*, church_links(type, url)";
 
 export interface ChurchFullRow extends Tables<"churches"> {
   church_links: Pick<Tables<"church_links">, "type" | "url">[];
-  church_photos: Pick<Tables<"church_photos">, "url" | "sort_order">[];
 }
 
 /** 카드가 읽는 만큼의 공고 — `Job`의 부분집합이라 카드·목록 계산에 그대로 쓴다 */
@@ -229,7 +232,7 @@ export function toJob(row: Tables<"jobs">): Job {
   };
 }
 
-/** 교회 상세 → `Church`. 사진은 `sort_order` 순(첫 장이 커버라 순서가 뜻을 가진다) */
+/** 교회 상세 → `Church` */
 export function toChurch(row: ChurchFullRow): Church {
   return {
     id: row.id,
@@ -243,7 +246,6 @@ export function toChurch(row: ChurchFullRow): Church {
     contactEmail: row.contact_email,
     contactTel: row.contact_tel,
     foundedYear: row.founded_year,
-    photos: [...row.church_photos].sort((a, b) => a.sort_order - b.sort_order).map((p) => p.url),
     links: row.church_links.flatMap((link) => {
       const type = keyOf(CHURCH_CHANNELS, link.type);
       return type ? [{ type, url: link.url }] : [];

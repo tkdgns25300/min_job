@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ChurchChannels } from "@/components/church/church-channels";
-import { ChurchGallery } from "@/components/church/church-gallery";
 import {
   churchMetaLine,
   churchPlaceLine,
@@ -67,29 +66,26 @@ export function ChurchDetailView({
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8 px-4 pt-6 pb-24">
-      {/* 커버 헤더 — 사진 있으면 갤러리(라이트박스), 없으면 딥그린 기본 */}
+      {/* 커버 헤더 — 딥그린 기본 커버.
+          ⛔ 사진 갤러리(라이트박스)는 뺐다(2026-08-29 · MVP 범위 밖). 업로드 경로가 없어 데이터가 영원히
+             0장인데 클라이언트 청크는 방문자 전원에게 실려 나갔다. 되살릴 때는 `e586fe0`의
+             `components/church/church-gallery.tsx`를 참조(첫 장=커버 · 썸네일 스트립 · 라이트박스). */}
       <div>
-        {church.photos && church.photos.length > 0 ? (
-          <ChurchGallery photos={church.photos} name={church.name} meta={meta} />
-        ) : (
-          <div className="relative overflow-hidden rounded-2xl">
-            {/* TODO: 기본 커버 이미지 제작 시 교체 (지금은 딥그린 그라데이션) */}
-            <div className="bg-hero h-56 w-full" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-            <Link
-              href="/jobs"
-              className="absolute top-4 left-4 text-sm text-white/85 transition-colors hover:text-white"
-            >
-              ← 목록으로
-            </Link>
-            <div className="absolute inset-x-0 bottom-0 p-6">
-              <h1 className="text-2xl leading-snug font-bold break-keep text-white">
-                {church.name}
-              </h1>
-              <p className="mt-1 text-sm text-white/85">{meta}</p>
-            </div>
+        <div className="relative overflow-hidden rounded-2xl">
+          {/* TODO: 기본 커버 이미지 제작 시 교체 (지금은 딥그린 그라데이션) */}
+          <div className="bg-hero h-56 w-full" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <Link
+            href="/jobs"
+            className="absolute top-4 left-4 text-sm text-white/85 transition-colors hover:text-white"
+          >
+            ← 목록으로
+          </Link>
+          <div className="absolute inset-x-0 bottom-0 p-6">
+            <h1 className="text-2xl leading-snug font-bold break-keep text-white">{church.name}</h1>
+            <p className="mt-1 text-sm text-white/85">{meta}</p>
           </div>
-        )}
+        </div>
         {church.links.length > 0 && (
           <div className="mt-4">
             <ChurchChannels links={church.links} variant="brand" />

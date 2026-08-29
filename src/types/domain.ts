@@ -50,7 +50,6 @@ export interface Church {
   contactEmail: string | null; // 사무용 — 인증 검수 때 공개 출처와 대조하는 근거
   contactTel: string | null; // 〃
   foundedYear: number | null; // 창립 연도 (null = 미상)
-  photos?: string[]; // 교회 사진(첫 장 = 커버). 없으면 기본 커버. 실 업로드는 Phase 1
   links: ChurchLink[]; // 교회 채널 — 없으면 빈 배열
 }
 
