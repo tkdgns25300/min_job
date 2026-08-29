@@ -148,6 +148,7 @@ src/
 │   ├── enum-filter-select.tsx     "○○ 전체" + 도메인 라벨 맵 필터 select — admin 6곳 공용
 │   └── relative-time.tsx          시간 표시(클라이언트 계산)
 ├── constants/                     domain.ts(도메인 enum + 그 값에 딸린 입력 안내) · business.ts(사업자정보) ·
+│                                  review.ts(검수 상수 + 게시판 이름·목록 주소 — 크롤러 `sources.json` 사본) ·
 │                                  storage.ts(localStorage 키) · site.ts(SITE_URL·SITE_OPEN_GRAPH)
 ├── lib/
 │   ├── supabase/                  server(쿠키·인증) · service(secret·cached read, 미사용) ·
