@@ -59,16 +59,29 @@ export function formatPayShort(job: Pick<JobCard, "payMin" | "payMax" | "payPeri
   return "협의";
 }
 
+/** 사택 표기 — 판정이 본문(`label`), 원문 표현은 그 아래 보조 줄(`note`) */
+interface HousingDisplay {
+  label: string;
+  note: string | null;
+}
+
 /**
- * 사택 표기 — boolean 3상태와 비정형 표현을 한 문장으로. `payNote`가 `payMin`의 짝인 것과 같은 관계.
+ * 사택 표기 — boolean 3상태(판정)와 비정형 표현(원문)을 **두 무게**로. `payNote`가 `payMin`의 짝인 것과
+ * 같은 관계.
  *
  * `null`(정보 없음/협의)과 `false`(명시적 미제공)를 구분한다(DATA §3): 정보가 없는데 "미제공"이라
- * 쓰면 공고가 하지 않은 말을 우리가 하는 것이 된다. **둘 다 비면 `null`을 돌려 호출부가 줄째 생략**한다.
+ * 쓰면 공고가 하지 않은 말을 우리가 하는 것이 된다. 판정이 없으면 원문 표현이 본문 자리에 오고,
+ * **둘 다 비면 `null`을 돌려 호출부가 줄째 생략**한다.
+ * ⚠️ 둘을 한 줄로 잇지 않는다 — "제공 · 사택제공"처럼 같은 말이 두 번 나왔다(모집중 953건 중 102건 ·
+ *    2026-08-30). 원문 표현은 판정이 담지 못하는 조건("전세 지원 5천만원")을 들 수 있어 지우지는 않고
+ *    무게만 낮춘다.
  */
-export function housingLabel(job: Pick<Job, "housingProvided" | "housingNote">): string | null {
+export function housingDisplay(
+  job: Pick<Job, "housingProvided" | "housingNote">,
+): HousingDisplay | null {
   const { housingProvided: provided, housingNote: note } = job;
-  if (provided === null) return note;
-  return [provided ? "제공" : "미제공", note].filter(Boolean).join(" · ");
+  if (provided === null) return note ? { label: note, note: null } : null;
+  return { label: provided ? "제공" : "미제공", note };
 }
 
 /**
@@ -150,18 +163,30 @@ export function positionLabel(positions: Position[], opts: { full?: boolean } = 
 }
 
 /**
+ * 공개 화면의 직분 조각 — **"기타"만 있으면 빈 문자열**. "기타"는 분류가 안 됐다는 뜻이라 방문자에게는
+ * 정보가 아닌데 제목 아래·카드에 "기타 · 전임"으로 나갔다(모집중 953건 중 229건 · 2026-08-30).
+ * 다른 직분과 섞인 것("부목사 · 기타")은 그대로 둔다 — 자리가 둘이라는 사실은 정보다.
+ * ⚠️ 검수·편집 화면은 **값 자체**를 보여야 하므로 `positionLabel`을 직접 쓴다(빈 칸으로 보이면 안 된다).
+ */
+export function publicPositionLabel(positions: Position[], opts: { full?: boolean } = {}): string {
+  if (positions.length === 1 && positions[0] === "ETC") return "";
+  return positionLabel(positions, opts);
+}
+
+/**
  * 자리 한 줄: 직분 · 직무 · 부서 · 고용형태 (카드·로우·운영자 테이블 공통).
  * 상세는 `{ full: true }`로 직분을 전부 펼친다.
  *
  * **직분과 직무는 같은 자리에 온다** — 사역직은 `position`, 일반직은 `role`이 채우고
- * 둘이 섞인 공고(한 글에 부목사 + 관리직원)는 둘 다 나온다. 없는 쪽은 조각째 빠진다.
+ * 둘이 섞인 공고(한 글에 부목사 + 관리직원)는 둘 다 나온다. 없는 쪽은 조각째 빠진다 — "기타"뿐인
+ * 직분도 그렇다(`publicPositionLabel`). 전부 비면 ""라 호출부가 줄째 걷어낸다.
  */
 export function jobRoleLine(
   job: Pick<JobCard, "position" | "role" | "department" | "employmentType">,
   opts: { full?: boolean } = {},
 ): string {
   return [
-    positionLabel(job.position, opts),
+    publicPositionLabel(job.position, opts),
     job.role,
     job.department ? DEPARTMENTS[job.department] : null,
     job.employmentType ? EMPLOYMENT_TYPES[job.employmentType] : null,

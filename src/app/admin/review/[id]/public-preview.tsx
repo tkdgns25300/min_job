@@ -1,7 +1,7 @@
 "use client";
 
 import { JobCard } from "@/components/job/job-card";
-import { formatPay, housingLabel, payLabel } from "@/lib/format";
+import { formatPay, housingDisplay, payLabel } from "@/lib/format";
 import { isDenominationPublished } from "@/lib/review-flags";
 import type { ReviewEdits } from "@/lib/review-edits";
 import type { JobCard as JobCardData } from "@/types/domain";
@@ -50,12 +50,14 @@ export function PublicPreview({
     deadline: draft.deadline,
   };
 
+  const housing = housingDisplay({
+    housingProvided: draft.housing_provided,
+    housingNote: draft.housing_note,
+  });
   const conditions: [string, string | null][] = [
     [payLabel(draft.job_kind), formatPay(job)],
-    [
-      "사택",
-      housingLabel({ housingProvided: draft.housing_provided, housingNote: draft.housing_note }),
-    ],
+    // 공개 상세는 판정 아래 원문 표현을 보조 줄로 그린다 — 여기는 값 확인용이라 다른 줄처럼 " · "로 잇는다
+    ["사택", housing && [housing.label, housing.note].filter(Boolean).join(" · ")],
     ["마감", draft.deadline ?? "상시모집"],
     ["필수 서류", draft.required_docs.join(" · ") || null],
     ["전형 절차", draft.process_steps.join(" · ") || null],

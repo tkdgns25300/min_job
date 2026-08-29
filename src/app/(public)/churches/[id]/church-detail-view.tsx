@@ -6,7 +6,7 @@ import {
   formatPayShort,
   jobRoleLine,
   naverMapUrl,
-  positionLabel,
+  publicPositionLabel,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { DEPARTMENTS } from "@/constants/domain";
@@ -15,11 +15,11 @@ import type { Church, JobCard as JobCardData, PastJob } from "@/types/domain";
 const externalAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
 
 // 자리 이름: 부서 + 직분/직무 (예: "유초등부 전도사"·"행정 행정간사")
-// 일반직은 직분이 비어 `role`이 그 자리를 채운다 — 안 넣으면 빈 줄이 된다.
+// 일반직은 직분이 비어 `role`이 그 자리를 채운다 — 안 넣으면 빈 줄이 된다. "기타"뿐인 직분도 빈 것으로 본다.
 function roleLabel(role: Pick<PastJob, "position" | "role" | "department">): string {
   return [
     role.department ? DEPARTMENTS[role.department] : null,
-    positionLabel(role.position, { full: true }) || role.role,
+    publicPositionLabel(role.position, { full: true }) || role.role,
   ]
     .filter(Boolean)
     .join(" ");
@@ -141,16 +141,18 @@ export function ChurchDetailView({
       {mapUrl && (
         <section className="space-y-3">
           <h2 className="text-base font-bold">위치</h2>
-          <p className="text-sm">{location}</p>
-          {/* 지도 자리(placeholder) — 클릭 시 네이버 지도. 임베드는 Phase 2(주소 필드+API 키) */}
-          <a
-            href={mapUrl}
-            {...externalAttrs}
-            className="flex h-40 flex-col items-center justify-center gap-1.5 rounded-xl border bg-muted/40 text-center transition-colors hover:bg-muted/60"
-          >
-            <span className="text-sm font-medium text-foreground">지도에서 위치 보기</span>
-            <span className="text-xs text-muted-foreground">네이버 지도에서 열기</span>
-          </a>
+          {/* 지도는 주소 옆 링크 한 개 — 공고 상세와 같은 모양(플레이스홀더 상자는 2026-08-30에 뺐다).
+              임베드는 Phase 2(주소 필드+API 키) */}
+          <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+            <span>{location}</span>
+            <a
+              href={mapUrl}
+              {...externalAttrs}
+              className="font-semibold text-primary underline underline-offset-4"
+            >
+              지도에서 보기
+            </a>
+          </p>
         </section>
       )}
     </div>

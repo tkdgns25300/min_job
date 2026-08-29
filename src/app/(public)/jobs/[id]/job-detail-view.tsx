@@ -12,13 +12,13 @@ import {
   naverMapUrl,
   formatPay,
   formatPayShort,
-  housingLabel,
+  housingDisplay,
   jobRoleLine,
   payLabel,
-  positionLabel,
+  publicPositionLabel,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { APPLY_METHODS, EMPLOYMENT_TYPES, JOB_SOURCES, type JobSource } from "@/constants/domain";
+import { APPLY_METHODS, EMPLOYMENT_TYPES } from "@/constants/domain";
 import type { Church, Job, JobCard as JobCardData, JobChurchRef, JobDetail } from "@/types/domain";
 
 const externalLinkAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
@@ -97,12 +97,27 @@ function StepList({ items }: { items: string[] }) {
   );
 }
 
-// 모집 조건 행 (라벨 위 · 값 아래) — 값이 자유 텍스트라 좌우 정렬로는 넘친다(SPEC 1번)
-function ConditionRow({ label, value }: { label: string; value: ReactNode }) {
+// 모집 조건 행 (라벨 위 · 값 아래) — 값이 자유 텍스트라 좌우 정렬로는 넘친다(SPEC 1번).
+// `note`는 값 아래 보조 줄(muted·일반 굵기) — 선택 서류·사택 원문 표현처럼 본문과 무게가 달라야 하는 것.
+// 같은 굵기로 이으면 다 내야 하는 서류로, 같은 말을 두 번 한 것으로 읽힌다.
+function ConditionRow({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: ReactNode;
+  note?: string | null;
+}) {
   return (
     <div>
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm font-medium break-keep">{value}</dd>
+      <dd className="mt-0.5 text-sm font-medium break-keep">
+        {value}
+        {note && (
+          <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{note}</span>
+        )}
+      </dd>
     </div>
   );
 }
@@ -128,6 +143,8 @@ function PostHeader({
   preview: boolean;
 }) {
   const meta = churchMetaLine(church);
+  // 직분이 "기타"뿐이고 직무·부서·고용형태도 없으면 ""(67건) — 빈 줄을 그리지 않는다
+  const roleLine = jobRoleLine(job, { full: true });
   return (
     <div>
       <div className="flex items-start justify-between gap-3">
@@ -150,7 +167,7 @@ function PostHeader({
 
       <div className="mt-5">
         <h1 className="text-2xl leading-snug font-bold break-keep">{job.title}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{jobRoleLine(job, { full: true })}</p>
+        {roleLine && <p className="mt-2 text-sm text-muted-foreground">{roleLine}</p>}
       </div>
     </div>
   );
@@ -205,7 +222,7 @@ function MainContent({
 }) {
   // 위치·사택 표기 규칙은 lib/format이 단일 소스(교회 상세도 같은 함수를 쓴다)
   const location = churchPlaceLine(churchRef);
-  const housing = housingLabel(job);
+  const housing = housingDisplay(job);
   const mapUrl = naverMapUrl(churchRef);
 
   return (
@@ -215,23 +232,15 @@ function MainContent({
           {job.headcount && <ConditionRow label="모집 인원" value={job.headcount} />}
           {job.startTiming && <ConditionRow label="부임 시기" value={job.startTiming} />}
           <ConditionRow label="출근" value={job.workDays ?? "협의"} />
-          {/* 사택은 `null`(정보 없음/협의)·`true`·`false`가 서로 다른 값이다 — 표기는 `housingLabel`이
-              단일 소스이고, 정보가 전혀 없으면 null을 돌려 이 줄이 사라진다(DATA §3) */}
-          {housing && <ConditionRow label="사택" value={housing} />}
+          {/* 사택은 `null`(정보 없음/협의)·`true`·`false`가 서로 다른 값이다 — 표기는 `housingDisplay`가
+              단일 소스(판정이 본문, 원문 표현은 보조 줄)이고, 정보가 전혀 없으면 null을 돌려 이 줄이
+              사라진다(DATA §3) */}
+          {housing && <ConditionRow label="사택" value={housing.label} note={housing.note} />}
           {job.benefitNote && <ConditionRow label="복리후생" value={job.benefitNote} />}
           <ConditionRow
             label="제출 서류"
-            value={
-              <>
-                {job.requiredDocs.length > 0 ? job.requiredDocs.join(" · ") : "—"}
-                {/* 선택 서류는 필수와 무게가 달라야 한다 — 같은 굵기면 다 내야 하는 것으로 읽힌다 */}
-                {job.optionalDocs.length > 0 && (
-                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                    선택 · {job.optionalDocs.join(" · ")}
-                  </span>
-                )}
-              </>
-            }
+            value={job.requiredDocs.length > 0 ? job.requiredDocs.join(" · ") : "—"}
+            note={job.optionalDocs.length > 0 ? `선택 · ${job.optionalDocs.join(" · ")}` : null}
           />
         </dl>
       </Section>
@@ -266,16 +275,18 @@ function MainContent({
 
       {mapUrl && (
         <Section title="위치">
-          <p className="mt-3 text-sm">{location}</p>
-          {/* 지도 자리(플레이스홀더) — 클릭 시 네이버 지도. 실제 임베드는 Phase 2(API 키+주소 필드) */}
-          <a
-            href={mapUrl}
-            {...externalLinkAttrs}
-            className="mt-3 flex h-40 flex-col items-center justify-center gap-1.5 rounded-xl border bg-muted/40 text-center transition-colors hover:bg-muted/60"
-          >
-            <span className="text-sm font-medium text-foreground">지도에서 위치 보기</span>
-            <span className="text-xs text-muted-foreground">네이버 지도에서 열기</span>
-          </a>
+          {/* 지도는 주소 옆 링크 한 개다(네이버 지도 검색·새 탭). 한때 160px 빈 회색 상자(플레이스홀더)였는데
+              임베드처럼 보여 "안 뜨는 지도"로 읽혔다(2026-08-30). 임베드는 Phase 2(API 키+주소 필드) */}
+          <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+            <span>{location}</span>
+            <a
+              href={mapUrl}
+              {...externalLinkAttrs}
+              className="font-semibold text-primary underline underline-offset-4"
+            >
+              지도에서 보기
+            </a>
+          </p>
         </Section>
       )}
 
@@ -283,13 +294,9 @@ function MainContent({
           마감 배너와도 모순된다. 그때는 우측 카드가 원문 링크만 남긴다(사실확인용). */}
       {isPubliclyOpen && (
         <Section title="지원 방법">
-          <p className="mt-3 text-sm leading-relaxed text-foreground/90">
-            {job.source === "OPERATOR"
-              ? "공개된 청빙 공고에서 정리한 연락처예요. 정확한 내용은 원문도 확인해 주세요."
-              : "교회가 직접 등록한 연락처예요."}{" "}
-            민잡은 지원서를 받지 않아요 — 지원은 교회로 직접 해주세요.
-          </p>
-          <div className="mt-4">
+          {/* 안내문은 두지 않는다 — 연락처 자체가 "교회에 직접"이라는 뜻이다(2026-08-30 · 한때 출처별
+              두 문장 → 한 문장 → 삭제). 출처 표기는 우측 카드의 원문 링크가 맡는다(가드레일 #1) */}
+          <div className="mt-3">
             <ApplyMethods job={job} />
           </div>
         </Section>
@@ -323,6 +330,8 @@ function MainContent({
               <ul className="mt-2 divide-y divide-border">
                 {churchJobs.map((cj) => {
                   const hasPay = cj.payMin !== null || cj.payMax !== null;
+                  // 일반직(직분 없음)·"기타"뿐이면 ""라 점만 매달린다 — 조각째 뺀다
+                  const position = publicPositionLabel(cj.position);
                   return (
                     <li key={cj.id}>
                       <Link
@@ -331,10 +340,7 @@ function MainContent({
                       >
                         <span className="min-w-0 flex-1 truncate group-hover:underline">
                           {cj.title}
-                          <span className="text-muted-foreground">
-                            {" "}
-                            · {positionLabel(cj.position)}
-                          </span>
+                          {position && <span className="text-muted-foreground"> · {position}</span>}
                         </span>
                         <span
                           className={cn(
@@ -428,22 +434,27 @@ function SummaryAside({
   );
 }
 
-// 비슷한 공고 (하단)
+// 비슷한 공고 (하단) — 공고가 끝난 뒤의 **추천 모듈**이라 본문 구획과 달리 보여야 한다(2026-08-30).
+// 페이지에서 유일한 구분선 + 큰 여백이 "여기서 공고가 끝난다"를 말하고(본문은 여백형이라 선이 없다),
+// 제목은 본문 구획보다 한 단계 크며 "더 보기"는 제목 줄 끝에 둔다 — 한때 제목 크기가 본문 구획과 같아서
+// 이 공고의 아홉 번째 구획처럼 읽혔다.
 function SimilarJobsSection({ jobs, moreHref }: { jobs: JobCardData[]; moreHref: string }) {
   return (
-    <section id="similar-jobs" className="scroll-mt-20 space-y-3">
-      <h2 className="text-base font-bold">비슷한 공고</h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <section id="similar-jobs" className="mt-12 scroll-mt-20 border-t pt-10">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-lg font-bold">비슷한 공고</h2>
+        <Link
+          href={moreHref}
+          className="shrink-0 text-sm font-semibold text-primary underline underline-offset-4"
+        >
+          더 보기 →
+        </Link>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {jobs.map((sj) => (
           <JobCard key={sj.id} job={sj} />
         ))}
       </div>
-      <Link
-        href={moreHref}
-        className="inline-block text-sm font-semibold text-primary underline underline-offset-4"
-      >
-        비슷한 공고 더 보기 →
-      </Link>
     </section>
   );
 }
@@ -467,15 +478,6 @@ function ClosedBanner({ job, hasSimilar }: { job: Job; hasSimilar: boolean }) {
         </a>
       )}
     </div>
-  );
-}
-
-// 하단 — 출처·오류 문의
-function SourceNote({ source }: { source: JobSource }) {
-  return (
-    <p className="px-1 text-xs text-muted-foreground">
-      {JOB_SOURCES[source]} 공고예요. 잘못된 정보가 있으면 문의해 주세요.
-    </p>
   );
 }
 
@@ -525,8 +527,9 @@ export function JobDetailView({
         <SummaryAside job={job} sourceLink={sourceLink} isPubliclyOpen={detail.isPubliclyOpen} />
       </div>
 
+      {/* 하단 "운영자 등록 공고예요. 잘못된 정보가 있으면 문의해 주세요." 문장은 뺐다(2026-08-30) —
+          출처는 우측 카드 원문 링크가, 문의는 푸터가 맡는다 */}
       {similar.length > 0 && <SimilarJobsSection jobs={similar} moreHref={moreHref} />}
-      <SourceNote source={job.source} />
     </div>
   );
 }
