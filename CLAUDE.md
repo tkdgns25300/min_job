@@ -137,6 +137,8 @@ src/
 │   ├── layout/                    헤더(계정 영역 포함)·푸터·모바일 네비·법률문서 셸
 │   ├── job/ church/ admin/ home/ pricing/ search/   각 도메인 표시 컴포넌트
 │   │                              ⚠️ admin/은 **검수·공고 관리 둘 다 쓰는 것만** — 한쪽 전용은 그 라우트 폴더에
+│   ├── job/bookmark-provider.tsx  저장한 공고 컨텍스트 — 두 레이아웃이 감싸고 헤더 hole이 seed(2026-08-28)
+│   │                              ⚠️ 액션은 **prop으로** 받는다 — `components/`가 `app/`을 import하지 않는다
 │   ├── field.tsx                  폼 입력 한 칸(라벨·선택·필수·힌트·에러) — 5개 폼 파일 48곳 공용
 │   ├── admin/value-row.tsx        값 한 줄(읽기 우선·펼쳐 고치기) + 구획 — 수집 검수·공고 관리 공용
 │   ├── confirm-button.tsx         되돌리기 어려운 동작에 한 번 더 묻는 버튼(그 자리에서 확인)
@@ -153,7 +155,7 @@ src/
 │   ├── auth.ts                    순수 인증 헬퍼(hasChurchAccess·safeInternalPath·로그인 URL·PATHNAME_HEADER)
 │   ├── auth-guard.ts              requireUser·requireOperator — 서버 전용 게이트(redirect 수행)
 │   ├── operator.ts                운영자 판정(.env ADMIN_EMAILS) — 서버 전용
-│   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications·review (도메인 1파일)
+│   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications·review·bookmarks (도메인 1파일)
 │   │                              + row-map.ts(DB 행 → 도메인 타입) · fetch-all.ts(1,000행 상한 페이징)
 │   │                              둘 다 queries 내부 전용
 │   ├── domain-enum.ts             닫힌 라벨 맵 ↔ DB 문자열(keyOf·keysOf·enumLabel) — 캐스트를 한 곳에 가둔다
@@ -166,7 +168,7 @@ src/
 │   ├── job-visibility.ts          만료 판정 단일 소스(todayInSeoul·isPubliclyOpen·hiddenReason)
 │   ├── job-church.ts              공고↔교회 파생 — church_id가 null일 수 있어 생긴 로직
 │   │                              (jobChurchRef=표시값 규칙 · churchIdentityKey=교회 수 집계)
-│   ├── bookmarks.ts · recent-jobs.ts · recent-searches.ts   localStorage 클라이언트 헬퍼
+│   ├── recent-jobs.ts · recent-searches.ts   localStorage 클라이언트 헬퍼(북마크는 2026-08-28 DB로 — `queries/bookmarks.ts`)
 │   └── seo.ts · format.ts · utils.ts
 ├── types/                         domain.ts(공유 도메인 타입 = 화면이 쓰는 모양) ·
 │                                  database.ts(**자동 생성** — DB 행의 모양. 손으로 고치지 않는다)
@@ -181,7 +183,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 > **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
 >
 > **배치 규칙**: 한 페이지 전용 뷰·폼·헬퍼는 **그 페이지 폴더에** 둔다(`jobs-view.tsx`·`job-form.tsx`). **두 라우트 기능 이상**이 쓰면 `components/`로 올린다 — 한 기능 안에서 여러 페이지가 나눠 쓰는 것은 그 기능 폴더의 공용 파일로 둔다(`admin/review/review-row.tsx`를 `[id]/`가 `../review-row`로 쓴다). ⚠️ 기준은 **쓰는 파일 수가 아니라 라우트 기능 수**다 — 파일 수로 세면 한 화면 전용이 `components/`로 올라간다(실제로 그렇게 넷이 올라가 있었다 · 2026-08-24 되돌림). mutation은 그 라우트의 `actions.ts`.
-> **mutation `actions.ts`는 login·mypage(로그아웃)·mypage/verify(교회 인증 신청)·mypage/church/info(교회 정보 저장)·(authed)/jobs(교회의 공고 등록·수정·마감)·admin(캐시 새로고침)·admin/review(수집 검수 판정)·admin/jobs(공개 공고 저장·마감)·admin/verify(교회 인증 판정)** — 클레임은 아직 없다.
+> **mutation `actions.ts`는 login·mypage(로그아웃·**북마크** `setBookmark`)·mypage/verify(교회 인증 신청)·mypage/church/info(교회 정보 저장)·(authed)/jobs(교회의 공고 등록·수정·마감)·admin(캐시 새로고침)·admin/review(수집 검수 판정)·admin/jobs(공개 공고 저장·마감)·admin/verify(교회 인증 판정)** — 클레임은 아직 없다.
 > ⚠️ `mypage/verify/actions.ts`의 **`lookupChurch`는 mutation이 아니다** — 클라이언트가 제출 전에 "처음인가 기존인가"를 물어야 하는데 데이터 조회용 route handler가 금지되어 있어(아래) **Server Action이 규칙이 남긴 유일한 경로**다.
 
 ## Layer Responsibilities
@@ -211,6 +213,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 - **쿠키·헤더 절대 만지지 마라** — cached scope 안에서 호출됨
 - **예외(인증 의존·PII read)** — `'use cache'`/`cacheTag`를 쓰지 않는 함수들:
   - `users.ts` **전체**(`getCurrentUser`·`getChurchDashboard`·`getEditableJob`) — 모두 로그인 사용자에 종속돼 방문자마다 결과가 다르다. `getCurrentUser`는 `server.ts`(쿠키 세션)를 쓰고 `React.cache`로 요청당 1회만 왕복한다 — 신원은 `auth.users`(Auth API), 소속·인증상태는 **`public.users` + `churches` 조인**에서 온다(`auth` 스키마는 PostgREST JOIN이 안 돼 프로필을 복제해 둔다).
+  - `bookmarks.ts` — 로그인 사용자의 저장한 공고. 사용자마다 결과가 다르고, 캐시하면 저장을 눌러도 목록이 한 시간 옛것으로 남는다. `server.ts` · `user_id`는 세션에서만.
   - `verifications.ts` — 인증 신청 PII(가드레일 #3). `server.ts`. ⚠️ **`church_verifications` 테이블은 없다** — 신청은 `users.verification_*` + `churches` 행에 나뉘어 있고 이 함수가 조인해 조립한다(DATA §3).
   - `review.ts` — **미검수 크롤 데이터**(`review_data`). 판정하는 순간 바뀌므로 캐시하면 방금 처리한 건이 큐에 남는다. 컬럼명도 여기만 snake_case를 유지한다(크롤러 소유 테이블을 직접 편집하는 도구라 명세와 1:1로 대조해야 한다).
   - `crawl.ts` — **크롤 실행 기록**(`crawl_run`). 크롤러가 우리 앱 밖에서 쓰므로 무효화할 방법이 없고, "마지막 수집이 언제인가"는 캐시된 답이 무의미한 질문이다. 같은 이유로 snake_case 유지. ⛔ **경보 판정을 옮겨오지 않는다** — 죽음(3시간)·연속 실패(2회)·빈 목록(2회)은 크롤러 `alerts_for`가 정본이고, 사본을 만들면 두 화면이 다른 말을 한다(`isPubliclyOpen`과 같은 이유). 반면 **실패한 게시판 이름과 마지막 실행 시각은 사실이라 그대로 쓴다** — 특히 "너무 오래 안 돌았나"(`CRAWL_OVERDUE_HOURS` · `constants/review.ts`)는 **크롤러가 답할 수 없는 질문**이다(프로세스가 안 뜨면 아무것도 기록하지 않는다). ⚠️ **끊긴 실행은 `finished_at`이 채워지고 `sources_ok`가 손대지 않은 게시판까지 센다** — 그대로 그리면 "전부 성공"이 되므로 `aborted`를 따로 넘긴다.
@@ -232,7 +235,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 
 ### Component (`components/**`)
 - 도메인 로직 없음. 재사용 UI만. `ui/` = shadcn 원본. 데이터는 prop으로 받는다(직접 fetch X).
-- **예외 1개 — `layout/header-account.tsx`**: 모든 레이아웃이 공유하는 셸이라 세션을 직접 읽는다(`lib/queries` seam 경유). 레이아웃마다 fetch+Suspense를 중복하는 대신 여기 한 곳에 둔 것 — **이 예외를 늘리지 말 것**.
+- **예외 1개 — `layout/header-account.tsx`**: 모든 레이아웃이 공유하는 셸이라 세션을 직접 읽는다(`lib/queries` seam 경유). 레이아웃마다 fetch+Suspense를 중복하는 대신 여기 한 곳에 둔 것 — **이 예외를 늘리지 말 것**. 공개 페이지에 들어오는 **사람별 데이터는 전부 이 hole을 지난다** — 저장한 공고 id도 여기서 읽어 `<BookmarkSeed>`로 넘긴다(2026-08-28). 세션 읽는 셸 컴포넌트를 하나 더 두는 대신 같은 요청·같은 hole에서 끝내는 것이 이 예외의 취지다.
 
 ## Supabase Client 사용 규칙
 
@@ -253,7 +256,7 @@ DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. �
   - ② **증빙 서류 쓰기** — 업로드(`mypage/verify/actions.ts`)는 **일반 로그인 사용자가 트리거**하고, 파기(`admin/verify/actions.ts` 반려)는 **운영자 게이트 뒤**다. 읽기(①·③)와 달리 쓰기라 방어를 코드로 만든다 — **경로에 사용자 입력을 넣지 않고**(`{user.id}/{uuid}.{ext}`) `upsert:false`로 덮어쓰기를 막으며, 크기·MIME은 버킷 설정이 한 번 더 거른다.
   - ① **포스터 signed URL**: `lib/queries/review.ts`의 포스터 signed URL은 `service.ts`를 쓴다. `storage.objects`는 RLS가 **항상** 켜져 있고 `postings` 버킷엔 정책이 없어(RLS 유예) publishable 키로는 서명이 조용히 빈 URL을 돌려준다(실측 2026-08-22). 정책을 만들면 로그인한 아무나 포스터를 읽게 되고, 운영자만 허용하려면 `.env ADMIN_EMAILS` 판정을 DB에 넣어야 해 "DB는 저장 전용"과 부딪힌다. 호출은 `requireOperator()` 뒤에서만 일어나고 나가는 것은 개체 하나에 묶인 30분 URL이다. **이 예외를 늘리지 말 것.**
 - `service.ts`가 RLS를 우회하므로 cached read(공개·비개인 조회 — 공고·교회·운영자 목록 등) 전용으로만. **인증 의존·PII read(예: 교회 인증 신청)와 모든 인증·권한 작업은 반드시 `server.ts`**(cached 금지).
-- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 쓰기는 **수집 검수 판정 · 공개 공고 저장·마감 · 교회 인증 신청 접수 · 교회 인증 판정 · 교회의 공고 등록·수정·마감 · 교회 정보 저장**까지 왔다(2026-08-27). 남은 것 — **클레임 · 노출 결제 주문 저장 · 북마크 DB 이전 · 사진 업로드**는 아직 Server Action이 없다(화면만 있다).
+- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 쓰기는 **수집 검수 판정 · 공개 공고 저장·마감 · 교회 인증 신청 접수 · 교회 인증 판정 · 교회의 공고 등록·수정·마감 · 교회 정보 저장 · 북마크**까지 왔다(2026-08-28). 남은 것 — **클레임 · 노출 결제 주문 저장 · 사진 업로드**는 아직 Server Action이 없다(화면만 있다).
 
 ## `'use cache'` 제약 (필수 준수)
 

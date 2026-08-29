@@ -367,7 +367,10 @@ CHECK ( source_url IS NULL OR length(btrim(source_url)) > 0 )
 - **이동**: 담당자가 다른 교회로 옮기면 기존 링크 해제(공고는 `church_id`에 매여 있어 교회에 그대로 잔류 — 작성자 컬럼이 없으므로 아무것도 끊기지 않는다) → 새 교회 재인증. 인증은 **교회별**.
 - 운영자(admin)는 **DB 컬럼으로 두지 않는다** — `.env` `ADMIN_EMAILS` allowlist로 판정(2026-07-29, `lib/operator.ts`, 목록 비면 fail-closed). 남은 것 = 실 DB 전환 시 operator RLS. 개인정보 최소 수집.
 
-### `bookmarks` — 사역자 북마크 (Phase 1 — 단일 계정이라 이동. 지금은 localStorage)
+### `bookmarks` — 사역자 북마크 (✅ 실 배선 2026-08-28 — localStorage에서 이전)
+
+> 쓰기는 `mypage/actions.ts`의 `setBookmark(jobId, saved)`(목표 상태 · 멱등), 읽기는 `lib/queries/bookmarks.ts`(**비캐시** · `server.ts`). `user_id`는 세션에서만 온다 — RLS 유예 중이라 `eq("user_id", …)`가 유일한 방어선이고, 정책을 켜도 "본인만"이라 그대로 맞는다. **비로그인은 저장 버튼을 누르면 로그인으로 간다**(A안). 공고가 지워지면 FK CASCADE로 북마크도 사라진다.
+> ⚠️ 교회 대시보드의 "내 공고 북마크 수"는 **아직 없다** — 남의 북마크를 세는 조회라 RLS 정책이 하나 더 필요해, RLS 설계 때 함께 넣는다.
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
 | `user_id` | uuid FK→users | |
