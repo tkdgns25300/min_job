@@ -39,7 +39,9 @@ function monthlyPay(amount: number, period: PayPeriod): number {
 }
 
 export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCard[] {
-  const query = c.q.trim();
+  // 검색어는 **공백으로 나눠 단어마다** 본다 — "방주교회 전임교역자"처럼 교회명과 제목 단어를 함께 적으면
+  // 통짜 substring으로는 아무것도 안 나온다(실측 2026-08-29: 0건). 단어가 전부 들어 있으면 매칭(AND).
+  const terms = c.q.trim().split(/\s+/).filter(Boolean);
   const s = c.selected;
 
   const result = jobs.filter((j) => {
@@ -65,7 +67,7 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
       if (c.payMax !== null && jMin > c.payMax) return false;
     }
 
-    if (query) {
+    if (terms.length > 0) {
       // 자유검색 매칭 소스 = 교회명·제목·지역·도시 + 직분·직무·부서·교단·고용형태
       // (직무는 일반직의 직분 짝이라 빠지면 "행정간사"로 검색해도 그 공고가 안 나온다.
       //  단 검색어 **제안**에는 넣지 않는다 — 자유 텍스트라 표기가 제각각이어서 후보로 부적합하다)
@@ -86,7 +88,7 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
         j.employmentType ? EMPLOYMENT_TYPES[j.employmentType] : "",
         j.qualification ? QUALIFICATIONS[j.qualification] : "",
       ].join(" ");
-      if (!hay.includes(query)) return false;
+      if (!terms.every((term) => hay.includes(term))) return false;
     }
     return true;
   });

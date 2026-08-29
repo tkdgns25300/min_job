@@ -133,7 +133,7 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
               setQ(e.target.value);
               setPage(1);
             }}
-            placeholder="교회명 · 지역 · 직분 검색"
+            placeholder="교회명 · 공고 제목 · 지역 · 직분 검색"
             aria-label="공고 검색"
             className="h-12 rounded-xl pl-12 text-base"
           />

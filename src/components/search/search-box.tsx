@@ -130,7 +130,7 @@ export function SearchBox({ suggestions }: { suggestions: string[] }) {
             }}
             onFocus={() => setOpen(true)}
             onKeyDown={onKeyDown}
-            placeholder="교회명 · 지역 · 직분 검색"
+            placeholder="교회명 · 공고 제목 · 지역 · 직분 검색"
             aria-label="공고 검색"
             aria-expanded={open}
             className="h-11 flex-1 border-0 bg-transparent px-0 text-[15.5px] shadow-none focus-visible:ring-0"
@@ -234,7 +234,7 @@ function EmptyState({
   if (searches.length === 0 && jobs.length === 0) {
     return (
       <p className="px-2.5 py-6 text-center text-sm text-muted-foreground">
-        교회명 · 지역 · 직분으로 검색해보세요
+        교회명 · 공고 제목 · 지역 · 직분으로 검색해보세요
       </p>
     );
   }
