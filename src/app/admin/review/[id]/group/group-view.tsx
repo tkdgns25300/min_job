@@ -13,6 +13,13 @@ import type { ReviewRow } from "@/lib/queries/review";
 import { approveReview, rejectReview, type ReviewActionResult } from "../../actions";
 import { groupDifferences, type GroupDifference } from "./group-diff";
 
+/**
+ * 중복 처리에 메모를 안 적었을 때 남기는 말. 단건 거절은 사유가 필수지만(규칙을 고칠 근거), 묶음
+ * 화면의 "같은 자리"는 **화면 자체가 근거**다 — 나란히 놓고 같은 자리라고 판정한 것. 그래서 비워도
+ * 막지 않되, 기록은 남긴다(`rejectReview`는 빈 사유를 거절하므로 여기서 채워 보낸다 · 2026-08-29).
+ */
+const DUPLICATE_NOTE = "묶음 판정 — 같은 자리";
+
 // 판정이 끝나면 돌아가는 곳 — 단건 화면과 같은 이유로 화면 쪽에 둔다(`review-form` 주석 참조).
 const QUEUE_PATH = "/admin/review";
 
@@ -82,7 +89,7 @@ export function GroupView({ members, target }: { members: ReviewRow[]; target: R
           <span className="mb-1.5 block text-sm font-medium">
             검수 메모
             <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-              중복 처리할 때는 필수
+              비워 두면 “묶음 판정 — 같은 자리”로 남습니다
             </span>
           </span>
           <Textarea
@@ -115,7 +122,12 @@ export function GroupView({ members, target }: { members: ReviewRow[]; target: R
             className="flex-1"
             variant="destructive"
             disabled={pending || processed}
-            onClick={() => run(() => rejectReview(target.row.id, note), "중복 처리했습니다.")}
+            onClick={() =>
+              run(
+                () => rejectReview(target.row.id, note.trim() || DUPLICATE_NOTE),
+                "중복 처리했습니다.",
+              )
+            }
           >
             같은 자리 — 이 건을 중복 처리
           </Button>
@@ -200,21 +212,35 @@ function MemberRow({
           </dl>
         )}
       </div>
-      <div className="w-20 shrink-0 text-right">
-        <p className={cn("font-bold", isTarget ? "text-primary" : "text-muted-foreground")}>
-          {memberState(member, isTarget)}
-        </p>
-        {row.published_job_id && (
-          <Link
-            href={`/jobs/${row.published_job_id}`}
-            target="_blank"
-            className="font-semibold text-primary underline underline-offset-2"
-          >
-            공고 보기 ↗
-          </Link>
-        )}
-      </div>
+      <MemberState member={member} isTarget={isTarget} />
     </li>
+  );
+}
+
+/**
+ * 오른쪽 열 — 상태 한 줄 + 갈 곳. 판정 대상이 아닌 멤버는 그 건의 **검수 화면**으로 — 거절된 건도,
+ * 대기 중인 건도 원문과 값을 열어 봐야 "같은 자리"인지 판단할 근거가 된다(2026-08-29 · 한때 공개된
+ * 건에만 "공고 보기"가 있었다). 공개된 건은 공고 자체도 연다.
+ */
+function MemberState({ member, isTarget }: { member: ReviewRow; isTarget: boolean }) {
+  const { row } = member;
+  const linkClass = "block font-semibold text-primary underline underline-offset-2";
+  return (
+    <div className="w-20 shrink-0 text-right">
+      <p className={cn("font-bold", isTarget ? "text-primary" : "text-muted-foreground")}>
+        {memberState(member, isTarget)}
+      </p>
+      {!isTarget && (
+        <Link href={`/admin/review/${row.id}`} target="_blank" className={linkClass}>
+          검수 화면 ↗
+        </Link>
+      )}
+      {row.published_job_id && (
+        <Link href={`/jobs/${row.published_job_id}`} target="_blank" className={linkClass}>
+          공고 보기 ↗
+        </Link>
+      )}
+    </div>
   );
 }
 
