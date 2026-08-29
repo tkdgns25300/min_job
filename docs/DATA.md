@@ -85,7 +85,7 @@
 
 > 앱 타입은 `Church.links: {type, url}[]`. 표시 전용 집합이라 채널 타입별 교차 조회 없음 → 정규화 테이블로 무결성 확보. (jsonb 컬럼도 대안이나 CHECK·정렬 관리 위해 테이블 채택)
 
-### `church_photos` — 교회 사진 (1 church : N, 순서 있음)
+### `church_photos` — 교회 사진 (1 church : N, 순서 있음) — ⏸ **표만 있고 코드는 없다**(2026-08-29 · Phase 2)
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
 | `id` | uuid PK | |
@@ -93,7 +93,7 @@
 | `url` | text NOT NULL | Supabase Storage 업로드 URL (Phase 1) |
 | `sort_order` | int NOT NULL DEFAULT 0 | 표시 순서 오름차순 — 최소값이 커버 |
 
-> 앱 타입은 `Church.photos: string[]` (sort_order 오름차순 URL 목록, 첫 장 = 커버). 사진 없으면 빈 배열 → 딥그린 기본 커버. 교회 상세 라이트박스는 client 컴포넌트(`ChurchGallery`), 실 업로드는 Phase 1(Storage). 채널과 같은 "표시 전용 집합"이라 정규화 테이블.
+> 채널과 같은 "표시 전용 집합"이라 정규화 테이블. 설계는 그대로 두고(첫 장 = 커버 = `sort_order` 최소값) **읽는 코드·쓰는 코드를 2026-08-29에 전부 뺐다** — 업로드 경로가 MVP 밖이라 `Church.photos`·`row-map` 조인·`ChurchGallery`가 전부 죽은 코드였다. `bookmarks`가 2026-08-28까지 그랬듯 "표만 먼저" 상태. 되살릴 때의 설계(공개 버킷 `church-photos` · 5MB · 브라우저 리사이즈 1600px · `{church.id}/{uuid}.jpg` · DB 먼저 파일 나중 · `updateTag("churches")`)는 ROADMAP Phase 2 항목에 적어 두었다.
 
 ### `jobs` — 공고 (핵심)
 | 컬럼 | 타입 | 비고 |

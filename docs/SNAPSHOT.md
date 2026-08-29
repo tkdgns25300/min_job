@@ -20,6 +20,8 @@
 >
 > ▶ **2026-08-22 mock 제거 — 읽기가 전부 실 DB로**: `lib/queries` 18개 함수(jobs 12·churches 3·users 2·verifications 1)를 Supabase 쿼리로 교체하고 **`src/mocks/` 폴더를 삭제**했다. seam을 둔 값어치가 여기서 드러났다 — **페이지 코드 0줄 · 라우트 모드(`◐`/`○`) 그대로.** 새로 생긴 것 = `lib/queries/row-map.ts`(DB 행 → 도메인 41필드, enum 좁히기) · `lib/domain-enum.ts`(`keyOf`·`keysOf`·`enumLabel` — 캐스트를 한 곳에 가둔다) · `lib/job-visibility.ts`의 `isFeaturedOn`(유료 노출 기한 판정 — mock엔 없던 개념이라 기한 지난 등급이 영구 노출될 자리였다). 검증은 충돌 불가능한 이름의 임시 행 7개 + 교회 2곳 + 임시 인증신청 2건을 심어 **공개 페이지 23항목**을 실측하고 전부 지웠다(빈 DB에서도 확인). ⚠️ **`church_verifications` 테이블은 설계상 없다** — 신청은 `users.verification_*` + `churches` 행 조인으로 조립한다.
 >
+> ▶ **2026-08-28~29 마이페이지 정리 · 북마크 DB · 사진 축 제거**: ① `/mypage`를 재구성 — 교회 카드는 인증·신청중이면 맨 위, 구직자엔 아래(사람에 따라 순서가 다르다), 관심 교회 "준비 중" 상자·회원탈퇴 빨간 상자 제거, 최근 본 공고는 서버 카드로 그려 지운 공고가 자동으로 빠진다. ② **북마크를 localStorage에서 `bookmarks` 표로** — 새 seam `lib/queries/bookmarks.ts`(비캐시) + `setBookmark` 액션 + `components/job/bookmark-provider.tsx`(컨텍스트 · 헤더 세션 hole이 seed). 비로그인은 저장을 누르면 로그인으로(A안). `/mypage`가 공고 885건 전부를 내리던 것이 그 사람 것만으로. `toCard`는 `row-map`으로. ⚠️ 레이아웃 provider에 `useSearchParams`를 쓰면 프리렌더 트리 전체가 dynamic hole이 된다 — 클릭 시점 `window.location`으로. ③ **사진 업로드를 MVP 밖(Phase 2)으로** 미루면서 코드에서 사진 축 전체 제거 — 정보 관리의 `disabled` 구획·`ChurchGallery`(`e586fe0`)·`Church.photos`·`church_photos` 조인. 표는 남겼다. 되살릴 설계는 ROADMAP Phase 2.
+>
 > ▶ **2026-08-27 성공 알림을 토스트로 통일**: `sonner` + `<Toaster />` **루트 한 벌**, 규칙은 **성공=토스트 / 실패=인라인**(CLAUDE.md Styling). 15지점 배선. 🔴 그 과정에서 **판정 화면 넷이 토스트를 띄울 수 없는 상태**였음이 드러났다 — 액션 안의 `redirect`가 **던져서** `await action()` 다음 줄이 죽은 코드였다(원래 주석도 그렇게 적고 있었다). `redirect`를 걷어내고 이동을 호출부로 옮겼다. 가장 필요한 자리였다: **반려는 되돌릴 수 없고 증빙을 파기하는데** 큐로 돌아가면 그 줄이 사라진 것만 보였다. 함께: `done` 상태 4개·`catch {}` 삼킴 1개 제거, 어드민 실패 문구 6개를 습니다체로(둘은 한 문장 안에서 섞여 있었다), `role="alert"` 누락 2곳.
 
 > ▶ **2026-08-05 SEO 마감**: `sitemap.xml`·`robots.txt`·canonical·OG(이미지 포함) 완료(§7 6·§8 SEO). **dev에 커밋 완료.** 남은 것 = **Search Console 사이트맵 등록**(실데이터 후 — 등록이 곧 "가짜 공고 색인 요청") · **공고별 OG 이미지**(한글 정적 폰트 선행).
@@ -44,7 +46,7 @@
 | 인프라/배포 | ~90% | Vercel·도메인·SSL·Supabase 연결 완료 |
 | 수익화/결제 | ~70% | ✅ **KCP 가맹·카드사 심사 둘 다 통과 → 실카드결제 활성(2026-08-05)**. 남은 것 = 주문 저장(`job_promotions` INSERT)·실 노출 적용(featured)·모바일 redirect 복귀. ⚠️ **결제 경로 자체가 교회 멤버십에 막혀 도달 불가** |
 | 프론트 로직 디테일(1-9) | ~85% | URL동기화·404/error·위저드검증·모바일네비·?next·admin deep-link 완료(2026-07-29). pagination 잔여 |
-| 백엔드(Supabase 실사용) | ~75% | Auth·운영자 게이트(2026-07-29) · 마이그레이션 + `types/database.ts`(2026-08-20~21) · **수집 검수 실 DB**(2026-08-22) · **`lib/queries` 읽기 전부 DB + mocks 삭제**(2026-08-22) · **교회 인증 접수·판정**(2026-08-25~26) · **교회의 공고 등록·수정·마감**(2026-08-27) · **교회 정보 저장**(2026-08-27) · **북마크 DB 이전**(2026-08-28). 남은 mutation = **클레임 · 노출 결제 주문 저장 · 사진 업로드**, 그리고 **RLS**(§9 유예 — 공개 전 필수) |
+| 백엔드(Supabase 실사용) | ~75% | Auth·운영자 게이트(2026-07-29) · 마이그레이션 + `types/database.ts`(2026-08-20~21) · **수집 검수 실 DB**(2026-08-22) · **`lib/queries` 읽기 전부 DB + mocks 삭제**(2026-08-22) · **교회 인증 접수·판정**(2026-08-25~26) · **교회의 공고 등록·수정·마감**(2026-08-27) · **교회 정보 저장**(2026-08-27) · **북마크 DB 이전**(2026-08-28). 남은 mutation = **클레임 · 노출 결제 주문 저장**(사진 업로드는 2026-08-29 Phase 2로), 그리고 **RLS**(§9 유예 — 공개 전 필수) |
 | 데이터(실 공고·구조화) | ~25% | 크롤러가 실수집 가동 중(`source_data` 449건·계속 증가). `jobs`는 크롤러 재실행 대기로 일시 0건. 구조화는 크롤러가 담당 |
 | 크롤러 연동(min_job_agent) | ~10% | **크롤러는 수집 가동 중**(백업 3,181건 — 이 데이터로 우리 필수값을 검증했다). min_job 쪽은 스키마 정합만 끝났고 **검수 브릿지 미착수**. ⚠️ `review_data`와 4곳 어긋남(ROADMAP Phase 0). 정본 = `../min_job_agent/docs/` (CRAWLER_HANDOFF.md는 흡수 후 삭제) |
 | SEO | ~80% (기술 마감 O, **유입 설계 X**) | **기술 요소 완료(2026-08-05)**: sitemap·robots·canonical·metadataBase·OG(이미지 포함)·JobPosting. 남은 것 = **지역·직분 랜딩 라우트**(노리는 키워드 `"OO지역 전도사 청빙"`를 받을 URL이 아직 없다 — §7 미해결 3) · 실데이터 후 Search Console 등록 · 공고별 OG 이미지(한글 폰트 선행) · 유입 측정 |
@@ -73,7 +75,7 @@
 | `/jobs/new` 공고 등록 | ✅ | ✅ | ✅ | ✅ `c2bcb0b`+ | **실 저장(2026-08-27)** — 3스텝 위저드 + 인증 게이트 + **미리보기**(공개 컴포넌트를 iframe에 그대로). `jobs` 한 표만 쓰고 교회 값은 인증된 `churches`에서 복사, `church_id`는 세션에서. 검수 없이 바로 `OPEN` |
 | `/jobs/[id]/edit` 수정 | ✅ | ✅ | ✅ | ✅ `c2bcb0b`+ | **실 저장(2026-08-27)** — 위저드 공유. 게이트 = 자기 교회 + `source=CHURCH`(미claim 크롤 공고는 못 고친다). `posted_at`을 다시 찍지 않는다(수정으로 목록 순위를 살 수 없다) + 하단 **상태 관리**(마감 ↔ 다시 모집, 삭제 없음) |
 | `/mypage/church` 교회 관리 | ✅ | ✅ | ✅ | ✅ `e89bebd`+ | **읽기 실 DB**(managed/claimable 분리) — 탭·노출광고 사이드바·공고 행. 행 액션은 **`수정` 하나**(2026-08-27 — 아무 동작도 안 하던 `⋯`의 마감·삭제·재등록을 걷어냈다. 상태 변경은 수정 화면 하단 상태 관리가 한다). ⬜ 클레임("가져와 관리하기")은 여전히 비활성 |
-| `/mypage/church/info` 교회 정보 | ✅ | ✅ | ✅ | ✅ `e89bebd`+ | **실 저장(2026-08-27)** — `churches` 6칸 + `church_links` 행 + `updateTag("churches")`. 지역·시·군·구 필수, 채널은 `http`/`https`만(`javascript:` 차단), 비우면 행 삭제. 저장 후 화면에 머물며 **토스트**로 알린다. ⬜ 사진 업로드 |
+| `/mypage/church/info` 교회 정보 | ✅ | ✅ | ✅ | ✅ `e89bebd`+ | **실 저장(2026-08-27)** — `churches` 6칸 + `church_links` 행 + `updateTag("churches")`. 지역·시·군·구 필수, 채널은 `http`/`https`만(`javascript:` 차단), 비우면 행 삭제. 저장 후 화면에 머물며 **토스트**로 알린다. 사진 구획은 2026-08-29에 걷어냈다(Phase 2) |
 | `/mypage/church/promote` 노출 결제 | ✅ | ✅ | ✅ | ✅ `5764fdc` | **PortOne V2 · 실카드 청구**(2026-08-05 활성, 서버 금액 검증). 화면이 실청구·수동 적용·환불 기준을 밝힌다. 주문 저장·실 노출 적용·모바일 redirect 복귀 Phase 1 |
 | `/terms`·`/privacy` | 🟡 초안 보강 | — | ✅ | ✅ `150aa99` | 법률검토·`[ ]`실값 대기 |
 | `/admin` 셸·홈·`/admin/jobs` | ✅ | ✅ | ✅ | ✅ `bcb9e77`+ | **읽기 실 DB** — 셸(딥그린 사이드바·noindex·**운영자 게이트 적용**: proxy `/admin/**` + `.env ADMIN_EMAILS`, 2026-07-29)·**홈 재설계(2026-08-25)**: 처리할 일(검수·인증 큐)·수집(마지막 실행 · 경보 판정은 크롤러 `minjob-ingest status`)·공개(공개 중·내려감·공개 대기+새로고침). `◐`로 내려가며 페이지 게이트 확보·공고 관리(탭[전체·게재중·내려감·마감]·필터[교단·지역·노출]·테이블·행 액션[수정·마감/다시 모집]). ⚠️ **공고 전수 검수 철회(2026-08-21)** — 검수중 탭을 만들지 않는다. **2026-08-24 쓰기 배선**: `/admin/jobs/[id]` 편집(33칸 · `◐`) + 마감·다시 모집. 삭제·노출 설정·재등록·출처 필터는 걷어냈다(크롤러가 되살림·결제 미배선·값 하나뿐) |
@@ -198,7 +200,7 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 - `Job`에 **`qualification?`(자격/경력)** · **`housingProvided?`(사택)**. (`ownerId`는 2026-08-07 제거)
 - `CurrentUser` = `{id, email, name|null, churchId|null, churchName|null, churchVerificationStatus|null}` — **배타적 role 없음**(단일 계정). 권한 파생 `hasChurchAccess` = `lib/auth.ts`. `FilterDim`에 `qualification`.
 - `PastJob` = `{ id, position, department, postedAt, deadline }` — 교회 상세의 '지난 공고' 평면 목록(2026-08-07, 구 `RoleHistory` 대체).
-- `Church`에 **`photos?: string[]`**(첫 장=커버; DATA `church_photos` 1:N 테이블). 기존 `photoUrl` 폐기.
+- `Church`에 **`photos?: string[]`**(첫 장=커버; DATA `church_photos` 1:N 테이블). 기존 `photoUrl` 폐기. → ⛔ 2026-08-29 필드 제거(Phase 2로 미루며 코드에서 뺐다).
 
 ### seam (`src/lib/queries/*.ts`, `'use cache'`+`cacheTag`+`cacheLife("days")`)
 - `jobs.ts`: getAdJobs·getListJobs·getAllJobCards(**모집중만** — sitemap도 이걸 쓴다)·**getAdminJobs**(운영자 전체 공고)·**getAdminOverview**(운영자 홈 요약)·getJobStats·**getCoverageStats**(/about·/pricing 집계)·getJobDetail·getRepost·getSimilarJobs·getChurchOpenJobs·getSearchSuggestions
@@ -217,7 +219,7 @@ CHECK ②   연락처 4컬럼 중 ≥1   ⚠️ source_url은 세지 않는다
 - **▶ 방향 전환(2026-07-28) — 크롤러 도입 + 개교회 채용으로 범위 확장 (되돌리지 말 것)**: 2026-07-28 크롤러 도입 확정 + 개교회 채용으로 범위 확장(사역직 MINISTRY + 일반직 GENERAL). 가드레일 #1·#3 재정의(법률 검토 완료). 정본 = **`../min_job_agent/docs/`**(CRAWLER_HANDOFF.md는 흡수 후 삭제, 2026-08-05). min_job 싱크 = **문서/코드/검수 브릿지 Phase로 진행**(ROADMAP 1-10). staging 4테이블은 min_job_agent 소유(min_job은 인지만), init.sql/마이그레이션 보류. denomination 10키·jobs `jobKind`(MINISTRY/GENERAL)·`role`·`contact` = types+mock 반영 완료(Phase 2, 2026-07-29). `position` NULL 허용·일반직 UI·필터는 크롤러 실데이터 시(deferred).
 - **/jobs**: 대표광고를 **리스트 안에 통합**(별도 밴드 폐기, 배경 틴트 없이 작은 "광고" 태그, 티어 차이=노출 위치) · **검색 존**(옅은 초록 밴드: H1+설명+"모집 중 N건") · **결과 툴바**(정렬 + **페이지당 20/50/100**) · **자격/경력·사택 필터 추가**(성별·결혼 필터 금지) · 최근 본 공고 정보형 · 교회 CTA 위젯 · 좌필터 스크롤(우레일만 sticky). "총 N건" = 모집 중(HERO 포함).
 - **/jobs/[id]**: **단일 흐름 본문(여백형)** + **우측 요약 카드 B**(지원하기 상단 + 사례비·마감·고용) + 비슷한 6개+더보기 + **아이콘 없음** + 지도 placeholder.
-- **/churches/[id]**(재설계): 얇은 허브 — 순서 **커버(사진 갤러리·라이트박스) → 채널(brand 색·아이콘) → 청빙 공고(현재 + 지난 공고 접이식) → 위치(지도)**. 공고가 방문 의도라 위로. **아바타 폐기** · **교회 소개 텍스트 미채택**(채널·유튜브로 파악 대체) · 카드 hover=`bg-muted/40`. 사진 = `Church.photos[]`(mock placeholder SVG, 업로드 Phase 1).
+- **/churches/[id]**(재설계): 얇은 허브 — 순서 **커버(사진 갤러리·라이트박스) → 채널(brand 색·아이콘) → 청빙 공고(현재 + 지난 공고 접이식) → 위치(지도)**. 공고가 방문 의도라 위로. **아바타 폐기** · **교회 소개 텍스트 미채택**(채널·유튜브로 파악 대체) · 카드 hover=`bg-muted/40`. 사진 = `Church.photos[]`(mock placeholder SVG, 업로드 Phase 1). → ⛔ 2026-08-29 갤러리·필드 제거(Phase 2).
 - **지원 모델**: **사이트 내 지원 안 받음** — 원문/교회로 안내. 교회 직접 등록은 나중 `applyMethod` 필드(Phase 1). 사이트 내 지원 중개는 Phase 3.
 - **지도**: Phase 1 = 링크/placeholder, Phase 2 = 네이버/카카오 임베드(주소 필드+API 키).
 - **헤더/계정(2026-07-13)**: 아바타 = **마이페이지 직행 링크**(드롭다운 폐기). 우측 상시 **"교회 공고 등록"**(로그인 상태로 분기: 비로그인→/login, 미인증→/verify, 인증→/church). 로그아웃·**회원탈퇴**는 `/mypage` 계정 섹션. **2026-07-29 정정**: 로그아웃 = Server Action(`signOut`, `scope:"local"`로 다른 기기 세션 유지) · **회원탈퇴 danger zone 버튼은 제거** — 자동 탈퇴(계정·연관 데이터 삭제)가 미구현이라 "준비 중" 안내 + 운영자 mailto로 대체(로그아웃만 하고 삭제했다고 말하지 않기 위해). footer 위 전 페이지 공통 여백 `mt-16 sm:mt-20`. 골드-틴트 대비 텍스트 토큰 `--gold-ink`.
