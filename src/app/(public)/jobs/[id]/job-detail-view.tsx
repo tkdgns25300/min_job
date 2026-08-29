@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { JobActions } from "@/components/job/job-actions";
@@ -372,11 +373,19 @@ function SummaryAside({
       {/* 원문·홈페이지 링크 — 이전 "지원하기" 버튼 자리에 그대로 두되 **outline으로 격하**한다.
           지원 동선은 본문 "지원 방법"의 연락처가 맡고, 이 버튼의 일은 사실확인 + 출처 표기다.
           링크는 여기 한 곳에만 둔다 — 본문에도 두면 같은 URL이 한 화면에 두 번 나온다. */}
-      {(sourceLink || !isPubliclyOpen) && (
+      {(sourceLink || !isPubliclyOpen || job.source === "CHURCH") && (
         <div className="border-b p-5">
           {!isPubliclyOpen && (
             <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
               모집이 끝난 공고예요. 내용 확인용으로만 남겨둡니다.
+            </p>
+          )}
+          {/* 교회가 직접 올린 공고는 **이 페이지가 원문**이라 원문 링크가 없다 — 그 자리에 왜 없는지를
+              말하는 배지를 둔다(2026-08-29). 인증 교회가 올렸다는 신뢰 표시이기도 하다. */}
+          {job.source === "CHURCH" && (
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+              <ShieldCheck className="size-4 shrink-0" aria-hidden />
+              교회가 직접 등록한 공고예요
             </p>
           )}
           {sourceLink && (
