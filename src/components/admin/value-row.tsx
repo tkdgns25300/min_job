@@ -61,8 +61,12 @@ export function ValueRow({
           {required && <span className="ml-0.5 text-muted-foreground/70">*</span>}
         </p>
         <div
+          // 값을 눌러도 편집기가 열린다(2026-08-29) — 운영자가 값 글자를 클릭·타이핑하려 한 실측 뒤 붙였다.
+          // 키보드·보조기기는 오른쪽 `고치기` 버튼이 맡으므로 여기는 마우스 편의만(role 없음).
+          onClick={canEdit ? () => setOpen((current) => !current) : undefined}
           className={cn(
             "min-w-0 flex-1 text-sm leading-relaxed break-keep",
+            canEdit && "cursor-pointer",
             // 확인 표시한 줄은 한 톤 내린다 — 남은 줄이 눈에 남게(지운 것처럼 보이면 안 되므로 취소선 X)
             check?.checked && "text-muted-foreground",
           )}
@@ -77,11 +81,11 @@ export function ValueRow({
               type="button"
               onClick={() => setOpen((current) => !current)}
               className={cn(
-                "text-xs transition-colors",
-                // 줄마다 반복되는 말이라 평소엔 배경으로 물러난다 — 손을 얹거나 키보드로 오면 살아난다
+                // 버튼으로 보여야 한다 — 회색 글자였을 때 운영자가 버튼인 줄 모르고 값 글자를 눌렀다(2026-08-29)
+                "rounded-md border px-2 py-0.5 text-xs transition-colors",
                 open
-                  ? "font-semibold text-primary"
-                  : "text-muted-foreground hover:text-primary focus-visible:text-primary",
+                  ? "border-primary/40 bg-primary/5 font-semibold text-primary"
+                  : "border-border text-muted-foreground hover:border-primary/40 hover:text-primary",
               )}
               aria-expanded={open}
             >
