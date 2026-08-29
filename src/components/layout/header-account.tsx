@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { BookmarkSeed } from "@/components/job/bookmark-provider";
 import { hasChurchAccess, loginPathWithNext } from "@/lib/auth";
+import { getBookmarkIds } from "@/lib/queries/bookmarks";
 import { getCurrentUser } from "@/lib/queries/users";
 import type { CurrentUser } from "@/types/domain";
 
@@ -8,12 +10,17 @@ import type { CurrentUser } from "@/types/domain";
 // ⚠️ 트레이드오프: 이 영역 때문에 공개 페이지가 ○ Static → ◐ PPR이 된다. 셸은 계속 prerender돼
 //    엣지에서 스트리밍되지만 문서 응답은 no-store라 요청마다 함수가 돈다(비로그인은 Auth 왕복 없음).
 //    "헤더에 로그인 상태를 보여준다"를 지키는 대가로 받아들인 비용.
+// ⚠️ **이 hole이 공개 페이지에 들어오는 사람별 데이터의 유일한 문이다.** 저장한 공고 id도 여기서 읽어
+//    `<BookmarkSeed>`로 흘려 넣는다(2026-08-28) — 세션 읽는 셸 컴포넌트를 하나 더 두는 대신 같은 요청,
+//    같은 hole에서 끝낸다. 비로그인은 조회도 seed도 없다.
 // 아바타는 마이페이지 직행 링크(로그아웃·회원탈퇴는 /mypage 안).
 export async function HeaderAccount() {
   const user = await getCurrentUser();
+  const bookmarkIds = user ? await getBookmarkIds(user.id) : null;
 
   return (
     <div className="ml-auto flex items-center gap-3 sm:gap-4">
+      {bookmarkIds && <BookmarkSeed ids={bookmarkIds} />}
       <Link
         href={postJobHref(user)}
         className="rounded-full border border-white/25 px-3 py-1.5 text-sm font-semibold text-white/85 transition-colors hover:border-white/45 hover:text-white"

@@ -14,8 +14,10 @@ import {
   REGIONS,
 } from "@/constants/domain";
 import { keyOf, keysOf } from "@/lib/domain-enum";
+import { jobChurchRef } from "@/lib/job-church";
+import { isFeaturedOn, isPubliclyOpen } from "@/lib/job-visibility";
 import type { Tables } from "@/types/database";
-import type { Church, Job } from "@/types/domain";
+import type { Church, Job, JobCard } from "@/types/domain";
 
 // DB 행 → 도메인 타입. **`lib/queries/*` 내부 전용**(페이지·컴포넌트가 import하지 않는다).
 //
@@ -136,6 +138,66 @@ export function toJobCardFields(row: JobCardRow): JobCardFields {
     featuredUntil: row.featured_until,
     postedAt: row.posted_at,
     deadline: row.deadline,
+  };
+}
+
+/** 카드 한 건 — 공고(카드 컬럼) + 교회 참조. `church_id`가 null이면 `church`도 null이다(크롤 공고) */
+export interface CardEntry {
+  job: JobCardFields;
+  church: ChurchRefRow | null;
+}
+
+/** `JOB_CARD_COLUMNS, CHURCH_REF_EMBED`로 읽은 행의 모양 */
+export type CardRow = JobCardRow & { churches: ChurchRefRow | null };
+
+export function toEntry(row: CardRow): CardEntry {
+  const { churches, ...job } = row;
+  return { job: toJobCardFields(job), church: churches };
+}
+
+/**
+ * 공개에 내보낼 교회인가 — **검수 통과분만**(DATA §3·§9).
+ * 인증 신청에서 신규 교회로 적어낸 행은 검수 전 `PENDING`이다 — 그대로 내보내면 운영자가 보기 전에
+ * 노출된다. `REJECTED`(허위 판명·opt-out으로 내린 교회)도 같은 문으로 막힌다.
+ * ⚠️ 운영자 화면에는 걸지 않는다 — 검수 중인 교회도 보여야 한다(§9 "+ operator는 전체").
+ */
+export function publicChurch(entry: CardEntry): { id: string } | null {
+  const { church } = entry;
+  return church && church.verification_status === "APPROVED" ? { id: church.id } : null;
+}
+
+/**
+ * 카드 → `JobCard`. 공개 목록·저장한 공고·최근 본 공고 세 seam이 같은 모양을 내보낸다 —
+ * 한때 `jobs.ts` 안에만 있었는데 `bookmarks.ts`와 액션이 함께 쓰게 되어 여기로 왔다(2026-08-28).
+ * `today`는 호출부가 준다 — cached scope 안이면 거기서, 요청 스코프면 요청마다 만든다.
+ */
+export function toCard(entry: CardEntry, today: string): JobCard {
+  const { job } = entry;
+  const church = jobChurchRef(job, publicChurch(entry));
+  return {
+    id: job.id,
+    isPubliclyOpen: isPubliclyOpen(job, today),
+    title: job.title,
+    church: {
+      name: church.name,
+      denomination: church.denomination,
+      region: church.region,
+      city: church.city,
+    },
+    position: job.position,
+    role: job.role,
+    department: job.department,
+    employmentType: job.employmentType,
+    qualification: job.qualification,
+    housingProvided: job.housingProvided,
+    payMin: job.payMin,
+    payMax: job.payMax,
+    payNote: job.payNote,
+    payPeriod: job.payPeriod,
+    // 기한 지난 유료 노출은 등급을 내려서 내려보낸다 — 화면마다 만료를 다시 판정하지 않게(DATA §3)
+    featuredTier: isFeaturedOn(job, today) ? job.featuredTier : "NONE",
+    postedAt: job.postedAt,
+    deadline: job.deadline,
   };
 }
 

@@ -1,25 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Bookmark, Check, Share2 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { isBookmarked, toggleBookmark } from "@/lib/bookmarks";
+import { useBookmarks } from "./bookmark-provider";
 
-// 공고 상세 헤더 액션 — 북마크(찜) 토글 + 링크 공유.
-// 북마크는 지금 localStorage 저장(로그인 불필요, lib/bookmarks). 계정 귀속은 Phase 1(/mypage).
-export function JobActions({ id }: { id: string }) {
-  const [bookmarked, setBookmarked] = useState(false);
+// 공고 상세 헤더 액션 — 북마크(저장) 토글 + 링크 공유.
+// 저장 여부·저장 동작은 `useBookmarks`에서 온다(목록 행의 `BookmarkButton`과 같은 소스).
+// `disabled` = 미리보기(`/jobs/new`의 `JobPreview`) — 아직 없는 공고라 저장도 공유도 실행되면 안 된다.
+export function JobActions({ id, disabled = false }: { id: string; disabled?: boolean }) {
+  const { isSaved, toggle } = useBookmarks();
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBookmarked(isBookmarked(id));
-  }, [id]);
-
-  function onToggleBookmark() {
-    setBookmarked(toggleBookmark(id));
-  }
+  const bookmarked = isSaved(id);
 
   async function share() {
     try {
@@ -40,13 +33,21 @@ export function JobActions({ id }: { id: string }) {
         type="button"
         variant={bookmarked ? "default" : "outline"}
         size="icon"
-        onClick={onToggleBookmark}
+        onClick={() => toggle(id)}
+        disabled={disabled}
         aria-pressed={bookmarked}
         aria-label={bookmarked ? "저장 취소" : "저장"}
       >
         <Bookmark className={bookmarked ? "fill-current" : ""} />
       </Button>
-      <Button type="button" variant="outline" size="icon" onClick={share} aria-label="공유">
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        onClick={share}
+        disabled={disabled}
+        aria-label="공유"
+      >
         {copied ? <Check /> : <Share2 />}
       </Button>
     </div>

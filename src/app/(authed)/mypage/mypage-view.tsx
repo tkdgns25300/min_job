@@ -19,7 +19,7 @@ import type { CurrentUser, JobCard } from "@/types/domain";
 //    그 화면 맨 아래 작은 링크 하나만 남는다. 아바타는 **계정** 진입점이고, "교회 공고 등록" pill이
 //    **작업** 바로가기다(라벨도 목적도 다르다).
 // (지원현황·이력서는 사이트 내 지원 없음/인재DB Phase 3라 없음)
-export function MypageView({ user, allCards }: { user: CurrentUser; allCards: JobCard[] }) {
+export function MypageView({ user, saved }: { user: CurrentUser; saved: JobCard[] }) {
   // 신청만 했어도 "교회 쪽 사람"이다 — 검수중·반려 상태를 확인하러 온다
   const churchFirst = hasChurchAccess(user) || user.churchVerificationStatus !== null;
 
@@ -34,7 +34,7 @@ export function MypageView({ user, allCards }: { user: CurrentUser; allCards: Jo
 
       {churchFirst && <ChurchEntry user={user} />}
 
-      <MinisterActivity allCards={allCards} />
+      <MinisterActivity saved={saved} />
 
       {!churchFirst && <ChurchEntry user={user} />}
 

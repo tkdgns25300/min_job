@@ -23,9 +23,13 @@ import {
   CHURCH_REF_EMBED,
   JOB_CARD_COLUMNS,
   JOB_FULL_COLUMNS,
+  publicChurch,
+  toCard,
+  toEntry,
   toJob,
   toJobCardFields,
-  type ChurchRefRow,
+  type CardEntry,
+  type CardRow,
   type JobCardFields,
   type JobCardRow,
 } from "./row-map";
@@ -55,19 +59,6 @@ import {
  */
 const VISIBLE_STATUS = "OPEN";
 
-/** 카드 한 건 — 공고(카드 컬럼) + 교회 참조. `church_id`가 null이면 `church`도 null이다(크롤 공고) */
-interface CardEntry {
-  job: JobCardFields;
-  church: ChurchRefRow | null;
-}
-
-type CardRow = JobCardRow & { churches: ChurchRefRow | null };
-
-function toEntry(row: CardRow): CardEntry {
-  const { churches, ...job } = row;
-  return { job: toJobCardFields(job), church: churches };
-}
-
 /**
  * 카드 조회 한 장 — 최신순 + `id`로 마지막 정렬(장 경계에서 행이 새거나 겹치지 않게 · fetch-all).
  * ⚠️ **embed에 `!inner`를 쓰지 않는다**: 크롤 공고는 `church_id=NULL`이 정상이라(가드레일 #1)
@@ -89,56 +80,15 @@ async function fetchOpenCards(): Promise<CardEntry[]> {
   return rows.map(toEntry);
 }
 
-/** 전체 공고 — 마감·만료 포함. 저장한 공고·운영자 화면 전용 */
+/** 전체 공고 — 마감·만료 포함. 운영자 화면 전용 */
 async function fetchAllCards(): Promise<CardEntry[]> {
   const rows = await fetchAllRows<CardRow>("공고 목록", (from, to) => cardPage(from, to, false));
   return rows.map(toEntry);
 }
 
-/**
- * 공개에 내보낼 교회인가 — **검수 통과분만**(DATA §3·§9).
- * 인증 신청에서 신규 교회로 적어낸 행은 검수 전 `PENDING`이다 — 그대로 내보내면 운영자가 보기 전에
- * 노출된다. `REJECTED`(허위 판명·opt-out으로 내린 교회)도 같은 문으로 막힌다.
- * ⚠️ 운영자 화면에는 걸지 않는다 — 검수 중인 교회도 보여야 한다(§9 "+ operator는 전체").
- */
-function publicChurch(entry: CardEntry): { id: string } | null {
-  const { church } = entry;
-  return church && church.verification_status === "APPROVED" ? { id: church.id } : null;
-}
-
 /** 공개 목록 대상만 — 판정은 `lib/job-visibility` */
 function onlyOpen(entries: CardEntry[], today: string): CardEntry[] {
   return entries.filter((e) => isPubliclyOpen(e.job, today));
-}
-
-function toCard(entry: CardEntry, today: string): JobCard {
-  const { job } = entry;
-  const church = jobChurchRef(job, publicChurch(entry));
-  return {
-    id: job.id,
-    isPubliclyOpen: isPubliclyOpen(job, today),
-    title: job.title,
-    church: {
-      name: church.name,
-      denomination: church.denomination,
-      region: church.region,
-      city: church.city,
-    },
-    position: job.position,
-    role: job.role,
-    department: job.department,
-    employmentType: job.employmentType,
-    qualification: job.qualification,
-    housingProvided: job.housingProvided,
-    payMin: job.payMin,
-    payMax: job.payMax,
-    payNote: job.payNote,
-    payPeriod: job.payPeriod,
-    // 기한 지난 유료 노출은 등급을 내려서 내려보낸다 — 화면마다 만료를 다시 판정하지 않게(DATA §3)
-    featuredTier: isFeaturedOn(job, today) ? job.featuredTier : "NONE",
-    postedAt: job.postedAt,
-    deadline: job.deadline,
-  };
 }
 
 /** 대표광고(HERO) 공고 — 홈 추천 슬롯 */
@@ -182,20 +132,25 @@ export async function getAllJobCards(): Promise<JobCard[]> {
 }
 
 /**
- * 저장한 공고(북마크)·최근 본 공고 해석용 카드 — **만료·마감분까지 포함**한다.
- * 둘 다 클라이언트 localStorage의 id 목록이라 서버가 전체 카드를 넘겨 매칭시킨다(`/mypage`).
- * 공개 목록(`getAllJobCards`)을 쓰면 만료된 순간 저장한 공고가 **아무 안내 없이 증발**한다
- * — 카드의 `isPubliclyOpen`으로 "마감" 표시를 붙여 보여준다.
- * ⚠️ 이 함수가 공개분만 주도록 바뀌면 그 두 목록에서 마감 공고가 **조용히 빠진다** — 여기가 그 목록의
- *    유일한 데이터 출처다. 반대로 **지워진** 공고는 여기 없는 것이 맞고, 목록도 그걸 근거로 걸러낸다.
- * ⬜ 북마크를 계정 귀속(`bookmarks` 테이블)으로 옮기면 id로 조회해 이 전체 전달을 없앤다(ROADMAP).
+ * id로 고른 카드 — **마감·만료 포함**(최근 본 공고가 쓴다: 본 공고가 마감됐으면 "마감"으로 보여야
+ * 하고, 조용히 빠지면 안 된다). 지워진 공고는 결과에 없다 — 호출부는 그걸 근거로 걸러낸다.
+ *
+ * 캐시 키는 **정렬한 id 집합**이다 — `getJobDetail(id)`가 id마다 캐시되는 것과 같은 결. 같은 열 개를
+ * 본 사람들은 한 엔트리를 나눠 쓰고, `cacheTag("jobs")`로 공고가 바뀌면 함께 비워진다.
+ * ⚠️ 호출부(Server Action)가 개수·모양을 먼저 거른다 — 여기는 신뢰한 인자만 받는다.
  */
-export async function getSavedJobCards(): Promise<JobCard[]> {
+export async function getJobCardsByIds(ids: string[]): Promise<JobCard[]> {
   "use cache";
   cacheTag("jobs", "churches");
   cacheLife("hours");
+  if (ids.length === 0) return [];
   const today = todayInSeoul();
-  return (await fetchAllCards()).map((e) => toCard(e, today));
+  const { data, error } = await createServiceClient()
+    .from("jobs")
+    .select(`${JOB_CARD_COLUMNS}, ${CHURCH_REF_EMBED}`)
+    .in("id", [...ids].sort());
+  if (error) throw new Error(`공고 조회 실패: ${error.message}`);
+  return (data as unknown as CardRow[]).map(toEntry).map((e) => toCard(e, today));
 }
 
 /** 운영자 관리 행 — 전체 상태·출처 + 교회 조인(**검수 상태를 안 본다**: 운영자는 전체를 본다) */

@@ -116,7 +116,15 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
 }
 
 // 상단 헤더 (풀폭) — 교회 정체성 + 제목
-function PostHeader({ job, church }: { job: Job; church: JobChurchRef }) {
+function PostHeader({
+  job,
+  church,
+  preview,
+}: {
+  job: Job;
+  church: JobChurchRef;
+  preview: boolean;
+}) {
   const meta = churchMetaLine(church);
   return (
     <div>
@@ -135,7 +143,7 @@ function PostHeader({ job, church }: { job: Job; church: JobChurchRef }) {
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">{job.postedAt} 등록</p>
         </div>
-        <JobActions id={job.id} />
+        <JobActions id={job.id} disabled={preview} />
       </div>
 
       <div className="mt-5">
@@ -465,10 +473,13 @@ export function JobDetailView({
   detail,
   churchJobs,
   similar,
+  preview = false,
 }: {
   detail: JobDetail;
   churchJobs: JobCardData[];
   similar: JobCardData[];
+  /** 등록 폼의 미리보기(`JobPreview`) — 아직 없는 공고라 저장·공유 버튼을 끈다 */
+  preview?: boolean;
 }) {
   const { job, church, churchRef } = detail;
   const sourceLink = getSourceLink(job, church, detail.isPubliclyOpen);
@@ -491,7 +502,7 @@ export function JobDetailView({
 
       {!detail.isPubliclyOpen && <ClosedBanner job={job} hasSimilar={similar.length > 0} />}
 
-      <PostHeader job={job} church={churchRef} />
+      <PostHeader job={job} church={churchRef} preview={preview} />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
         <MainContent

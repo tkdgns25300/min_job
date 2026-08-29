@@ -13,7 +13,9 @@ const STATUS_BADGE_VARIANT: Record<JobStatus, "default" | "secondary"> = {
   CLOSED: "secondary",
 };
 
-// 마이페이지 관리 행 — 액션은 **`수정` 하나**다. 조회·북마크 지표는 집계 준비 중.
+// 마이페이지 관리 행 — 액션은 **`수정` 하나**다.
+// ⛔ "조회 · 북마크 [집계 준비 중]" 배지는 뺐다(2026-08-28) — 조회수는 소스가 없고, 북마크 수는 RLS를 켤 때
+//    남의 북마크를 세는 정책이 따로 필요해 그때 함께 넣는다. 안 만든 기능의 자리는 두지 않는다.
 //
 // ⛔ **`⋯` 오버플로우 메뉴를 걷어냈다**(2026-08-27). 안에 있던 `마감`·`삭제`·`재등록`이 전부
 //    문제였다:
@@ -66,12 +68,6 @@ export function MyJobRow({ job }: { job: MyJob }) {
         {hidden && (
           <p className="mt-1.5 text-xs font-semibold text-gold-ink">{HIDDEN_NOTICE[hidden]}</p>
         )}
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          조회 · 북마크
-          <span className="ml-1.5 rounded border px-1 text-[10px] text-muted-foreground/70">
-            집계 준비 중
-          </span>
-        </p>
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5">

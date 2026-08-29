@@ -119,6 +119,7 @@ export function JobPreview({
                   detail={{ job, church, churchRef, isPubliclyOpen: visible }}
                   churchJobs={[]}
                   similar={[]}
+                  preview
                 />
               )}
             </DeviceFrame>
@@ -158,7 +159,8 @@ function Toggle({
  * draft → 저장될 모양의 `Job`. **`toUpdate`가 만든 행을 도메인 타입으로 옮긴다** — 화면이 입력
  * 그대로가 아니라 DB에 들어갈 값을 보여줘야 미리보기가 뜻을 갖는다.
  *
- * ⚠️ `id`는 미리보기 전용 값이다 — 상세 뷰가 링크·북마크에 쓰지만 아직 공고가 없다.
+ * ⚠️ `id`는 미리보기 전용 값이다 — 상세 뷰가 링크에 쓰지만 아직 공고가 없다. 저장·공유 버튼은
+ *    `preview`로 꺼 둔다(저장 액션까지 가면 FK 위반이다).
  */
 function previewJob(draft: JobDraft, church: Church, postedAt: string): Job {
   const row = toUpdate(draft);

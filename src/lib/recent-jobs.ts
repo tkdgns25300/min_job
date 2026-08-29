@@ -10,7 +10,11 @@ export interface RecentJob {
   pay?: string; // 사례비 금액 있을 때만 (예: "210만원"). 비공개·협의는 미저장
 }
 
-const MAX = 10;
+/**
+ * 저장 상한. ⚠️ `/mypage`의 표시 상한(`RECENT_SHOWN`)과 다른 값이다 — 여기를 줄이면 `/jobs` 우측
+ * 레일·검색 오버레이도 함께 짧아진다. 서버 액션(`getRecentJobCards`)이 인자 상한으로도 쓴다.
+ */
+export const RECENT_JOBS_MAX = 10;
 
 export function readRecentJobs(): RecentJob[] {
   try {
@@ -23,7 +27,10 @@ export function readRecentJobs(): RecentJob[] {
 
 export function addRecentJob(job: RecentJob): void {
   try {
-    const next = [job, ...readRecentJobs().filter((it) => it.id !== job.id)].slice(0, MAX);
+    const next = [job, ...readRecentJobs().filter((it) => it.id !== job.id)].slice(
+      0,
+      RECENT_JOBS_MAX,
+    );
     localStorage.setItem(STORAGE_KEYS.recentJobs, JSON.stringify(next));
   } catch {
     // 저장 실패 무시 (프라이빗 모드 등)
