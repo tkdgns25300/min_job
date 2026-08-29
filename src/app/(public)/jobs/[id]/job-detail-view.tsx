@@ -69,17 +69,38 @@ function Section({
   );
 }
 
-// 불릿 리스트 (자격요건·우대사항) — 아이콘 없이 대시(–). break-keep로 한글 단어 안 깨지게
-function BulletList({ items }: { items: string[] }) {
+// 불릿 리스트 (자격요건·우대사항·제출 서류) — 아이콘 없이 대시(–). break-keep로 한글 단어 안 깨지게.
+// `className`은 간격·글자 크기를 자리에 맞출 때만(모집 조건 줄 안에서는 더 촘촘하고 작다)
+function BulletList({ items, className }: { items: string[]; className?: string }) {
   return (
-    <ul className="mt-3 space-y-2">
+    <ul className={cn("mt-3 space-y-2 text-sm", className)}>
       {items.map((item) => (
-        <li key={item} className="flex gap-2 text-sm break-keep">
+        <li key={item} className="flex gap-2 break-keep">
           <span className="shrink-0 text-muted-foreground">–</span>
           <span>{item}</span>
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * 제출 서류 — 항목마다 한 줄(자격 요건과 같은 대시 목록). 다섯 목록 컬럼 중 이 칸만 " · "로 이어 한 줄이었는데,
+ * 항목 3개 중 1개가 괄호·콜론을 품은 문장이라(실측 2026-08-30 · 3,116개 중 1,013개) 구분점이 묻히고
+ * 4건 중 1건이 두 줄로 넘쳤다. 배열을 해석하지 않고 그대로 나열만 한다 — 저장 단위 = 교회가 입력한 단위 = 표시 단위.
+ * 선택 서류는 필수와 무게가 달라야 한다 — 같은 굵기면 다 내야 하는 것으로 읽힌다.
+ */
+function DocList({ required, optional }: { required: string[]; optional: string[] }) {
+  return (
+    <>
+      {required.length > 0 ? <BulletList items={required} className="mt-1 space-y-1" /> : "—"}
+      {optional.length > 0 && (
+        <div className="mt-2 text-xs font-normal text-muted-foreground">
+          선택
+          <BulletList items={optional} className="mt-1 space-y-1 text-xs" />
+        </div>
+      )}
+    </>
   );
 }
 
@@ -98,8 +119,8 @@ function StepList({ items }: { items: string[] }) {
 }
 
 // 모집 조건 행 (라벨 위 · 값 아래) — 값이 자유 텍스트라 좌우 정렬로는 넘친다(SPEC 1번).
-// `note`는 값 아래 보조 줄(muted·일반 굵기) — 선택 서류·사택 원문 표현처럼 본문과 무게가 달라야 하는 것.
-// 같은 굵기로 이으면 다 내야 하는 서류로, 같은 말을 두 번 한 것으로 읽힌다.
+// `note`는 값 아래 보조 줄(muted·일반 굵기) — 사택 원문 표현처럼 본문(판정)과 무게가 달라야 하는 것.
+// 같은 굵기로 이으면 같은 말을 두 번 한 것으로 읽힌다.
 function ConditionRow({
   label,
   value,
@@ -239,8 +260,7 @@ function MainContent({
           {job.benefitNote && <ConditionRow label="복리후생" value={job.benefitNote} />}
           <ConditionRow
             label="제출 서류"
-            value={job.requiredDocs.length > 0 ? job.requiredDocs.join(" · ") : "—"}
-            note={job.optionalDocs.length > 0 ? `선택 · ${job.optionalDocs.join(" · ")}` : null}
+            value={<DocList required={job.requiredDocs} optional={job.optionalDocs} />}
           />
         </dl>
       </Section>
