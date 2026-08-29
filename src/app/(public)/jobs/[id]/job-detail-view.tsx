@@ -11,6 +11,7 @@ import {
   churchPlaceLine,
   naverMapUrl,
   formatPay,
+  formatPayShort,
   housingLabel,
   jobRoleLine,
   payLabel,
@@ -341,7 +342,7 @@ function MainContent({
                             hasPay ? "text-primary" : "text-muted-foreground",
                           )}
                         >
-                          {formatPay(cj)}
+                          {formatPayShort(cj)}
                         </span>
                       </Link>
                     </li>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import type { JobCard } from "@/types/domain";
-import { churchLocation, denominationLabel, formatPay, jobRoleLine } from "@/lib/format";
+import { churchLocation, denominationLabel, formatPayShort, jobRoleLine } from "@/lib/format";
 import { RelativeTime } from "@/components/relative-time";
 import { BookmarkButton } from "./bookmark-button";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,7 @@ export function FeaturedJobCard({ job }: { job: JobCard }) {
             hasPay ? "font-bold text-primary" : "text-sm font-semibold text-muted-foreground",
           )}
         >
-          {formatPay(job)}
+          {formatPayShort(job)}
         </span>
         <span className="text-xs text-muted-foreground/80">
           <RelativeTime date={job.postedAt} />

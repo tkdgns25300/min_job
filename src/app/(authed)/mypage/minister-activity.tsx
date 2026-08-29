@@ -6,7 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { useBookmarks } from "@/components/job/bookmark-provider";
 import { cn } from "@/lib/utils";
 import { clearRecentJobs, readRecentJobs } from "@/lib/recent-jobs";
-import { churchLocation, formatPay, jobRoleLine } from "@/lib/format";
+import { churchLocation, formatPayShort, jobRoleLine } from "@/lib/format";
 import type { JobCard } from "@/types/domain";
 import { getRecentJobCards } from "./actions";
 
@@ -188,7 +188,7 @@ function JobRow({ job, action }: { job: JobCard; action?: ReactNode }) {
       </div>
       <div className="shrink-0 text-right">
         <div className={cn(hasPay ? "font-bold text-primary" : "text-sm text-muted-foreground")}>
-          {formatPay(job)}
+          {formatPayShort(job)}
         </div>
       </div>
       {action}

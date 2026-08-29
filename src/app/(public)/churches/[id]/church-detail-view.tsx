@@ -3,7 +3,7 @@ import { ChurchChannels } from "@/components/church/church-channels";
 import {
   churchMetaLine,
   churchPlaceLine,
-  formatPay,
+  formatPayShort,
   jobRoleLine,
   naverMapUrl,
   positionLabel,
@@ -38,7 +38,7 @@ function OpenJobCard({ job }: { job: JobCardData }) {
       <p
         className={cn("mt-auto pt-1 font-bold", hasPay ? "text-primary" : "text-muted-foreground")}
       >
-        {formatPay(job)}
+        {formatPayShort(job)}
       </p>
     </Link>
   );

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { JobCard as JobCardData } from "@/types/domain";
-import { churchLocation, denominationLabel, formatPay, jobRoleLine } from "@/lib/format";
+import { churchLocation, denominationLabel, formatPayShort, jobRoleLine } from "@/lib/format";
 import { RelativeTime } from "@/components/relative-time";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +46,7 @@ export function JobCard({ job }: { job: JobCardData }) {
         <p className="text-sm text-muted-foreground">{role}</p>
         <div className="mt-auto flex items-center justify-between pt-1">
           <span className={cn("font-bold", hasPay ? "text-primary" : "text-muted-foreground")}>
-            {formatPay(job)}
+            {formatPayShort(job)}
           </span>
           <span className="text-xs text-muted-foreground">
             <RelativeTime date={job.postedAt} />
