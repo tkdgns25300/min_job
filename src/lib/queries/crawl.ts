@@ -16,29 +16,41 @@ export interface CrawlRun extends Pick<
   Tables<"crawl_run">,
   "started_at" | "finished_at" | "sources_ok" | "sources_failed" | "new_count"
 > {
-  /** 이번 실행에서 실패한 게시판 키(이름순) — 이름은 화면이 `boardLabel`로 붙인다 */
-  failed_sources: string[];
+  /** 이번 실행에서 실패한 게시판(키 이름순) — 이름·주소는 화면이 `boardLabel`·`boardUrl`로 붙인다 */
+  failed_sources: FailedSource[];
   /** 실행이 도중에 끊겼나 — 게시판 수치를 믿을 수 없다는 뜻이다(아래 주석) */
   aborted: boolean;
+}
+
+/** 실패한 게시판 하나 — `error`는 크롤러가 남긴 예외 문구 그대로다 */
+export interface FailedSource {
+  key: string;
+  error: string;
 }
 
 /** 게시판이 아니라 **실행 자체가 끊긴 것** — 크롤러도 실패 게시판 수에서 뺀다(`cli.py`) */
 const ABORTED_KEY = "_aborted";
 
 /**
- * 실패한 게시판 키 — `error_detail`은 `{게시판키: 에러문구}` 꼴이다.
+ * 실패한 게시판 — `error_detail`은 `{게시판키: 에러문구}` 꼴이다.
  *
- * **키만 쓰고 문구는 버린다.** 문구는 길고 기술적이라(`ParseError: ... (1107593: ...)`) 이 화면이
- * 감당할 것이 아니고, 자세한 내용은 `minjob-ingest status`가 보여준다.
+ * 문구도 함께 넘긴다(2026-08-29 — 한때 키만 쓰고 버렸다). 길고 기술적이라(`ParseError: ... (1107593: ...)`)
+ * 본문에 그리지는 않고, 화면이 링크의 `title`(마우스를 올리면 보이는 말)로만 붙인다. 자세한 것은
+ * 여전히 `minjob-ingest status`가 보여준다.
  * ⚠️ `sources_failed`(개수)는 크롤러가 센 값을 그대로 쓴다 — `_aborted`가 섞이면 키 수와 갈린다.
- * ⚠️ **이름순으로 정렬한다.** jsonb는 키를 *길이 먼저* 정렬해 저장하므로 그대로 쓰면 짧은 키가 늘
+ * ⚠️ **키 이름순으로 정렬한다.** jsonb는 키를 *길이 먼저* 정렬해 저장하므로 그대로 쓰면 짧은 키가 늘
  *    앞에 오고(`BU`·`CSU`), 크롤러 화면(`_print_errors`는 `sorted()`)과 **같은 실행을 다른 이름으로**
  *    부르게 된다. 화면이 둘 다 잘라 보여주므로(외 N) 순서가 곧 무엇을 보여줄지를 정한다.
  */
-function failedSources(detail: Json): string[] {
-  return detailKeys(detail)
-    .filter((key) => key !== ABORTED_KEY)
-    .sort();
+function failedSources(detail: Json): FailedSource[] {
+  if (detail === null || typeof detail !== "object" || Array.isArray(detail)) return [];
+  return Object.entries(detail)
+    .filter(([key]) => key !== ABORTED_KEY)
+    .map(([key, value]) => ({
+      key,
+      error: typeof value === "string" ? value : JSON.stringify(value),
+    }))
+    .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
 }
 
 /** 실행이 도중에 끊겼나 — 크롤러가 `_aborted` 키를 남긴다(`cli.py`의 `except BaseException`) */

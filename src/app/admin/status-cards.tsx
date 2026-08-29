@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { boardLabel, CRAWL_OVERDUE_HOURS } from "@/constants/review";
+import { boardLabel, boardUrl, CRAWL_OVERDUE_HOURS } from "@/constants/review";
 import { formatKstDayTime } from "@/lib/format";
-import type { CrawlRun } from "@/lib/queries/crawl";
+import type { CrawlRun, FailedSource } from "@/lib/queries/crawl";
 import type { AdminOverview, QueueSummary } from "@/types/domain";
 
 // 운영자 홈의 카드 셋 — **순수 프레젠테이션**. 값을 받아 그리기만 하고 **조회를 하지 않는다**(그래야
@@ -184,10 +184,41 @@ export function CrawlCard({
   );
 }
 
-function failedLabel(keys: string[]): string {
-  const shown = keys.slice(0, FAILED_NAMES_SHOWN).map(boardLabel).join(" · ");
-  const rest = keys.length - FAILED_NAMES_SHOWN;
-  return rest > 0 ? `${shown} 외 ${rest}` : shown;
+/**
+ * 실패한 게시판 이름 — **게시판 목록으로 가는 링크**다(운영자가 바로 열어 무슨 일인지 본다). 크롤러가
+ * 남긴 에러 문구는 `title`로만 붙인다 — 길고 기술적이라 본문에 그리면 이 카드가 감당하지 못한다.
+ * 주소를 모르는 키(새 게시판)는 링크 없이 이름만.
+ */
+function FailedBoards({ sources }: { sources: FailedSource[] }) {
+  const shown = sources.slice(0, FAILED_NAMES_SHOWN);
+  const rest = sources.length - FAILED_NAMES_SHOWN;
+  return (
+    <>
+      {shown.map(({ key, error }, i) => {
+        const url = boardUrl(key);
+        return (
+          <span key={key}>
+            {i > 0 && " · "}
+            {url ? (
+              // 외부 주소는 `<a>` — `Link`는 내부 라우트에만(source-pane·poster-view와 같은 관용구)
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={error}
+                className="font-semibold text-foreground underline underline-offset-2"
+              >
+                {boardLabel(key)}
+              </a>
+            ) : (
+              <span title={error}>{boardLabel(key)}</span>
+            )}
+          </span>
+        );
+      })}
+      {rest > 0 && ` 외 ${rest}`}
+    </>
+  );
 }
 
 /**
@@ -232,7 +263,12 @@ function RunResult({ run }: { run: CrawlRun }) {
             {" · "}게시판 {boardCount}곳 중{" "}
             <b className="font-bold text-foreground">{run.sources_failed}곳 실패</b>
             {/* 개수와 이름은 크롤러가 같은 dict에서 같이 쓰므로 어긋날 수 없다 — 방어로만 둔다 */}
-            {run.failed_sources.length > 0 && ` — ${failedLabel(run.failed_sources)}`}
+            {run.failed_sources.length > 0 && (
+              <>
+                {" — "}
+                <FailedBoards sources={run.failed_sources} />
+              </>
+            )}
           </>
         ))
       )}

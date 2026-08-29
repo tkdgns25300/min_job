@@ -116,47 +116,109 @@ export const READABLE_ATTACHMENT_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "web
  * 수집 게시판 이름 — `source_data.source_key` → 한글. 정본은
  * `../min_job_agent/config/sources.json`의 `board_name`이고(31곳), 여기는 **표시용 사본**이다.
  *
- * 사본을 두는 이유: 크롤러는 형제 리포라 런타임에 그 설정을 읽을 수 없고, `source_data`에는
+ * 사본을 두는 이유(이름·목록 주소): 크롤러는 형제 리포라 런타임에 그 설정을 읽을 수 없고, `source_data`에는
  * 이름 컬럼이 없다(키만 온다). ⚠️ 모르는 키는 **키를 그대로 보여준다**(`boardLabel`) — 새 게시판이
  * 붙었을 때 화면이 비지 않고 "이름을 아직 안 넣었다"가 눈에 보인다.
  */
-const SOURCE_BOARDS: Record<string, string> = {
-  DAESHIN: "대신대 취업정보",
-  CALVIN: "칼빈대 사역취업정보",
-  KWANGSHIN: "광신대 구인게시판",
-  CSU: "총신대 사역게시판",
-  YTUS: "영남신대 취업/초빙",
-  PUTS: "장신대 초빙(장신Lounge)",
-  HTUS: "호남신대 미니스트리",
-  BPU: "부산장신대 청빙취업안내",
-  PCK: "예장통합 총회(PCK)",
-  SJS: "서울장신대 사역구인정보",
-  PCKWORLD: "한국기독공보 광고검색",
-  HANIL: "한일장신대 청빙게시판",
-  BU: "백석대 대학원 정보나눔터",
-  PGAK: "백석총회 사역자구함",
-  KTS: "고려신학대학원(KTS) 교역자초빙",
-  KOSIN_TH: "고신대 신학과 자유게시판",
-  HAPSHIN: "합신대 교역자초빙",
-  MTU: "감신대 취업게시판",
-  UHS: "협성대 웨슬리 교역자청빙",
-  MOKWON: "목원대 신학과 사역지정보",
-  HANSEI: "한세대 대학원(영산) 모집/채용",
-  STS: "순복음대학원대 청빙및취업",
-  KBTUS: "침신대 취업지원 사역자채용",
-  KOREABAPTIST: "침례회 총회 목회자청빙",
-  KEHC: "기성 총회 성결광장 구인",
-  SUNGKYUL: "예성 총회 구인/청빙",
-  KAICAM: "KAICAM 독립교회연합회 청빙·청원",
-  NAZARENE: "나사렛성결회 목회자청빙",
-  TTGU: "횃불트리니티 Job Posting",
-  ACTS: "아세아연합신대(아신대) 사역정보",
-  WGST: "웨스트민스터신대원 교역자청빙",
+const SOURCE_BOARDS: Record<string, { label: string; url: string }> = {
+  DAESHIN: { label: "대신대 취업정보", url: "https://daeshin.ac.kr/html/05_community/03.php" },
+  CALVIN: {
+    label: "칼빈대 사역취업정보",
+    url: "http://calvin.ac.kr/main/boardList.do?brd_mgrno=692&menu_no=2282",
+  },
+  KWANGSHIN: {
+    label: "광신대 구인게시판",
+    url: "https://www.kwangshin.ac.kr/front/boardList.do?brd_mgrno=184&menu_no=467",
+  },
+  CSU: { label: "총신대 사역게시판", url: "https://csu.ac.kr/?m1=page&menu_id=1110" },
+  YTUS: { label: "영남신대 취업/초빙", url: "https://www.ytus.ac.kr/board/list/trXXR" },
+  PUTS: {
+    label: "장신대 초빙(장신Lounge)",
+    url: "https://puts.ac.kr/www/board/list.general.asp?bd_name=jangshin_jboard04",
+  },
+  HTUS: {
+    label: "호남신대 미니스트리",
+    url: "https://ministry.htus.ac.kr/board/board.php?b_id=ministry_009",
+  },
+  BPU: {
+    label: "부산장신대 청빙취업안내",
+    url: "https://www.bpu.ac.kr/Board/BoardList.aspx?BoardMstNo=6&CategoryNo=1",
+  },
+  PCK: { label: "예장통합 총회(PCK)", url: "https://pck.or.kr/bbs/board.php?bo_table=SM05_05" },
+  SJS: { label: "서울장신대 사역구인정보", url: "https://sjs.ac.kr/ht_ml/w_04ed/4600.php" },
+  PCKWORLD: { label: "한국기독공보 광고검색", url: "https://pckworld.com/adsearch/" },
+  HANIL: {
+    label: "한일장신대 청빙게시판",
+    url: "https://www.hanil.ac.kr/portal/default/bbs/list.do?menuId=M0004000500000000",
+  },
+  BU: {
+    label: "백석대 대학원 정보나눔터",
+    url: "https://community.bu.ac.kr/graduateschool/3938/subview.do",
+  },
+  PGAK: {
+    label: "백석총회 사역자구함",
+    url: "https://pgak.net/sys-infra/components/board/list.asp?skin=basic&boardid=B5FF8",
+  },
+  KTS: { label: "고려신학대학원(KTS) 교역자초빙", url: "https://www.kts.ac.kr/home/pinvit" },
+  KOSIN_TH: {
+    label: "고신대 신학과 자유게시판",
+    url: "https://best.kosin.ac.kr/th/index.php?pCode=MN6000030&mode=list",
+  },
+  HAPSHIN: { label: "합신대 교역자초빙", url: "https://hapdong.ac.kr/bbs/board.php?bo_table=e03" },
+  MTU: { label: "감신대 취업게시판", url: "https://www.mtu.ac.kr/mtu/board/list.do?mId=162" },
+  UHS: { label: "협성대 웨슬리 교역자청빙", url: "https://www.uhs.ac.kr/gsthe/2386/subview.do" },
+  MOKWON: {
+    label: "목원대 신학과 사역지정보",
+    url: "https://mokwon.ac.kr/mt1954/html/sub06/0602.html",
+  },
+  HANSEI: {
+    label: "한세대 대학원(영산) 모집/채용",
+    url: "https://graduate.hansei.ac.kr/graduated/644/subview.do",
+  },
+  STS: { label: "순복음대학원대 청빙및취업", url: "https://sts.ac.kr/main/sub.html?pageCode=38" },
+  KBTUS: {
+    label: "침신대 취업지원 사역자채용",
+    url: "https://job.kbtus.ac.kr/job/CMS/Board/Board.do?mCode=MN014",
+  },
+  KOREABAPTIST: {
+    label: "침례회 총회 목회자청빙",
+    url: "https://koreabaptist.or.kr/Board/Index/21317",
+  },
+  KEHC: { label: "기성 총회 성결광장 구인", url: "https://kehc.org/home/recruit/view_list/page/0" },
+  SUNGKYUL: {
+    label: "예성 총회 구인/청빙",
+    url: "https://sungkyul.org/NOS-Board/bbs.php?idx=com9",
+  },
+  KAICAM: {
+    label: "KAICAM 독립교회연합회 청빙·청원",
+    url: "https://home.kaicam.org/webchon.layout/board/white2022/list.asp?boardid=D9537",
+  },
+  NAZARENE: { label: "나사렛성결회 목회자청빙", url: "https://na.or.kr/ccall" },
+  TTGU: {
+    label: "횃불트리니티 Job Posting",
+    url: "https://www.ttgu.ac.kr/index.php?mid=ttgu_board_03",
+  },
+  ACTS: {
+    label: "아세아연합신대(아신대) 사역정보",
+    url: "https://www.acts.ac.kr/modules/board/bd_list.asp?id=acts_csrd_guide&ca_no=1",
+  },
+  WGST: {
+    label: "웨스트민스터신대원 교역자청빙",
+    url: "http://www.wgst.ac.kr/wgst_renew/board/board.asp?key=6131",
+  },
 };
 
 /** 게시판 표시 이름 — 모르는 키는 키 그대로(위 주석) */
 export function boardLabel(sourceKey: string): string {
-  return SOURCE_BOARDS[sourceKey] ?? sourceKey;
+  return SOURCE_BOARDS[sourceKey]?.label ?? sourceKey;
+}
+
+/**
+ * 게시판 목록 주소 — 크롤러 `config/sources.json`의 `list_url` 사본(2026-08-29). 운영자 홈이 실패한
+ * 게시판을 바로 열어 볼 수 있게 한다. 모르는 키는 `null`(링크 없이 이름만).
+ */
+export function boardUrl(sourceKey: string): string | null {
+  return SOURCE_BOARDS[sourceKey]?.url ?? null;
 }
 
 /**
