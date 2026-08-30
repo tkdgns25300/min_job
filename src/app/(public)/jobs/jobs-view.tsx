@@ -147,15 +147,20 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
               </span>
             )}
           </SheetTrigger>
-          <SheetContent side="left" className="w-80 overflow-y-auto p-6">
-            <SheetTitle className="mb-2">상세 필터</SheetTitle>
+          {/* `pt-12` — 시트의 닫기 X(absolute top-3 right-3)가 `JobFilter` 머리의 "초기화"와 같은 줄에 겹치지
+              않게 머리를 X 아래로 내린다 */}
+          <SheetContent side="left" className="w-80 overflow-y-auto p-6 pt-12">
+            {/* 제목은 접근성용으로만 — `JobFilter`가 자기 머리("상세 필터 · 초기화")를 그려서 보이는 제목을
+                두면 같은 글자가 위아래로 두 번 선다(2026-08-30 전수 점검) */}
+            <SheetTitle className="sr-only">상세 필터</SheetTitle>
             <JobFilter {...filterProps} />
           </SheetContent>
         </Sheet>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-start">
-        <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:items-start">
+      {/* 기본 `grid-cols-1` — 비워 두면 좁은 폭에서 열이 내용 최소 폭으로 늘어난다(홈 page.tsx 참조) */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-start">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:items-start">
           {/* 데스크톱 필터 사이드바 — 홈 사이드바와 같은 카드 문법 */}
           <aside className="hidden md:block">
             <div className="rounded-xl border bg-card p-4 shadow-sm">

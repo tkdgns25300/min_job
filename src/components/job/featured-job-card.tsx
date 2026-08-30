@@ -26,20 +26,23 @@ export function FeaturedJobCard({ job }: { job: JobCard }) {
 
       <h3 className="text-[17px] leading-snug font-extrabold tracking-tight">{job.title}</h3>
 
-      <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+      {/* 조각 단위 줄바꿈 — `job-row`의 메타 줄과 같은 규칙(그 파일 주석 참조) */}
+      <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground">
         {location && (
-          <>
+          <span className="inline-flex items-center gap-1.5 font-medium whitespace-nowrap text-foreground">
             <MapPin className="size-3.5 shrink-0 text-primary" />
-            <span className="font-medium text-foreground">{location}</span>
-            <span className="text-border">·</span>
-          </>
+            {location}
+          </span>
         )}
-        {job.church.name}
+        <span className="max-w-full truncate">
+          {location && <span className="mr-1.5 text-border">·</span>}
+          {job.church.name}
+        </span>
         {denomination && (
-          <>
-            <span className="text-border">·</span>
+          <span className="whitespace-nowrap">
+            <span className="mr-1.5 text-border">·</span>
             {denomination}
-          </>
+          </span>
         )}
       </p>
       <p className="truncate text-sm text-muted-foreground">{role}</p>

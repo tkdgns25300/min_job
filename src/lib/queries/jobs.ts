@@ -252,11 +252,13 @@ export async function getJobStats(): Promise<{
 }
 
 /**
- * about·pricing 커버리지 스탯 — 모집 중 공고 / **등록 교회**(`churches` 행) / 지역·교단 폭.
+ * about·pricing 커버리지 스탯 — 모집 중 공고 / 청빙 중인 교회 / 지역·교단 폭. **넷 다 공고(`jobs`) 기준**이다 —
+ * 교회는 홈 `getJobStats`와 같은 키(`churchIdentityKey`), 지역·교단은 카드가 그리는 교회 참조에서 센다.
  *
- * ⚠️ `churchCount`가 홈의 "청빙 중인 교회"(`getJobStats`)와 **다른 값인 게 정상이다.**
- * 여긴 우리가 프로필까지 아는 **등록 교회 수**이고, 홈은 지금 청빙 중인 교회 수(미claim 포함)다.
- * ⬜ 크롤 데이터가 들어오면 이 수치가 서비스 규모를 크게 밑돌게 된다 — 라벨·출처를 다시 본다.
+ * ⚠️ 한때 교회·지역·교단을 `churches` 표(인증 교회)에서 셌다. 크롤 공고는 교회 행을 만들지 않으므로
+ *    (가드레일 #1) 공고 921건 옆에 **"교회 1 · 지역 1 · 교단 1"**이 나갔고, 홈의 "청빙 중인 교회 794곳"과
+ *    한 사이트 안에서 다른 말을 했다(2026-08-30 전수 점검). 인증 교회 수는 서비스 폭이 아니라 인증 진도다.
+ * 미상(null)은 지역·교단 하나로 세지 않는다 — 그대로 두면 "교단 10개"처럼 조용히 +1 된다.
  */
 export async function getCoverageStats(): Promise<{
   openCount: number;
@@ -265,28 +267,18 @@ export async function getCoverageStats(): Promise<{
   denominationCount: number;
 }> {
   "use cache";
+  // 카드의 교회 참조가 `churches` 조인을 읽는다(claim된 공고) — 교회 정보가 바뀌면 지역·교단도 바뀐다
   cacheTag("jobs", "churches");
   cacheLife("hours");
   const today = todayInSeoul();
-  const [open, rows] = await Promise.all([
-    fetchOpenCards().then((entries) => onlyOpen(entries, today)),
-    // 검수 전 교회는 공개 지표에서 뺀다 — `service.ts`가 RLS를 우회하므로 쿼리가 직접 건다
-    fetchAllRows<{ region: string | null; denomination: string | null }>("교회 집계", (from, to) =>
-      createServiceClient()
-        .from("churches")
-        .select("region, denomination", { count: "exact" })
-        .eq("verification_status", "APPROVED")
-        .order("id")
-        .range(from, to),
-    ),
-  ]);
+  const open = onlyOpen(await fetchOpenCards(), today);
+  const churches = open.map((e) => toCard(e, today).church);
 
-  // 미상(null)은 지역·교단 하나로 세지 않는다 — 그대로 두면 "교단 10개"처럼 조용히 +1 된다.
   return {
     openCount: open.length,
-    churchCount: rows.length,
-    regionCount: new Set(rows.map((c) => c.region).filter(Boolean)).size,
-    denominationCount: new Set(rows.map((c) => c.denomination).filter(Boolean)).size,
+    churchCount: new Set(open.map((e) => churchIdentityKey(e.job))).size,
+    regionCount: new Set(churches.map((c) => c.region).filter(Boolean)).size,
+    denominationCount: new Set(churches.map((c) => c.denomination).filter(Boolean)).size,
   };
 }
 

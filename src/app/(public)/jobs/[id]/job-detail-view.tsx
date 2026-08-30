@@ -536,7 +536,7 @@ export function JobDetailView({
 
       <PostHeader job={job} church={churchRef} preview={preview} />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
         <MainContent
           job={job}
           church={church}

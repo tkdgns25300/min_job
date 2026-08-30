@@ -30,20 +30,25 @@ export function JobRow({ job }: { job: JobCard }) {
             </span>
           )}
         </div>
-        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+        {/* 지역·교회·교단 — **조각 단위로 줄을 바꾼다**(`flex-wrap` + 조각마다 `whitespace-nowrap`). 한때 줄바꿈
+            없는 flex라 390px에서 세 조각이 좁게 눌려 "상\n록구 · 안산드림교\n회"처럼 글자가 세로로 쌓였다
+            (2026-08-30 전수 점검). 점은 뒤 조각에 붙여 줄 머리에 점만 남지 않게 한다. */}
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground">
           {location && (
-            <>
+            <span className="inline-flex items-center gap-1.5 font-medium whitespace-nowrap text-foreground">
               <MapPin className="size-3.5 shrink-0 text-primary" />
-              <span className="font-medium text-foreground">{location}</span>
-              <span className="text-border">·</span>
-            </>
+              {location}
+            </span>
           )}
-          {job.church.name}
+          <span className="max-w-full truncate">
+            {location && <span className="mr-1.5 text-border">·</span>}
+            {job.church.name}
+          </span>
           {denomination && (
-            <>
-              <span className="text-border">·</span>
+            <span className="whitespace-nowrap">
+              <span className="mr-1.5 text-border">·</span>
               {denomination}
-            </>
+            </span>
           )}
         </p>
         <p className="mt-1 truncate text-sm text-muted-foreground">{role}</p>

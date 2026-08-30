@@ -48,11 +48,14 @@ export function MobileNav() {
             <X className="size-5" />
           </SheetClose>
         </SheetHeader>
-        {/* SheetClose가 링크 클릭 시 Sheet를 닫는다(라우트 전환과 함께 자동 닫힘) */}
+        {/* SheetClose가 링크 클릭 시 Sheet를 닫는다(라우트 전환과 함께 자동 닫힘).
+            `nativeButton={false}` — render가 <a>(Link)라 Base UI가 "native <button>을 기대했다"는
+            콘솔 에러를 매 페이지 로드마다 냈다(2026-08-30 전수 점검에서 발견). 링크는 링크로 남긴다 */}
         <nav className="flex flex-col gap-1 p-2">
           {MOBILE_NAV_LINKS.map((link) => (
             <SheetClose
               key={link.href}
+              nativeButton={false}
               render={
                 <Link
                   href={link.href}

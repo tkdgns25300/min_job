@@ -92,7 +92,7 @@ function JobDetailSkeleton() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6">
       <div className="h-4 w-20 animate-pulse rounded bg-muted" />
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="h-96 animate-pulse rounded-xl bg-muted" />
         {/* 우측 사이드바는 데스크톱 전용(경량 CTA 카드) — 스켈레톤도 동일하게 */}
         <div className="hidden h-56 animate-pulse rounded-xl bg-muted lg:block" />

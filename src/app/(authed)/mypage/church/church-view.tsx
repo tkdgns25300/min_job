@@ -103,7 +103,7 @@ function ChurchDashboardView({
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_250px] lg:items-start">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_250px] lg:items-start">
         <ChurchJobList jobs={managed} />
         <ExposurePromo />
       </div>

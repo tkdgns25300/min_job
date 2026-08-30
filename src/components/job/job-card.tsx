@@ -22,19 +22,22 @@ export function JobCard({ job }: { job: JobCardData }) {
           isAd && "border-primary/30 bg-muted/30",
         )}
       >
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">{job.church.name}</span>
+        {/* 조각 단위 줄바꿈 — `job-row`의 메타 줄과 같은 규칙(그 파일 주석 참조). 카드는 교회명이 먼저다 */}
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground">
+          <span className="max-w-full truncate font-semibold text-foreground">
+            {job.church.name}
+          </span>
           {denomination && (
-            <>
-              <span className="text-border">·</span>
-              <span>{denomination}</span>
-            </>
+            <span className="whitespace-nowrap">
+              <span className="mr-1.5 text-border">·</span>
+              {denomination}
+            </span>
           )}
           {location && (
-            <>
-              <span className="text-border">·</span>
-              <span>{location}</span>
-            </>
+            <span className="whitespace-nowrap">
+              <span className="mr-1.5 text-border">·</span>
+              {location}
+            </span>
           )}
           {(isAd || isPremium) && (
             <Badge variant={isAd ? "default" : "secondary"} className="ml-auto shrink-0">

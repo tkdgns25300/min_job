@@ -87,7 +87,10 @@ export default async function HomePage() {
         )}
 
         {/* ② 청빙 공고(프리미엄 상단+일반) 2단 — 좌 리스트 / 우 사이드바 */}
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
+        {/* ⚠️ `grid-cols-1`을 빼면 lg 아래에서 열이 암묵 `auto`가 되어 내용의 최소 폭만큼 늘어난다 —
+            390px에서 목록 카드·사이드바가 오른쪽으로 넘쳐 잘렸다(2026-08-30 전수 점검). `minmax(0,1fr)`을
+            lg에만 쓰고 기본을 비워 둔 탓이다 */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold">청빙 공고</h2>
