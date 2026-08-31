@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { getCoverageStats } from "@/lib/queries/jobs";
+import { cn } from "@/lib/utils";
 import { BUSINESS_INFO, contactMailto } from "@/constants/business";
 
 export const metadata: Metadata = {
@@ -11,25 +13,54 @@ export const metadata: Metadata = {
 };
 
 // 페이지 카피 — 도메인 값 아님(화면 문구). 유지보수 위해 배열로.
+// ⚠️ "반복되는 자리도 보입니다"(재공고 이력)는 뺐다(2026-08-31) — 재공고 추적이 보류(ROADMAP 1-4)라
+//    사실이 아니었고, "조건" 같은 표현은 세상적이라 피한다(운영자 — 교회 시장 정서, ROADMAP 톤 항목).
 const BENEFITS = [
   {
     title: "여기저기 안 돌아다녀도 됩니다",
     body: "여러 게시판에 흩어진 청빙 공고를 한 곳에서 확인합니다.",
   },
   {
-    title: "원하는 조건만 빠르게",
+    title: "원하는 자리만 빠르게",
     body: "지역·교단·직분·부서로 걸러, 필요한 공고만 골라 봅니다.",
-  },
-  {
-    title: "반복되는 자리도 보입니다",
-    body: "같은 자리가 여러 번 청빙됐는지 지난 이력까지 확인합니다.",
   },
 ] as const;
 
-const FAQS = [
+// 공고가 오르는 두 경로 — **직접 등록이 먼저다**(운영자 결정 2026-08-31: 지향점이라 순서가 말하게 한다).
+// 단 비중 주장("대부분 직접 등록")은 쓰지 않는다 — 사실이 아니다. 정리 경로 문구는 크롤링·자동화 같은
+// 단어 없이 "직접 모아 정리"로 말하되(운영자 결정), 요약+원문 링크는 가드레일 #1의 방어선이라 꼭 남긴다.
+const PATHS = [
+  {
+    title: "교회가 직접 올립니다",
+    note: "등록 무료",
+    body: "교회 인증을 마친 교회가 공고를 직접 등록하고, 수정·마감까지 직접 관리합니다.",
+    featured: true, // 지향점인 경로만 브랜드 톤으로 — pricing의 `highlight`와 같은 관례
+  },
+  {
+    title: "공개된 공고를 정리해 올립니다",
+    note: null,
+    body: "총회·신학교·교단 게시판에 공개된 청빙 공고를 저희가 직접 모아 지역·사례비·제출 서류 같은 항목으로 정리합니다. 모든 공고에 원문 링크를 함께 둡니다.",
+    featured: false,
+  },
+] as const;
+
+// FAQ 답변에서 쓰는 문의 링크 — 행동("알려 주세요")을 요구하는 답은 연락 수단을 그 자리에 품는다.
+// 독립 "문의" 섹션이 사라져서(교회 카드로 흡수) 링크 없이는 답이 갈 곳을 말하지 않게 된다(리뷰 2026-08-31).
+function MailLink({ subject }: { subject: string }) {
+  return (
+    <a
+      href={contactMailto(subject)}
+      className="font-medium text-foreground underline underline-offset-4"
+    >
+      {BUSINESS_INFO.email}
+    </a>
+  );
+}
+
+const FAQS: { q: string; a: ReactNode }[] = [
   {
     q: "민잡은 무료인가요?",
-    a: "청빙 자리를 찾는 교역자는 열람·검색을 무료로 이용합니다.",
+    a: "청빙 자리를 찾는 교역자는 열람·검색을 무료로 이용합니다. 교회의 공고 등록도 무료입니다.",
   },
   {
     q: "공고는 어떻게 올라오나요?",
@@ -38,6 +69,18 @@ const FAQS = [
     a: "교회가 직접 등록하거나, 여러 곳에 공개된 청빙 공고를 정리해 요약과 원문 출처 링크로 안내합니다.",
   },
   {
+    q: "공고 내용이 원문과 다르면 어떻게 하나요?",
+    a: (
+      <>
+        모든 공고에 원문 링크가 있으니 지원 전에 원문을 함께 확인해 주세요. 잘못된 내용은{" "}
+        <MailLink subject="공고 수정 요청" />로 알려 주시면 바로 고칩니다.
+      </>
+    ),
+  },
+  // ⛔ "우리 교회 공고를 내리고 싶어요" 항목은 뺐다(운영자 2026-09-01) — 수정·삭제 요청 안내는
+  //    문의 페이지(ROADMAP 문의 접수 폼)가 생기면 그쪽이 맡는다. opt-out 자체(가드레일 #1)는 계속
+  //    이행한다 — 그때까지는 위 "원문과 다르면" 답의 이메일과 푸터 문의가 경로다.
+  {
     q: "지원은 민잡에서 하나요?",
     a: "사이트 안에서 지원을 받지 않습니다. 교회의 공개 접수처나 원문으로 안내해 드립니다.",
   },
@@ -45,7 +88,7 @@ const FAQS = [
     q: "어느 교단·지역을 다루나요?",
     a: "특정 교단에 한정하지 않는 한국 개신교 교역자 청빙 전반입니다. 초기에는 예장합동·통합을 중심으로 넓혀가고 있습니다.",
   },
-] as const;
+];
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
@@ -56,6 +99,9 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
+// 재구성 2026-08-31 — 8→6섹션. "이런 분들께"(히어로·교회 카드와 중복)와 독립 "문의"(푸터·교회 카드가
+// 맡음)를 접고, "공고는 이렇게 모입니다"(두 경로)와 "교회 담당자" 카드(인증 CTA + 수정·삭제 요청 =
+// opt-out 경로)를 신설했다. 구성 근거는 ROADMAP 소개 항목.
 export default async function AboutPage() {
   const stats = await getCoverageStats();
 
@@ -106,36 +152,75 @@ export default async function AboutPage() {
           </div>
         </section>
 
-        {/* 이런 분들께 — 텍스트형 */}
+        {/* 공고는 이렇게 모입니다 — 두 경로. 첫 카드(직접 등록)만 브랜드 톤으로 힘을 준다 */}
         <section>
-          <h2 className="mb-5 text-xl font-bold">이런 분들께</h2>
-          <div className="space-y-3">
-            <p className="break-keep">
-              <span className="font-bold">교역자</span>
-              <span className="text-muted-foreground">
-                {" "}
-                — 청빙 자리를 찾는 분. 조건으로 빠르게 찾습니다.
-              </span>
-            </p>
-            <p className="break-keep">
-              <span className="font-bold">교회</span>
-              <span className="text-muted-foreground">
-                {" "}
-                — 함께 사역할 사람을 찾는 곳. 공고를 등록·관리합니다.
-              </span>
-            </p>
+          <h2 className="mb-2 text-xl font-bold">공고는 이렇게 모입니다</h2>
+          <p className="mb-5 break-keep text-muted-foreground">
+            공고가 민잡에 실리는 방법은 두 가지입니다.
+          </p>
+          <div className="space-y-3.5">
+            {PATHS.map((p, i) => (
+              <div
+                key={p.title}
+                className={cn(
+                  "flex gap-4 rounded-2xl border p-5 sm:p-6",
+                  p.featured && "border-primary/25 bg-primary/5",
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-extrabold",
+                    p.featured
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {i + 1}
+                </span>
+                <div>
+                  <h3 className="font-bold">
+                    {p.title}
+                    {p.note && (
+                      <span className="ml-2 text-xs font-bold text-primary">{p.note}</span>
+                    )}
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed break-keep text-muted-foreground">
+                    {p.body}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* 현재 등록 현황 — 실 데이터 집계(getCoverageStats). 유일한 박스 섹션 */}
+        {/* 현재 등록 현황 — 실 데이터 집계(getCoverageStats · fabricate 없음). 공고 → 지역 → 교회 3수치,
+            교단은 뺐다(운영자 2026-09-01 — 10이라는 숫자가 폭을 말해주지 못한다) */}
         <section>
           <h2 className="mb-5 text-xl font-bold">현재 등록 현황</h2>
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border sm:grid-cols-4">
+          <div className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border bg-border">
             <Stat value={stats.openCount} label="모집 중 공고" />
-            <Stat value={stats.churchCount} label="교회" />
             <Stat value={stats.regionCount} label="지역" />
-            <Stat value={stats.denominationCount} label="교단" />
+            <Stat value={stats.churchCount} label="교회" />
           </div>
+        </section>
+
+        {/* 교회 담당자 — 인증 CTA 하나로. "이미 올라온 공고의 수정·삭제" 안내는 뺐다(운영자 2026-09-01 —
+            문의 페이지가 생기면 그쪽이 맡는다). 마이페이지 인증 유도 카드와 같은 결 */}
+        <section className="rounded-2xl bg-brand-900 px-6 py-10 text-white sm:px-10 sm:py-12">
+          <p className="text-[11px] font-bold text-gold">교회 담당자이신가요?</p>
+          <h2 className="mt-2 text-xl font-bold break-keep sm:text-2xl">
+            우리 교회 공고, 직접 올리고 관리하세요
+          </h2>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed break-keep text-white/70">
+            교회 인증(고유번호증·사업자등록증)을 마치면 공고를 직접 등록·수정·마감할 수 있습니다.
+            등록은 무료입니다.
+          </p>
+          <Link
+            href="/mypage/verify"
+            className="mt-7 inline-block rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-white/90"
+          >
+            교회 인증하기 →
+          </Link>
         </section>
 
         {/* 자주 묻는 질문 */}
@@ -148,21 +233,6 @@ export default async function AboutPage() {
                 <p className="mt-1.5 leading-relaxed break-keep text-muted-foreground">{f.a}</p>
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* 문의 */}
-        <section>
-          <h2 className="mb-5 text-xl font-bold">문의</h2>
-          <div className="rounded-2xl border bg-muted/30 p-5">
-            <p className="font-semibold">도움이 필요하신가요?</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              서비스 관련 문의는{" "}
-              <a href={contactMailto()} className="font-medium text-foreground hover:underline">
-                {BUSINESS_INFO.email}
-              </a>{" "}
-              로 보내 주세요.
-            </p>
           </div>
         </section>
 

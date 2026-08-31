@@ -3,9 +3,13 @@ import Link from "next/link";
 import { HeaderAccount, HeaderAccountFallback } from "./header-account";
 import { MobileNav } from "./mobile-nav";
 
-// 상단 nav = 구직자 탐색 기능만(=공고 하나). 소개는 footer, 노출/광고는 footer+교회 여정.
+// 상단 nav = 구직자 탐색(공고) + 서비스 소개(2026-08-31 운영자 결정 — 신뢰 구축용, 소개 재작성과 함께).
+// 노출/광고는 footer + 교회 여정("교회 공고 등록" pill·대시보드)이 맡는다.
 // 딥그린 브랜드 헤더 — 홈에선 히어로와 이어지고, 다른 페이지에선 상단 브랜드 바.
-const NAV_LINKS = [{ href: "/jobs", label: "공고" }] as const;
+const NAV_LINKS = [
+  { href: "/jobs", label: "공고" },
+  { href: "/about", label: "소개" },
+] as const;
 
 export function Header() {
   return (
