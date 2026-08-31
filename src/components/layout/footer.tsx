@@ -49,7 +49,9 @@ export function Footer() {
               ? [`통신판매업 신고 ${BUSINESS_INFO.ecommerceLicense}`]
               : []),
             BUSINESS_INFO.address,
-            `전화 ${BUSINESS_INFO.phone}`,
+            // 공개 연락처는 이메일 하나로 통일(운영자 결정 2026-08-31) — 전화는 약관 15조·개인정보처리방침의
+            // 사업자 표기(businessInfoLines)에 남는다(KCP 심사 때 낸 정보라 상수에서 지우지 않는다)
+            `문의 ${BUSINESS_INFO.email}`,
           ].join(" · ")}
         </p>
         <p className="mt-1 text-xs text-white/45">© 2026 MinJob · 흩어진 사역자 청빙, 한곳에서.</p>
