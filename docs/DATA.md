@@ -396,7 +396,7 @@ churches ──1:N──▶ church_links · church_photos  (채널·사진)
 users ──▶ bookmarks ──▶ jobs     (Phase 1)
 ```
 - **공고 소유 = 교회 엔티티(`jobs.church_id`)**. 작성자 컬럼은 **두지 않는다**(2026-08-07 `owner_id` 제거) — **편집 권한은 그 교회의 인증 관리자 여부로 판정**. 운영자 등록=`source=OPERATOR`, 교회 등록=`source=CHURCH`.
-- **편집 게이트 = `church_id` 일치 + `source=CHURCH`**(2026-08-07). 운영자 등록 공고는 **클레임("가져오기")을 거쳐 `source`가 `CHURCH`로 바뀐 뒤에야** 편집된다 — 교회 대시보드가 managed(편집)/claimable(클레임)을 나눠 보여주므로, 게이트가 이보다 넓으면 **화면과 동작이 어긋난다**(수정해도 `source`가 `OPERATOR`로 남아 "가져오세요"가 계속 표시된다). `getChurchDashboard`의 `managed` 조건과 `getEditableJob`의 게이트는 **같은 술어를 유지**할 것.
+- **편집 게이트 = `church_id` 일치 + `source=CHURCH`**(2026-08-07). 운영자 등록 공고는 **클레임("가져오기")을 거쳐 `source`가 `CHURCH`로 바뀐 뒤에야** 편집된다 — ✅ 클레임은 2026-09-01 구현(`claimJob` — `/jobs/new` 등록 전 후보 패널, 규칙 정본 `claimMatchTier`, 원문 링크·게시일 보존). `getChurchDashboard`의 `managed` 조건과 `getEditableJob`의 게이트는 **같은 술어를 유지**할 것(클레임 직후 관리 목록·수정 화면이 같은 답을 하도록).
 - **교회 관리 링크**: 인증 승인 시 `users.church_id` 연결(다대일 → 다중 담당자). 담당자 이동 = 링크 해제(공고는 **교회에 잔류** — 공고가 사람에 매여 있지 않다) → 새 교회 재인증. 인증은 교회별.
 
 ---

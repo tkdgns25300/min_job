@@ -106,7 +106,9 @@ src/
 │   │   │                          actions.ts(lookupChurch · 신청 접수). 판정은 운영자가 DB에서 직접
 │   │   └── jobs/                  job-form·job-wizard·check-list·list-field 등 등록/수정 공용 ·
 │   │                              job-preview(공개 화면을 그대로 그리는 미리보기) · device-frame(iframe) ·
-│   │                              actions.ts(등록·수정·마감) + new/ · [id]/edit/(+ status-panel)
+│   │                              actions.ts(등록·수정·마감·클레임) + new/(+ claim-panel — 등록 전
+│   │                              "이미 올라온 우리 교회 공고" 후보, 규칙=lib/job-church claimMatchTier) ·
+│   │                              [id]/edit/(+ status-panel)
 │   ├── admin/                     운영자 전용 — 접근 판정은 proxy(.env ADMIN_EMAILS)
 │   │   ├── layout.tsx · admin-sidebar     admin shell (noindex) — jobs/ 목록만 ○ Static
 │   │   ├── page.tsx(셸) · admin-status(조회·조합) · status-cards(순수) ·
@@ -184,7 +186,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 > **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
 >
 > **배치 규칙**: 한 페이지 전용 뷰·폼·헬퍼는 **그 페이지 폴더에** 둔다(`jobs-view.tsx`·`job-form.tsx`). **두 라우트 기능 이상**이 쓰면 `components/`로 올린다 — 한 기능 안에서 여러 페이지가 나눠 쓰는 것은 그 기능 폴더의 공용 파일로 둔다(`admin/review/review-row.tsx`를 `[id]/`가 `../review-row`로 쓴다). ⚠️ 기준은 **쓰는 파일 수가 아니라 라우트 기능 수**다 — 파일 수로 세면 한 화면 전용이 `components/`로 올라간다(실제로 그렇게 넷이 올라가 있었다 · 2026-08-24 되돌림). mutation은 그 라우트의 `actions.ts`.
-> **mutation `actions.ts`는 login·mypage(로그아웃·**북마크** `setBookmark`)·mypage/verify(교회 인증 신청)·mypage/church/info(교회 정보 저장)·(authed)/jobs(교회의 공고 등록·수정·마감)·admin(캐시 새로고침)·admin/review(수집 검수 판정)·admin/jobs(공개 공고 저장·마감)·admin/verify(교회 인증 판정)** — 클레임은 아직 없다.
+> **mutation `actions.ts`는 login·mypage(로그아웃·**북마크** `setBookmark`)·mypage/verify(교회 인증 신청)·mypage/church/info(교회 정보 저장)·(authed)/jobs(교회의 공고 등록·수정·마감·**클레임** `claimJob` — 2026-09-01)·admin(캐시 새로고침)·admin/review(수집 검수 판정)·admin/jobs(공개 공고 저장·마감)·admin/verify(교회 인증 판정)**.
 > ⚠️ `mypage/verify/actions.ts`의 **`lookupChurch`는 mutation이 아니다** — 클라이언트가 제출 전에 "처음인가 기존인가"를 물어야 하는데 데이터 조회용 route handler가 금지되어 있어(아래) **Server Action이 규칙이 남긴 유일한 경로**다.
 
 ## Layer Responsibilities
@@ -213,7 +215,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 - ⚠️ **공고↔교회 embed에 `!inner`를 쓰지 않는다** — 크롤 공고는 `church_id=NULL`이 정상이라(가드레일 #1) inner join이면 통째로 탈락한다.
 - **쿠키·헤더 절대 만지지 마라** — cached scope 안에서 호출됨
 - **예외(인증 의존·PII read)** — `'use cache'`/`cacheTag`를 쓰지 않는 함수들:
-  - `users.ts` **전체**(`getCurrentUser`·`getChurchDashboard`·`getEditableJob`) — 모두 로그인 사용자에 종속돼 방문자마다 결과가 다르다. `getCurrentUser`는 `server.ts`(쿠키 세션)를 쓰고 `React.cache`로 요청당 1회만 왕복한다 — 신원은 `auth.users`(Auth API), 소속·인증상태는 **`public.users` + `churches` 조인**에서 온다(`auth` 스키마는 PostgREST JOIN이 안 돼 프로필을 복제해 둔다).
+  - `users.ts` **전체**(`getCurrentUser`·`getChurchDashboard`·`getEditableJob`·`getClaimCandidates`) — 모두 로그인 사용자(또는 그 인증 교회)에 종속돼 방문자마다 결과가 다르다. `getClaimCandidates`는 **가져간 즉시 목록에서 빠져야** 해서도 캐시하지 않는다. `getCurrentUser`는 `server.ts`(쿠키 세션)를 쓰고 `React.cache`로 요청당 1회만 왕복한다 — 신원은 `auth.users`(Auth API), 소속·인증상태는 **`public.users` + `churches` 조인**에서 온다(`auth` 스키마는 PostgREST JOIN이 안 돼 프로필을 복제해 둔다).
   - `bookmarks.ts` — 로그인 사용자의 저장한 공고. 사용자마다 결과가 다르고, 캐시하면 저장을 눌러도 목록이 한 시간 옛것으로 남는다. `server.ts` · `user_id`는 세션에서만.
   - `verifications.ts` — 인증 신청 PII(가드레일 #3). `server.ts`. ⚠️ **`church_verifications` 테이블은 없다** — 신청은 `users.verification_*` + `churches` 행에 나뉘어 있고 이 함수가 조인해 조립한다(DATA §3).
   - `review.ts` — **미검수 크롤 데이터**(`review_data`). 판정하는 순간 바뀌므로 캐시하면 방금 처리한 건이 큐에 남는다. 컬럼명도 여기만 snake_case를 유지한다(크롤러 소유 테이블을 직접 편집하는 도구라 명세와 1:1로 대조해야 한다).
@@ -257,7 +259,7 @@ DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. �
   - ② **증빙 서류 쓰기** — 업로드(`mypage/verify/actions.ts`)는 **일반 로그인 사용자가 트리거**하고, 파기(`admin/verify/actions.ts` 반려)는 **운영자 게이트 뒤**다. 읽기(①·③)와 달리 쓰기라 방어를 코드로 만든다 — **경로에 사용자 입력을 넣지 않고**(`{user.id}/{uuid}.{ext}`) `upsert:false`로 덮어쓰기를 막으며, 크기·MIME은 버킷 설정이 한 번 더 거른다.
   - ① **포스터 signed URL**: `lib/queries/review.ts`의 포스터 signed URL은 `service.ts`를 쓴다. `storage.objects`는 RLS가 **항상** 켜져 있고 `postings` 버킷엔 정책이 없어(RLS 유예) publishable 키로는 서명이 조용히 빈 URL을 돌려준다(실측 2026-08-22). 정책을 만들면 로그인한 아무나 포스터를 읽게 되고, 운영자만 허용하려면 `.env ADMIN_EMAILS` 판정을 DB에 넣어야 해 "DB는 저장 전용"과 부딪힌다. 호출은 `requireOperator()` 뒤에서만 일어나고 나가는 것은 개체 하나에 묶인 30분 URL이다. **이 예외를 늘리지 말 것.**
 - `service.ts`가 RLS를 우회하므로 cached read(공개·비개인 조회 — 공고·교회·운영자 목록 등) 전용으로만. **인증 의존·PII read(예: 교회 인증 신청)와 모든 인증·권한 작업은 반드시 `server.ts`**(cached 금지).
-- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 쓰기는 **수집 검수 판정 · 공개 공고 저장·마감 · 교회 인증 신청 접수 · 교회 인증 판정 · 교회의 공고 등록·수정·마감 · 교회 정보 저장 · 북마크**까지 왔다(2026-08-28). 남은 것 — **클레임 · 노출 결제 주문 저장**은 아직 Server Action이 없다(화면만 있다). 사진 업로드는 Phase 2로 미루고 화면도 걷어냈다(2026-08-29).
+- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 쓰기는 **수집 검수 판정 · 공개 공고 저장·마감 · 교회 인증 신청 접수 · 교회 인증 판정 · 교회의 공고 등록·수정·마감 · 교회 정보 저장 · 북마크**까지 왔다(2026-08-28). **클레임(가져오기)도 왔다**(2026-09-01 — `/jobs/new` 등록 전 후보 패널 + `claimJob`). 남은 것 — **노출 결제 주문 저장**은 아직 Server Action이 없다(화면만 있다). 사진 업로드는 Phase 2로 미루고 화면도 걷어냈다(2026-08-29).
 
 ## `'use cache'` 제약 (필수 준수)
 
