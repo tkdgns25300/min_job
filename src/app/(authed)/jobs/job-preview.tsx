@@ -55,9 +55,12 @@ export function JobPreview({
   draft,
   church,
   postedAt,
+  initialJob,
 }: {
   draft: JobDraft;
   church: Church;
+  /** 수정이면 고치기 전의 공고 — 폼이 못 고치는 값(교회명·원문 링크)의 출처다(`identity`) */
+  initialJob?: Job;
   /**
    * 수정이면 원래 게시일, 등록이면 오늘 — 카드의 "며칠 전"이 실제와 같아야 한다.
    * ⚠️ **마감 판정의 "오늘"로도 쓴다.** 등록이면 둘이 같고, 수정이면 과거 게시일로 판정해
@@ -70,7 +73,7 @@ export function JobPreview({
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("list");
 
-  const job = previewJob(draft, church, postedAt);
+  const job = previewJob(draft, church, postedAt, initialJob);
   const churchRef = jobChurchRef(job, church);
   const visible = isPubliclyOpen(job, postedAt);
   const card = previewCard(job, churchRef, visible);
@@ -156,22 +159,43 @@ function Toggle({
 }
 
 /**
+ * 폼이 못 고치는 값 — **수정이면 그 공고가 들고 있는 것, 등록이면 인증 교회 것**(교회 카드와 같은
+ * 규칙 · `job-form`). 클레임으로 가져온 공고는 원문의 교회명을 유지하고 원문 링크도 남아 있어서,
+ * 인증 교회 값으로 그리면 미리보기가 실제 공개 화면과 다른 말을 한다(이름 · 그리고 "직접 등록"
+ * 배지 대 원문 링크).
+ *
+ * ⚠️ 칸마다 `??`로 메우지 않는다 — 크롤 공고는 교단이 비어 있는 게 정상이라 교회 값으로 채우면
+ *    **미리보기에만 있는 교단**이 생긴다. 출처를 통째로 고른다.
+ */
+function identity(church: Church, existing?: Job) {
+  if (existing) {
+    const { churchName, denomination, region, city, address, sourceUrl } = existing;
+    return { churchName, denomination, region, city, address, sourceUrl };
+  }
+  return {
+    churchName: church.name,
+    denomination: church.denomination,
+    region: church.region,
+    city: church.city,
+    address: church.address,
+    // 교회가 직접 쓰는 공고라 원문 링크가 없다 — `jobs_collected_needs_source_url`이 면제하는 그 경우다
+    sourceUrl: null,
+  };
+}
+
+/**
  * draft → 저장될 모양의 `Job`. **`toUpdate`가 만든 행을 도메인 타입으로 옮긴다** — 화면이 입력
  * 그대로가 아니라 DB에 들어갈 값을 보여줘야 미리보기가 뜻을 갖는다.
  *
  * ⚠️ `id`는 미리보기 전용 값이다 — 상세 뷰가 링크에 쓰지만 아직 공고가 없다. 저장·공유 버튼은
  *    `preview`로 꺼 둔다(저장 액션까지 가면 FK 위반이다).
  */
-function previewJob(draft: JobDraft, church: Church, postedAt: string): Job {
+function previewJob(draft: JobDraft, church: Church, postedAt: string, existing?: Job): Job {
   const row = toUpdate(draft);
   return {
     id: "preview",
     churchId: church.id,
-    churchName: church.name,
-    denomination: church.denomination,
-    region: church.region,
-    city: church.city,
-    address: church.address,
+    ...identity(church, existing),
     title: row.title || "(제목을 적어 주세요)",
     jobKind: row.job_kind,
     position: row.position,
@@ -201,9 +225,7 @@ function previewJob(draft: JobDraft, church: Church, postedAt: string): Job {
     optionalDocs: row.optional_docs,
     processSteps: row.process_steps,
     description: row.description || "(본문을 적어 주세요)",
-    // 교회가 직접 쓴 공고라 원문 링크가 없다 — `jobs_collected_needs_source_url`이 면제하는 그 경우다
     source: "CHURCH",
-    sourceUrl: null,
     contactEmail: row.contact_email,
     contactTel: row.contact_tel,
     contactLink: row.contact_link,

@@ -10,7 +10,13 @@ import type { Church } from "@/types/domain";
 //    넘기므로 **도달하지 않는 코드**였다. 없앤 `/admin/ingest`(운영자 붙여넣기)용 잔재다.
 // ⛔ **"정보 수정 문의" 링크도 없앴다**(2026-08-26 · 운영자 결정). 교회가 스스로 고치는 화면이
 //    이미 있어(`/mypage/church/info`) 메일로 요청할 이유가 없다.
-export function ChurchSummaryCard({ church }: { church: Church }) {
+// 값 출처는 호출부가 정한다 — 등록은 인증 교회, 수정은 그 공고가 들고 있는 값(`job-form` 주석).
+// 그래서 `Church`가 아니라 두 타입이 함께 만족하는 모양을 받는다(`JobChurchRef`도 그대로 들어온다).
+export function ChurchSummaryCard({
+  church,
+}: {
+  church: Pick<Church, "name" | "denomination" | "region" | "city">;
+}) {
   const meta = churchMetaLine(church);
   return (
     <div className="rounded-xl border bg-muted/30 px-4 py-3">

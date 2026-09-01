@@ -408,8 +408,10 @@ function SummaryAside({
             </p>
           )}
           {/* 교회가 직접 올린 공고는 **이 페이지가 원문**이라 원문 링크가 없다 — 그 자리에 왜 없는지를
-              말하는 배지를 둔다(2026-08-29). 인증 교회가 올렸다는 신뢰 표시이기도 하다. */}
-          {job.source === "CHURCH" && (
+              말하는 배지를 둔다(2026-08-29). 인증 교회가 올렸다는 신뢰 표시이기도 하다.
+              ⚠️ 클레임으로 가져온 공고(source=CHURCH인데 원문 링크가 남음)에는 안 단다(2026-09-01) —
+              "직접 등록"이 거짓이 되고, 출처 표기(가드레일 #1)는 그 원문 링크가 계속 맡는다. */}
+          {job.source === "CHURCH" && !job.sourceUrl && (
             <p className="flex items-center gap-1.5 text-sm font-semibold text-primary">
               <ShieldCheck className="size-4 shrink-0" aria-hidden />
               교회가 직접 등록한 공고예요

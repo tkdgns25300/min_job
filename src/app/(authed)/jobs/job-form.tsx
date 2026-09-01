@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { unstable_rethrow } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { jobChurchRef } from "@/lib/job-church";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -309,8 +310,10 @@ function stepSections(
   step: number,
   draft: JobDraft,
   patch: SectionProps["patch"],
-  church: Church,
+  // 표시 전용 — 이름·교단·지역·시만 그린다(값 출처는 호출부가 정한다)
+  church: Pick<Church, "name" | "denomination" | "region" | "city">,
   errors: DraftErrors,
+  mode: "create" | "edit",
 ): SectionDef[] {
   const errorOf = (field: DraftField) => errors[field];
   const ministry = draft.jobKind.includes("MINISTRY");
@@ -322,7 +325,10 @@ function stepSections(
         title: "교회 정보",
         // ⚠️ 고칠 수 없다 — 미검증 값이 인증된 교회를 덮어쓰면 안 된다(인증 신청에서 같은 이유로 막았다).
         //    편집 칸을 두던 분기는 삭제했다: 인증을 통과한 교회는 항상 값이 있어 **도달하지 않는 코드**였다.
-        description: "인증된 교회 정보로 게재돼요.",
+        // 수정 화면에서는 "인증된 정보"라고 말하지 않는다 — 클레임 공고는 원문의 교회명이 실려 있어
+        // 거짓이 될 수 있다. 대신 지금 보이는 값이 곧 공개 화면이라고 말한다(호출부 주석).
+        description:
+          mode === "create" ? "인증된 교회 정보로 게재돼요." : "공개 화면에 이렇게 나가요.",
         content: <ChurchSummaryCard church={church} />,
       },
       {
@@ -620,7 +626,19 @@ export function JobForm({
     });
   };
 
-  const sections = stepSections(step, draft, patch, church, errors);
+  // 교회 카드의 값 출처는 모드마다 다르다 — 등록은 **앞으로 쓸 값**(인증 교회)을, 수정은 **이미
+  // 공고에 실려 있는 값**을 보여준다. 클레임으로 가져온 공고는 크롤 원문의 교회명·교단을 그대로
+  // 유지하므로(그게 크롤러 dedup 자물쇠다 · `claimJob` 주석) 인증된 이름을 그리면 공개 화면과 다른
+  // 말이 된다. 교회가 직접 올린 공고는 두 값이 같아 화면이 그대로다.
+  const sections = stepSections(
+    step,
+    draft,
+    patch,
+    // 공개 화면과 같은 규칙으로 고른다 — `jobChurchRef`가 "표시값은 전부 공고에서"의 단일 소스다
+    initialJob ? jobChurchRef(initialJob, church) : church,
+    errors,
+    mode,
+  );
 
   // 스크롤 스파이 — 현재 뷰포트 상단에 걸친 섹션을 활성 표시(왼쪽 점). step 바뀌면 재관찰.
   useEffect(() => {
@@ -741,7 +759,12 @@ export function JobForm({
 
       {/* 마지막 스텝에만 — 앞 스텝에서 펼치면 아직 안 적은 칸이 "(제목을 적어 주세요)"로 보여 혼란스럽다 */}
       {step === TOTAL_STEPS && (
-        <JobPreview draft={draft} church={church} postedAt={initialJob?.postedAt ?? today} />
+        <JobPreview
+          draft={draft}
+          church={church}
+          postedAt={initialJob?.postedAt ?? today}
+          initialJob={initialJob}
+        />
       )}
 
       {failure && (

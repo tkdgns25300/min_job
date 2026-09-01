@@ -75,3 +75,36 @@ export function churchIdentityKey(job: Pick<Job, "churchId" | "churchName" | "re
   if (job.churchId) return job.churchId;
   return `${normalizeChurchName(job.churchName)}@${job.region ?? ""}`;
 }
+
+/**
+ * 클레임 후보 판정 — 이 미배정(크롤) 공고가 **이 인증 교회의 것일 수 있는가**.
+ *
+ * 크롤러의 `dedup_key`(같은 "자리" 자물쇠: 교회명·지역·직분)와는 **묻는 질문이 다르다** — 여기는
+ * "같은 교회냐"라서 자물쇠의 앞 두 조각(교회명·지역)만 본다. 직분까지 맞추면 이 교회의 다른 자리
+ * 공고(가져가서 관리해야 할 것)를 놓친다. **확정은 규칙이 아니라 교회가 한다** — 후보를 거는 그물일
+ * 뿐이고, 크롤러도 애매하면 사람(UNCERTAIN)에게 보낸다. 같은 철학이라 자동 병합·자동 마감이 없다.
+ *
+ * 값: `1` 이름 일치·지역 일치 / `2` 이름 일치·지역 한쪽 미상 / `3` 이름 포함 관계 / `null` 후보 아님.
+ * - 지역·교단이 **양쪽 다 명시인데 다르면** 동명이교회로 보고 뺀다 — 크롤러가 지역을 자물쇠에 넣는
+ *   근거와 같다(교회명 894종 중 70종이 복수 지역).
+ * - 포함 매칭("방주교회" ⊂ "남양주방주교회")은 크롤 표기의 지역 접두·괄호 흔들림을 흡수한다.
+ *   짧은 쪽이 3자 이상일 때만 — "중앙" 같은 초단명이 아무 데나 걸리지 않게.
+ */
+export function claimMatchTier(
+  church: Pick<Church, "name" | "region" | "denomination">,
+  job: Pick<Job, "churchName" | "region" | "denomination">,
+): 1 | 2 | 3 | null {
+  if (job.region && church.region && job.region !== church.region) return null;
+  if (job.denomination && church.denomination && job.denomination !== church.denomination) {
+    return null;
+  }
+
+  const mine = normalizeChurchName(church.name);
+  const theirs = normalizeChurchName(job.churchName);
+  if (!mine || !theirs) return null;
+  if (mine === theirs) return job.region && church.region ? 1 : 2;
+
+  const [shorter, longer] = mine.length <= theirs.length ? [mine, theirs] : [theirs, mine];
+  if (shorter.length >= 3 && longer.includes(shorter)) return 3;
+  return null;
+}

@@ -58,7 +58,7 @@ function ChurchDashboardView({
   user: CurrentUser;
   dashboard: ChurchDashboard;
 }) {
-  const { church, managed, claimableCount } = dashboard;
+  const { church, managed } = dashboard;
   // 교단·지역은 미상일 수 있다 — 표기 규칙은 churchMetaLine이 단일 소스(아는 조각만 잇는다)
   const churchLine = church
     ? [church.name, churchMetaLine(church)].filter(Boolean).join(" · ")
@@ -86,22 +86,8 @@ function ChurchDashboardView({
         </div>
       </header>
 
-      {/* 운영자 공고 클레임 — 있을 때만 목록 위 배너 */}
-      {claimableCount > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-primary/40 bg-primary/[0.04] p-4">
-          <p className="text-sm break-keep">
-            <span className="font-bold">운영자가 정리한 우리 교회 공고 {claimableCount}건</span>
-            <span className="text-muted-foreground"> — 가져오면 직접 수정·관리할 수 있어요.</span>
-          </p>
-          {/* 비활성 — 클레임 액션(source→CHURCH)은 Phase 1 Server Action */}
-          <button
-            disabled
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
-          >
-            가져와 관리하기
-          </button>
-        </div>
-      )}
+      {/* 클레임 배너는 뺐다(2026-09-01) — 클레임 입구는 `/jobs/new`의 등록 전 후보 패널 한 곳이다.
+          가져온 공고는 source=CHURCH가 되어 아래 관리 목록에 그냥 들어온다 */}
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_250px] lg:items-start">
         <ChurchJobList jobs={managed} />

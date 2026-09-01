@@ -3,9 +3,11 @@ import { unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CHURCH_VERIFICATION_STATUSES, DENOMINATIONS, REGIONS } from "@/constants/domain";
 import { keyOf } from "@/lib/domain-enum";
+import { claimMatchTier } from "@/lib/job-church";
 import { hiddenReason, isFeaturedOn, isPubliclyOpen, todayInSeoul } from "@/lib/job-visibility";
 import type { HiddenReason } from "@/lib/job-visibility";
 import type { Church, CurrentUser, Job } from "@/types/domain";
+import { fetchAllRows } from "./fetch-all";
 import { JOB_CARD_COLUMNS, JOB_FULL_COLUMNS, toJob, toJobCardFields } from "./row-map";
 import type { JobCardFields, JobCardRow } from "./row-map";
 
@@ -41,8 +43,9 @@ export type MyJob = Pick<
 // 교회 관리 대시보드 — 그 교회 공고(church_id 기준) + 클레임 가능(운영자 등록) 건수
 export interface ChurchDashboard {
   church: Pick<Church, "name" | "denomination" | "region" | "city"> | null;
-  managed: MyJob[]; // 교회 직접 등록(source=CHURCH) — 편집 대상
-  claimableCount: number; // 운영자 등록(source=OPERATOR) — "가져와 관리"(클레임) 대상
+  // 교회 직접 등록 + 클레임으로 가져온 공고(둘 다 source=CHURCH) — 편집 대상.
+  // 클레임 입구는 `/jobs/new`(등록 전 후보 패널) 한 곳이다 — 대시보드 상시 노출은 안 한다(운영자 2026-09-01)
+  managed: MyJob[];
 }
 
 /**
@@ -147,8 +150,92 @@ export async function getChurchDashboard(churchId: string): Promise<ChurchDashbo
         }
       : null,
     managed: rows.filter((j) => j.source === "CHURCH").map((j) => toMyJob(j, today)),
-    claimableCount: rows.filter((j) => j.source === "OPERATOR").length,
   };
+}
+
+/** 클레임 후보 한 건 — `/jobs/new` 등록 전 "이미 올라온 공고" 패널이 그린다 */
+export interface ClaimCandidate {
+  id: string;
+  title: string;
+  /**
+   * **공고에 적힌 교회명** — 인증된 이름과 다를 수 있다(포함 매칭·교단 접두어·띄어쓰기).
+   * 후보를 거는 그물은 느슨하고 **확정은 교회가 한다** — 그 판단의 핵심 근거가 이 이름이라,
+   * 화면이 인증된 이름과 다를 때 보여 준다. 없으면 "태화교회" 공고를 "안동태화교회"가
+   * 원문을 열어 보기 전에는 구분할 수 없다.
+   */
+  churchName: string;
+  region: Job["region"];
+  city: string | null;
+  postedAt: string;
+  sourceUrl: string | null;
+}
+
+/**
+ * 클레임 후보 — 모집중·미배정(크롤) 공고 중 **이 인증 교회의 것일 수 있는 것**.
+ * 규칙(어떤 공고를 후보로 거나)의 단일 소스는 `claimMatchTier`(lib/job-church)다 — 확실한
+ * 순서(이름·지역 일치 → 지역 미상 → 이름 포함)로 정렬하고, 확정은 화면에서 교회가 한다.
+ *
+ * 인증 교회에 종속된 조회 + 가져간 즉시 목록에서 빠져야 하므로 캐시하지 않는다(`server.ts`).
+ * ⚠️ 미배정 모집중 공고는 목표 규모가 1,000행을 넘는다 — `fetchAllRows`로 훑는다(CLAUDE 절단 함정).
+ */
+export async function getClaimCandidates(
+  church: Pick<Church, "name" | "region" | "denomination">,
+): Promise<ClaimCandidate[]> {
+  const supabase = await createClient();
+  const rows = await fetchAllRows<{
+    id: string;
+    title: string;
+    church_name: string;
+    region: string | null;
+    city: string | null;
+    denomination: string | null;
+    posted_at: string;
+    deadline: string | null;
+    source_url: string | null;
+  }>("클레임 후보", (from, to) =>
+    supabase
+      .from("jobs")
+      .select(
+        "id, title, church_name, region, city, denomination, posted_at, deadline, source_url",
+        {
+          count: "exact",
+        },
+      )
+      .is("church_id", null)
+      .eq("status", "OPEN")
+      .order("id")
+      .range(from, to),
+  );
+
+  const today = todayInSeoul();
+  return rows
+    .map((r) => {
+      const region = keyOf(REGIONS, r.region);
+      const tier = claimMatchTier(church, {
+        churchName: r.church_name,
+        region,
+        denomination: keyOf(DENOMINATIONS, r.denomination),
+      });
+      return { r, region, tier };
+    })
+    .filter(({ r, tier }) => {
+      if (tier === null) return false;
+      // 목록에 실제로 보이는 공고만 — 숨은(만료) 공고를 가져가게 하면 중복 방지라는 목적과 무관하다
+      return isPubliclyOpen({ status: "OPEN", postedAt: r.posted_at, deadline: r.deadline }, today);
+    })
+    .sort(
+      (a, b) =>
+        (a.tier as number) - (b.tier as number) || b.r.posted_at.localeCompare(a.r.posted_at),
+    )
+    .map(({ r, region }) => ({
+      id: r.id,
+      title: r.title,
+      churchName: r.church_name,
+      region,
+      city: r.city,
+      postedAt: r.posted_at,
+      sourceUrl: r.source_url,
+    }));
 }
 
 /** 마이페이지 관리 행 — 만료 판정을 붙여 내려보낸다(교회는 "왜 안 보이는지"를 알아야 한다) */

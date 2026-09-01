@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { requireUser } from "@/lib/auth-guard";
 import { hasChurchAccess } from "@/lib/auth";
+import { DENOMINATIONS, REGIONS } from "@/constants/domain";
+import { keyOf } from "@/lib/domain-enum";
+import { claimMatchTier } from "@/lib/job-church";
 import { draftErrors, toInsert, toUpdate, type DraftErrors, type JobDraft } from "@/lib/job-draft";
 import { todayInSeoul } from "@/lib/job-visibility";
 import { getChurch } from "@/lib/queries/churches";
@@ -24,7 +27,7 @@ import type { Church } from "@/types/domain";
 // ⚠️ **검수가 없다.** 교회가 등록하면 바로 `OPEN`이다 — 인증이 게이트다(가드레일 #1 개정
 //    2026-08-21). 그래서 `status`·`featured_tier`는 DB 기본값(`OPEN`·`NONE`)에 맡긴다.
 
-/** 실패만 말이 필요하다 — 성공하면 `redirect`가 나간다 */
+/** 실패만 말이 필요하다 — 성공하면 `redirect`가 나가거나(등록·수정) 호출부가 이어받는다(마감·클레임) */
 export type JobActionResult = { message?: string; errors?: DraftErrors };
 
 const DASHBOARD = "/mypage/church";
@@ -143,4 +146,69 @@ async function churchGate(): Promise<{ churchId: string; church: Church } | { me
   const church = await getChurch(user.churchId);
   if (church === null) return { message: "교회 정보를 찾지 못했어요." };
   return { churchId: user.churchId, church };
+}
+
+const CLAIM_FAILED = "공고를 가져오지 못했어요. 잠시 후 다시 시도해 주세요.";
+// 후보가 아니거나(경합에 졌거나·마감됐거나) 애초에 가져갈 수 없는 공고 — 세 갈래를 한 말로 답한다.
+// 이유를 나눠 말하면 규칙이 새고, 교회가 할 일은 어느 쪽이든 "목록을 다시 부르기"로 같다.
+const CLAIM_UNAVAILABLE = "가져올 수 없는 공고예요. 목록을 새로 불러 주세요.";
+
+/**
+ * 클레임 — 미배정 크롤 공고를 이 인증 교회 소유로 가져온다(`/jobs/new` 등록 전 후보 패널).
+ *
+ * 후보 규칙(`claimMatchTier`)을 **서버에서 다시 판정**한다 — 패널이 보여준 것과 무관하게, 클라이언트가
+ * 보낸 id는 신뢰 경계 밖이다. 성공하면 `source=CHURCH`가 되어 편집 게이트(`getEditableJob`)와
+ * 대시보드 관리 목록에 들어오고, **원문 링크·게시일은 그대로 남는다**(가드레일 #1 출처 표기 —
+ * 상세의 "직접 등록" 배지 대신 원문 링크가 출처를 말한다).
+ *
+ * ⚠️ **`church_name`을 인증된 이름으로 덮어쓰지 않는다.** 크롤러 `dedup_key`의 조각(정규화
+ *    교회명·지역·직분)이라, 이름이 바뀌면 같은 자리가 다른 자물쇠가 되어 **다음 실행이 중복을
+ *    새로 공개한다**(min_job_agent SPEC §4.1·§4.2). 공고 화면이 공고가 말한 이름을 쓰는 규칙과도
+ *    같은 방향이다(`jobChurchRef`).
+ * 성공 알림·이동은 호출부가 한다(토스트 + `/jobs/[id]/edit`) — 액션의 `redirect`는 던져서 토스트를 못 띄운다.
+ */
+export async function claimJob(id: string): Promise<JobActionResult> {
+  const gate = await churchGate();
+  if ("message" in gate) return gate;
+
+  const supabase = await createClient();
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .select("church_name, region, denomination, status")
+    .eq("id", id)
+    .is("church_id", null)
+    .eq("source", "OPERATOR")
+    .maybeSingle();
+  if (error) {
+    console.error("[jobs] 클레임 대상 조회 실패", error);
+    return { message: CLAIM_FAILED };
+  }
+  if (!row || row.status !== "OPEN") return { message: CLAIM_UNAVAILABLE };
+
+  const tier = claimMatchTier(gate.church, {
+    churchName: row.church_name,
+    region: keyOf(REGIONS, row.region),
+    denomination: keyOf(DENOMINATIONS, row.denomination),
+  });
+  if (tier === null) return { message: CLAIM_UNAVAILABLE };
+
+  // `.is("church_id", null)` 재확인 = 동시 클레임 경합 방어 — 먼저 가져간 쪽이 이기고, 진 쪽은 0행이다
+  const { error: updateError, count } = await supabase
+    .from("jobs")
+    // 트리거가 없다 — 여기서 넣지 않으면 `updated_at`이 영원히 생성 시각이다(위 두 액션과 같은 관용구).
+    // ⚠️ `posted_at`은 건드리지 않는다 — 소유자만 바뀐 것이라 목록 최신순에서 새 공고처럼 올라가면 안 된다.
+    .update(
+      { church_id: gate.churchId, source: "CHURCH", updated_at: new Date().toISOString() },
+      { count: "exact" },
+    )
+    .eq("id", id)
+    .is("church_id", null);
+  if (updateError) {
+    console.error("[jobs] 클레임 실패", updateError);
+    return { message: CLAIM_FAILED };
+  }
+  if (!count) return { message: CLAIM_UNAVAILABLE };
+
+  updateTag("jobs");
+  return {};
 }
