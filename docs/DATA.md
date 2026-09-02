@@ -43,7 +43,7 @@
 | **pay_period** (사례비·급여 기간) | `jobs.pay_period` | MONTH(기본) · YEAR |
 | **job_status** | `jobs.status` | OPEN(기본) · CLOSED. ⚠️ ~~PENDING(검수중)~~은 **제거**(2026-08-21 · 마이그레이션 `20260821051500`) — 공고 전수 검수를 하지 않는다 |
 | **job_source** (출처) | `jobs.source` | OPERATOR · CHURCH |
-| **featured_tier** (노출) | `jobs.featured_tier` | NONE(기본) · PREMIUM · HERO. ⬜ **SPECIAL · PLUS · BASIC로 교체 예정**(상품 3등급 확정 2026-09-02 · §7 — 마이그레이션은 결제 마무리와 함께, 그전까지 DB·코드는 2단) |
+| **featured_tier** (노출) | `jobs.featured_tier` | NONE(기본) · SPECIAL · PLUS · BASIC(상품 3등급 · 마이그레이션 `20260902153342` 적용 2026-09-03 · §7) |
 | **verification_status** (인증 상태) | `users.church_verification_status` **3값** · `churches.verification_status` **2값** | ⚠️ **키 집합이 다르다.** 사람: `PENDING`·`APPROVED`·`REJECTED` + `NULL`(=미신청). 교회: `PENDING`·`APPROVED` (NOT NULL · DEFAULT `PENDING`). **거부는 사람 쪽에만 있다** — 교회를 내리는 것은 `PENDING`으로 되돌리기이고 공개 조회가 `APPROVED`만 보므로 그 순간 내려간다(마이그레이션 `20260825081000`). 라벨 맵도 둘이다(`CHURCH_VERIFICATION_STATUSES` · `CHURCH_STATUSES`) |
 
 > **역할 enum 없음**: 모든 계정은 기본 **사역자(MINISTER)**. 교회(CHURCH)는 저장된 role이 아니라 **인증으로 열리는 view/능력**(§3 users). MINISTER/CHURCH는 화면 라벨.
@@ -309,12 +309,12 @@ CHECK ( source_url IS NULL OR length(btrim(source_url)) > 0 )
 |---|---|---|
 | `id` | uuid PK | |
 | `job_id` | uuid NOT NULL FK→jobs ON DELETE CASCADE | |
-| `tier` | text NOT NULL CHECK (`PREMIUM`/`HERO`) | **`NONE` 없음** — 무료는 상품이 아니라 원장에 들어올 수 없다(`EXPOSURE_PRODUCTS`와 일치). `jobs.featured_tier`는 `NONE` 포함 3키로 역할이 다르다. ⬜ 값은 `SPECIAL`/`PLUS`/`BASIC`로 교체 예정(§7 · 결제 마무리와 함께) |
+| `tier` | text NOT NULL CHECK (`SPECIAL`/`PLUS`/`BASIC`) | **`NONE` 없음** — 무료는 상품이 아니라 원장에 들어올 수 없다(`EXPOSURE_PRODUCTS`와 일치). `jobs.featured_tier`는 `NONE` 포함 4키로 역할이 다르다(값 교체 2026-09-03 · 마이그레이션 `20260902153342`) |
 | `weeks` | int NOT NULL CHECK (`1`/`2`/`4`) | `EXPOSURE_WEEKS`와 일치 |
 | `amount` | int NOT NULL | 결제 금액(원, VAT 포함). `exposurePrice(tier, weeks)` 서버 재계산값과 대조 |
 | `payment_id` | text NOT NULL **UNIQUE** | PortOne paymentId(38자 — KCP 40자 제한). **UNIQUE가 멱등성**: `/api/payments/complete`가 재시도돼도 노출이 두 번 적립되지 않는다 |
-| `starts_at` | date NOT NULL | 노출 시작 |
-| `ends_at` | date NOT NULL | 노출 종료 — `weeks`에서 계산 가능하지만 **저장한다**(정산·정원 조회에 필요, 계산은 Server Action이 1회) |
+| `starts_at` | date NOT NULL CHECK(월요일) | 노출 시작. **월요일**만(`extract(isodow)=1`) — 정원이 주(월~일) 단위라 주 경계에 맞춘다(2026-09-03) |
+| `ends_at` | date NOT NULL CHECK(`= starts_at + weeks*7 - 1`) | 노출 종료(마지막 주 일요일) — `weeks`에서 계산 가능하지만 **저장한다**(정산·정원 조회에 필요, 계산은 Server Action이 1회). CHECK가 둘의 정합을 강제한다 — 정원 판정이 기간 행을 믿기 때문(2026-09-03) |
 | `status` | text NOT NULL CHECK | PAID/REFUNDED/CANCELLED — `PROMOTION_STATUSES`와 일치. ⚠️ **REFUNDED와 CANCELLED의 경계는 미정** — 값만 정해졌다. 주문 저장(ROADMAP 1-8 ①)에서 정한다 |
 | `created_at` | timestamptz DEFAULT now() | |
 
@@ -506,15 +506,15 @@ users ──▶ bookmarks ──▶ jobs     (Phase 1)
 
 ---
 
-## 7. 노출(광고) 모델 — 사다리 3등급 (확정 2026-09-02 · ⬜ 구현 대기)
+## 7. 노출(광고) 모델 — 사다리 3등급 (확정 2026-09-02 · 자리·상품표 구현 2026-09-03 · 결제 적용은 ROADMAP 1-8)
 
 - **저장은 2군데** — 원장 `job_promotions`(결제 이력·정원 판정) + 캐시 `jobs.featured_tier`·`featured_until`(현재 유효 노출). 근거는 §3 `job_promotions`.
   - **스페셜**(SPECIAL) = 홈 카드 3칸 + 목록 상단 로우 + 연관 첫 칸 · **주 정원 3** / **플러스**(PLUS) = 목록 상단 로우 + 연관 첫 칸 · **주 정원 2** / **기본**(BASIC) = 연관 첫 칸 · 정원 없음(지역별로 자연히 나뉨). 자리별 노출 조건·가격은 SPEC 수익화 절이 정본
   - **정원 판정은 원장으로** — "그 주에 스페셜 3건이 찼나"는 `job_promotions`의 기간 행(`tier`·`starts_at`·`ends_at`, `status=PAID`)을 센다. 캐시 컬럼으로는 미래 판매를 판정할 수 없다
   - **연관 첫 칸의 자격은 데이터가 정한다** — 비슷한 공고 규칙(SPEC 공고 상세 절)이 교단을 "둘 다 밝혀졌는데 다르면 탈락, 미상은 통과"로 두는 이유: 노출 중 888건 중 교단 미상이 25%다. 부서는 미상 68%라 문이 아니라 점수에만 쓴다(2026-09-02 실측)
 - **만료 자동 강등 = cached scope 계산.** ⚠️ `'use cache'` 안에서 `new Date()`는 **엔트리가 만들어질 때 한 번** 평가되고 그동안 고정된다(CLAUDE.md 제약 #2). 호출부(`/jobs`·홈·`sitemap.xml`)가 전부 프리렌더 스코프라 **거기서 만들면 빌드 시각이 굳으므로**, `lib/queries/*`가 `todayInSeoul()`로 만들어 mock/DB에 넘긴다. `cacheLife("days")`와 함께 하루마다 갱신되어 만료가 최대 하루 늦게 반영된다(목록 자체가 하루 캐시라 무해). 인자로 받으려면 `await connection()`이 필요하고 `◐ PPR` → `ƒ`. **`deadline` 만료(§6-1)와 같은 코드 경로.**
-- **정렬에 섞지 않는다**(2026-09-02 폐기) — 유료는 홈 카드·목록 상단 로우(최대 5줄)·연관 첫 칸이라는 **자리**에 서고, 일반 목록은 순수 최신순. ⬜ 지금 코드는 `featured_tier`를 정렬 1차 키로 쓴다. (끌어올리기/bump 없음 — 저볼륨이라 제외)
-- **가격**(`EXPOSURE_PRODUCTS` 단일 소스 · ⬜ 2026-09-02 확정값으로 교체 대기: 스페셜 9.9/18.9/29.9만 · 플러스 4.9/9.4/14.9만 · 기본 2.9/5.5/8.9만 — 1·2·4주, VAT 포함. 지금 코드는 PREMIUM 7만/24만 · HERO 15만/50만). 결제·서버 검증 구현 완료, **실카드결제 활성(2026-08-05)** — 실연동 채널이라 카드가 실제로 청구된다. `/pricing`은 아직 "문의" — 교회 멤버십 미배선으로 결제 경로에 도달 불가(ROADMAP 1-8·8). ⚠️ **노출 적용·취소는 아직 수동**이다(주문 저장·`featured` 세팅이 없다) — 운영자가 PortOne 콘솔을 보고 처리하고 이메일로 안내한다. 결제 화면이 그 사실을 밝힌다(2026-08-19 — 그전까지 "테스트 모드 — 실제 청구는 없어요"라고 **거짓 안내**하고 있었다).
+- **정렬에 섞지 않는다**(2026-09-02 폐기 · ✅ 2026-09-03) — 유료는 홈 카드·목록 상단 로우(등급별 정원이 상한 = 최대 5줄)·연관 첫 칸이라는 **자리**에 서고, 일반 목록은 순수 최신순(`filter-jobs.ts`의 `splitListAds` · 홈은 `getHomeFeed`). 라벨은 자리의 속성(`PlacedJob.ad`)이라 `featured_tier`에서 파생하지 않는다. (끌어올리기/bump 없음 — 저볼륨이라 제외)
+- **가격**(`EXPOSURE_PRODUCTS.prices` 단일 소스 · ✅ 2026-09-03: 스페셜 9.9/18.9/29.9만 · 플러스 4.9/9.4/14.9만 · 기본 2.9/5.5/8.9만 — 1·2·4주, VAT 포함. 2·4주는 묶음가라 **계산이 아니라 표**다). 결제·서버 검증 구현 완료, **실카드결제 활성(2026-08-05)** — 실연동 채널이라 카드가 실제로 청구된다. `/pricing`은 아직 "문의" — 교회 멤버십 미배선으로 결제 경로에 도달 불가(ROADMAP 1-8·8). ⚠️ **노출 적용·취소는 아직 수동**이다(주문 저장·`featured` 세팅이 없다) — 운영자가 PortOne 콘솔을 보고 처리하고 이메일로 안내한다. 결제 화면이 그 사실을 밝힌다(2026-08-19 — 그전까지 "테스트 모드 — 실제 청구는 없어요"라고 **거짓 안내**하고 있었다).
 - 기독 B2B 배너 광고 = 별도 광고주·ad ops → Phase 2+ 옵션(레일 슬롯만).
 
 ---
