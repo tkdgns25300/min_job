@@ -101,7 +101,9 @@ src/
 │   ├── (authed)/                  로그인 필요 (proxy 1차 차단 + 페이지 requireUser 최종 방어)
 │   │   ├── layout.tsx             인증 shell — robots noindex를 하위에 상속
 │   │   ├── mypage/                사역자 view · minister-activity · account-actions · actions.ts(signOut)
-│   │   │   ├── church/            교회 대시보드 + info/(정보 관리) + promote/(PortOne 노출 결제)
+│   │   │   ├── church/            교회 대시보드 + info/(정보 관리) + promote/(PortOne 노출 결제 — page(정원 원장 전달·
+│   │   │   │                      모바일 복귀 `?paymentId=`) · promote-checkout(등급·시작 주·기간) · promote-outcome ·
+│   │   │   │                      promote-complete · actions.ts(결제 완료 `completePromotion` — 원장 기록·노출 적용))
 │   │   │   └── verify/            교회 인증 신청 — page(상태 3갈래) · verify-form(확인 단계) ·
 │   │   │                          actions.ts(lookupChurch · 신청 접수). 판정은 운영자가 DB에서 직접
 │   │   └── jobs/                  job-form·job-wizard·check-list·list-field 등 등록/수정 공용 ·
@@ -117,6 +119,7 @@ src/
 │   │   │                          actions.ts(승인·반려) ·
 │   │   │                          [id]/(판정: page · doc-view(서류·확대) · decision-panel(대조·사유·판정))
 │   │   │                          (PII — 페이지에서도 requireOperator)
+│   │   ├── promotions/            노출 원장 — page · promotion-ledger-table(읽기만 · 환불은 PortOne 콘솔 · 2026-09-03)
 │   │   ├── jobs/                  공고 관리 — page(목록) · admin-jobs-view · job-row ·
 │   │   │                          actions.ts(저장·마감·다시 모집) ·
 │   │   │                          [id]/(편집: job-edit-form · job-value-list)
@@ -128,8 +131,7 @@ src/
 │   │                              [id]/group/(묶음: group-view·group-diff)
 │   ├── login/                     Google OAuth — layout(전용 미니멀 셸) · page ·
 │   │                              login-form(서버) · submit-button(client) · actions.ts
-│   ├── auth/callback/route.ts     OAuth 콜백(code→세션) — "REST 라우트 금지" 예외 ①
-│   ├── api/payments/complete/     결제 검증(PortOne) — 예외 ②
+│   ├── auth/callback/route.ts     OAuth 콜백(code→세션) — "REST 라우트 금지"의 **유일한 예외**
 │   ├── layout.tsx · fonts/        root layout (Pretendard self-host · 메타 · metadataBase)
 │   ├── error.tsx · global-error.tsx · not-found.tsx    에러·404 바운더리
 │   ├── globals.css                디자인 토큰(브랜드 색 단일 소스)
@@ -158,7 +160,7 @@ src/
 │   ├── auth.ts                    순수 인증 헬퍼(hasChurchAccess·safeInternalPath·로그인 URL·PATHNAME_HEADER)
 │   ├── auth-guard.ts              requireUser·requireOperator — 서버 전용 게이트(redirect 수행)
 │   ├── operator.ts                운영자 판정(.env ADMIN_EMAILS) — 서버 전용
-│   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications·review·bookmarks (도메인 1파일)
+│   ├── queries/                   **데이터 seam** — jobs·churches·users·verifications·review·bookmarks·promotions (도메인 1파일)
 │   │                              + row-map.ts(DB 행 → 도메인 타입) · fetch-all.ts(1,000행 상한 페이징)
 │   │                              둘 다 queries 내부 전용
 │   ├── domain-enum.ts             닫힌 라벨 맵 ↔ DB 문자열(keyOf·keysOf·enumLabel) — 캐스트를 한 곳에 가둔다
@@ -168,7 +170,10 @@ src/
 │   ├── review-edits.ts            검수가 고칠 수 있는 칸 + CHECK 짝 규칙(순수) — 화면·액션 공용
 │   ├── job-edits.ts               공개된 공고를 고칠 수 있는 칸 + `jobs` CHECK 짝 규칙(순수)
 │   │                              ⚠️ review-edits와 합치지 않는다 — 제약이 다르다(그 파일 머리말)
-│   ├── job-visibility.ts          만료 판정 단일 소스(todayInSeoul·isPubliclyOpen·hiddenReason)
+│   ├── job-visibility.ts          만료 판정 단일 소스(todayInSeoul·isPubliclyOpen·hiddenReason·isFeaturedOn·exposureWindow)
+│   ├── exposure-order.ts          노출 주문 순수 판정 — 주 경계(월요일)·기간·정원·겹침. 화면과 결제 액션이 같이 쓴다
+│   ├── similar-jobs.ts            비슷한 공고 규칙(순수) — 문 → 점수 → 보충 · 첫 칸 광고(id 해시)
+│   ├── portone.ts                 PortOne V2 REST 서버 전용 — 결제 조회·전액 취소 둘만
 │   ├── job-church.ts              공고↔교회 파생 — church_id가 null일 수 있어 생긴 로직
 │   │                              (jobChurchRef=표시값 규칙 · churchIdentityKey=교회 수 집계)
 │   ├── recent-jobs.ts · recent-searches.ts   localStorage 클라이언트 헬퍼(북마크는 2026-08-28 DB로 — `queries/bookmarks.ts`)
@@ -186,7 +191,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 > **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
 >
 > **배치 규칙**: 한 페이지 전용 뷰·폼·헬퍼는 **그 페이지 폴더에** 둔다(`jobs-view.tsx`·`job-form.tsx`). **두 라우트 기능 이상**이 쓰면 `components/`로 올린다 — 한 기능 안에서 여러 페이지가 나눠 쓰는 것은 그 기능 폴더의 공용 파일로 둔다(`admin/review/review-row.tsx`를 `[id]/`가 `../review-row`로 쓴다). ⚠️ 기준은 **쓰는 파일 수가 아니라 라우트 기능 수**다 — 파일 수로 세면 한 화면 전용이 `components/`로 올라간다(실제로 그렇게 넷이 올라가 있었다 · 2026-08-24 되돌림). mutation은 그 라우트의 `actions.ts`.
-> **mutation `actions.ts`는 login·mypage(로그아웃·**북마크** `setBookmark`)·mypage/verify(교회 인증 신청)·mypage/church/info(교회 정보 저장)·(authed)/jobs(교회의 공고 등록·수정·마감·**클레임** `claimJob` — 2026-09-01)·admin(캐시 새로고침)·admin/review(수집 검수 판정)·admin/jobs(공개 공고 저장·마감)·admin/verify(교회 인증 판정)**.
+> **mutation `actions.ts`는 login·mypage(로그아웃·**북마크** `setBookmark`)·mypage/verify(교회 인증 신청)·mypage/church/info(교회 정보 저장)·(authed)/jobs(교회의 공고 등록·수정·마감·**클레임** `claimJob` — 2026-09-01)·**mypage/church/promote(노출 결제 완료 `completePromotion` — PortOne 조회·정원 재확인·원장 INSERT·`featured_*` 적용 · 2026-09-03)**·admin(캐시 새로고침)·admin/review(수집 검수 판정)·admin/jobs(공개 공고 저장·마감)·admin/verify(교회 인증 판정)**.
 > ⚠️ `mypage/verify/actions.ts`의 **`lookupChurch`는 mutation이 아니다** — 클라이언트가 제출 전에 "처음인가 기존인가"를 물어야 하는데 데이터 조회용 route handler가 금지되어 있어(아래) **Server Action이 규칙이 남긴 유일한 경로**다.
 
 ## Layer Responsibilities
@@ -203,7 +208,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 - 끝에서 `updateTag(resource)` — read-your-own-writes
 - ⚠️ **`updateTag`은 Server Action에서만 부를 수 있다**(문서 명시 — route handler·client에서는 던진다). route handler에서 무효화해야 하면 `revalidateTag`뿐이고 그건 stale-while-revalidate라 **다음 방문자가 아직 옛 데이터를 본다**. 즉시 반영이 필요하면 경로가 Server Action이어야 한다.
 - ⚠️ **공고는 크롤러(별개 프로세스)가 `jobs`에 직접 쓴다** → 우리 캐시를 무효화할 방법이 없다. 그래서 공개 데이터는 `cacheLife("hours")`로 한 시간마다 스스로 갱신되고(바닥선), 즉시 반영이 필요할 때 운영자가 `/admin`의 **공개 목록 새로고침**(`refreshPublicCache`)을 누른다(가속기).
-- **데이터 CRUD용 REST API 라우트 만들지 않는다.** 외부 규약이 HTTP 엔드포인트를 강제할 때만 route handler 허용 — 현재 예외 2개뿐: `app/auth/callback`(OAuth 리다이렉트 수신), `app/api/payments/complete`(결제 검증).
+- **데이터 CRUD용 REST API 라우트 만들지 않는다.** 외부 규약이 HTTP 엔드포인트를 강제할 때만 route handler 허용 — 현재 예외는 `app/auth/callback`(OAuth 리다이렉트 수신) **하나**. 결제 검증도 한때 route handler였는데(`/api/payments/complete`) 적용 직후 `updateTag("jobs")`가 필요해 Server Action(`mypage/church/promote/actions.ts`)으로 옮겼다(2026-09-03) — 주문은 PortOne `customData`에서 다시 읽으므로 모바일 복귀도 같은 액션이 처리한다.
 
 ### Query (`lib/queries/*.ts`) — 데이터 소스 seam
 - **페이지·view는 데이터를 여기서만 가져온다.** 데이터 출처를 이 레이어에 은닉한다 — 2026-08-22 mock→DB 전환에서 **페이지 코드가 0줄** 바뀌었고 라우트 모드(`◐`/`○`)도 그대로였다.
@@ -219,6 +224,7 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
   - `bookmarks.ts` — 로그인 사용자의 저장한 공고. 사용자마다 결과가 다르고, 캐시하면 저장을 눌러도 목록이 한 시간 옛것으로 남는다. `server.ts` · `user_id`는 세션에서만.
   - `verifications.ts` — 인증 신청 PII(가드레일 #3). `server.ts`. ⚠️ **`church_verifications` 테이블은 없다** — 신청은 `users.verification_*` + `churches` 행에 나뉘어 있고 이 함수가 조인해 조립한다(DATA §3).
   - `review.ts` — **미검수 크롤 데이터**(`review_data`). 판정하는 순간 바뀌므로 캐시하면 방금 처리한 건이 큐에 남는다. 컬럼명도 여기만 snake_case를 유지한다(크롤러 소유 테이블을 직접 편집하는 도구라 명세와 1:1로 대조해야 한다).
+  - `promotions.ts` — **노출 구매 원장**(`job_promotions`) 읽기. 정원("이번 주 스페셜이 찼나")은 결제가 들어오는 순간 바뀌어 캐시된 답으로 팔면 초과 판매다. 인증 화면·Server Action·운영자 화면 뒤에서만. 쓰는 곳은 결제 완료 액션 하나.
   - `crawl.ts` — **크롤 실행 기록**(`crawl_run`). 크롤러가 우리 앱 밖에서 쓰므로 무효화할 방법이 없고, "마지막 수집이 언제인가"는 캐시된 답이 무의미한 질문이다. 같은 이유로 snake_case 유지. ⛔ **경보 판정을 옮겨오지 않는다** — 죽음(3시간)·연속 실패(2회)·빈 목록(2회)은 크롤러 `alerts_for`가 정본이고, 사본을 만들면 두 화면이 다른 말을 한다(`isPubliclyOpen`과 같은 이유). 반면 **실패한 게시판 이름과 마지막 실행 시각은 사실이라 그대로 쓴다** — 특히 "너무 오래 안 돌았나"(`CRAWL_OVERDUE_HOURS` · `constants/review.ts`)는 **크롤러가 답할 수 없는 질문**이다(프로세스가 안 뜨면 아무것도 기록하지 않는다). ⚠️ **끊긴 실행은 `finished_at`이 채워지고 `sources_ok`가 손대지 않은 게시판까지 센다** — 그대로 그리면 "전부 성공"이 되므로 `aborted`를 따로 넘긴다.
   - 이 함수들은 **dynamic 페이지의 `<Suspense>` 안·Server Action·route handler에서만** 호출한다(cached scope에서 부르면 빌드가 깨진다).
 
@@ -259,7 +265,7 @@ DB 접근은 아래 3개 파일로만. 새 클라이언트 만들지 말 것. �
   - ② **증빙 서류 쓰기** — 업로드(`mypage/verify/actions.ts`)는 **일반 로그인 사용자가 트리거**하고, 파기(`admin/verify/actions.ts` 반려)는 **운영자 게이트 뒤**다. 읽기(①·③)와 달리 쓰기라 방어를 코드로 만든다 — **경로에 사용자 입력을 넣지 않고**(`{user.id}/{uuid}.{ext}`) `upsert:false`로 덮어쓰기를 막으며, 크기·MIME은 버킷 설정이 한 번 더 거른다.
   - ① **포스터 signed URL**: `lib/queries/review.ts`의 포스터 signed URL은 `service.ts`를 쓴다. `storage.objects`는 RLS가 **항상** 켜져 있고 `postings` 버킷엔 정책이 없어(RLS 유예) publishable 키로는 서명이 조용히 빈 URL을 돌려준다(실측 2026-08-22). 정책을 만들면 로그인한 아무나 포스터를 읽게 되고, 운영자만 허용하려면 `.env ADMIN_EMAILS` 판정을 DB에 넣어야 해 "DB는 저장 전용"과 부딪힌다. 호출은 `requireOperator()` 뒤에서만 일어나고 나가는 것은 개체 하나에 묶인 30분 URL이다. **이 예외를 늘리지 말 것.**
 - `service.ts`가 RLS를 우회하므로 cached read(공개·비개인 조회 — 공고·교회·운영자 목록 등) 전용으로만. **인증 의존·PII read(예: 교회 인증 신청)와 모든 인증·권한 작업은 반드시 `server.ts`**(cached 금지).
-- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 쓰기는 **수집 검수 판정 · 공개 공고 저장·마감 · 교회 인증 신청 접수 · 교회 인증 판정 · 교회의 공고 등록·수정·마감 · 교회 정보 저장 · 북마크**까지 왔다(2026-08-28). **클레임(가져오기)도 왔다**(2026-09-01 — `/jobs/new` 등록 전 후보 패널 + `claimJob`). 남은 것 — **노출 결제 주문 저장**은 아직 Server Action이 없다(화면만 있다). 사진 업로드는 Phase 2로 미루고 화면도 걷어냈다(2026-08-29).
+- ✅ **읽기는 전부 실 DB다**(2026-08-22 전환 완료 · `src/mocks/` 삭제). 쓰기는 **수집 검수 판정 · 공개 공고 저장·마감 · 교회 인증 신청 접수 · 교회 인증 판정 · 교회의 공고 등록·수정·마감 · 교회 정보 저장 · 북마크**까지 왔다(2026-08-28). **클레임(가져오기)도 왔다**(2026-09-01 — `/jobs/new` 등록 전 후보 패널 + `claimJob`). **노출 결제 주문 저장·적용도 왔다**(2026-09-03 — `completePromotion`: PortOne 조회 → 정원·겹침 재확인(경합이면 전액 취소) → `job_promotions` INSERT(멱등) → `featured_*` 적용). 사진 업로드는 Phase 2로 미루고 화면도 걷어냈다(2026-08-29).
 
 ## `'use cache'` 제약 (필수 준수)
 
