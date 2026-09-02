@@ -2,11 +2,16 @@ import { cacheLife, cacheTag } from "next/cache";
 import {
   DENOMINATIONS,
   DEPARTMENTS,
+  HOME_AD_SLOTS,
   POSITIONS,
   RECENT_WINDOW_DAYS,
   REGIONS,
+  SIMILAR_JOBS_COUNT,
+  tiersForSlot,
+  type FeaturedTier,
 } from "@/constants/domain";
 import { churchIdentityKey, jobChurchRef } from "@/lib/job-church";
+import { pickSimilarJobs } from "@/lib/similar-jobs";
 import {
   addDays,
   hiddenReason,
@@ -17,7 +22,7 @@ import {
 import { createServiceClient } from "@/lib/supabase/service";
 import { fetchAllRows } from "./fetch-all";
 import type { Tables } from "@/types/database";
-import type { AdminJob, AdminOverview, JobCard, JobDetail } from "@/types/domain";
+import type { AdminJob, AdminOverview, JobCard, JobDetail, PlacedJob } from "@/types/domain";
 import { getChurch } from "./churches";
 import {
   CHURCH_REF_EMBED,
@@ -91,38 +96,42 @@ function onlyOpen(entries: CardEntry[], today: string): CardEntry[] {
   return entries.filter((e) => isPubliclyOpen(e.job, today));
 }
 
-/** 대표광고(HERO) 공고 — 홈 추천 슬롯 */
-export async function getAdJobs(): Promise<JobCard[]> {
+export interface HomeFeed {
+  /** "추천 청빙" 3칸 — 스페셜이 서고, 안 팔린 칸은 최신 공고(`ad=false`) */
+  slots: PlacedJob[];
+  /** 그 아래 "청빙 공고" — 순수 최신순. 추천 칸에 선 공고는 뺀다(같은 화면에 두 번 나오지 않게) */
+  latest: JobCard[];
+}
+
+/**
+ * 홈 피드 — 추천 3칸 + 최신 목록을 **한 번에** 만든다. 둘을 따로 캐시하면 "칸에 선 공고를 목록에서 뺀다"를
+ * 맞출 수 없다(각자 다른 엔트리라 서로를 모른다).
+ * 추천 칸은 항상 3칸이다(SPEC 수익화 절): 스페셜이 여럿이면 최신순으로 3장, 모자라면 최신 공고가 채운다.
+ */
+export async function getHomeFeed(latestLimit = 8): Promise<HomeFeed> {
   "use cache";
   cacheTag("jobs", "churches");
   cacheLife("hours");
   const today = todayInSeoul();
-  // 등급은 저장된 값이라 SQL로 미리 거른다 — 전 공고를 훑어 3건을 고르지 않는다.
-  // 기한 만료는 여전히 JS가 본다(`toCard`) → 여기서 걸러도 결과가 달라지지 않는다.
-  const rows = await fetchAllRows<CardRow>("대표광고 공고", (from, to) =>
-    cardPage(from, to, true).eq("featured_tier", "HERO"),
-  );
-  return onlyOpen(rows.map(toEntry), today)
-    .map((e) => toCard(e, today))
-    .filter((c) => c.featuredTier === "HERO");
+  // 등급은 만료를 반영한 카드 값으로 판단한다 — 기한 지난 스페셜이 추천 칸을 차지하지 않게
+  const cards = onlyOpen(await fetchOpenCards(), today).map((e) => toCard(e, today));
+  const homeTiers = new Set<FeaturedTier>(tiersForSlot("home"));
+
+  const slots: PlacedJob[] = cards
+    .filter((card) => homeTiers.has(card.featuredTier))
+    .slice(0, HOME_AD_SLOTS)
+    .map((job) => ({ job, ad: true }));
+  for (const card of cards) {
+    if (slots.length >= HOME_AD_SLOTS) break;
+    if (!slots.some((slot) => slot.job.id === card.id)) slots.push({ job: card, ad: false });
+  }
+
+  const placed = new Set(slots.map((slot) => slot.job.id));
+  const latest = cards.filter((card) => !placed.has(card.id)).slice(0, latestLimit);
+  return { slots, latest };
 }
 
-/** 리스트 공고 — 대표광고(HERO)는 별도 추천 슬롯이라 제외. 프리미엄 우선 + 최신순 */
-export async function getListJobs(limit = 8): Promise<JobCard[]> {
-  "use cache";
-  cacheTag("jobs", "churches");
-  cacheLife("hours");
-  const today = todayInSeoul();
-  const rank = (tier: string) => (tier === "PREMIUM" ? 0 : 1);
-  // 등급은 만료를 반영한 카드 값으로 판단한다 — 기한 지난 프리미엄이 앞자리를 차지하지 않게
-  return onlyOpen(await fetchOpenCards(), today)
-    .map((e) => toCard(e, today))
-    .filter((c) => c.featuredTier !== "HERO")
-    .sort((a, b) => rank(a.featuredTier) - rank(b.featuredTier))
-    .slice(0, limit);
-}
-
-/** 전체 모집 중 공고 카드 (목록 페이지 클라이언트 필터용) — 만료분 제외 */
+/** 전체 모집 중 공고 카드(목록 페이지 클라이언트 필터용) — 만료분 제외 */
 export async function getAllJobCards(): Promise<JobCard[]> {
   "use cache";
   cacheTag("jobs", "churches");
@@ -314,12 +323,11 @@ export async function getJobDetail(id: string): Promise<JobDetail | null> {
 }
 
 /**
- * 비슷한 공고 — 같은 부서 + 같은 지역 (현재 공고·같은 교회 제외). 둘 다 0건일 때만 직분으로 폴백.
- * ⚠️ 같은 교회 판정에 `churchId` 비교를 쓰면 안 된다 — 미claim 공고끼리는 둘 다 null이라
- *    서로 무관한 교회의 공고가 "같은 교회"로 묶여 통째로 걸러진다.
+ * 비슷한 공고 — 규칙은 `lib/similar-jobs`(순수)가, 후보 조회와 카드 변환은 여기가 한다.
+ * 첫 칸이 광고 자리라 `PlacedJob`으로 내려준다(광고가 없으면 전부 `ad=false`, 합은 늘 `limit` 이하).
  * 지역 매칭은 `jobs.region`으로 한다 — 조인 없이 도는 값이다(DATA §1 예외).
  */
-export async function getSimilarJobs(id: string, limit = 4): Promise<JobCard[]> {
+export async function getSimilarJobs(id: string, limit = SIMILAR_JOBS_COUNT): Promise<PlacedJob[]> {
   "use cache";
   cacheTag("jobs", "churches");
   cacheLife("hours");
@@ -330,23 +338,21 @@ export async function getSimilarJobs(id: string, limit = 4): Promise<JobCard[]> 
   const base = entries.find((e) => e.job.id === id)?.job ?? (await fetchCardFields(id));
   if (!base) return [];
 
-  const baseKey = churchIdentityKey(base);
-  const pool = entries.filter((e) => e.job.id !== id && churchIdentityKey(e.job) !== baseKey);
-  const byDept = pool.filter(
-    (e) => base.department !== null && e.job.department === base.department,
+  const byId = new Map(entries.map((e) => [e.job.id, e]));
+  const pick = pickSimilarJobs(
+    base,
+    entries.map((e) => e.job),
+    today,
+    limit,
   );
-  const byRegion = pool.filter(
-    (e) => !byDept.includes(e) && base.region !== null && e.job.region === base.region,
-  );
-  // 부서·지역이 둘 다 미상이면 위 두 단계가 통째로 비어 **"비슷한 공고"가 0건**이 된다
-  // (하단 섹션과 마감 배너의 "비슷한 공고 보기"가 사라진 막다른 페이지). 그때만 직분으로 받쳐준다.
-  // ⚠️ 일반 패딩으로 쓰면 안 된다 — 부서·지역이 다 다르고 직분만 겹치는 공고가 "비슷한 공고"의
-  //    빈자리를 채워 추천 품질이 떨어진다.
-  const byRelevance =
-    byDept.length + byRegion.length > 0
-      ? [...byDept, ...byRegion]
-      : pool.filter((e) => e.job.position.some((p) => base.position.includes(p)));
-  return byRelevance.slice(0, limit).map((e) => toCard(e, today));
+  const place = (jobId: string, ad: boolean): PlacedJob => ({
+    job: toCard(byId.get(jobId)!, today),
+    ad,
+  });
+  return [
+    ...(pick.ad ? [place(pick.ad.id, true)] : []),
+    ...pick.organic.map((c) => place(c.id, false)),
+  ];
 }
 
 /** 기준 공고 한 건(카드 컬럼만) — 공개 목록에 없는 공고의 유사 추천에 쓴다 */

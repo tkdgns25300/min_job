@@ -3,8 +3,8 @@ import { getCurrentUser } from "@/lib/queries/users";
 import { hasChurchAccess } from "@/lib/auth";
 import {
   EXPOSURE_PRODUCTS,
-  EXPOSURE_WEEKS,
   exposurePrice,
+  isExposureWeeks,
   type ExposureProduct,
 } from "@/constants/domain";
 
@@ -40,8 +40,7 @@ export async function POST(request: Request) {
     typeof paymentId !== "string" ||
     typeof tier !== "string" ||
     !(tier in EXPOSURE_PRODUCTS) ||
-    typeof weeks !== "number" ||
-    !(EXPOSURE_WEEKS as readonly number[]).includes(weeks)
+    !isExposureWeeks(weeks)
   ) {
     return NextResponse.json({ ok: false, reason: "잘못된 요청" }, { status: 400 });
   }

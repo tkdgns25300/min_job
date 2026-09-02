@@ -162,12 +162,15 @@ export const JOB_STATUSES = {
 } as const;
 export type JobStatus = keyof typeof JOB_STATUSES;
 
-// 노출 등급 (수익화) — 일반/프리미엄/대표광고
+// 노출 등급 — `jobs.featured_tier`의 값(현재 유효 노출의 캐시 · DATA §7). NONE = 노출 없음.
+// 상품 자체(자리·정원·가격)는 아래 `EXPOSURE_PRODUCTS`가 정의하고, 여기는 라벨만 갖는다.
+// ⚠️ 등급명은 **교회가 사는 상품 이름**이다 — 구직자 화면에는 나오지 않는다(카드·로우는 "광고" 한 단어).
 export const FEATURED_TIERS = {
   NONE: "일반",
-  PREMIUM: "프리미엄",
-  HERO: "대표광고",
-} as const;
+  SPECIAL: "스페셜",
+  PLUS: "플러스",
+  BASIC: "기본",
+} as const satisfies Record<ExposureProduct | "NONE", string>;
 export type FeaturedTier = keyof typeof FEATURED_TIERS;
 
 // 상시모집(마감일 없음) 공고의 공개 유효 기간(일). 이 기간이 지나면 공개 목록에서 내린다.
@@ -180,43 +183,95 @@ export const ALWAYS_OPEN_MAX_DAYS = 90;
 // "이번 주 새 공고" 집계 창(일). 홈 스탯과 운영자 홈이 같은 값을 써야 숫자가 갈리지 않는다.
 export const RECENT_WINDOW_DAYS = 7;
 
-// 노출 상품(결제) — 가격 단일 소스(promote 결제 페이지 + 서버 금액 검증 공용). VAT 포함가(원).
-// 가격 확정은 SNAPSHOT §9(BM). NONE은 유료 상품 아님.
-export const EXPOSURE_PRODUCTS = {
-  PREMIUM: {
-    label: "프리미엄",
-    weekly: 70000,
-    bundle4: 240000,
-    desc: "목록·검색 결과 상단 고정 + “광고” 표시",
-  },
-  HERO: {
-    label: "대표광고",
-    weekly: 150000,
-    bundle4: 500000,
-    desc: "홈 배너 + 목록 최상단(구좌 한정) · 프리미엄 노출 포함",
-  },
+// 노출 상품(결제) — 사다리 3등급(확정 2026-09-02 · SPEC 수익화 절 · DATA §7). **가격 단일 소스**:
+// 요금 페이지·결제 화면·서버 금액 검증이 전부 여기서 읽는다. VAT 포함가(원).
+//
+// 자리는 셋이다 — 홈 추천 카드 3칸 · 공고 목록 1페이지 상단 로우(최대 5줄) · 공고 상세 "비슷한 공고" 첫 칸.
+// 등급은 **닿는 범위**로 갈린다: 스페셜 = 셋 다 · 플러스 = 목록 + 연관 · 기본 = 연관만.
+// 정원(`weeklyCapacity`)은 **주 단위**다 — 홈 3칸·목록 5줄이 자리 수라 그보다 많이 팔 수 없다.
+// 기본은 정원이 없다 — 연관 첫 칸은 **같은 지역** 광고만 서서 지역별로 자연히 나뉜다.
+export const EXPOSURE_SLOTS = {
+  home: "홈 추천 카드",
+  list: "목록 상단 로우",
+  related: "비슷한 공고 첫 칸",
 } as const;
-export type ExposureProduct = keyof typeof EXPOSURE_PRODUCTS;
+export type ExposureSlot = keyof typeof EXPOSURE_SLOTS;
+
 export const EXPOSURE_WEEKS = [1, 2, 4] as const;
+export type ExposureWeeks = (typeof EXPOSURE_WEEKS)[number];
+
+interface ExposureProductDef {
+  label: string;
+  slots: Record<ExposureSlot, boolean>;
+  /** 한 주에 팔 수 있는 건수. null = 정원 없음 */
+  weeklyCapacity: number | null;
+  /** 주수별 가격(원, VAT 포함). 2주·4주는 묶음가라 주 단가 × 주수가 아니다 — 계산하지 않고 표로 둔다 */
+  prices: Record<ExposureWeeks, number>;
+  desc: string;
+}
+
+// ⚠️ 키 순서 = 사다리 위부터(스페셜 → 플러스 → 기본). `tiersForSlot`이 이 순서를 그대로 쓴다.
+export const EXPOSURE_PRODUCTS = {
+  SPECIAL: {
+    label: "스페셜",
+    slots: { home: true, list: true, related: true },
+    weeklyCapacity: 3,
+    prices: { 1: 99_000, 2: 189_000, 4: 299_000 },
+    desc: "홈 추천 카드 + 목록 상단 + 비슷한 공고 첫 칸",
+  },
+  PLUS: {
+    label: "플러스",
+    slots: { home: false, list: true, related: true },
+    weeklyCapacity: 2,
+    prices: { 1: 49_000, 2: 94_000, 4: 149_000 },
+    desc: "목록 상단 + 비슷한 공고 첫 칸",
+  },
+  BASIC: {
+    label: "기본",
+    slots: { home: false, list: false, related: true },
+    weeklyCapacity: null,
+    prices: { 1: 29_000, 2: 55_000, 4: 89_000 },
+    desc: "같은 지역 공고 상세의 비슷한 공고 첫 칸",
+  },
+} as const satisfies Record<string, ExposureProductDef>;
+export type ExposureProduct = keyof typeof EXPOSURE_PRODUCTS;
+
+/** 이 자리에 설 수 있는 등급 — 사다리 위부터. 목록 상단 로우가 스페셜 → 플러스로 서는 근거 */
+export function tiersForSlot(slot: ExposureSlot): ExposureProduct[] {
+  return (Object.keys(EXPOSURE_PRODUCTS) as ExposureProduct[]).filter(
+    (tier) => EXPOSURE_PRODUCTS[tier].slots[slot],
+  );
+}
+
+export function isExposureProduct(value: unknown): value is ExposureProduct {
+  return typeof value === "string" && value in EXPOSURE_PRODUCTS;
+}
+
+export function isExposureWeeks(value: unknown): value is ExposureWeeks {
+  return (EXPOSURE_WEEKS as readonly unknown[]).includes(value);
+}
+
+/** 노출 금액 — client·server가 같은 표를 읽는다(서버가 재계산해 위변조를 막는다) */
+export function exposurePrice(tier: ExposureProduct, weeks: ExposureWeeks): number {
+  return EXPOSURE_PRODUCTS[tier].prices[weeks];
+}
+
+// 자리 크기 — 홈 추천 카드 칸 수 · 공고 상세 "비슷한 공고" 장 수(첫 칸이 광고 자리).
+// 목록 상단 로우는 상수가 없다 — 등급별 주 정원(스페셜 3 + 플러스 2 = 최대 5줄)이 그대로 상한이다(`splitListAds`).
+export const HOME_AD_SLOTS = 3;
+export const SIMILAR_JOBS_COUNT = 6;
 
 // 노출 구매 원장(`job_promotions.status`)의 상태 — 결제 이력 한 줄이 지금 어떤 상태인가.
-// 원장은 append-only라 행을 지우지 않고 이 값을 바꾼다(DATA.md §3 `job_promotions`).
-// ⚠️ REFUNDED와 CANCELLED의 **경계는 아직 정하지 않았다** — 스키마 확정(2026-08-05) 때 세 값만
-//    정해졌다. 라벨은 어느 해석에도 참인 직역으로 두었다. 주문 저장(ROADMAP Phase 1)에서
-//    "적용 전 전액취소 vs 적용 후 일할환불"인지 "승인취소 vs 매입후환불"인지 정하고 여기 적는다
-//    — HERO 구좌 판정이 취소된 행을 세는지에 답이 달라진다.
+// 원장은 append-only라 행을 지우지 않고 이 값을 바꾼다(DATA.md §3 `job_promotions`). **정원 판정은 PAID만 센다.**
+// 환불 정책(확정 2026-09-03 · 약관 제10조와 한 쌍):
+//   CANCELLED — **게재 시작 전** 취소. 전액 환불. 주 단위 상품이라 일할 계산은 없다.
+//   REFUNDED  — 게재 시작 뒤 운영자가 예외로 환불한 것. 기본은 환불 없음(시작 뒤에는 남은 기간을 소진한다).
 export const PROMOTION_STATUSES = {
   PAID: "결제완료",
   REFUNDED: "환불",
   CANCELLED: "취소",
 } as const;
 export type PromotionStatus = keyof typeof PROMOTION_STATUSES;
-
-// 노출 금액 계산 — 4주는 묶음가, 그 외는 주 단가 × 주수. (client·server 동일 계산 → 위변조 검증)
-export function exposurePrice(tier: ExposureProduct, weeks: number): number {
-  const p = EXPOSURE_PRODUCTS[tier];
-  return weeks === 4 ? p.bundle4 : p.weekly * weeks;
-}
 
 // 공고 출처 — 운영자가 수집·등록 / 교회가 직접 등록 (공고 owner nullable 가드레일)
 export const JOB_SOURCES = {

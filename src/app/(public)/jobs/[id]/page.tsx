@@ -44,7 +44,7 @@ async function JobDetailContent({ params }: Params) {
   const church = detail.churchRef;
   // 미claim 공고는 묶어줄 교회가 없다 — "이 교회 다른 모집" 조회 자체를 건너뛴다
   const churchJobs = church.id ? await getChurchOpenJobs(church.id, id) : [];
-  const similar = await getSimilarJobs(id, 6);
+  const similar = await getSimilarJobs(id);
   // 지역 미상이면 `""`가 아니라 **undefined**를 넘긴다 — 소비처가 `location ?? subtitle`로 폴백하는데
   // `""`는 nullish가 아니라 폴백을 막고(교회명이 가려짐), `&&` 가드엔 falsy로 걸려 줄이 통째로 사라진다.
   const location = churchLocation(church) || undefined;

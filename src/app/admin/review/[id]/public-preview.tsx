@@ -70,7 +70,7 @@ export function PublicPreview({
         <h3 className="text-xs font-bold text-muted-foreground">목록 카드</h3>
         {/* 미리보기는 링크가 아니다 — 누르면 없는 공고로 간다(검수 id는 공고 id가 아니다) */}
         <div className="pointer-events-none mt-1.5 max-w-md">
-          <JobCard job={job} />
+          <JobCard job={job} preview />
         </div>
       </div>
 

@@ -49,7 +49,7 @@ const MOBILE_VIEWPORT = 390;
  * 틀 높이는 **탭이 정한다** — 목록 카드는 한 장이라 짧고, 상세는 한 페이지다.
  * ⚠️ 하나로 고정하면 목록 탭에서 카드가 빈 공간을 다 차지한다(`JobCard`가 `h-full`이다).
  */
-const HEIGHTS: Record<Tab, number> = { list: 210, detail: 620 };
+const HEIGHTS: Record<Tab, number> = { list: 236, detail: 620 };
 
 export function JobPreview({
   draft,
@@ -114,7 +114,7 @@ export function JobPreview({
             <DeviceFrame viewport={MOBILE_VIEWPORT} height={HEIGHTS[tab]}>
               {tab === "list" ? (
                 <div className="p-3">
-                  <JobCard job={card} />
+                  <JobCard job={card} preview />
                 </div>
               ) : (
                 // 비슷한 공고·교회 지난 공고는 아직 없는 공고라 빈 배열이다(그 구획이 스스로 빠진다)

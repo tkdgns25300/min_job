@@ -13,6 +13,7 @@ import {
   EXPOSURE_WEEKS,
   exposurePrice,
   type ExposureProduct,
+  type ExposureWeeks,
 } from "@/constants/domain";
 
 // PortOne 공개 값 — **실연동 채널**("MinJob NHN KCP" kcp_v2). 카드가 실제로 청구된다.
@@ -29,8 +30,8 @@ const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
 export function PromoteCheckout({ jobs, payerEmail }: { jobs: JobOption[]; payerEmail: string }) {
   const [jobId, setJobId] = useState(jobs[0]?.id ?? "");
-  const [tier, setTier] = useState<ExposureProduct>("PREMIUM");
-  const [weeks, setWeeks] = useState<number>(1);
+  const [tier, setTier] = useState<ExposureProduct>("PLUS");
+  const [weeks, setWeeks] = useState<ExposureWeeks>(1);
   const [agreed, setAgreed] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -207,7 +208,7 @@ export function PromoteCheckout({ jobs, payerEmail }: { jobs: JobOption[]; payer
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="text-[15px] font-bold">{p.label}</span>
                     <span className="text-[15px] font-bold text-gold-ink">
-                      주 {formatExposurePrice(p.weekly)}
+                      주 {formatExposurePrice(p.prices[1])}
                     </span>
                   </span>
                   <span className="mt-0.5 block text-xs break-keep text-muted-foreground">
@@ -240,9 +241,11 @@ export function PromoteCheckout({ jobs, payerEmail }: { jobs: JobOption[]; payer
                 )}
               >
                 {w}주
-                {w === 4 && (
-                  <span className="block text-[11px] font-medium opacity-80">묶음 할인</span>
-                )}
+                {w > 1 ? (
+                  <span className="block text-[11px] font-medium opacity-80">
+                    {formatExposurePrice(exposurePrice(tier, w))}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -314,7 +317,7 @@ export function PromoteCheckout({ jobs, payerEmail }: { jobs: JobOption[]; payer
             드려요.
           </p>
           <p>
-            <b>노출 적용 전에는 전액 환불</b>, 적용 후에는 남은 기간만큼 일할 환불해 드려요.{" "}
+            <b>게재 시작 전에는 전액 환불</b>, 게재가 시작된 뒤에는 환불되지 않아요.{" "}
             <a href={contactMailto("노출 결제 취소·환불 문의")} className="underline">
               취소·환불 문의
             </a>

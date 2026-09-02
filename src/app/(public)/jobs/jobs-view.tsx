@@ -14,7 +14,7 @@ import { RecentlyViewed } from "@/components/job/recently-viewed";
 import { ChurchCtaCard } from "@/components/job/church-cta-card";
 import { cn } from "@/lib/utils";
 import type { JobCard as JobCardData } from "@/types/domain";
-import { filterAndSortJobs } from "./filter-jobs";
+import { filterAndSortJobs, splitListAds } from "./filter-jobs";
 import {
   buildJobsQuery,
   emptySelected,
@@ -91,10 +91,13 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
     [jobs, q, selected, payMin, payMax, includeNego, housingOnly],
   );
 
-  const total = filtered.length;
+  // 광고 로우는 결과 수·페이지 계산에 들어가지 않는다 — 1페이지 맨 위에 최대 5줄 따로 선다(SPEC 수익화 절)
+  const { ads, rest } = useMemo(() => splitListAds(filtered), [filtered]);
+  const total = rest.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageItems = rest.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const adRows = currentPage === 1 ? ads : [];
 
   // 활성 필터 수 — 모바일 트리거 배지 + 빈 상태 초기화 버튼 노출 판단
   const activeFilterCount =
@@ -168,7 +171,8 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
             </div>
           </aside>
 
-          {/* 목록 — 대표광고 최상단 통합 → 프리미엄 상단 고정 → 일반 */}
+          {/* 목록 — 1페이지 맨 위 광고 로우(스페셜 → 플러스, 필터 통과분만) → 일반 최신순. 한 상자에 이어진다 —
+              광고를 별도 상자로 떼면 상단 광고 밴드로 읽힌다(2026-08 폐기). 경계는 로우의 "광고" 텍스트가 말한다 */}
           <div className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-y-2 border-b pb-2">
               <p className="text-sm text-muted-foreground">
@@ -214,8 +218,11 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
               onReset={filterProps.onReset}
             />
 
-            {pageItems.length > 0 ? (
+            {adRows.length + pageItems.length > 0 ? (
               <div className="divide-y divide-border overflow-hidden rounded-xl border bg-card">
+                {adRows.map((job) => (
+                  <JobRow key={job.id} job={job} ad />
+                ))}
                 {pageItems.map((job) => (
                   <JobRow key={job.id} job={job} />
                 ))}

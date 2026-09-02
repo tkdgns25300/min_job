@@ -19,7 +19,14 @@ import {
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { APPLY_METHODS, EMPLOYMENT_TYPES } from "@/constants/domain";
-import type { Church, Job, JobCard as JobCardData, JobChurchRef, JobDetail } from "@/types/domain";
+import type {
+  Church,
+  Job,
+  JobCard as JobCardData,
+  JobChurchRef,
+  JobDetail,
+  PlacedJob,
+} from "@/types/domain";
 
 const externalLinkAttrs = { target: "_blank", rel: "noopener noreferrer" } as const;
 
@@ -460,7 +467,8 @@ function SummaryAside({
 // 페이지에서 유일한 구분선 + 큰 여백이 "여기서 공고가 끝난다"를 말하고(본문은 여백형이라 선이 없다),
 // 제목은 본문 구획보다 한 단계 크며 "더 보기"는 제목 줄 끝에 둔다 — 한때 제목 크기가 본문 구획과 같아서
 // 이 공고의 아홉 번째 구획처럼 읽혔다.
-function SimilarJobsSection({ jobs, moreHref }: { jobs: JobCardData[]; moreHref: string }) {
+// 첫 칸은 광고 자리다(`PlacedJob.ad`) — 카드 모양은 같고 회색 "광고" 텍스트만 다르다(SPEC 수익화 절).
+function SimilarJobsSection({ jobs, moreHref }: { jobs: PlacedJob[]; moreHref: string }) {
   return (
     <section id="similar-jobs" className="mt-12 scroll-mt-20 border-t pt-10">
       <div className="flex items-baseline justify-between gap-3">
@@ -473,8 +481,8 @@ function SimilarJobsSection({ jobs, moreHref }: { jobs: JobCardData[]; moreHref:
         </Link>
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {jobs.map((sj) => (
-          <JobCard key={sj.id} job={sj} />
+        {jobs.map(({ job, ad }) => (
+          <JobCard key={job.id} job={job} ad={ad} />
         ))}
       </div>
     </section>
@@ -511,7 +519,7 @@ export function JobDetailView({
 }: {
   detail: JobDetail;
   churchJobs: JobCardData[];
-  similar: JobCardData[];
+  similar: PlacedJob[];
   /** 등록 폼의 미리보기(`JobPreview`) — 아직 없는 공고라 저장·공유 버튼을 끈다 */
   preview?: boolean;
 }) {

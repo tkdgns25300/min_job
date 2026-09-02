@@ -43,6 +43,7 @@ const CARD_FIELDS = [
   "city",
   "address",
   "title",
+  "job_kind",
   "position",
   "role",
   "department",
@@ -97,6 +98,7 @@ export type JobCardFields = Pick<
   | "city"
   | "address"
   | "title"
+  | "jobKind"
   | "position"
   | "role"
   | "department"
@@ -125,6 +127,8 @@ export function toJobCardFields(row: JobCardRow): JobCardFields {
     city: row.city,
     address: row.address,
     title: row.title,
+    // 카드가 그리지는 않지만 카드 컬럼에 둔다 — "비슷한 공고"의 문(사역직/일반직 같음)이 이 값을 본다
+    jobKind: keysOf(JOB_KINDS, row.job_kind),
     position: keysOf(POSITIONS, row.position ?? []),
     role: row.role,
     department: keyOf(DEPARTMENTS, row.department),
@@ -212,7 +216,6 @@ export function toCard(entry: CardEntry, today: string): JobCard {
 export function toJob(row: Tables<"jobs">): Job {
   return {
     ...toJobCardFields(row),
-    jobKind: keysOf(JOB_KINDS, row.job_kind),
     headcount: row.headcount,
     startTiming: row.start_timing,
     housingNote: row.housing_note,

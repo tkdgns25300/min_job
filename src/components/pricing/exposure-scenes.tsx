@@ -3,9 +3,11 @@ import { SITE_DOMAIN } from "@/constants/site";
 
 // /pricing 노출 미리보기의 "장면" — 실제 페이지 주요 섹션을 담은 근사(마케팅 일러스트).
 // 인터랙션 없는 순수 프레젠테이션. 셸(캐러셀·모달)은 exposure-preview.tsx.
+// 자리 셋(홈 추천 카드 · 목록 상단 로우 · 비슷한 공고 첫 칸)을 **실제 컴포넌트와 같은 모양**으로 그린다 —
+// 카드·로우 모양, 회색 "광고" 텍스트 하나. 등급명·틴트는 실제 화면에 없으니 여기도 없다(2026-09-03).
 
 export type Device = "mobile" | "pc";
-export type Group = "premium" | "hero";
+export type Group = "basic" | "plus" | "special";
 export type Scene = { cap: string; node: ReactNode };
 
 export const DEVICE: Record<Device, { w: number; label: string }> = {
@@ -14,15 +16,16 @@ export const DEVICE: Record<Device, { w: number; label: string }> = {
 };
 
 export const GROUP_TITLE: Record<Group, string> = {
-  premium: "프리미엄 노출 미리보기",
-  hero: "대표광고 노출 미리보기",
+  basic: "기본 노출 미리보기",
+  plus: "플러스 노출 미리보기",
+  special: "스페셜 노출 미리보기",
 };
 
 // ---------- 장면 primitives ----------
 function Chrome({ device, url, children }: { device: Device; url: string; children: ReactNode }) {
   return (
     <div
-      className="overflow-hidden rounded-xl border border-border bg-[#f4f6f5]"
+      className="overflow-hidden rounded-xl border border-border bg-white text-left"
       style={{ width: DEVICE[device].w }}
     >
       <div className="flex items-center gap-2 border-b border-black/10 bg-white px-3 py-1.5">
@@ -47,45 +50,64 @@ function Chrome({ device, url, children }: { device: Device; url: string; childr
   );
 }
 
-function Card({
-  church,
-  title,
-  role,
-  pay,
-  tag,
-  variant = "plain",
-}: {
-  church: string;
+interface Posting {
   title: string;
+  meta: string;
   role?: string;
-  pay?: string;
-  tag?: "광고" | "대표광고";
-  variant?: "plain" | "ad" | "top";
-}) {
-  const border =
-    variant === "top"
-      ? "border-[1.5px] border-gold bg-[#fffdf5]"
-      : variant === "ad"
-        ? "border-primary/50 bg-[#fbfdfc] ring-1 ring-primary/10"
-        : "border-border bg-white";
+  pay: string;
+  time: string;
+}
+
+const AdText = () => <span className="text-[9px] font-medium text-muted-foreground">광고</span>;
+const BookmarkGlyph = () => <span className="text-[11px] text-neutral-300">▢</span>;
+
+// 홈 추천 카드·비슷한 공고 카드 — `components/job/job-card`의 축소판
+function MiniCard({ posting, ad = false }: { posting: Posting; ad?: boolean }) {
   return (
-    <div className={`rounded-[10px] border p-2.5 ${border}`}>
-      <div className="text-[10.5px] text-muted-foreground">{church}</div>
-      <div className="mt-0.5 text-[13px] leading-snug font-extrabold break-keep">
-        {title}
-        {tag && (
-          <span
-            className={`ml-1.5 rounded-[5px] px-1.5 py-px align-middle text-[9px] font-extrabold ${
-              tag === "대표광고" ? "bg-gold/30 text-gold-ink" : "bg-primary/15 text-primary"
-            }`}
-          >
-            {tag}
-          </span>
-        )}
+    <div className="flex flex-col gap-1 rounded-[10px] border border-border bg-white p-2.5">
+      <div className="flex min-h-3 items-center justify-between">
+        {ad ? <AdText /> : <span />}
+        <BookmarkGlyph />
       </div>
-      {role && <div className="mt-0.5 text-[11px] text-muted-foreground">{role}</div>}
-      {pay && <div className="mt-1.5 text-[12.5px] font-extrabold text-primary">{pay}</div>}
+      <div className="text-[12px] leading-snug font-bold break-keep">{posting.title}</div>
+      <div className="text-[10px] text-muted-foreground">{posting.meta}</div>
+      {posting.role ? (
+        <div className="text-[10px] text-muted-foreground">{posting.role}</div>
+      ) : null}
+      <div className="mt-1 flex items-center justify-between border-t border-border pt-1.5">
+        <span className="text-[11px] font-bold text-primary">{posting.pay}</span>
+        <span className="text-[9px] text-muted-foreground">{posting.time}</span>
+      </div>
     </div>
+  );
+}
+
+// 목록 로우 — `components/job/job-row`의 축소판
+function Row({ posting, ad = false }: { posting: Posting; ad?: boolean }) {
+  return (
+    <div className="flex items-center gap-3 border-t border-border px-3 py-2.5 first:border-t-0">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate text-[12px] font-bold">{posting.title}</span>
+          {ad ? <AdText /> : null}
+        </div>
+        <div className="mt-0.5 text-[10px] text-muted-foreground">{posting.meta}</div>
+        {posting.role ? (
+          <div className="text-[10px] text-muted-foreground">{posting.role}</div>
+        ) : null}
+      </div>
+      <div className="shrink-0 text-right">
+        <div className="text-[11px] font-bold text-primary">{posting.pay}</div>
+        <div className="text-[9px] text-muted-foreground">{posting.time}</div>
+      </div>
+      <BookmarkGlyph />
+    </div>
+  );
+}
+
+function ListBox({ children }: { children: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-[10px] border border-border bg-white">{children}</div>
   );
 }
 
@@ -100,7 +122,7 @@ function SearchPill({ text }: { text: string }) {
   );
 }
 // 실제 /jobs 툴바를 축소 재현 — 정렬 선택은 없다(최신순 고정, SPEC 정렬·필터 규칙).
-// 여기서 없는 UI를 그리면 교회가 보는 미리보기와 실제 화면이 어긋난다.
+// 총 건수는 광고 로우를 빼고 센다(실제 화면과 같게).
 function Toolbar({ total }: { total: number }) {
   return (
     <div className="flex items-center justify-between px-3.5 py-2 text-[10.5px] text-muted-foreground">
@@ -123,10 +145,8 @@ function Chips({ items }: { items: string[] }) {
     </div>
   );
 }
-function SectionLabel({ children }: { children: ReactNode }) {
-  return (
-    <div className="mt-3 mb-1 text-[10px] font-extrabold text-muted-foreground">{children}</div>
-  );
+function SectionTitle({ children }: { children: ReactNode }) {
+  return <div className="mb-1.5 text-[12px] font-bold">{children}</div>;
 }
 function Pager() {
   return (
@@ -143,248 +163,162 @@ function Pager() {
 
 const FILTERS = ["지역 ▾", "교단 ▾", "직분 ▾", "부서 ▾", "자격 ▾", "사택 ▾"];
 
+// 가상 공고 — 실제 교회가 아니다(마케팅 일러스트). 광고 자리에 서는 것은 `mine`.
+const mine: Posting = {
+  title: "새벽빛교회에서 청년부 전도사를 모십니다",
+  meta: "경기 수원시 · 새벽빛교회 · 예장백석",
+  role: "전도사 · 청년부 · 전임",
+  pay: "월 210만원",
+  time: "오늘",
+};
+const others: Posting[] = [
+  {
+    title: "동산교회 유초등부 전도사 청빙",
+    meta: "서울 관악구 · 동산교회 · 예장합동",
+    role: "전도사 · 유초등부",
+    pay: "월 220만원",
+    time: "어제",
+  },
+  {
+    title: "은혜교회에서 교구 담당 부목사님을 모십니다",
+    meta: "인천 · 은혜교회 · 예장통합",
+    role: "부목사 · 장년·교구 · 전임",
+    pay: "월 295만원",
+    time: "2일 전",
+  },
+  {
+    title: "주안에교회 중고등부 전도사 모집",
+    meta: "경기 용인시 · 주안에교회 · 예장통합",
+    role: "전도사 · 중고등부",
+    pay: "월 230만원",
+    time: "3일 전",
+  },
+  {
+    title: "한빛교회 찬양 사역자를 찾습니다",
+    meta: "경기 성남시 · 한빛교회 · 예장합동",
+    role: "찬양·예배",
+    pay: "협의",
+    time: "3일 전",
+  },
+  {
+    title: "빛된교회 유년부 전도사 청빙",
+    meta: "경기 수원시 · 빛된교회 · 예장합동",
+    role: "전도사 · 유초등부 · 파트",
+    pay: "월 120만원",
+    time: "4일 전",
+  },
+];
+
 // ---------- 장면들 (페이지 전체 섹션, footer 제외) ----------
 export function buildScenes(device: Device): Record<Group, Scene[]> {
   const isPc = device === "pc";
-  const grid = isPc ? "grid-cols-2" : "grid-cols-1";
-  const premiumAd = (
-    <Card
-      church="새벽빛교회 · 예장백석 · 경기 수원"
-      title="청년부 전도사 청빙"
-      role="전도사 · 청년부 · 전임"
-      pay="월 210만원"
-      tag="광고"
-      variant="ad"
-    />
-  );
-  const normalCards = (
-    <>
-      <Card
-        church="동산교회 · 예장합동 · 서울 관악"
-        title="유초등부 전도사"
-        role="전도사 · 유초등부"
-        pay="월 220만원"
-      />
-      <Card
-        church="은혜교회 · 예장통합 · 인천"
-        title="교구 담당 부목사"
-        role="부목사 · 장년·교구"
-        pay="월 295만원"
-      />
-      <Card
-        church="주안에교회 · 예장통합 · 경기 용인"
-        title="중고등부 전도사"
-        role="전도사 · 중고등부"
-        pay="월 230만원"
-      />
-      <Card
-        church="한빛교회 · 예장합동 · 경기 성남"
-        title="찬양 사역자"
-        role="전도사 · 찬양"
-        pay="월 210만원"
-      />
-    </>
-  );
+  const cardGrid = isPc ? "grid-cols-3" : "grid-cols-1";
 
-  const premium: Scene[] = [
-    {
-      cap: "공고 목록 페이지 — 상단 고정",
-      node: (
-        <Chrome device={device} url={`/jobs`}>
-          <Band>
-            <div className="text-[15px] font-extrabold">사역자 청빙 공고</div>
-            <div className="mt-0.5 mb-2 text-[11px] font-bold text-primary">모집 중 74건</div>
-            <SearchPill text="지역·교단·직분으로 검색" />
-          </Band>
-          <Chips items={FILTERS} />
-          <Toolbar total={61} />
-          <div className={`grid gap-2 px-3.5 ${grid}`}>
-            {premiumAd}
-            {normalCards}
+  // 비슷한 공고 첫 칸 — 세 등급 모두 걸리는 자리(기본은 이것 하나)
+  const related: Scene = {
+    cap: "공고 상세 — 하단 ‘비슷한 공고’ 첫 칸",
+    node: (
+      <Chrome device={device} url="/jobs/…">
+        <div className="p-3.5">
+          <div className="text-[10.5px] text-muted-foreground">
+            경기 수원시 · 새소망교회 · 예장합동
           </div>
-          <Pager />
-        </Chrome>
-      ),
-    },
-    {
-      cap: "검색 결과 페이지 — 상단",
-      node: (
-        <Chrome device={device} url={`/jobs`}>
-          <Band>
-            <SearchPill text="수원 전도사" />
-            <div className="mt-2 text-[11px] font-bold text-primary">검색결과 3건</div>
-          </Band>
-          <Chips items={["경기 수원 ✕", "전도사 ✕"]} />
-          <Toolbar total={7} />
-          <div className={`grid gap-2 px-3.5 pb-4 ${grid}`}>
-            {premiumAd}
-            <Card
-              church="빛된교회 · 예장합동 · 경기 수원"
-              title="수원 유년부 전도사"
-              role="전도사 · 유년부"
-              pay="월 200만원"
-            />
-            <Card
-              church="수원제일교회 · 예장통합 · 경기 수원"
-              title="장년부 부목사"
-              role="부목사 · 장년"
-              pay="월 300만원"
-            />
+          <div className="mt-1 text-[16px] font-extrabold">교육부 전도사 청빙</div>
+          <div className="mt-1.5 text-[10.5px] text-muted-foreground">전도사 · 교육부 · 전임</div>
+          <div className="mt-3 space-y-1 text-[11px] text-muted-foreground">
+            <div>사례비 · 월 220만원</div>
+            <div>출근 · 주일·수요</div>
+            <div>지원 · 교회 공개 접수처로 안내</div>
           </div>
-        </Chrome>
-      ),
-    },
-    {
-      cap: "공고 상세 페이지 — 하단 ‘비슷한 공고’",
-      node: (
-        <Chrome device={device} url={`/jobs/job-021`}>
-          <div className={`p-3.5 ${isPc ? "grid grid-cols-[1.6fr_1fr] gap-3" : ""}`}>
-            <div>
-              <div className="text-[10.5px] text-muted-foreground">
-                새소망교회 · 예장합동 · 경기 성남
-              </div>
-              <div className="mt-1 text-[16px] font-extrabold">교육부 전도사 청빙</div>
-              <div className="mt-1.5 flex flex-wrap gap-1 text-[10px] text-muted-foreground">
-                <span className="rounded bg-[#eef0ef] px-1.5 py-0.5">전도사</span>
-                <span className="rounded bg-[#eef0ef] px-1.5 py-0.5">교육부</span>
-                <span className="rounded bg-[#eef0ef] px-1.5 py-0.5">전임</span>
-              </div>
-              <SectionLabel>모집 조건</SectionLabel>
-              <div className="space-y-1 text-[11px] text-muted-foreground">
-                <div>사례비 · 월 220만원</div>
-                <div>출근 · 주일·수요</div>
-                <div>자격 · 교육 전도사 우대</div>
-              </div>
-              <SectionLabel>지원 방법</SectionLabel>
-              <div className="rounded-[8px] border border-border bg-white p-2 text-[10.5px] text-muted-foreground">
-                교회 공개 접수처로 안내 · 원문 링크
-              </div>
-            </div>
-            {isPc && (
-              <div className="rounded-[10px] border border-border bg-white p-3">
-                <div className="rounded-[8px] bg-primary py-2 text-center text-[11px] font-bold text-white">
-                  지원하기
-                </div>
-                <div className="mt-2 space-y-1 text-[10.5px] text-muted-foreground">
-                  <div>사례비 · 월 220만원</div>
-                  <div>마감 · 상시</div>
-                  <div>고용 · 전임</div>
-                </div>
-              </div>
-            )}
+        </div>
+        <div className="mx-3.5 border-t border-border pt-3 pb-4">
+          <div className="flex items-baseline justify-between">
+            <SectionTitle>비슷한 공고</SectionTitle>
+            <span className="text-[10px] font-semibold text-primary underline">더 보기 →</span>
           </div>
-          <div className="px-3.5 pb-4">
-            <SectionLabel>비슷한 공고</SectionLabel>
-            <div className={`grid gap-2 ${isPc ? "grid-cols-3" : "grid-cols-2"}`}>
-              <Card church="새벽빛교회 · 경기 수원" title="청년부 전도사" tag="광고" variant="ad" />
-              <Card church="경기 용인" title="중고등부 전도사" />
-              <Card church="서울 관악" title="유초등부 전도사" />
-              <Card church="경기 성남" title="영아부 전도사" />
-            </div>
+          <div className={`grid gap-2 ${cardGrid}`}>
+            <MiniCard posting={mine} ad />
+            {others.slice(0, isPc ? 5 : 2).map((p) => (
+              <MiniCard key={p.title} posting={p} />
+            ))}
           </div>
-        </Chrome>
-      ),
-    },
-  ];
+        </div>
+      </Chrome>
+    ),
+  };
 
-  const hero: Scene[] = [
-    {
-      cap: "홈 화면 — 대표 배너",
-      node: (
-        <Chrome device={device} url={SITE_DOMAIN}>
+  // 목록 1페이지 맨 위 로우 — 플러스·스페셜
+  const list: Scene = {
+    cap: "공고 목록 — 1페이지 맨 위 광고 로우",
+    node: (
+      <Chrome device={device} url="/jobs">
+        <Band>
+          <div className="text-[15px] font-extrabold">사역자 청빙</div>
+          <div className="mt-0.5 mb-2 text-[11px] font-bold text-primary">지금 모집 중 889건</div>
+          <SearchPill text="교회명 · 공고 제목 · 지역 · 직분 검색" />
+        </Band>
+        <Chips items={FILTERS} />
+        <Toolbar total={887} />
+        <div className="px-3.5">
+          <ListBox>
+            <Row posting={mine} ad />
+            <Row posting={others[4]} ad />
+            {others.slice(0, isPc ? 4 : 3).map((p) => (
+              <Row key={p.title} posting={p} />
+            ))}
+          </ListBox>
+        </div>
+        <Pager />
+      </Chrome>
+    ),
+  };
+
+  // 홈 추천 청빙 3칸 — 스페셜만
+  const home: Scene = {
+    cap: "홈 — 첫 화면 ‘추천 청빙’ 카드",
+    node: (
+      <Chrome device={device} url={SITE_DOMAIN}>
+        <div
+          className="bg-hero px-4 py-6 text-center text-white"
+          style={isPc ? { paddingTop: 40, paddingBottom: 40 } : undefined}
+        >
+          <div className="text-[9.5px] font-bold text-gold">한국교회 사역자 청빙 플랫폼</div>
           <div
-            className="bg-hero px-4 py-6 text-center text-white"
-            style={isPc ? { paddingTop: 44, paddingBottom: 44 } : undefined}
+            className={`mt-1.5 font-extrabold leading-tight ${isPc ? "text-[26px]" : "text-[17px]"}`}
           >
-            <div className="text-[9.5px] font-bold text-gold">한국교회 사역자 청빙 플랫폼</div>
-            <div
-              className={`mt-1.5 font-extrabold leading-tight ${isPc ? "text-[26px]" : "text-[17px]"}`}
-            >
-              다음 사역지, 여기에서 찾으세요
-            </div>
-            <div
-              className={`mx-auto mt-3 rounded-full bg-white px-3 py-2 text-left text-[10.5px] text-muted-foreground ${isPc ? "max-w-[440px]" : ""}`}
-            >
-              🔍 지역·교단·직분으로 검색
-            </div>
-            <div className="mt-4 flex justify-center gap-5 text-[10px] text-white/70">
-              <span>
-                <b className="text-[13px] text-white">74</b> 모집 중
-              </span>
-              <span>
-                <b className="text-[13px] text-white">12</b> 이번 주 새 공고
-              </span>
-              <span>
-                <b className="text-[13px] text-white">35</b> 교회
-              </span>
-            </div>
+            다음 사역지, 여기에서 찾으세요
           </div>
-          <div className="p-3.5">
-            <div className="rounded-[11px] bg-gradient-to-br from-brand-700 to-brand-900 p-3.5 text-white">
-              <div className="text-[9px] font-extrabold text-gold">대표광고</div>
-              <div className="mt-0.5 text-[13px] font-extrabold">
-                청년부 전도사 청빙 · 새벽빛교회
-              </div>
-              <div className="mt-0.5 text-[10px] text-white/70">경기 수원 · 전임 · 월 210만원</div>
-            </div>
-            <SectionLabel>추천 공고</SectionLabel>
-            <div className={`grid gap-2 ${grid}`}>
-              <Card
-                church="빛된교회 · 경기 수원"
-                title="장년부 부목사"
-                role="프리미엄"
-                pay="월 300만원"
-                tag="광고"
-                variant="ad"
-              />
-              <Card church="한빛교회 · 경기 성남" title="찬양 사역자" pay="월 210만원" />
-            </div>
-            <SectionLabel>최신 공고</SectionLabel>
-            <div className={`grid gap-2 ${grid}`}>
-              <Card church="동산교회 · 서울 관악" title="유초등부 전도사" pay="월 220만원" />
-              <Card church="은혜교회 · 인천" title="교구 담당 부목사" pay="월 295만원" />
-            </div>
+          <div
+            className={`mx-auto mt-3 rounded-full bg-white px-3 py-2 text-left text-[10.5px] text-muted-foreground ${isPc ? "max-w-[440px]" : ""}`}
+          >
+            🔍 지역·교단·직분으로 검색
           </div>
-        </Chrome>
-      ),
-    },
-    {
-      cap: "공고 목록 페이지 — 맨 위 대표 슬롯",
-      node: (
-        <Chrome device={device} url={`/jobs`}>
-          <Band>
-            <div className="text-[15px] font-extrabold">사역자 청빙 공고</div>
-            <div className="mt-0.5 mb-2 text-[11px] font-bold text-primary">모집 중 74건</div>
-            <SearchPill text="지역·교단·직분으로 검색" />
-          </Band>
-          <Chips items={FILTERS} />
-          <Toolbar total={61} />
-          <div className="px-3.5">
-            <Card
-              church="새벽빛교회 · 예장백석 · 경기 수원"
-              title="청년부 전도사 청빙"
-              role="전도사 · 청년부 · 전임"
-              pay="월 210만원"
-              tag="대표광고"
-              variant="top"
-            />
+        </div>
+        <div className="p-3.5">
+          <SectionTitle>추천 청빙</SectionTitle>
+          <div className={`grid gap-2 ${cardGrid}`}>
+            <MiniCard posting={mine} ad />
+            {isPc ? (
+              <>
+                <MiniCard posting={others[1]} ad />
+                <MiniCard posting={others[2]} ad />
+              </>
+            ) : null}
           </div>
-          <div className={`grid gap-2 px-3.5 pt-2 ${grid}`}>
-            <Card
-              church="동산교회 · 서울 관악"
-              title="유초등부 전도사"
-              role="프리미엄"
-              pay="월 220만원"
-              tag="광고"
-              variant="ad"
-            />
-            {normalCards}
+          <div className="mt-4 flex items-baseline justify-between">
+            <SectionTitle>청빙 공고</SectionTitle>
+            <span className="text-[10px] text-muted-foreground">전체 공고 보기 →</span>
           </div>
-          <Pager />
-        </Chrome>
-      ),
-    },
-  ];
+          <ListBox>
+            {others.slice(0, isPc ? 3 : 2).map((p) => (
+              <Row key={p.title} posting={p} />
+            ))}
+          </ListBox>
+        </div>
+      </Chrome>
+    ),
+  };
 
-  return { premium, hero };
+  // 등급별 장면 = 그 등급이 걸리는 자리(SPEC 수익화 절): 기본 1 · 플러스 2 · 스페셜 3
+  return { basic: [related], plus: [list, related], special: [home, list, related] };
 }

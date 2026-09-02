@@ -2,9 +2,11 @@ import {
   DENOMINATIONS,
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
+  EXPOSURE_PRODUCTS,
   POSITIONS,
   QUALIFICATIONS,
   REGIONS,
+  tiersForSlot,
   type PayPeriod,
 } from "@/constants/domain";
 import { normalizeChurchName } from "@/lib/job-church";
@@ -12,8 +14,6 @@ import type { FilterDim, JobCard } from "@/types/domain";
 
 // 클라이언트 필터/정렬 (순수 함수) — `/jobs`는 서버가 전체 카드를 한 번 내리고 여기서 다 거른다.
 // 실제 데이터 연동 시 이 로직은 lib/queries의 서버 쿼리로 이전한다.
-
-const TIER_RANK = { HERO: 0, PREMIUM: 1, NONE: 2 } as const;
 
 const MONTHS_PER_YEAR = 12;
 
@@ -93,11 +93,29 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
     return true;
   });
 
-  // 노출 등급(대표광고 → 프리미엄 → 일반) 먼저, 그 안에서 최신순.
-  // 등급은 정렬 옵션이 아니라 **유료 상품의 근거**라 사용자가 바꿀 수 없다(SPEC 정렬·필터 규칙).
-  result.sort((a, b) => {
-    const tier = TIER_RANK[a.featuredTier] - TIER_RANK[b.featuredTier];
-    return tier !== 0 ? tier : b.postedAt.localeCompare(a.postedAt);
-  });
+  // 순수 최신순 — 사용자가 고르는 정렬축은 없다(SPEC 정렬·필터 규칙). 유료 노출은 정렬이 아니라
+  // **자리**다(`splitListAds`) — 한때 등급이 정렬 1차 키였는데 정원 없이 정렬로 올리면 팔릴수록 목록이
+  // 광고판이 되어 폐기했다(2026-09-02).
+  result.sort((a, b) => b.postedAt.localeCompare(a.postedAt));
   return result;
+}
+
+/**
+ * 1페이지 맨 위 광고 로우 — **필터를 통과한 결과 중** 목록 자리를 가진 등급을 사다리 순(스페셜 → 플러스)으로,
+ * 등급마다 **주 정원까지만**(스페셜 3·플러스 2 = 최대 5줄). 정원이 상한인 이유: 스페셜이 여섯이면 플러스가
+ * 자기가 산 자리를 못 받는다 — 한 등급이 다른 등급의 줄을 먹지 않게 등급별로 자른다.
+ * 사용자가 건 필터에 걸리지 않는 광고는 서지 않는다(그 화면의 결과에 원래 들어갈 공고만 광고가 된다).
+ * `rest`가 일반 목록이고 "총 N건"은 `rest`만 센다 — 광고는 결과 수에 들어가지 않는다(SPEC 수익화 절).
+ * **결과가 없으면 자리도 없다** — 광고는 결과 위에 서는 자리라, 필터에 광고 공고만 남으면 그건 광고가 아니라
+ * 결과다(라벨 없이 `rest`로 간다). 안 그러면 "총 0건" 아래에 로우가 서는 자기모순이 난다.
+ * 입력은 `filterAndSortJobs`의 결과(최신순)라 같은 등급 안에서는 최신순이 유지된다.
+ */
+export function splitListAds(jobs: JobCard[]): { ads: JobCard[]; rest: JobCard[] } {
+  const ads = tiersForSlot("list").flatMap((tier) => {
+    const capacity = EXPOSURE_PRODUCTS[tier].weeklyCapacity ?? jobs.length;
+    return jobs.filter((job) => job.featuredTier === tier).slice(0, capacity);
+  });
+  const adIds = new Set(ads.map((job) => job.id));
+  const rest = jobs.filter((job) => !adIds.has(job.id));
+  return rest.length === 0 ? { ads: [], rest: jobs } : { ads, rest };
 }

@@ -3,24 +3,89 @@ import Link from "next/link";
 import { getCoverageStats } from "@/lib/queries/jobs";
 import { PreviewButton } from "@/components/pricing/exposure-preview";
 import { BUSINESS_INFO, contactMailto } from "@/constants/business";
-import { EXPOSURE_PRODUCTS, type ExposureProduct } from "@/constants/domain";
+import {
+  EXPOSURE_PRODUCTS,
+  EXPOSURE_SLOTS,
+  exposurePrice,
+  type ExposureProduct,
+  type ExposureSlot,
+  type ExposureWeeks,
+} from "@/constants/domain";
 import { formatExposurePrice } from "@/lib/format";
+import type { Group } from "@/components/pricing/exposure-scenes";
 
 // 가격은 `EXPOSURE_PRODUCTS`(원 단위)에서만 읽는다 — 여기 숫자를 적으면 결제 금액과 갈린다
-const weekly = (tier: ExposureProduct) => formatExposurePrice(EXPOSURE_PRODUCTS[tier].weekly);
-const bundle4 = (tier: ExposureProduct) => formatExposurePrice(EXPOSURE_PRODUCTS[tier].bundle4);
+const price = (tier: ExposureProduct, weeks: ExposureWeeks) =>
+  formatExposurePrice(exposurePrice(tier, weeks));
 
 export const metadata: Metadata = {
   title: "공고 노출 안내 | 민잡",
   description:
-    "무료로 공고를 올리고, 더 많은 교역자에게 빠르게 닿고 싶을 때만 노출을 더하세요. 프리미엄·대표광고 노출 상품 안내.",
+    "무료로 공고를 올리고, 더 많은 교역자에게 빠르게 닿고 싶을 때만 노출을 더하세요. 기본·플러스·스페셜 노출 상품 안내.",
   alternates: { canonical: "/pricing" },
 };
 
-// 상품 카드 데이터 — 화면 문구. 단 **가격은 도메인 상수에서 파생**한다(위 weekly·bundle4)
-const PLANS = [
+// 자리 → 카드에 적는 말. 자리 이름(`EXPOSURE_SLOTS`)보다 한 마디 더 — 어디에 어떻게 서는지
+const SLOT_FEATURE: Record<ExposureSlot, string> = {
+  home: "홈 첫 화면 추천 청빙 카드(3칸)",
+  list: "공고 목록 1페이지 맨 위 로우",
+  related: "비슷한 공고 첫 칸 — 같은 지역 공고 상세마다",
+};
+
+// 카드는 사다리 아래부터(기본 → 플러스 → 스페셜) — 왼쪽이 싼 것이 읽기 자연스럽다
+const PAID_TIERS = (Object.keys(EXPOSURE_PRODUCTS) as ExposureProduct[]).reverse();
+const PREVIEW_GROUP: Record<ExposureProduct, Group> = {
+  BASIC: "basic",
+  PLUS: "plus",
+  SPECIAL: "special",
+};
+
+const PLAN_AUDIENCE: Record<ExposureProduct, string> = {
+  BASIC: "이 지역에서 찾는 사역자에게 — 가볍게 한 번",
+  PLUS: "목록을 훑는 사역자에게 — 맨 위에서 먼저",
+  SPECIAL: "가장 크게 알리고 싶을 때 — 첫 화면부터",
+};
+
+interface Plan {
+  name: string;
+  price: string;
+  unit: string;
+  aud: string;
+  features: string[];
+  cta: { label: string; href: string; primary: boolean };
+  highlight: boolean;
+  badge?: string;
+  preview?: Group;
+}
+
+function paidPlan(tier: ExposureProduct): Plan {
+  const p = EXPOSURE_PRODUCTS[tier];
+  const slots = (Object.keys(EXPOSURE_SLOTS) as ExposureSlot[])
+    .filter((slot) => p.slots[slot])
+    .map((slot) => SLOT_FEATURE[slot]);
+  return {
+    name: p.label,
+    price: price(tier, 1),
+    unit: "/ 주",
+    aud: PLAN_AUDIENCE[tier],
+    features: [
+      ...slots,
+      p.weeklyCapacity === null
+        ? "정원 없음 — 바로 시작"
+        : `주 ${p.weeklyCapacity}건 정원 — 매진이면 다음 주`,
+      `2주 ${price(tier, 2)} · 4주 ${price(tier, 4)}`,
+    ],
+    cta: { label: "문의하기", href: "#contact", primary: true },
+    highlight: tier === "PLUS",
+    badge: tier === "PLUS" ? "추천" : tier === "SPECIAL" ? "주 3건 한정" : undefined,
+    preview: PREVIEW_GROUP[tier],
+  };
+}
+
+// 상품 카드 — 무료 + 유료 3등급. 유료 카드의 문구는 도메인 상수에서 파생한다(위 paidPlan)
+const PLANS: Plan[] = [
   {
-    name: "기본 공고",
+    name: "무료 공고",
     price: "무료",
     unit: "",
     aud: "모든 교회 — 먼저 공고를 올려보세요",
@@ -28,40 +93,8 @@ const PLANS = [
     cta: { label: "공고 등록", href: "/jobs/new", primary: false },
     highlight: false,
   },
-  {
-    name: "프리미엄",
-    price: weekly("PREMIUM"),
-    unit: "/ 주",
-    aud: "노출을 넓히고 싶은 교회 — 어디서 찾든 위에",
-    features: [
-      "목록 상단 고정",
-      "검색·필터 결과 상단",
-      "비슷한 공고 슬롯 노출",
-      `“광고” 표시 · 4주 ${bundle4("PREMIUM")}`,
-    ],
-    cta: { label: "문의하기", href: "#contact", primary: true },
-    highlight: true,
-    badge: "가장 많이 찾는",
-    preview: "premium",
-  },
-  {
-    name: "대표광고",
-    price: weekly("HERO"),
-    unit: "/ 주",
-    aud: "가장 크게 알리고 싶을 때 — 소수 구좌만",
-    features: [
-      "홈 배너 + 목록 최상단",
-      "프리미엄 노출 전부 포함",
-      "구좌 한정(매진제)",
-      `4주 묶음 ${bundle4("HERO")}`,
-    ],
-    cta: { label: "문의하기", href: "#contact", primary: true },
-    highlight: false,
-    badge: "구좌 한정",
-    gold: true,
-    preview: "hero",
-  },
-] as const;
+  ...PAID_TIERS.map(paidPlan),
+];
 
 const FAQS = [
   {
@@ -70,11 +103,15 @@ const FAQS = [
   },
   {
     q: "무료 공고도 노출되나요?",
-    a: "네. 기본 공고는 최신순 목록·검색에 노출됩니다. 유료 상품은 상단·홈 등 더 눈에 띄는 자리를 더하는 것입니다.",
+    a: "네. 무료 공고는 최신순 목록·검색에 노출됩니다. 유료 상품은 홈 추천·목록 맨 위·비슷한 공고 첫 칸처럼 더 눈에 띄는 자리를 더하는 것입니다.",
   },
   {
-    q: "노출 기간은요?",
-    a: "주 단위이고, 4주 묶음은 할인됩니다. 대표광고는 구좌가 한정이라 조기 마감될 수 있어요.",
+    q: "노출 기간과 정원은요?",
+    a: "주 단위(월~일)로 1·2·4주 중 고릅니다. 스페셜은 주 3건, 플러스는 주 2건까지만 팔아요. 그 주가 찼으면 다음 주부터 시작할 수 있어요.",
+  },
+  {
+    q: "취소·환불은요?",
+    a: "게재 시작 전에는 전액 환불해 드려요. 게재가 시작된 뒤에는 환불되지 않고, 공고를 마감해도 남은 기간은 소진됩니다.",
   },
   {
     q: "지원도 민잡에서 받나요?",
@@ -82,9 +119,7 @@ const FAQS = [
   },
 ] as const;
 
-function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
-  const badge = "badge" in plan ? plan.badge : undefined;
-  const gold = "gold" in plan ? plan.gold : false;
+function PlanCard({ plan }: { plan: Plan }) {
   return (
     <div
       className={`relative flex flex-col rounded-2xl border bg-card p-5 ${
@@ -93,15 +128,11 @@ function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
           : "border-border"
       }`}
     >
-      {badge && (
-        <span
-          className={`absolute -top-3 left-5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-            gold ? "bg-gold text-[#3d3011]" : "bg-primary text-primary-foreground"
-          }`}
-        >
-          {badge}
+      {plan.badge ? (
+        <span className="absolute -top-3 left-5 rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-bold text-primary-foreground">
+          {plan.badge}
         </span>
-      )}
+      ) : null}
       <div className="font-bold">{plan.name}</div>
       <div
         className={`mt-2 text-2xl font-bold ${plan.price === "무료" ? "text-foreground" : "text-primary"}`}
@@ -133,13 +164,13 @@ function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
       {plan.cta.primary && (
         <div className="mt-2 text-center text-[11px] text-muted-foreground">VAT 포함</div>
       )}
-      {"preview" in plan && plan.preview && <PreviewButton group={plan.preview} />}
+      {plan.preview ? <PreviewButton group={plan.preview} /> : null}
     </div>
   );
 }
 
-function Yes({ label }: { label?: string }) {
-  return <span className="font-bold text-primary">✓{label ? ` ${label}` : ""}</span>;
+function Yes() {
+  return <span className="font-bold text-primary">✓</span>;
 }
 function No() {
   return <span className="text-border">–</span>;
@@ -169,97 +200,73 @@ export default async function PricingPage() {
 
       <div className="mx-auto w-full max-w-5xl space-y-14 px-4 pt-12 pb-24">
         {/* 상품 카드 */}
-        <section className="grid gap-4 md:grid-cols-3 md:items-start">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-start">
           {PLANS.map((plan) => (
             <PlanCard key={plan.name} plan={plan} />
           ))}
         </section>
 
-        {/* 비교표 */}
+        {/* 비교표 — 행은 자리(`EXPOSURE_SLOTS`), 열은 무료 + 유료 3등급. 상품 정의에서 그대로 그린다 */}
         <section>
           <h2 className="mb-5 text-xl font-bold">한눈에 비교</h2>
           <div className="overflow-x-auto rounded-2xl border">
-            <table className="w-full min-w-[420px] border-collapse text-sm">
+            <table className="w-full min-w-[480px] border-collapse text-sm">
               <thead>
                 <tr className="bg-primary/5">
-                  <th className="p-3 text-left font-semibold text-muted-foreground">노출 위치</th>
-                  <th className="p-3 font-bold">기본</th>
-                  <th className="p-3 font-bold text-primary">프리미엄</th>
-                  <th className="p-3 font-bold text-primary">대표광고</th>
+                  <th className="p-3 text-left font-semibold text-muted-foreground">노출 자리</th>
+                  <th className="p-3 font-bold">무료</th>
+                  {PAID_TIERS.map((tier) => (
+                    <th key={tier} className="p-3 font-bold text-primary">
+                      {EXPOSURE_PRODUCTS[tier].label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="[&_td]:border-t [&_td]:p-3 [&_td]:text-center [&_td:first-child]:text-left [&_td:first-child]:font-medium [&_td:first-child]:text-muted-foreground">
                 <tr>
-                  <td>최신순 목록</td>
+                  <td>최신순 목록·검색</td>
                   <td>
                     <Yes />
                   </td>
-                  <td>
-                    <Yes />
-                  </td>
-                  <td>
-                    <Yes />
-                  </td>
+                  {PAID_TIERS.map((tier) => (
+                    <td key={tier}>
+                      <Yes />
+                    </td>
+                  ))}
                 </tr>
+                {(Object.keys(EXPOSURE_SLOTS) as ExposureSlot[]).map((slot) => (
+                  <tr key={slot}>
+                    <td>{EXPOSURE_SLOTS[slot]}</td>
+                    <td>
+                      <No />
+                    </td>
+                    {PAID_TIERS.map((tier) => (
+                      <td key={tier}>{EXPOSURE_PRODUCTS[tier].slots[slot] ? <Yes /> : <No />}</td>
+                    ))}
+                  </tr>
+                ))}
                 <tr>
-                  <td>목록 상단 고정</td>
+                  <td>주 정원</td>
                   <td>
                     <No />
                   </td>
-                  <td>
-                    <Yes />
-                  </td>
-                  <td>
-                    <Yes label="최상단" />
-                  </td>
-                </tr>
-                <tr>
-                  <td>검색·필터 결과 상단</td>
-                  <td>
-                    <No />
-                  </td>
-                  <td>
-                    <Yes />
-                  </td>
-                  <td>
-                    <Yes />
-                  </td>
-                </tr>
-                <tr>
-                  <td>비슷한 공고 슬롯</td>
-                  <td>
-                    <No />
-                  </td>
-                  <td>
-                    <Yes />
-                  </td>
-                  <td>
-                    <Yes />
-                  </td>
-                </tr>
-                <tr>
-                  <td>홈 배너</td>
-                  <td>
-                    <No />
-                  </td>
-                  <td>
-                    <No />
-                  </td>
-                  <td>
-                    <Yes />
-                  </td>
+                  {PAID_TIERS.map((tier) => {
+                    const capacity = EXPOSURE_PRODUCTS[tier].weeklyCapacity;
+                    return <td key={tier}>{capacity === null ? "없음" : `${capacity}건`}</td>;
+                  })}
                 </tr>
                 <tr className="font-bold [&_td]:text-foreground">
-                  <td>가격</td>
+                  <td>1주</td>
                   <td>0원</td>
-                  <td>{weekly("PREMIUM")}/주</td>
-                  <td>{weekly("HERO")}/주</td>
+                  {PAID_TIERS.map((tier) => (
+                    <td key={tier}>{price(tier, 1)}</td>
+                  ))}
                 </tr>
               </tbody>
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            ※ 표시가는 VAT 포함. 주 단위 · 4주 묶음 할인. 실제 단가·묶음·구좌는 문의 시 안내.
+            ※ 표시가는 VAT 포함. 주 단위(월~일) · 2주·4주 묶음가. 유료 자리에는 “광고”라고 표시돼요.
           </p>
         </section>
 
@@ -327,9 +334,10 @@ export default async function PricingPage() {
                   name="관심상품"
                   className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
                 >
-                  <option>프리미엄</option>
-                  <option>대표광고</option>
-                  <option>둘 다 / 상담</option>
+                  {PAID_TIERS.map((tier) => (
+                    <option key={tier}>{EXPOSURE_PRODUCTS[tier].label}</option>
+                  ))}
+                  <option>상담 후 결정</option>
                 </select>
               </label>
               <label className="flex flex-col gap-1.5 text-xs font-bold">

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JobRow } from "@/components/job/job-row";
-import { FeaturedJobCard } from "@/components/job/featured-job-card";
+import { JobCard } from "@/components/job/job-card";
 import { HomeSidebar } from "@/components/home/home-sidebar";
 import { SearchBox } from "@/components/search/search-box";
-import { getAdJobs, getListJobs, getJobStats, getSearchSuggestions } from "@/lib/queries/jobs";
+import { getHomeFeed, getJobStats, getSearchSuggestions } from "@/lib/queries/jobs";
 
 // title·description은 root layout 값을 그대로 쓴다(홈 = 사이트 대표 페이지).
 // canonical만 지정 — 공유 링크에 붙는 추적 쿼리(?utm_*)가 별도 페이지로 색인되지 않게.
@@ -23,9 +23,8 @@ function HeroStat({ value, unit, label }: { value: number; unit: string; label: 
 }
 
 export default async function HomePage() {
-  const [adJobs, listJobs, stats, suggestions] = await Promise.all([
-    getAdJobs(),
-    getListJobs(8),
+  const [feed, stats, suggestions] = await Promise.all([
+    getHomeFeed(),
     getJobStats(),
     getSearchSuggestions(),
   ]);
@@ -67,26 +66,21 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 노출 등급 분리: 추천 청빙(대표광고 카드) + 청빙 공고(프리미엄+일반 리스트) + 사이드바 */}
+      {/* 추천 청빙(스페셜 3칸) + 청빙 공고(순수 최신순) + 사이드바 — 자리 규칙은 SPEC 수익화 절 */}
       <div className="mx-auto w-full max-w-6xl space-y-12 px-4 pt-12 pb-24">
-        {/* ① 추천 청빙 = 대표광고 슬롯 */}
-        {adJobs.length > 0 && (
-          <section>
-            <div className="mb-4 flex items-center gap-2">
-              <h2 className="text-lg font-bold">추천 청빙</h2>
-              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
-                대표광고
-              </span>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {adJobs.map((job) => (
-                <FeaturedJobCard key={job.id} job={job} />
-              ))}
-            </div>
-          </section>
-        )}
+        {/* ① 추천 청빙 — 스페셜 자리 3칸. **항상** 그린다: 안 팔린 칸은 최신 공고가 서고 "광고" 라벨만 없다.
+            라벨은 카드 안에 있어 섹션 제목엔 붙이지 않는다(칸이 섞일 때 제목 라벨은 거짓이 된다) */}
+        <section>
+          <h2 className="mb-4 text-lg font-bold">추천 청빙</h2>
+          {/* 3열은 md부터 — 640px에서 3열이면 카드 한 장이 200px라 제목이 세 줄로 접힌다 */}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            {feed.slots.map(({ job, ad }) => (
+              <JobCard key={job.id} job={job} ad={ad} />
+            ))}
+          </div>
+        </section>
 
-        {/* ② 청빙 공고(프리미엄 상단+일반) 2단 — 좌 리스트 / 우 사이드바 */}
+        {/* ② 청빙 공고(최신순 · 추천 칸에 선 공고 제외) 2단 — 좌 리스트 / 우 사이드바 */}
         {/* ⚠️ `grid-cols-1`을 빼면 lg 아래에서 열이 암묵 `auto`가 되어 내용의 최소 폭만큼 늘어난다 —
             390px에서 목록 카드·사이드바가 오른쪽으로 넘쳐 잘렸다(2026-08-30 전수 점검). `minmax(0,1fr)`을
             lg에만 쓰고 기본을 비워 둔 탓이다 */}
@@ -99,7 +93,7 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="divide-y divide-border overflow-hidden rounded-2xl border bg-card">
-              {listJobs.map((job) => (
+              {feed.latest.map((job) => (
                 <JobRow key={job.id} job={job} />
               ))}
             </div>

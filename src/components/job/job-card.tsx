@@ -1,61 +1,88 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { MapPin } from "lucide-react";
 import type { JobCard as JobCardData } from "@/types/domain";
 import { churchLocation, denominationLabel, formatPayShort, jobRoleLine } from "@/lib/format";
 import { RelativeTime } from "@/components/relative-time";
+import { BookmarkButton } from "./bookmark-button";
 import { cn } from "@/lib/utils";
 
-export function JobCard({ job }: { job: JobCardData }) {
+// 공고 카드 — 홈 "추천 청빙" 3칸과 공고 상세 "비슷한 공고" 6장이 **같은 카드**를 쓴다(2026-09-03 통합.
+// 그전엔 홈용 대표광고 카드가 따로 있어 등급 배지·초록 테두리로 도드라졌다). 읽는 순서는 로우(`job-row`)와
+// 같다: 제목 → 지역·교회·교단 → 자리 → 사례비·게시. 화면마다 정보 순서가 안 바뀌게.
+//
+// `ad`는 **공고가 아니라 자리의 속성**이다 — 그 칸이 유료 배치인가(`PlacedJob`). 공고의 `featuredTier`에서
+// 파생하지 않는다: 같은 공고가 유기적으로 뜬 자리에는 라벨이 붙지 않아야 한다.
+// 표시는 회색 텍스트 "광고" 한 단어뿐 — 등급명·틴트·색 테두리 없음(SPEC 수익화 절 · 표시광고·신뢰).
+// 전체 카드 클릭 = 상세(stretched Link), 책갈피만 별도 클릭(z-10).
+// `preview` = 아직 없는 공고(등록 폼·검수 미리보기) — 저장 버튼을 끈다. 버튼의 `useBookmarks`는 provider 밖
+// (admin 셸)에서 던지고, 있는 곳에서도 없는 id를 저장하려 든다(`JobDetailView`의 `preview`와 같은 선례).
+export function JobCard({
+  job,
+  ad = false,
+  preview = false,
+}: {
+  job: JobCardData;
+  ad?: boolean;
+  preview?: boolean;
+}) {
   const role = jobRoleLine(job);
   const denomination = denominationLabel(job.church.denomination);
   const location = churchLocation(job.church);
-  const isAd = job.featuredTier === "HERO";
-  const isPremium = job.featuredTier === "PREMIUM";
   const hasPay = job.payMin !== null || job.payMax !== null;
 
   return (
-    <Link href={`/jobs/${job.id}`} className="group block h-full">
-      <Card
-        className={cn(
-          "flex h-full flex-col gap-3 p-5 transition-colors group-hover:border-ring",
-          isAd && "border-primary/30 bg-muted/30",
+    <article className="relative flex h-full flex-col gap-2 rounded-2xl border bg-card p-4 transition-colors hover:border-ring">
+      <Link
+        href={`/jobs/${job.id}`}
+        className="absolute inset-0 rounded-2xl"
+        aria-label={job.title}
+      />
+
+      {/* 라벨 줄은 광고가 아니어도 자리를 지킨다 — 한 줄에 선 세 장의 제목 높이가 맞아야 한다 */}
+      <div className="flex min-h-6 items-center justify-between">
+        {ad ? (
+          <span className="text-[11px] font-medium text-muted-foreground">광고</span>
+        ) : (
+          <span />
         )}
-      >
-        {/* 조각 단위 줄바꿈 — `job-row`의 메타 줄과 같은 규칙(그 파일 주석 참조). 카드는 교회명이 먼저다 */}
-        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground">
-          <span className="max-w-full truncate font-semibold text-foreground">
-            {job.church.name}
+        {preview ? null : <BookmarkButton jobId={job.id} className="-mt-1 -mr-1.5" />}
+      </div>
+
+      <h3 className="line-clamp-2 leading-snug font-bold tracking-tight">{job.title}</h3>
+
+      {/* 조각 단위 줄바꿈 — `job-row`의 메타 줄과 같은 규칙(그 파일 주석 참조) */}
+      <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground">
+        {location && (
+          <span className="inline-flex items-center gap-1.5 font-medium whitespace-nowrap text-foreground">
+            <MapPin className="size-3.5 shrink-0 text-primary" />
+            {location}
           </span>
-          {denomination && (
-            <span className="whitespace-nowrap">
-              <span className="mr-1.5 text-border">·</span>
-              {denomination}
-            </span>
-          )}
-          {location && (
-            <span className="whitespace-nowrap">
-              <span className="mr-1.5 text-border">·</span>
-              {location}
-            </span>
-          )}
-          {(isAd || isPremium) && (
-            <Badge variant={isAd ? "default" : "secondary"} className="ml-auto shrink-0">
-              {isAd ? "대표광고" : "프리미엄"}
-            </Badge>
-          )}
-        </div>
-        <h3 className="line-clamp-2 leading-snug font-semibold">{job.title}</h3>
-        <p className="text-sm text-muted-foreground">{role}</p>
-        <div className="mt-auto flex items-center justify-between pt-1">
-          <span className={cn("font-bold", hasPay ? "text-primary" : "text-muted-foreground")}>
-            {formatPayShort(job)}
+        )}
+        <span className="max-w-full truncate">
+          {location && <span className="mr-1.5 text-border">·</span>}
+          {job.church.name}
+        </span>
+        {denomination && (
+          <span className="whitespace-nowrap">
+            <span className="mr-1.5 text-border">·</span>
+            {denomination}
           </span>
-          <span className="text-xs text-muted-foreground">
-            <RelativeTime date={job.postedAt} />
-          </span>
-        </div>
-      </Card>
-    </Link>
+        )}
+      </p>
+      {role ? <p className="truncate text-sm text-muted-foreground">{role}</p> : null}
+
+      <div className="mt-auto flex items-center justify-between border-t border-border pt-2.5">
+        <span
+          className={cn(
+            hasPay ? "font-bold text-primary" : "text-sm font-semibold text-muted-foreground",
+          )}
+        >
+          {formatPayShort(job)}
+        </span>
+        <span className="text-xs text-muted-foreground/80">
+          <RelativeTime date={job.postedAt} />
+        </span>
+      </div>
+    </article>
   );
 }

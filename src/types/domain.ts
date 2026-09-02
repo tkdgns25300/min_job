@@ -256,6 +256,17 @@ export interface JobCard {
   deadline: string | null;
 }
 
+/**
+ * 자리에 놓인 카드 — `ad`는 **공고가 아니라 자리의 속성**이다(그 칸이 유료 배치인가).
+ * 홈 "추천 청빙" 3칸(안 팔린 칸은 최신 공고가 서고 `ad=false`)과 공고 상세 "비슷한 공고"(첫 칸만 광고일 수
+ * 있다)가 쓴다. 공고의 `featuredTier`에서 파생하지 않는 이유: 같은 공고가 유기적으로 뜬 자리에는 라벨이
+ * 붙지 않아야 한다(SPEC 수익화 절).
+ */
+export interface PlacedJob {
+  job: JobCard;
+  ad: boolean;
+}
+
 // 운영자 공고 관리 테이블용 projection — 전체 상태·출처 포함(공개 카드와 달리 CLOSED·운영자/교회 구분). (admin/jobs)
 export interface AdminJob {
   /** 공개 목록에 실제로 뜨는가 (DATA §6-1). `status`만 보면 내려간 공고를 "게재중"으로 표시하게 된다 */
