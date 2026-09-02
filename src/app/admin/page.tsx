@@ -48,6 +48,9 @@ function StatusSkeleton() {
       <StatusSection title={STATUS_SECTIONS.publish}>
         <div className="h-30 animate-pulse rounded-2xl bg-muted" />
       </StatusSection>
+      <StatusSection title={STATUS_SECTIONS.exposure}>
+        <div className="h-28 animate-pulse rounded-2xl bg-muted" />
+      </StatusSection>
     </div>
   );
 }

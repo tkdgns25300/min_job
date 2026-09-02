@@ -75,7 +75,9 @@ function paidPlan(tier: ExposureProduct): Plan {
         : `주 ${p.weeklyCapacity}건 정원 — 매진이면 다음 주`,
       `2주 ${price(tier, 2)} · 4주 ${price(tier, 4)}`,
     ],
-    cta: { label: "문의하기", href: "#contact", primary: true },
+    // 결제 화면이 게이트를 맡는다 — 비로그인은 proxy가 로그인으로, 미인증 교회는 대시보드(인증 안내)로 보낸다.
+    // 그래서 이 정적 페이지가 세션을 읽지 않아도 CTA 하나로 충분하다(PPR 셸 유지)
+    cta: { label: "노출 신청하기", href: "/mypage/church/promote", primary: true },
     highlight: tier === "PLUS",
     badge: tier === "PLUS" ? "추천" : tier === "SPECIAL" ? "주 3건 한정" : undefined,
     preview: PREVIEW_GROUP[tier],
@@ -99,7 +101,7 @@ const PLANS: Plan[] = [
 const FAQS = [
   {
     q: "결제는 어떻게 하나요?",
-    a: "지금은 문의로 진행합니다(온라인 결제는 준비 중). 문의 주시면 노출 기간·금액을 안내하고 게재해 드려요.",
+    a: "교회 인증을 마친 계정으로 노출 신청 화면에서 카드로 결제해요. 결제가 확인되면 노출이 바로 적용돼요(다음 주 시작을 골랐으면 그 월요일부터). 인증이 아직이면 먼저 교회 인증을 진행해 주세요.",
   },
   {
     q: "무료 공고도 노출되나요?",
@@ -193,7 +195,7 @@ export default async function PricingPage() {
             노출 화면을 미리 볼 수 있어요.
           </p>
           <span className="mt-4 inline-block rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold">
-            온라인 결제는 준비 중 — 지금은 문의로 진행해요
+            인증 교회는 카드로 바로 결제 — 확인되면 즉시 적용
           </span>
         </div>
       </section>
@@ -301,7 +303,8 @@ export default async function PricingPage() {
         <section id="contact" className="scroll-mt-20">
           <h2 className="text-xl font-bold">노출 문의</h2>
           <p className="mt-1 mb-4 text-sm text-muted-foreground">
-            원하는 상품·기간을 남겨주시면 게재를 도와드려요. 보내기를 누르면 메일 앱이 열립니다.
+            결제 전에 상품·기간이 궁금하거나 세금계산서 등이 필요하면 남겨 주세요. 보내기를 누르면
+            메일 앱이 열립니다.
           </p>
           <form
             action={contactMailto()}

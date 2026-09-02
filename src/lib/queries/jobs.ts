@@ -14,8 +14,8 @@ import { churchIdentityKey, jobChurchRef } from "@/lib/job-church";
 import { pickSimilarJobs } from "@/lib/similar-jobs";
 import {
   addDays,
+  exposureWindow,
   hiddenReason,
-  isFeaturedOn,
   isPubliclyOpen,
   todayInSeoul,
 } from "@/lib/job-visibility";
@@ -177,7 +177,7 @@ function toAdminRow(entry: CardEntry, today: string): AdminJob {
     department: job.department,
     employmentType: job.employmentType,
     status: job.status,
-    featuredTier: isFeaturedOn(job, today) ? job.featuredTier : "NONE",
+    exposure: exposureWindow(job, today),
     source: job.source,
     postedAt: job.postedAt,
     deadline: job.deadline,

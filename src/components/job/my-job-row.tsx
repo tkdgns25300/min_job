@@ -3,7 +3,12 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { FEATURED_TIERS, JOB_STATUSES, ALWAYS_OPEN_MAX_DAYS } from "@/constants/domain";
+import {
+  ALWAYS_OPEN_MAX_DAYS,
+  EXPOSURE_PRODUCTS,
+  FEATURED_TIERS,
+  JOB_STATUSES,
+} from "@/constants/domain";
 import type { JobStatus } from "@/types/domain";
 import type { MyJob } from "@/lib/queries/users";
 
@@ -55,14 +60,29 @@ export function MyJobRow({ job }: { job: MyJob }) {
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{roleLine}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {/* 노출 등급 = 텍스트 라벨(정보). 일반은 표시 안 함. 만료일은 Phase 1 */}
-          {job.featuredTier !== "NONE" && (
-            <span className="font-semibold text-gold-ink">
-              {FEATURED_TIERS[job.featuredTier]} 노출 ·{" "}
-            </span>
-          )}
           {job.postedAt} 게시 · {job.deadline ? `${job.deadline} 마감` : "상시모집"}
         </p>
+        {/* 유료 노출 — 노출 중이면 끝나는 날, 예약이면 시작하는 날. 결제했는데 표시가 없으면 적용 안 된 줄 안다.
+            "보기"는 그 등급이 서는 자리로 — 스페셜만 홈에 있다 */}
+        {job.exposure ? (
+          <p className="mt-1 text-xs font-semibold text-gold-ink">
+            {FEATURED_TIERS[job.exposure.tier]}{" "}
+            {job.exposure.active
+              ? `노출 중 · ${job.exposure.until}까지`
+              : `노출 예약 · ${job.exposure.from}부터`}
+            {job.exposure.active ? (
+              <>
+                {" · "}
+                <Link
+                  href={EXPOSURE_PRODUCTS[job.exposure.tier].slots.home ? "/" : "/jobs"}
+                  className="underline underline-offset-2"
+                >
+                  노출 보기
+                </Link>
+              </>
+            ) : null}
+          </p>
+        ) : null}
         {/* 게재중인데 공개 목록에 안 보이는 경우 — 왜 안 보이는지 교회가 알아야 한다(DATA §6-1).
             status는 OPEN이라 배지만으로는 알 수 없어 별도 안내가 필요하다. */}
         {hidden && (

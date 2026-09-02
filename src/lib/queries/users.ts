@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { CHURCH_VERIFICATION_STATUSES, DENOMINATIONS, REGIONS } from "@/constants/domain";
 import { keyOf } from "@/lib/domain-enum";
 import { claimMatchTier } from "@/lib/job-church";
-import { hiddenReason, isFeaturedOn, isPubliclyOpen, todayInSeoul } from "@/lib/job-visibility";
-import type { HiddenReason } from "@/lib/job-visibility";
+import { exposureWindow, hiddenReason, isPubliclyOpen, todayInSeoul } from "@/lib/job-visibility";
+import type { ExposureWindow, HiddenReason } from "@/lib/job-visibility";
 import type { Church, CurrentUser, Job } from "@/types/domain";
 import { fetchAllRows } from "./fetch-all";
 import { JOB_CARD_COLUMNS, JOB_FULL_COLUMNS, toJob, toJobCardFields } from "./row-map";
@@ -21,7 +21,6 @@ export type MyJob = Pick<
   | "id"
   | "title"
   | "status"
-  | "featuredTier"
   | "postedAt"
   | "deadline"
   | "position"
@@ -38,6 +37,8 @@ export type MyJob = Pick<
   isPubliclyOpen: boolean;
   /** 내려간 이유 (안내 문구 선택용) — 노출 중이거나 교회가 직접 마감했으면 null */
   hiddenReason: HiddenReason;
+  /** 유료 노출 창 — 노출 중이거나 시작을 기다리는 예약. 끝났거나 없으면 null(`exposureWindow`) */
+  exposure: ExposureWindow | null;
 };
 
 // 교회 관리 대시보드 — 그 교회 공고(church_id 기준) + 클레임 가능(운영자 등록) 건수
@@ -244,7 +245,6 @@ function toMyJob(job: JobCardFields, today: string): MyJob {
     id: job.id,
     title: job.title,
     status: job.status,
-    featuredTier: isFeaturedOn(job, today) ? job.featuredTier : "NONE",
     postedAt: job.postedAt,
     deadline: job.deadline,
     position: job.position,
@@ -254,6 +254,7 @@ function toMyJob(job: JobCardFields, today: string): MyJob {
     source: job.source,
     isPubliclyOpen: isPubliclyOpen(job, today),
     hiddenReason: hiddenReason(job, today),
+    exposure: exposureWindow(job, today),
   };
 }
 

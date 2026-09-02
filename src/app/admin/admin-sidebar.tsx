@@ -10,6 +10,7 @@ const NAV: { href: string; label: string; exact?: boolean }[] = [
   { href: "/admin/review", label: "수집 검수" },
   { href: "/admin/jobs", label: "공고 관리" },
   { href: "/admin/verify", label: "교회 인증" },
+  { href: "/admin/promotions", label: "노출 원장" },
 ];
 
 export function AdminSidebar() {

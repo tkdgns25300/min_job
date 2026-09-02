@@ -84,13 +84,17 @@ export function JobRow({ job }: { job: AdminJob }) {
           <Badge variant={STATUS_VARIANT[job.status]}>{JOB_STATUSES[job.status]}</Badge>
         )}
       </td>
+      {/* 노출 — 등급 + 언제까지(노출 중) / 언제부터(예약). 원장 전체는 /admin/promotions */}
       <td className="px-4 py-3 align-middle whitespace-nowrap">
-        {job.featuredTier === "NONE" ? (
-          <span className="text-xs text-muted-foreground">일반</span>
-        ) : (
+        {job.exposure ? (
           <span className="text-xs font-semibold text-gold-ink">
-            {FEATURED_TIERS[job.featuredTier]}
+            {FEATURED_TIERS[job.exposure.tier]}
+            <span className="ml-1 font-normal text-muted-foreground tabular-nums">
+              {job.exposure.active ? `~${job.exposure.until}` : `${job.exposure.from}~`}
+            </span>
           </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">일반</span>
         )}
       </td>
       <td className="px-4 py-3 align-middle text-xs whitespace-nowrap text-muted-foreground">
