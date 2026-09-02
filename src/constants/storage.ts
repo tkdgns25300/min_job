@@ -4,4 +4,6 @@
 export const STORAGE_KEYS = {
   recentJobs: "minjob:recentJobs",
   recentSearches: "minjob:recentSearches",
+  /** 결제창을 띄운 결제번호 — 완료 처리가 끝나기 전에 탭이 닫히거나 세션이 풀려도 다시 열면 이어서 확인한다 */
+  pendingPromotionPayment: "minjob:pendingPromotionPayment",
 } as const;

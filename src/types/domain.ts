@@ -1,4 +1,4 @@
-import type { HiddenReason } from "@/lib/job-visibility";
+import type { ExposureWindow, HiddenReason } from "@/lib/job-visibility";
 import type {
   Denomination,
   Region,
@@ -137,9 +137,14 @@ export interface Job {
   status: JobStatus;
   featuredTier: FeaturedTier;
   /**
-   * 유료 노출 만료일("YYYY-MM-DD"). `featuredTier`와 한 짝인 **판정 캐시**로, 원장은
-   * `job_promotions`다(DATA §3). **화면에 그리지 않는다** — "지금 유료 노출 중인가"를
-   * `now()` 없이 판정하려고 두는 값이다(만료 판정은 seam이 `todayInSeoul()`을 만들어 넘긴다).
+   * 유료 노출 시작일("YYYY-MM-DD"). 다음 주부터 시작하는 예약이 있어 필요하다 — 없으면 결제한 순간부터
+   * 노출로 읽혀 이번 주 정원을 넘긴다(DATA §7). null = 시작 제한 없음(NONE 공고는 셋 다 비어 있다).
+   */
+  featuredFrom: string | null;
+  /**
+   * 유료 노출 만료일("YYYY-MM-DD"). `featuredTier`·`featuredFrom`과 한 짝인 **판정 캐시**로, 원장은
+   * `job_promotions`다(DATA §3). **공개 화면에 그리지 않는다** — "지금 유료 노출 중인가"를
+   * `now()` 없이 판정하려고 두는 값이다(판정은 `isFeaturedOn` · 날짜는 seam이 `todayInSeoul()`로 만든다).
    */
   featuredUntil: string | null;
   postedAt: string; // "YYYY-MM-DD"
@@ -281,7 +286,8 @@ export interface AdminJob {
   department: Department | null;
   employmentType: EmploymentType | null;
   status: JobStatus;
-  featuredTier: FeaturedTier;
+  /** 유료 노출 창(노출 중·예약) — 없거나 끝났으면 null. 운영자가 "언제까지 팔린 자리인가"를 본다 */
+  exposure: ExposureWindow | null;
   source: JobSource;
   postedAt: string;
   deadline: string | null;

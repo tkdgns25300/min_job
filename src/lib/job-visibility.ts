@@ -1,4 +1,4 @@
-import { ALWAYS_OPEN_MAX_DAYS } from "@/constants/domain";
+import { ALWAYS_OPEN_MAX_DAYS, type ExposureProduct } from "@/constants/domain";
 import type { Job } from "@/types/domain";
 
 // 공고가 공개 목록에 뜨는지 판정 — DATA.md §6-1.
@@ -57,20 +57,49 @@ export function isPubliclyOpen(
 }
 
 /**
- * 지금 유료 노출 중인가 — `featured_tier`는 **`now()` 없이 읽는 판정 캐시**고 기한은 `featured_until`이다
- * (DATA §3·§7. 원장은 `job_promotions`). 그래서 만료 판정은 이 술어가, 날짜는 seam이 만들어 넘긴다.
+ * 지금 유료 노출 중인가 — `featured_tier`는 **`now()` 없이 읽는 판정 캐시**고 창은 `featured_from`~`featured_until`이다
+ * (DATA §3·§7. 원장은 `job_promotions`). 그래서 판정은 이 술어가, 날짜는 seam이 만들어 넘긴다.
  *
- * ⚠️ **기한이 없으면 노출로 보지 않는다.** 둘은 결제 시 함께 써지는 한 쌍이고(N주 → 종료일이 항상 있다)
- *    짝을 강제하는 CHECK는 없다 — 기한 없는 등급은 덜 써진 캐시이거나 손으로 넣은 값이다. 그걸 노출로
- *    읽으면 **끝나지 않는 무료 프리미엄**이 되고, 반대 방향(노출이 빠짐)은 교회가 알려줘 고쳐진다.
- *    ⬜ 노출 적용 경로(`/mypage/church/promote` → `jobs` 쓰기)를 만들 때 이 판단을 다시 본다.
+ * ⚠️ **기한이 없으면 노출로 보지 않는다.** 등급·시작·종료는 결제 완료 액션이 함께 쓰는 한 묶음이고(N주 → 종료일이
+ *    항상 있다) 짝을 강제하는 CHECK는 없다 — 기한 없는 등급은 덜 써진 캐시이거나 손으로 넣은 값이다. 그걸 노출로
+ *    읽으면 **끝나지 않는 무료 노출**이 되고, 반대 방향(노출이 빠짐)은 교회가 알려줘 고쳐진다.
+ * **시작 전이면 아니다** — 다음 주부터 사는 예약을 결제한 날부터 노출로 읽으면 이번 주 정원을 넘긴다.
+ *    시작일이 없는 행(옛 데이터)은 시작 제한 없이 본다.
  */
 export function isFeaturedOn(
-  job: Pick<Job, "featuredTier" | "featuredUntil">,
+  job: Pick<Job, "featuredTier" | "featuredFrom" | "featuredUntil">,
   today: string,
 ): boolean {
   if (job.featuredTier === "NONE" || job.featuredUntil === null) return false;
+  if (job.featuredFrom !== null && job.featuredFrom > today) return false;
   return job.featuredUntil >= today;
+}
+
+/** 교회 화면이 그리는 유료 노출 창 — 살아 있거나(`active`) 시작을 기다리는 예약. `from`이 없으면 옛 데이터(시작 제한 없음) */
+export interface ExposureWindow {
+  tier: ExposureProduct;
+  from: string | null;
+  until: string;
+  active: boolean;
+}
+
+/**
+ * 공고의 유료 노출 창 — 끝났거나 없으면 null. `isFeaturedOn`은 "지금 보이나"만 답하는데, 교회 화면은
+ * 다음 주부터 시작하는 예약도 알아야 한다(결제했는데 아무 표시가 없으면 적용이 안 된 줄 안다).
+ */
+export function exposureWindow(
+  job: Pick<Job, "featuredTier" | "featuredFrom" | "featuredUntil">,
+  today: string,
+): ExposureWindow | null {
+  if (job.featuredTier === "NONE" || job.featuredUntil === null || job.featuredUntil < today) {
+    return null;
+  }
+  return {
+    tier: job.featuredTier,
+    from: job.featuredFrom,
+    until: job.featuredUntil,
+    active: isFeaturedOn(job, today),
+  };
 }
 
 /** 공개 목록에서 내려간 이유. null = 노출 중이거나 교회가 직접 마감한 것 */

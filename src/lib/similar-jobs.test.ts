@@ -17,6 +17,7 @@ function candidate(over: Partial<SimilarCandidate> = {}): SimilarCandidate {
     department: "YOUTH",
     employmentType: "FULL_TIME",
     featuredTier: "NONE",
+    featuredFrom: null,
     featuredUntil: null,
     postedAt: "2026-09-01",
     ...over,

@@ -28,6 +28,7 @@ export type SimilarCandidate = Pick<
   | "department"
   | "employmentType"
   | "featuredTier"
+  | "featuredFrom"
   | "featuredUntil"
   | "postedAt"
 >;

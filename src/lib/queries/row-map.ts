@@ -57,6 +57,7 @@ const CARD_FIELDS = [
   "status",
   "source",
   "featured_tier",
+  "featured_from",
   "featured_until",
   "posted_at",
   "deadline",
@@ -112,6 +113,7 @@ export type JobCardFields = Pick<
   | "status"
   | "source"
   | "featuredTier"
+  | "featuredFrom"
   | "featuredUntil"
   | "postedAt"
   | "deadline"
@@ -142,6 +144,7 @@ export function toJobCardFields(row: JobCardRow): JobCardFields {
     status: keyOf(JOB_STATUSES, row.status) ?? "CLOSED",
     source: keyOf(JOB_SOURCES, row.source) ?? "OPERATOR",
     featuredTier: keyOf(FEATURED_TIERS, row.featured_tier) ?? "NONE",
+    featuredFrom: row.featured_from,
     featuredUntil: row.featured_until,
     postedAt: row.posted_at,
     deadline: row.deadline,

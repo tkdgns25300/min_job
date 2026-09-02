@@ -215,6 +215,7 @@ function previewJob(draft: JobDraft, church: Church, postedAt: string, existing?
     // 등록하면 바로 게재된다(검수 없음 · 가드레일 #1). 마감일로 안 뜨는 경우는 `isPubliclyOpen`이 본다
     status: "OPEN",
     featuredTier: "NONE",
+    featuredFrom: null,
     featuredUntil: null,
     postedAt,
     deadline: row.deadline,

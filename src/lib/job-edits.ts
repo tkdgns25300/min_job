@@ -43,7 +43,7 @@ import type { Tables } from "@/types/database";
  *  · `posted_at` — 크롤러가 끌어올린다(크롤러 SPEC §4.2b: "`posted_at` 한 칸만 쓴다. 제목·연락처·
  *    마감일·상태는 운영자·교회의 몫"). 우리가 쓰면 다음 실행에 덮인다.
  *  · `source`·`source_url`·`church_id` — 출처와 소유권. 고치는 것이 아니라 claim으로 바뀐다.
- *  · `featured_tier`·`featured_until` — 결제 결과. 결제 경로가 붙을 때 그쪽이 쓴다.
+ *  · `featured_tier`·`featured_from`·`featured_until` — 결제 결과. 결제 완료 액션(`mypage/church/promote/actions.ts`)만 쓴다.
  *  · `status` — **전용 버튼(마감·다시 모집)만** 쓴다. 같은 컬럼에 쓰기 경로가 둘이면 갈라진다.
  *  · `id`·`created_at`·`updated_at` — 관리 칸(`updated_at`은 저장 액션이 직접 넣는다 · 트리거 없음).
  */
