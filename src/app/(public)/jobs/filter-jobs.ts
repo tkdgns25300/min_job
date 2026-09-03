@@ -102,7 +102,7 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
 
 /**
  * 1페이지 맨 위 광고 로우 — **필터를 통과한 결과 중** 목록 자리를 가진 등급을 사다리 순(스페셜 → 플러스)으로,
- * 등급마다 **주 정원까지만**(스페셜 3·플러스 2 = 최대 5줄). 정원이 상한인 이유: 스페셜이 여섯이면 플러스가
+ * 등급마다 **정원까지만**(스페셜 3·플러스 2 = 최대 5줄). 정원이 상한인 이유: 스페셜이 여섯이면 플러스가
  * 자기가 산 자리를 못 받는다 — 한 등급이 다른 등급의 줄을 먹지 않게 등급별로 자른다.
  * 사용자가 건 필터에 걸리지 않는 광고는 서지 않는다(그 화면의 결과에 원래 들어갈 공고만 광고가 된다).
  * `rest`가 일반 목록이고 "총 N건"은 `rest`만 센다 — 광고는 결과 수에 들어가지 않는다(SPEC 수익화 절).
@@ -112,7 +112,7 @@ export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCar
  */
 export function splitListAds(jobs: JobCard[]): { ads: JobCard[]; rest: JobCard[] } {
   const ads = tiersForSlot("list").flatMap((tier) => {
-    const capacity = EXPOSURE_PRODUCTS[tier].weeklyCapacity ?? jobs.length;
+    const capacity = EXPOSURE_PRODUCTS[tier].capacity ?? jobs.length;
     return jobs.filter((job) => job.featuredTier === tier).slice(0, capacity);
   });
   const adIds = new Set(ads.map((job) => job.id));

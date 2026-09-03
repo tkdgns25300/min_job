@@ -162,8 +162,8 @@ export const JOB_STATUSES = {
 } as const;
 export type JobStatus = keyof typeof JOB_STATUSES;
 
-// 노출 등급 — `jobs.featured_tier`의 값(현재 유효 노출의 캐시 · DATA §7). NONE = 노출 없음.
-// 상품 자체(자리·정원·가격)는 아래 `EXPOSURE_PRODUCTS`가 정의하고, 여기는 라벨만 갖는다.
+// 노출 등급 — 원장(`job_promotions.tier`)의 값 + `NONE`(노출 없음). 화면이 쓰는 등급은 오늘을 덮는 PAID 행에서
+// 온다(2026-09-03 · `lib/exposure-order`). 상품 자체(자리·정원·가격)는 아래 `EXPOSURE_PRODUCTS`가 정의한다.
 // ⚠️ 등급명은 **교회가 사는 상품 이름**이다 — 구직자 화면에는 나오지 않는다(카드·로우는 "광고" 한 단어).
 export const FEATURED_TIERS = {
   NONE: "일반",
@@ -188,7 +188,8 @@ export const RECENT_WINDOW_DAYS = 7;
 //
 // 자리는 셋이다 — 홈 추천 카드 3칸 · 공고 목록 1페이지 상단 로우(최대 5줄) · 공고 상세 "비슷한 공고" 첫 칸.
 // 등급은 **닿는 범위**로 갈린다: 스페셜 = 셋 다 · 플러스 = 목록 + 연관 · 기본 = 연관만.
-// 정원(`weeklyCapacity`)은 **주 단위**다 — 홈 3칸·목록 5줄이 자리 수라 그보다 많이 팔 수 없다.
+// 정원(`capacity`)은 **동시 건수**다(개정 2026-09-03 — 그전엔 주 단위였다) — 홈 3칸·목록 5줄이 자리 수라
+// 어느 날이든 그보다 많이 노출할 수 없다. 기간은 시작일부터 주수 × 7일이고 정원은 하루 단위로 센다.
 // 기본은 정원이 없다 — 연관 첫 칸은 **같은 지역** 광고만 서서 지역별로 자연히 나뉜다.
 export const EXPOSURE_SLOTS = {
   home: "홈 추천 카드",
@@ -203,8 +204,8 @@ export type ExposureWeeks = (typeof EXPOSURE_WEEKS)[number];
 interface ExposureProductDef {
   label: string;
   slots: Record<ExposureSlot, boolean>;
-  /** 한 주에 팔 수 있는 건수. null = 정원 없음 */
-  weeklyCapacity: number | null;
+  /** 같은 날 동시에 노출할 수 있는 건수. null = 정원 없음 */
+  capacity: number | null;
   /** 주수별 가격(원, VAT 포함). 2주·4주는 묶음가라 주 단가 × 주수가 아니다 — 계산하지 않고 표로 둔다 */
   prices: Record<ExposureWeeks, number>;
   desc: string;
@@ -215,21 +216,21 @@ export const EXPOSURE_PRODUCTS = {
   SPECIAL: {
     label: "스페셜",
     slots: { home: true, list: true, related: true },
-    weeklyCapacity: 3,
+    capacity: 3,
     prices: { 1: 99_000, 2: 189_000, 4: 299_000 },
     desc: "홈 추천 카드 + 목록 상단 + 비슷한 공고 첫 칸",
   },
   PLUS: {
     label: "플러스",
     slots: { home: false, list: true, related: true },
-    weeklyCapacity: 2,
+    capacity: 2,
     prices: { 1: 49_000, 2: 94_000, 4: 149_000 },
     desc: "목록 상단 + 비슷한 공고 첫 칸",
   },
   BASIC: {
     label: "기본",
     slots: { home: false, list: false, related: true },
-    weeklyCapacity: null,
+    capacity: null,
     prices: { 1: 29_000, 2: 55_000, 4: 89_000 },
     desc: "같은 지역 공고 상세의 비슷한 공고 첫 칸",
   },
@@ -256,15 +257,20 @@ export function exposurePrice(tier: ExposureProduct, weeks: ExposureWeeks): numb
   return EXPOSURE_PRODUCTS[tier].prices[weeks];
 }
 
+// 시작일을 고를 수 있는 범위(오늘 포함, 일). 더 멀리 열면 정원을 미리 잠그는 예약이 생긴다 —
+// 자리가 3·2칸뿐이라 한 주면 충분하다. 요금 페이지·약관 문구가 이 값을 말한다.
+export const START_WINDOW_DAYS = 7;
+
 // 자리 크기 — 홈 추천 카드 칸 수 · 공고 상세 "비슷한 공고" 장 수(첫 칸이 광고 자리).
-// 목록 상단 로우는 상수가 없다 — 등급별 주 정원(스페셜 3 + 플러스 2 = 최대 5줄)이 그대로 상한이다(`splitListAds`).
+// 목록 상단 로우는 상수가 없다 — 등급별 정원(스페셜 3 + 플러스 2 = 최대 5줄)이 그대로 상한이다(`splitListAds`).
 export const HOME_AD_SLOTS = 3;
 export const SIMILAR_JOBS_COUNT = 6;
 
 // 노출 구매 원장(`job_promotions.status`)의 상태 — 결제 이력 한 줄이 지금 어떤 상태인가.
 // 원장은 append-only라 행을 지우지 않고 이 값을 바꾼다(DATA.md §3 `job_promotions`). **정원 판정은 PAID만 센다.**
 // 환불 정책(확정 2026-09-03 · 약관 제10조와 한 쌍):
-//   CANCELLED — **게재 시작 전** 취소. 전액 환불. 주 단위 상품이라 일할 계산은 없다.
+//   CANCELLED — **게재 시작 전** 취소. 전액 환불(주 단위 상품이라 일할 계산은 없다). 결제 완료 액션이
+//     자리를 줄 수 없을 때(주문 불일치·남의 공고·정원 마감·경합) 스스로 적는 값이기도 하다.
 //   REFUNDED  — 게재 시작 뒤 운영자가 예외로 환불한 것. 기본은 환불 없음(시작 뒤에는 남은 기간을 소진한다).
 export const PROMOTION_STATUSES = {
   PAID: "결제완료",

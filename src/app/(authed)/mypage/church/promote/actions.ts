@@ -12,31 +12,27 @@ import {
   type PromotionStatus,
 } from "@/constants/domain";
 import {
-  firstFullWeek,
+  firstFullDay,
   isAllowedStart,
-  isExtension,
   isIsoDate,
   lostCapacityRace,
-  mondayOf,
-  pendingWindow,
+  lostOverlapRace,
+  overlapsExisting,
   promotionPeriod,
-  weeklySales,
-  weeksOf,
-  type PromotionPeriod,
 } from "@/lib/exposure-order";
-import { addDays, todayInSeoul } from "@/lib/job-visibility";
+import { todayInSeoul } from "@/lib/job-visibility";
 import { cancelPayment, getPayment } from "@/lib/portone";
 import { getPaidPromotionsOverlapping } from "@/lib/queries/promotions";
 import { createClient } from "@/lib/supabase/server";
 
-// 노출 결제 완료 — **원장에 적고 공고에 노출을 건다.** 결제창(브라우저)이 끝나면 여기로 온다:
+// 노출 결제 완료 — **원장에 한 줄 적는 것이 곧 노출이다.** 결제창(브라우저)이 끝나면 여기로 온다:
 // PC는 SDK 약속이 풀리는 즉시, 모바일은 `redirectUrl`로 돌아온 화면이 URL의 `paymentId`로.
 //
 // Server Action인 이유(2026-09-02 확정): 적용 직후 `updateTag("jobs")`로 캐시를 비워 교회가 홈·목록에서
 // 자기 광고를 **바로** 본다. route handler는 `revalidateTag`만 가능해 다음 방문자가 옛 목록을 본다.
 // 그래서 `/api/payments/complete`는 없앴다(CLAUDE "REST 라우트 금지"의 예외 하나가 줄었다).
 //
-// **주문은 PortOne이 들고 있다.** 결제창에 실은 `customData`(공고·등급·주수·시작 주)를 결제 조회로 다시 읽는다 —
+// **주문은 PortOne이 들고 있다.** 결제창에 실은 `customData`(공고·등급·주수·시작일)를 결제 조회로 다시 읽는다 —
 // 클라이언트가 한 번 더 보낸 값을 믿지 않고, 모바일 복귀처럼 우리 쪽 상태가 사라진 뒤에도 같은 답이 나온다.
 // 금액은 등급·주수로 **서버가 재계산**해 PortOne이 받은 금액·통화와 대조한다(위변조·다른 상품 결제 방어).
 //
@@ -46,15 +42,18 @@ import { createClient } from "@/lib/supabase/server";
 //  · `charged: true`  — 청구됐는데 적용도 취소도 못 했다. 화면은 재시도 대신 결제번호와 문의 수단을 보여준다.
 // 멱등성은 `job_promotions.payment_id UNIQUE`다 — 같은 결제가 두 번 들어와도 노출이 두 번 적립되지 않는다.
 //
-// **한 공고는 창 하나** — 캐시 컬럼(`featured_*`)이 한 창이라 두 창을 겹쳐 두면 하나가 사라진다(진행 중인 노출을
-// 새 결제가 지운다). 이미 잡힌 창이 있으면 **같은 등급으로 이어 사는 연장**만 받고 종료일을 늘린다.
+// **원장이 유일한 진실이다**(2026-09-03) — `jobs`에 노출 칸이 없다. 여기가 하는 쓰기는 원장 INSERT 하나뿐이고,
+// 목록·홈·상세는 오늘을 덮는 PAID 행을 읽어 등급을 정한다. 그래서 "노출 적용"이라는 별도 단계가 없다.
+// 같은 공고에 **기간이 겹치는 구매만** 막는다 — 같은 날 값을 두 번 받지 않고, 그날 어느 등급인지가 애매해지지 않는다.
+// 정원과 겹침은 **팔기 전과 적은 뒤 두 번** 본다 — DB가 배타를 강제하지 않아(트리거·함수 없음) 세고-적기 사이에
+// 다른 결제가 들어올 수 있다. 두 번째 판정은 순서 키로 하므로 어느 쪽에서 봐도 한 명만 진다.
 
 /** 결제창에 실어 보내는 주문 — `customData`로 PortOne 결제 레코드에 남는다 */
 export interface PromotionOrder {
   jobId: string;
   tier: ExposureProduct;
   weeks: ExposureWeeks;
-  /** 시작 주 월요일(YYYY-MM-DD) */
+  /** 시작일(YYYY-MM-DD) — 오늘부터 7일 안 */
   startsAt: string;
 }
 
@@ -65,20 +64,29 @@ export type PromotionResult =
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 const CONTACT_NEEDED = "결제는 확인됐지만 노출을 적용하지 못했어요. 결제번호로 문의해 주세요.";
+const UNKNOWN_PAYMENT = "알 수 없는 결제번호예요.";
 const REFUNDED_INVALID = "주문 내용을 확인할 수 없어 결제를 전액 취소했어요. 다시 신청해 주세요.";
-const REFUNDED_FULL =
-  "그 주 자리가 방금 다 찼어요. 결제는 전액 취소했어요 — 다른 주나 기간으로 다시 신청해 주세요.";
+const refundedFull = (day: string) =>
+  `${monthDay(day)}에 자리가 방금 다 찼어요. 결제는 전액 취소했어요 — 다른 날짜나 기간으로 다시 신청해 주세요.`;
+/** "2026-09-07" → "9/7" — 결제 화면과 같은 날짜 표기 */
+const monthDay = (iso: string) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
 const REFUNDED_WINDOW =
-  "이 공고는 이미 노출이 잡혀 있어요. 결제는 전액 취소했어요 — 노출이 끝나는 다음 주부터 같은 등급으로 이어 신청할 수 있어요.";
+  "이 공고에 이미 잡힌 노출과 기간이 겹쳐요. 결제는 전액 취소했어요. 노출이 끝난 뒤 다시 신청해 주세요.";
 const PAYMENT_ID_PREFIX = "promo-"; // 결제창이 만드는 번호 형식(promote-checkout) — 다른 형식은 우리 결제가 아니다
 const KRW = "KRW";
 const PAID = "PAID" satisfies PromotionStatus;
 const CANCELLED = "CANCELLED" satisfies PromotionStatus;
 const UNIQUE_VIOLATION = "23505";
+// **아무것도 안 써진 것이 확실한** 오류들 — CHECK·FK 위반은 행이 들어가지 않는다. 주문이 우리 규칙과
+// 어긋난 것이므로 청구를 되돌린다(문의로 넘기면 돈만 받고 흔적이 로그뿐이다). 그 밖의 코드는 행이
+// 들어갔을 수도 있어 운영자 확인으로 보낸다 — 재시도는 `replayFromLedger`가 원장으로 답한다.
+const NOT_WRITTEN_CODES = new Set(["23514", "23503"]);
+/** 이 시간 안에 적힌 행이면 캐시를 대신 비운다 — 그 뒤에는 이미 비워졌거나 `cacheLife`가 지나간다 */
+const RECENT_WRITE_MS = 10 * 60 * 1000;
 
 export async function completePromotion(paymentId: string): Promise<PromotionResult> {
   if (!paymentId.startsWith(PAYMENT_ID_PREFIX)) {
-    return { ok: false, message: "알 수 없는 결제번호예요.", charged: false };
+    return { ok: false, message: UNKNOWN_PAYMENT, charged: false };
   }
 
   const user = await requireUser();
@@ -91,7 +99,7 @@ export async function completePromotion(paymentId: string): Promise<PromotionRes
   const today = todayInSeoul();
 
   // 멱등 — 이미 적은 결제면 원장으로 답한다(모바일 복귀 새로고침·이중 호출). PortOne 왕복도 없다
-  const recorded = await replayFromLedger(supabase, paymentId);
+  const recorded = await replayFromLedger(supabase, paymentId, user.churchId);
   if (recorded !== null) return recorded;
 
   // PortOne에 직접 묻는다 — 상태·금액·통화·주문 전부 여기서
@@ -128,10 +136,10 @@ export async function completePromotion(paymentId: string): Promise<PromotionRes
   const refund = (reason: string, message: string) =>
     cancelAndRecord(supabase, paymentId, reason, ledgerRow, message);
 
-  // 화면이 낸 주문이 아니다 — 금액·통화가 다르거나, 시작 주가 화면의 선택지 밖이거나, 기간이 통째로 과거다
+  // 화면이 낸 주문이 아니다 — 금액·통화가 다르거나, 시작일이 화면의 선택지(오늘부터 7일 + 자정 유예) 밖이다
   const priced =
     payment.currency === KRW && payment.amount.total === exposurePrice(order.tier, order.weeks);
-  if (!priced || !isAllowedStart(order.startsAt, today) || period.endsAt < today) {
+  if (!priced || !isAllowedStart(order.startsAt, today)) {
     console.error("[promote] 주문 불일치", paymentId, order, payment.amount, payment.currency);
     return refund("주문 불일치", REFUNDED_INVALID);
   }
@@ -142,6 +150,8 @@ export async function completePromotion(paymentId: string): Promise<PromotionRes
     .select("id")
     .eq("id", order.jobId)
     .eq("church_id", user.churchId)
+    // 결제 화면이 내주는 대상과 같은 술어 — 미claim 크롤 공고에는 광고를 걸 수 없다(`getChurchDashboard`)
+    .eq("source", "CHURCH")
     .maybeSingle();
   if (jobError) {
     console.error("[promote] 대상 공고 조회 실패", paymentId, order.jobId, jobError);
@@ -152,18 +162,13 @@ export async function completePromotion(paymentId: string): Promise<PromotionRes
     return refund("교회의 공고가 아님", REFUNDED_INVALID);
   }
 
-  // 정원·창 재확인 — 화면이 봤을 때와 결제창을 지나는 사이에 다른 결제가 들어올 수 있다(경합).
-  // 이번 주 월요일부터 읽어야 이 공고의 **진행 중인 창**(기간 앞에서 끝나는 것)도 잡힌다.
-  const paid = await getPaidPromotionsOverlapping({
-    startsAt: mondayOf(today),
-    endsAt: period.endsAt,
-  });
-  const window = pendingWindow(order.jobId, today, paid);
-  const extension = window !== null && isExtension(window, order);
-  if (window !== null && !extension) return refund("같은 공고의 노출과 겹침", REFUNDED_WINDOW);
-  if (firstFullWeek(order.tier, period, weeklySales(weeksOf(period), paid)) !== null) {
-    return refund("정원 마감", REFUNDED_FULL);
+  // 정원·겹침 재확인 — 화면이 봤을 때와 결제창을 지나는 사이에 다른 결제가 들어올 수 있다(경합)
+  const paid = await getPaidPromotionsOverlapping(period);
+  if (overlapsExisting(order.jobId, period, paid)) {
+    return refund("같은 공고의 노출과 기간 겹침", REFUNDED_WINDOW);
   }
+  const fullDay = firstFullDay(order.tier, period, paid);
+  if (fullDay !== null) return refund("정원 마감", refundedFull(fullDay));
 
   const inserted = await supabase
     .from("job_promotions")
@@ -174,7 +179,7 @@ export async function completePromotion(paymentId: string): Promise<PromotionRes
     // UNIQUE 위반 — 같은 결제가 먼저 적혔다(이중 호출). 원장이 답이고, 캐시 적용도 거기서 다시 한다
     if (inserted.error.code === UNIQUE_VIOLATION) {
       return (
-        (await replayFromLedger(supabase, paymentId)) ?? {
+        (await replayFromLedger(supabase, paymentId, user.churchId)) ?? {
           ok: false,
           message: CONTACT_NEEDED,
           charged: true,
@@ -182,34 +187,43 @@ export async function completePromotion(paymentId: string): Promise<PromotionRes
       );
     }
     console.error("[promote] 원장 기록 실패", paymentId, inserted.error);
+    if (NOT_WRITTEN_CODES.has(inserted.error.code)) {
+      return refund("원장 제약 위반", REFUNDED_INVALID);
+    }
     return { ok: false, message: CONTACT_NEEDED, charged: true };
   }
 
-  // 세고-적기 사이에 다른 결제가 끼어들었나 — 적은 뒤 다시 읽어 **먼저 적힌 행**만으로 정원을 다시 센다.
-  // DB가 배타를 강제하지 않으니(트리거·함수 없음) 이 한 번의 재확인이 초과 판매를 막는다. 졌으면 취소한다.
-  const lost = lostCapacityRace(
-    order.tier,
-    period,
-    { paymentId, createdAt: inserted.data.created_at },
-    await getPaidPromotionsOverlapping(period),
-  );
-  if (lost !== null) return cancelRecorded(supabase, paymentId, "정원 마감(경합)", REFUNDED_FULL);
+  // 세고-적기 사이에 다른 결제가 끼어들었나 — 적은 뒤 다시 읽어 **먼저 적힌 행**만으로 둘 다 다시 본다.
+  // DB가 배타를 강제하지 않으니(트리거·함수 없음) 이 한 번의 재확인이 초과 판매와 이중 청구를 막는다.
+  const ours = { paymentId, createdAt: inserted.data.created_at };
+  const after = await getPaidPromotionsOverlapping(period);
+  // ① 같은 공고에 기간이 겹치는 결제가 먼저 적혔다(탭 두 개) — 정원 없는 기본 등급은 이것이 유일한 방어다
+  if (lostOverlapRace(order.jobId, period, ours, after)) {
+    return cancelRecorded(supabase, paymentId, "같은 공고의 노출과 기간 겹침", REFUNDED_WINDOW);
+  }
+  // ② 우리보다 먼저 적힌 같은 등급 행이 정원을 채웠다
+  const lost = lostCapacityRace(order.tier, period, ours, after);
+  if (lost !== null)
+    return cancelRecorded(supabase, paymentId, "정원 마감(경합)", refundedFull(lost));
 
-  const applied = await applyExposure(supabase, order.jobId, order.tier, period, extension);
-  if (!applied) return { ok: false, message: CONTACT_NEEDED, charged: true };
-
+  // 원장 한 줄이 곧 노출이다 — 캐시를 비우면 다음 요청부터 목록·홈·상세가 이 등급을 읽는다
   updateTag("jobs");
   return { ok: true, order, endsAt: period.endsAt };
 }
 
-/** 원장에 있는 결제로 답한다 — PAID면 캐시 적용을 한 번 더 하고(멱등) 성공, 취소·환불이면 그 사실. 없으면 null */
+/**
+ * 원장에 있는 결제로 답한다 — PAID면 캐시 적용을 한 번 더 하고(멱등) 성공, 취소·환불이면 그 사실. 없으면 null.
+ * ⚠️ **남의 결제번호면 없는 것처럼 답하지 않는다** — null을 주면 아래 흐름이 그 결제를 PortOne에서 조회하고
+ *    끝내 **다른 교회의 결제를 취소**하게 된다. 주문 내용도 새지 않게 그 자리에서 끊는다(RLS 유예 · DATA §9).
+ */
 async function replayFromLedger(
   supabase: Supabase,
   paymentId: string,
+  churchId: string,
 ): Promise<PromotionResult | null> {
   const { data: row, error } = await supabase
     .from("job_promotions")
-    .select("job_id, tier, weeks, starts_at, ends_at, status")
+    .select("job_id, tier, weeks, starts_at, ends_at, status, created_at, jobs(church_id)")
     .eq("payment_id", paymentId)
     .maybeSingle();
   if (error) {
@@ -217,70 +231,24 @@ async function replayFromLedger(
     return { ok: false, message: CONTACT_NEEDED, charged: true };
   }
   if (!row) return null;
+  if (row.jobs?.church_id !== churchId) {
+    console.error("[promote] 남의 결제번호", paymentId, churchId);
+    return { ok: false, message: UNKNOWN_PAYMENT, charged: false };
+  }
   if (row.status !== PAID) {
     return { ok: false, message: "취소된 결제예요. 다시 신청해 주세요.", charged: false };
   }
   if (!isExposureProduct(row.tier) || !isExposureWeeks(row.weeks)) {
     return { ok: false, message: CONTACT_NEEDED, charged: true };
   }
-  const period = { startsAt: row.starts_at, endsAt: row.ends_at };
-  // 먼저 적은 쪽이 캐시 적용 전에 죽었을 수 있다 — 적용은 멱등이라 여기서 다시 해도 안전하다
-  const applied = await applyExposure(supabase, row.job_id, row.tier, period, null);
-  if (!applied) return { ok: false, message: CONTACT_NEEDED, charged: true };
-  updateTag("jobs");
+  // 먼저 적은 쪽이 캐시를 비우기 전에 죽었을 수 있다 — 그때만 대신 비운다. 무조건 비우면 이 화면을
+  // 새로고침하는 것만으로 공개 캐시 전체(`cacheTag("jobs")`)를 계속 날릴 수 있다.
+  if (Date.now() - Date.parse(row.created_at) < RECENT_WRITE_MS) updateTag("jobs");
   return {
     ok: true,
     order: { jobId: row.job_id, tier: row.tier, weeks: row.weeks, startsAt: row.starts_at },
     endsAt: row.ends_at,
   };
-}
-
-/**
- * 캐시 컬럼 적용 — "지금 이 공고는 스페셜이다"를 `now()` 없이 읽는 값(DATA §7). 원장과 함께 써야 한다.
- * `extension`이 true면 종료일만 늘린다(진행 중인 창의 시작을 건드리면 이번 주 노출이 사라진다). null이면 지금
- * 캐시를 읽어 판정한다 — 같은 등급의 창이 이 기간 바로 앞까지 이어져 있으면 연장이다(원장 재생 경로).
- * 트리거가 없다 — `updated_at`도 여기서 넣는다(공고 액션들과 같은 관용구).
- */
-async function applyExposure(
-  supabase: Supabase,
-  jobId: string,
-  tier: ExposureProduct,
-  period: PromotionPeriod,
-  extension: boolean | null,
-): Promise<boolean> {
-  let extend = extension;
-  if (extend === null) {
-    const { data } = await supabase
-      .from("jobs")
-      .select("featured_tier, featured_from, featured_until")
-      .eq("id", jobId)
-      .maybeSingle();
-    const sameTier = data?.featured_tier === tier && data.featured_from !== null;
-    // 이미 이 기간을 덮는 창이 있다(같은 결제의 재생) — 다시 쓰면 연장된 창의 시작이 뒤로 밀려 진행 중 노출이 끊긴다
-    if (
-      sameTier &&
-      data.featured_from! <= period.startsAt &&
-      data.featured_until !== null &&
-      data.featured_until >= period.endsAt
-    ) {
-      return true;
-    }
-    // 연장 = 같은 등급의 창이 새 기간 바로 전날(일요일)에 끝난다
-    extend = sameTier && data.featured_until === addDays(period.startsAt, -1);
-  }
-  const patch = extend
-    ? { featured_until: period.endsAt }
-    : { featured_tier: tier, featured_from: period.startsAt, featured_until: period.endsAt };
-  const { error } = await supabase
-    .from("jobs")
-    .update({ ...patch, updated_at: new Date().toISOString() })
-    .eq("id", jobId);
-  if (error) {
-    // 원장은 적혔다(자리는 잡혔다) — 노출만 안 걸렸으니 운영자가 원장을 보고 다시 건다
-    console.error("[promote] 노출 적용 실패", jobId, error);
-    return false;
-  }
-  return true;
 }
 
 /** `customData` — SDK가 객체를 JSON 문자열로 저장한다. 모양이 다르면 null */
@@ -291,8 +259,8 @@ function parseOrder(customData: string | null): PromotionOrder | null {
     const { jobId, tier, weeks, startsAt } = raw;
     if (typeof jobId !== "string" || typeof startsAt !== "string") return null;
     if (!isExposureProduct(tier) || !isExposureWeeks(weeks)) return null;
-    // 날짜는 모양부터 본다 — `mondayOf`는 못 읽는 값을 그대로 돌려줘 월요일 검사가 통과해 버린다
-    if (!isIsoDate(startsAt) || mondayOf(startsAt) !== startsAt) return null;
+    // 날짜는 모양부터 본다 — 못 읽는 값이 통과하면 INSERT가 Postgres 캐스트에서 죽는다
+    if (!isIsoDate(startsAt)) return null;
     return { jobId, tier, weeks, startsAt };
   } catch {
     return null;
@@ -329,14 +297,25 @@ async function cancelAndRecord(
   return { ok: false, message, charged: false };
 }
 
-/** 이미 PAID로 적힌 행을 되돌린다(경합에서 졌을 때) — 취소 뒤 상태만 바꾼다(append-only: 지우지 않는다) */
+/**
+ * 이미 PAID로 적힌 행을 되돌린다(경합에서 졌을 때) — 취소 뒤 상태만 바꾼다(append-only: 지우지 않는다).
+ * ⚠️ **PAID 행이 곧 노출이다** — 상태를 바꾸기 전까지 그 광고는 실제로 나가고 있다. 그래서 바꾼 뒤
+ *    `updateTag("jobs")`로 캐시를 비운다(INSERT와 UPDATE 사이에 캐시가 채워졌으면 환불된 광고가
+ *    한 시간 더 걸린다). 취소가 확인되지 않으면 **노출은 켜진 채**라 문구도 그렇게 말한다.
+ */
 async function cancelRecorded(
   supabase: Supabase,
   paymentId: string,
   reason: string,
   message: string,
 ): Promise<PromotionResult> {
-  if (!(await cancelled(paymentId, reason))) return chargedButStuck(reason);
+  if (!(await cancelled(paymentId, reason))) {
+    return {
+      ok: false,
+      message: `${reason}이지만 결제 취소가 확인되지 않았어요. 노출은 켜진 상태로 두었으니 결제번호로 문의해 주세요.`,
+      charged: true,
+    };
+  }
   const { error } = await supabase
     .from("job_promotions")
     .update({ status: CANCELLED })
@@ -345,6 +324,7 @@ async function cancelRecorded(
     // 돈은 돌아갔는데 원장이 PAID로 남았다 — 자리를 하나 더 차지한 채다. 운영자가 원장에서 바로잡는다
     console.error("[promote] 취소 상태 기록 실패 — 원장 PAID 잔존", paymentId, error);
   }
+  updateTag("jobs");
   return { ok: false, message, charged: false };
 }
 

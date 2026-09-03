@@ -12,13 +12,9 @@ import {
 } from "@/constants/domain";
 import { churchIdentityKey, jobChurchRef } from "@/lib/job-church";
 import { pickSimilarJobs } from "@/lib/similar-jobs";
-import {
-  addDays,
-  exposureWindow,
-  hiddenReason,
-  isPubliclyOpen,
-  todayInSeoul,
-} from "@/lib/job-visibility";
+import { addDays, hiddenReason, isPubliclyOpen, todayInSeoul } from "@/lib/job-visibility";
+import type { ExposureWindow } from "@/lib/exposure-order";
+import { getActiveExposure } from "./promotions";
 import { createServiceClient } from "@/lib/supabase/service";
 import { fetchAllRows } from "./fetch-all";
 import type { Tables } from "@/types/database";
@@ -96,6 +92,26 @@ function onlyOpen(entries: CardEntry[], today: string): CardEntry[] {
   return entries.filter((e) => isPubliclyOpen(e.job, today));
 }
 
+type ExposureMap = Map<string, ExposureWindow>;
+
+/**
+ * 노출 등급 — **오늘 실제로 보이는 것만**. 시작 전 예약(`active=false`)은 `NONE`이다:
+ * 며칠 뒤부터 시작하는 광고가 오늘 목록 맨 위에 서면 아직 오지 않은 기간의 자리를 준 셈이 된다.
+ */
+function activeTier(exposure: ExposureMap, jobId: string): FeaturedTier {
+  const window = exposure.get(jobId);
+  return window?.active ? window.tier : "NONE";
+}
+
+/**
+ * 공개 목록 카드 — 공고와 **원장을 함께** 읽어 등급까지 채운 뒤 내려보낸다(2026-09-03).
+ * 두 조회가 서로를 기다릴 이유가 없어 나란히 던진다. 원장은 결제 건수만큼이라 아주 작다.
+ */
+async function openCards(today: string): Promise<JobCard[]> {
+  const [entries, exposure] = await Promise.all([fetchOpenCards(), getActiveExposure()]);
+  return onlyOpen(entries, today).map((e) => toCard(e, today, activeTier(exposure, e.job.id)));
+}
+
 export interface HomeFeed {
   /** "추천 청빙" 3칸 — 스페셜이 서고, 안 팔린 칸은 최신 공고(`ad=false`) */
   slots: PlacedJob[];
@@ -113,8 +129,7 @@ export async function getHomeFeed(latestLimit = 8): Promise<HomeFeed> {
   cacheTag("jobs", "churches");
   cacheLife("hours");
   const today = todayInSeoul();
-  // 등급은 만료를 반영한 카드 값으로 판단한다 — 기한 지난 스페셜이 추천 칸을 차지하지 않게
-  const cards = onlyOpen(await fetchOpenCards(), today).map((e) => toCard(e, today));
+  const cards = await openCards(today);
   const homeTiers = new Set<FeaturedTier>(tiersForSlot("home"));
 
   const slots: PlacedJob[] = cards
@@ -136,8 +151,7 @@ export async function getAllJobCards(): Promise<JobCard[]> {
   "use cache";
   cacheTag("jobs", "churches");
   cacheLife("hours");
-  const today = todayInSeoul();
-  return onlyOpen(await fetchOpenCards(), today).map((e) => toCard(e, today));
+  return openCards(todayInSeoul());
 }
 
 /**
@@ -154,16 +168,21 @@ export async function getJobCardsByIds(ids: string[]): Promise<JobCard[]> {
   cacheLife("hours");
   if (ids.length === 0) return [];
   const today = todayInSeoul();
-  const { data, error } = await createServiceClient()
-    .from("jobs")
-    .select(`${JOB_CARD_COLUMNS}, ${CHURCH_REF_EMBED}`)
-    .in("id", [...ids].sort());
+  const [{ data, error }, exposure] = await Promise.all([
+    createServiceClient()
+      .from("jobs")
+      .select(`${JOB_CARD_COLUMNS}, ${CHURCH_REF_EMBED}`)
+      .in("id", [...ids].sort()),
+    getActiveExposure(),
+  ]);
   if (error) throw new Error(`공고 조회 실패: ${error.message}`);
-  return (data as unknown as CardRow[]).map(toEntry).map((e) => toCard(e, today));
+  return (data as unknown as CardRow[])
+    .map(toEntry)
+    .map((e) => toCard(e, today, activeTier(exposure, e.job.id)));
 }
 
 /** 운영자 관리 행 — 전체 상태·출처 + 교회 조인(**검수 상태를 안 본다**: 운영자는 전체를 본다) */
-function toAdminRow(entry: CardEntry, today: string): AdminJob {
+function toAdminRow(entry: CardEntry, today: string, exposure: ExposureMap): AdminJob {
   const { job, church } = entry;
   const ref = jobChurchRef(job, church ? { id: church.id } : null);
   return {
@@ -177,7 +196,7 @@ function toAdminRow(entry: CardEntry, today: string): AdminJob {
     department: job.department,
     employmentType: job.employmentType,
     status: job.status,
-    exposure: exposureWindow(job, today),
+    exposure: exposure.get(job.id) ?? null,
     source: job.source,
     postedAt: job.postedAt,
     deadline: job.deadline,
@@ -190,7 +209,8 @@ export async function getAdminJobs(): Promise<AdminJob[]> {
   cacheTag("jobs", "churches");
   cacheLife("hours");
   const today = todayInSeoul();
-  return (await fetchAllCards()).map((e) => toAdminRow(e, today));
+  const [entries, exposure] = await Promise.all([fetchAllCards(), getActiveExposure()]);
+  return entries.map((e) => toAdminRow(e, today, exposure));
 }
 
 /**
@@ -226,12 +246,13 @@ export async function getAdminOverview(): Promise<AdminOverview> {
   cacheTag("jobs");
   cacheLife("hours");
   const today = todayInSeoul();
-  const all = (await fetchAllCards()).map((e) => toAdminRow(e, today));
+  // 수치 둘 다 만료 판정만 쓴다 — 운영자 행(`toAdminRow`)을 만들지 않고 판정 함수를 바로 부른다.
   // 두 수치가 짝이다 — "게재중(OPEN)"은 같은데 하나는 뜨고 하나는 안 뜬다. 그 차이를 만드는 것이
   // 만료 판정이라(`hiddenReason`) `status`만 세면 운영자가 부풀린 수치를 본다.
+  const all = await fetchAllCards();
   return {
-    visibleCount: all.filter((j) => j.isPubliclyOpen).length,
-    hiddenCount: all.filter((j) => j.hiddenReason !== null).length,
+    visibleCount: all.filter((e) => isPubliclyOpen(e.job, today)).length,
+    hiddenCount: all.filter((e) => hiddenReason(e.job, today) !== null).length,
   };
 }
 
@@ -281,7 +302,8 @@ export async function getCoverageStats(): Promise<{
   cacheLife("hours");
   const today = todayInSeoul();
   const open = onlyOpen(await fetchOpenCards(), today);
-  const churches = open.map((e) => toCard(e, today).church);
+  // 교회 참조만 쓴다 — 노출 등급은 이 수치와 무관해 원장을 읽지 않는다(`"NONE"`)
+  const churches = open.map((e) => toCard(e, today, "NONE").church);
 
   return {
     openCount: open.length,
@@ -332,21 +354,22 @@ export async function getSimilarJobs(id: string, limit = SIMILAR_JOBS_COUNT): Pr
   cacheTag("jobs", "churches");
   cacheLife("hours");
   const today = todayInSeoul();
-  const entries = onlyOpen(await fetchOpenCards(), today);
+  const [rawEntries, exposure] = await Promise.all([fetchOpenCards(), getActiveExposure()]);
+  const entries = onlyOpen(rawEntries, today);
 
   // 기준 공고는 만료·마감됐어도 필요하다(마감 배너의 "비슷한 공고 보기") — 목록에서 못 찾으면 따로 읽는다
   const base = entries.find((e) => e.job.id === id)?.job ?? (await fetchCardFields(id));
   if (!base) return [];
 
   const byId = new Map(entries.map((e) => [e.job.id, e]));
+  // 규칙(`lib/similar-jobs`)은 후보의 **오늘 등급**만 본다 — 첫 칸 광고 자격이 거기서 갈린다
   const pick = pickSimilarJobs(
-    base,
-    entries.map((e) => e.job),
-    today,
+    { ...base, featuredTier: activeTier(exposure, base.id) },
+    entries.map((e) => ({ ...e.job, featuredTier: activeTier(exposure, e.job.id) })),
     limit,
   );
   const place = (jobId: string, ad: boolean): PlacedJob => ({
-    job: toCard(byId.get(jobId)!, today),
+    job: toCard(byId.get(jobId)!, today, activeTier(exposure, jobId)),
     ad,
   });
   return [
@@ -371,17 +394,19 @@ export async function getChurchOpenJobs(churchId: string, excludeId?: string): P
   cacheTag("jobs", "churches");
   cacheLife("hours");
   const today = todayInSeoul();
-  const { data, error } = await createServiceClient()
-    .from("jobs")
-    .select(`${JOB_CARD_COLUMNS}, ${CHURCH_REF_EMBED}`)
-    .eq("church_id", churchId)
-    .eq("status", VISIBLE_STATUS)
-    .order("posted_at", { ascending: false });
+  const [{ data, error }, exposure] = await Promise.all([
+    createServiceClient()
+      .from("jobs")
+      .select(`${JOB_CARD_COLUMNS}, ${CHURCH_REF_EMBED}`)
+      .eq("church_id", churchId)
+      .eq("status", VISIBLE_STATUS)
+      .order("posted_at", { ascending: false }),
+    getActiveExposure(),
+  ]);
   if (error) throw new Error(`교회 공고 조회 실패: ${error.message}`);
-
   return onlyOpen((data as unknown as CardRow[]).map(toEntry), today)
     .filter((e) => e.job.id !== excludeId)
-    .map((e) => toCard(e, today));
+    .map((e) => toCard(e, today, activeTier(exposure, e.job.id)));
 }
 
 /**

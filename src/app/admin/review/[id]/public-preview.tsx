@@ -45,7 +45,7 @@ export function PublicPreview({
     payMax: draft.pay_max,
     payNote: draft.pay_note,
     payPeriod: draft.pay_period ?? "MONTH",
-    featuredTier: "NONE",
+    featuredTier: "NONE", // 미리보기 카드 — 광고 자리가 아니다(원장에 행이 없다)
     postedAt: row.posted_at,
     deadline: draft.deadline,
   };

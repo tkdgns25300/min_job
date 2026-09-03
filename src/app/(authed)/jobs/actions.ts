@@ -25,7 +25,7 @@ import type { Church } from "@/types/domain";
 //    권한은 사람이 아니라 **그 교회의 인증 관리자**라는 자격에서 온다.
 //
 // ⚠️ **검수가 없다.** 교회가 등록하면 바로 `OPEN`이다 — 인증이 게이트다(가드레일 #1 개정
-//    2026-08-21). 그래서 `status`·`featured_tier`는 DB 기본값(`OPEN`·`NONE`)에 맡긴다.
+//    2026-08-21). 그래서 `status`는 DB 기본값(`OPEN`)에 맡긴다 — 노출은 `jobs`에 칸이 없다(원장이 답한다).
 
 /** 실패만 말이 필요하다 — 성공하면 `redirect`가 나가거나(등록·수정) 호출부가 이어받는다(마감·클레임) */
 export type JobActionResult = { message?: string; errors?: DraftErrors };

@@ -4,7 +4,6 @@ import {
   DENOMINATIONS,
   DEPARTMENTS,
   EMPLOYMENT_TYPES,
-  FEATURED_TIERS,
   JOB_KINDS,
   JOB_SOURCES,
   JOB_STATUSES,
@@ -15,8 +14,9 @@ import {
 } from "@/constants/domain";
 import { keyOf, keysOf } from "@/lib/domain-enum";
 import { jobChurchRef } from "@/lib/job-church";
-import { isFeaturedOn, isPubliclyOpen } from "@/lib/job-visibility";
+import { isPubliclyOpen } from "@/lib/job-visibility";
 import type { Tables } from "@/types/database";
+import type { FeaturedTier } from "@/constants/domain";
 import type { Church, Job, JobCard } from "@/types/domain";
 
 // DB 행 → 도메인 타입. **`lib/queries/*` 내부 전용**(페이지·컴포넌트가 import하지 않는다).
@@ -56,9 +56,6 @@ const CARD_FIELDS = [
   "pay_period",
   "status",
   "source",
-  "featured_tier",
-  "featured_from",
-  "featured_until",
   "posted_at",
   "deadline",
 ] as const;
@@ -112,9 +109,6 @@ export type JobCardFields = Pick<
   | "payPeriod"
   | "status"
   | "source"
-  | "featuredTier"
-  | "featuredFrom"
-  | "featuredUntil"
   | "postedAt"
   | "deadline"
 >;
@@ -143,9 +137,6 @@ export function toJobCardFields(row: JobCardRow): JobCardFields {
     payPeriod: keyOf(PAY_PERIODS, row.pay_period) ?? "MONTH",
     status: keyOf(JOB_STATUSES, row.status) ?? "CLOSED",
     source: keyOf(JOB_SOURCES, row.source) ?? "OPERATOR",
-    featuredTier: keyOf(FEATURED_TIERS, row.featured_tier) ?? "NONE",
-    featuredFrom: row.featured_from,
-    featuredUntil: row.featured_until,
     postedAt: row.posted_at,
     deadline: row.deadline,
   };
@@ -180,8 +171,12 @@ export function publicChurch(entry: CardEntry): { id: string } | null {
  * 카드 → `JobCard`. 공개 목록·저장한 공고·최근 본 공고 세 seam이 같은 모양을 내보낸다 —
  * 한때 `jobs.ts` 안에만 있었는데 `bookmarks.ts`와 액션이 함께 쓰게 되어 여기로 왔다(2026-08-28).
  * `today`는 호출부가 준다 — cached scope 안이면 거기서, 요청 스코프면 요청마다 만든다.
+ *
+ * ⚠️ **노출 등급은 인자로 받는다**(2026-09-03) — `jobs`에 노출 칸이 없어졌고 답은 원장에 있다.
+ *    호출부가 `exposureByJob`으로 만든 지도에서 꺼내 넘긴다. **기본값을 두지 않는다** — 원장을 안 읽는
+ *    seam은 `"NONE"`을 직접 적어 "여기선 노출을 안 본다"고 말하게 한다(빠뜨린 것과 구별된다).
  */
-export function toCard(entry: CardEntry, today: string): JobCard {
+export function toCard(entry: CardEntry, today: string, tier: FeaturedTier): JobCard {
   const { job } = entry;
   const church = jobChurchRef(job, publicChurch(entry));
   return {
@@ -204,8 +199,7 @@ export function toCard(entry: CardEntry, today: string): JobCard {
     payMax: job.payMax,
     payNote: job.payNote,
     payPeriod: job.payPeriod,
-    // 기한 지난 유료 노출은 등급을 내려서 내려보낸다 — 화면마다 만료를 다시 판정하지 않게(DATA §3)
-    featuredTier: isFeaturedOn(job, today) ? job.featuredTier : "NONE",
+    featuredTier: tier,
     postedAt: job.postedAt,
     deadline: job.deadline,
   };
@@ -213,8 +207,8 @@ export function toCard(entry: CardEntry, today: string): JobCard {
 
 /**
  * 전 컬럼 → `Job`.
- * ⚠️ 좁히기 실패의 기본값은 **덜 보이는 쪽**으로 넘어뜨린다 — `status`는 `CLOSED`, `featuredTier`는
- *    `NONE`. 알 수 없는 값을 공개·유료 노출로 읽으면 사고가 되고, 반대는 눈에 띄어 고쳐진다.
+ * ⚠️ 좁히기 실패의 기본값은 **덜 보이는 쪽**으로 넘어뜨린다 — `status`는 `CLOSED`. 알 수 없는 값을
+ *    공개로 읽으면 사고가 되고, 반대는 눈에 띄어 고쳐진다.
  */
 export function toJob(row: Tables<"jobs">): Job {
   return {

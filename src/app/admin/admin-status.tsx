@@ -1,5 +1,5 @@
 import { requireOperator } from "@/lib/auth-guard";
-import { promotionPeriod, startWeekOptions } from "@/lib/exposure-order";
+import { startDateOptions } from "@/lib/exposure-order";
 import { todayInSeoul } from "@/lib/job-visibility";
 import { getLastCrawlRun } from "@/lib/queries/crawl";
 import { getAdminOverview } from "@/lib/queries/jobs";
@@ -36,7 +36,8 @@ export async function AdminStatus() {
   // 그게 바로 원하는 것이다("지금" 기준 판정). 규칙은 클라이언트 재렌더의 불안정성을 겨냥한 것이다.
   // eslint-disable-next-line react-hooks/purity
   const nowMs = Date.now();
-  const [thisMonday, nextMonday] = startWeekOptions(today);
+  // 오늘부터 일주일 — 정원이 하루 단위라 "언제 자리가 나나"를 이 창으로 답한다(살 수 있는 시작일 범위와 같다)
+  const days = startDateOptions(today);
 
   // 서로를 기다릴 이유가 없다 — 순서대로 await하면 왕복이 직렬로 쌓인다(검수 큐 화면과 같은 관용구).
   const [review, verification, crawl, overview, publishBacklog, paid] = await Promise.all([
@@ -45,11 +46,8 @@ export async function AdminStatus() {
     getLastCrawlRun(),
     getAdminOverview(),
     getPublishBacklogCount(),
-    // 이번 주·다음 주에 걸친 유효 구매 — 정원 잔여를 세는 입력(판정은 lib/exposure-order)
-    getPaidPromotionsOverlapping({
-      startsAt: thisMonday,
-      endsAt: promotionPeriod(nextMonday, 1).endsAt,
-    }),
+    // 오늘부터 일주일에 걸친 유효 구매 — 자리 잔여를 세는 입력(판정은 lib/exposure-order)
+    getPaidPromotionsOverlapping({ startsAt: days[0], endsAt: days[days.length - 1] }),
   ]);
 
   return (
@@ -88,7 +86,7 @@ export async function AdminStatus() {
       </StatusSection>
 
       <StatusSection title={STATUS_SECTIONS.exposure}>
-        <ExposureCard weeks={[thisMonday, nextMonday]} paid={paid} />
+        <ExposureCard days={days} spans={paid} />
       </StatusSection>
     </div>
   );

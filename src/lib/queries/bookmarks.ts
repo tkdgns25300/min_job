@@ -39,5 +39,6 @@ export async function getBookmarkedJobCards(userId: string): Promise<JobCard[]> 
   // 중첩 embed는 PostgREST 타입 파서가 못 읽어 행 모양을 직접 준다(`jobs.ts`의 `CardRow` 캐스트와 같은 관용구)
   const rows = data as unknown as { jobs: CardRow | null }[];
   // FK가 보장하지만 타입은 nullable — 없으면 건너뛴다(빈 행을 그리지 않는다)
-  return rows.flatMap((row) => (row.jobs ? [toCard(toEntry(row.jobs), today)] : []));
+  // 노출 등급은 `"NONE"`이다 — 저장한 공고 목록엔 광고 자리가 없어(라벨은 자리의 속성) 원장을 읽지 않는다
+  return rows.flatMap((row) => (row.jobs ? [toCard(toEntry(row.jobs), today, "NONE")] : []));
 }

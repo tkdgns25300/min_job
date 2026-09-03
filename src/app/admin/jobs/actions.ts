@@ -24,7 +24,7 @@ import type { TablesUpdate } from "@/types/database";
 //    둘 다 `write()` 한 곳에 가둔다 — 호출부가 기억해야 하는 것을 남기지 않는다.
 //
 // ⚠️ **크롤러의 칸은 건드리지 않는다.** `posted_at`은 크롤러가 끌어올리고(크롤러 SPEC §4.2b),
-//    `source`·`source_url`·`church_id`는 출처·소유권, `featured_tier`는 결제 결과다.
+//    `source`·`source_url`·`church_id`는 출처·소유권이다. 노출은 `jobs`에 칸이 없다 — 원장(`job_promotions`)이 답한다.
 //    `JobEdits`(lib/job-edits)에 그 칸이 없어 타입이 먼저 막는다.
 // ⛔ **삭제는 만들지 않는다.** 크롤러가 "공개된 job이 사라졌다"를 감지해 `published_job_id`를 비우고
 //    **다시 공개한다**(크롤러 SPEC §4.3). 내리는 수단은 마감이다.

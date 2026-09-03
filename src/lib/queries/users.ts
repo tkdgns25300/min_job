@@ -4,8 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { CHURCH_VERIFICATION_STATUSES, DENOMINATIONS, REGIONS } from "@/constants/domain";
 import { keyOf } from "@/lib/domain-enum";
 import { claimMatchTier } from "@/lib/job-church";
-import { exposureWindow, hiddenReason, isPubliclyOpen, todayInSeoul } from "@/lib/job-visibility";
-import type { ExposureWindow, HiddenReason } from "@/lib/job-visibility";
+import { hiddenReason, isPubliclyOpen, todayInSeoul } from "@/lib/job-visibility";
+import type { HiddenReason } from "@/lib/job-visibility";
+import { windowsByJob, type ExposureWindow } from "@/lib/exposure-order";
+import { getPromotionsForJobs } from "./promotions";
 import type { Church, CurrentUser, Job } from "@/types/domain";
 import { fetchAllRows } from "./fetch-all";
 import { JOB_CARD_COLUMNS, JOB_FULL_COLUMNS, toJob, toJobCardFields } from "./row-map";
@@ -37,8 +39,12 @@ export type MyJob = Pick<
   isPubliclyOpen: boolean;
   /** 내려간 이유 (안내 문구 선택용) — 노출 중이거나 교회가 직접 마감했으면 null */
   hiddenReason: HiddenReason;
-  /** 유료 노출 창 — 노출 중이거나 시작을 기다리는 예약. 끝났거나 없으면 null(`exposureWindow`) */
-  exposure: ExposureWindow | null;
+  /**
+   * 남은 유료 노출 창 — 시작일순. 노출 중인 것과 시작을 기다리는 예약이 함께 들어온다.
+   * **목록이어야 한다** — 끝난 뒤를 미리 사 둘 수 있어(겹치지만 않으면 자유) 하나만 보여주면 교회가 산 것이
+   * 화면에서 사라진다. 끝난 구매는 넘어오지 않는다.
+   */
+  exposures: ExposureWindow[];
 };
 
 // 교회 관리 대시보드 — 그 교회 공고(church_id 기준) + 클레임 가능(운영자 등록) 건수
@@ -140,6 +146,15 @@ export async function getChurchDashboard(churchId: string): Promise<ChurchDashbo
   if (jobs.error) throw new Error(`교회 공고 조회 실패: ${jobs.error.message}`);
 
   const rows = (jobs.data as unknown as JobCardRow[]).map(toJobCardFields);
+  const managed = rows.filter((j) => j.source === "CHURCH");
+  // 노출은 `jobs`의 칸이 아니라 원장에서 온다(2026-09-03) — 이 교회 공고의 남은 구매만 읽는다
+  const exposures = windowsByJob(
+    await getPromotionsForJobs(
+      managed.map((j) => j.id),
+      today,
+    ),
+    today,
+  );
   return {
     // 교회명·교단·지역은 **인증된 교회 행**에서 온다 — 공고 화면과 달리 여기는 교회 자기 정보다
     church: church.data
@@ -150,7 +165,7 @@ export async function getChurchDashboard(churchId: string): Promise<ChurchDashbo
           city: church.data.city,
         }
       : null,
-    managed: rows.filter((j) => j.source === "CHURCH").map((j) => toMyJob(j, today)),
+    managed: managed.map((j) => toMyJob(j, today, exposures.get(j.id) ?? [])),
   };
 }
 
@@ -239,8 +254,8 @@ export async function getClaimCandidates(
     }));
 }
 
-/** 마이페이지 관리 행 — 만료 판정을 붙여 내려보낸다(교회는 "왜 안 보이는지"를 알아야 한다) */
-function toMyJob(job: JobCardFields, today: string): MyJob {
+/** 마이페이지 관리 행 — 만료 판정과 노출 창을 붙여 내려보낸다(교회는 "왜 안 보이는지"를 알아야 한다) */
+function toMyJob(job: JobCardFields, today: string, exposures: ExposureWindow[]): MyJob {
   return {
     id: job.id,
     title: job.title,
@@ -254,7 +269,7 @@ function toMyJob(job: JobCardFields, today: string): MyJob {
     source: job.source,
     isPubliclyOpen: isPubliclyOpen(job, today),
     hiddenReason: hiddenReason(job, today),
-    exposure: exposureWindow(job, today),
+    exposures,
   };
 }
 

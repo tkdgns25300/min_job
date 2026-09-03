@@ -258,9 +258,6 @@ export type Database = {
           department: string | null;
           description: string;
           employment_type: string | null;
-          featured_from: string | null;
-          featured_tier: string;
-          featured_until: string | null;
           headcount: string | null;
           housing_note: string | null;
           housing_provided: boolean | null;
@@ -304,9 +301,6 @@ export type Database = {
           department?: string | null;
           description: string;
           employment_type?: string | null;
-          featured_from?: string | null;
-          featured_tier?: string;
-          featured_until?: string | null;
           headcount?: string | null;
           housing_note?: string | null;
           housing_provided?: boolean | null;
@@ -350,9 +344,6 @@ export type Database = {
           department?: string | null;
           description?: string;
           employment_type?: string | null;
-          featured_from?: string | null;
-          featured_tier?: string;
-          featured_until?: string | null;
           headcount?: string | null;
           housing_note?: string | null;
           housing_provided?: boolean | null;

@@ -1,4 +1,5 @@
-import type { ExposureWindow, HiddenReason } from "@/lib/job-visibility";
+import type { ExposureWindow } from "@/lib/exposure-order";
+import type { HiddenReason } from "@/lib/job-visibility";
 import type {
   Denomination,
   Region,
@@ -135,18 +136,6 @@ export interface Job {
    */
   payPeriod: PayPeriod;
   status: JobStatus;
-  featuredTier: FeaturedTier;
-  /**
-   * 유료 노출 시작일("YYYY-MM-DD"). 다음 주부터 시작하는 예약이 있어 필요하다 — 없으면 결제한 순간부터
-   * 노출로 읽혀 이번 주 정원을 넘긴다(DATA §7). null = 시작 제한 없음(NONE 공고는 셋 다 비어 있다).
-   */
-  featuredFrom: string | null;
-  /**
-   * 유료 노출 만료일("YYYY-MM-DD"). `featuredTier`·`featuredFrom`과 한 짝인 **판정 캐시**로, 원장은
-   * `job_promotions`다(DATA §3). **공개 화면에 그리지 않는다** — "지금 유료 노출 중인가"를
-   * `now()` 없이 판정하려고 두는 값이다(판정은 `isFeaturedOn` · 날짜는 seam이 `todayInSeoul()`로 만든다).
-   */
-  featuredUntil: string | null;
   postedAt: string; // "YYYY-MM-DD"
   deadline: string | null; // "YYYY-MM-DD", null = 상시모집
   // --- 상세 필드 ---
@@ -256,6 +245,10 @@ export interface JobCard {
   payMax: number | null;
   payNote: string | null;
   payPeriod: PayPeriod; // 카드 표시 + 사례비 필터의 월 환산에 쓴다
+  /**
+   * **오늘 유효한** 노출 등급 — 공고의 칸이 아니라 원장(`job_promotions`)에서 파생한다(2026-09-03).
+   * seam이 오늘을 덮는 PAID 행을 읽어 채운다. 시작 전 예약은 `NONE`이다(아직 안 보인다).
+   */
   featuredTier: FeaturedTier;
   postedAt: string;
   deadline: string | null;

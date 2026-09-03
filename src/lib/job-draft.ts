@@ -325,7 +325,7 @@ function common(draft: JobDraft) {
  *    이어도 목록·필터가 도는 이유다.
  * ⚠️ **`source_url`을 넣지 않는다** — `jobs_collected_needs_source_url`이 `source='CHURCH'`를
  *    면제한다. 교회가 직접 쓴 공고는 원문 링크라는 것이 없다.
- * ⚠️ `status`·`featured_tier`는 DB 기본값(`OPEN`·`NONE`)에 맡긴다 — 등록이 곧 게재다(검수 없음 ·
+ * ⚠️ `status`는 DB 기본값(`OPEN`)에 맡긴다 — 등록이 곧 게재다(검수 없음 ·
  *    가드레일 #1 개정 2026-08-21).
  */
 export function toInsert(draft: JobDraft, church: Church, today: string): TablesInsert<"jobs"> {

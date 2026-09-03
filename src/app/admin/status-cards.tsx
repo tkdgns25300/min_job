@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { EXPOSURE_PRODUCTS, type ExposureProduct } from "@/constants/domain";
 import { boardLabel, boardUrl, CRAWL_OVERDUE_HOURS } from "@/constants/review";
-import { promotionPeriod, soldInWeek, type PromotionSpan } from "@/lib/exposure-order";
+import { soldOn, type CapacitySpan } from "@/lib/exposure-order";
 import { formatKstDayTime } from "@/lib/format";
 import type { CrawlRun, FailedSource } from "@/lib/queries/crawl";
 import type { AdminOverview, QueueSummary } from "@/types/domain";
@@ -347,48 +347,49 @@ export function PublicCard({
   );
 }
 
-/** "2026-09-07" → "9/7" — 카드 안 주 표기 */
+/** "2026-09-07" → "9/7" — 카드 안 날짜 표기 */
 const monthDay = (iso: string) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
 
 /**
- * 노출 — 이번 주·다음 주에 등급별로 몇 자리가 팔렸나. **판정은 `lib/exposure-order`**(결제 화면·액션과 같은 함수)라
- * 여기 숫자와 교회가 보는 "남은 자리"가 갈릴 수 없다. 정원 없는 등급(기본)은 팔린 건수만 쓴다.
+ * 노출 — 오늘부터 일주일, 날짜별로 등급 자리가 몇 개 찼나. **판정은 `lib/exposure-order`**(결제 화면·액션과 같은
+ * 함수)라 여기 숫자와 교회가 보는 "남은 자리"가 갈릴 수 없다. 정원이 하루 단위라 날짜로 늘어놓는다.
  * 색은 쓰지 않는다 — 매진은 좋은 일이지 손댈 일이 아니다. 원장 전체는 `/admin/promotions`.
  */
-export function ExposureCard({
-  weeks,
-  paid,
-}: {
-  /** 이번 주·다음 주 월요일 */
-  weeks: [string, string];
-  paid: PromotionSpan[];
-}) {
+export function ExposureCard({ days, spans }: { days: string[]; spans: CapacitySpan[] }) {
   const tiers = Object.keys(EXPOSURE_PRODUCTS) as ExposureProduct[];
   return (
     <StatusCard tone="quiet">
-      <div className="grid grid-cols-2">
-        {weeks.map((monday, i) => (
-          <div key={monday} className="border-r px-4 py-3 last:border-r-0">
-            <div className="text-[11px] font-semibold text-muted-foreground">
-              {i === 0 ? "이번 주" : "다음 주"} · {monthDay(monday)}~
-              {monthDay(promotionPeriod(monday, 1).endsAt)}
-            </div>
-            <dl className="mt-1.5 space-y-0.5 text-sm">
-              {tiers.map((tier) => {
-                const { label, weeklyCapacity } = EXPOSURE_PRODUCTS[tier];
-                const sold = soldInWeek(tier, monday, paid);
-                return (
-                  <div key={tier} className="flex items-baseline justify-between gap-3">
-                    <dt className="text-muted-foreground">{label}</dt>
-                    <dd className="font-bold tabular-nums">
-                      {weeklyCapacity === null ? `${sold}건` : `${sold}/${weeklyCapacity}`}
-                    </dd>
-                  </div>
-                );
-              })}
-            </dl>
-          </div>
-        ))}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-md text-sm">
+          <thead>
+            <tr className="text-[11px] font-semibold text-muted-foreground">
+              <th className="px-4 py-2.5 text-left font-semibold">등급</th>
+              {days.map((day, i) => (
+                <th key={day} className="px-2 py-2.5 text-right font-semibold tabular-nums">
+                  {i === 0 ? "오늘" : monthDay(day)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {tiers.map((tier) => {
+              const { label, capacity } = EXPOSURE_PRODUCTS[tier];
+              return (
+                <tr key={tier} className="border-t">
+                  <td className="px-4 py-2 whitespace-nowrap text-muted-foreground">
+                    {label}
+                    {capacity !== null && <span className="ml-1 text-[11px]">/{capacity}</span>}
+                  </td>
+                  {days.map((day) => (
+                    <td key={day} className="px-2 py-2 text-right font-bold tabular-nums">
+                      {soldOn(tier, day, spans)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
       <div className="border-t px-4 py-2.5 text-[11px] text-muted-foreground">
         <Link href="/admin/promotions" className="font-semibold text-foreground hover:underline">

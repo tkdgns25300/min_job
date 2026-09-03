@@ -9,20 +9,18 @@ import { getChurchDashboard } from "@/lib/queries/users";
 import { getPaidPromotionsOverlapping } from "@/lib/queries/promotions";
 import { requireUser } from "@/lib/auth-guard";
 import { hasChurchAccess } from "@/lib/auth";
-import { EXPOSURE_WEEKS } from "@/constants/domain";
+import { EXPOSURE_WEEKS, START_WINDOW_DAYS } from "@/constants/domain";
 import {
-  pendingWindow,
+  periodsByJob,
   promotionPeriod,
-  startWeekOptions,
-  weeklySales,
-  weeksOf,
-  type PendingWindow,
+  startDateOptions,
+  type CapacitySpan,
 } from "@/lib/exposure-order";
-import { todayInSeoul } from "@/lib/job-visibility";
+import { addDays, todayInSeoul } from "@/lib/job-visibility";
 
 export const metadata: Metadata = { title: "노출 신청 | 민잡" }; // noindex는 (authed) layout 상속
 
-// 가장 긴 상품이 가장 늦은 시작 주에서 끝나는 날까지 — 정원 판정에 필요한 원장 범위
+// 가장 긴 상품을 가장 늦은 시작일에 사면 끝나는 날까지 — 정원 판정에 필요한 원장 범위
 const LONGEST_WEEKS = Math.max(...EXPOSURE_WEEKS) as (typeof EXPOSURE_WEEKS)[number];
 
 type SearchParams = Promise<{
@@ -56,11 +54,8 @@ async function PromoteContent({ searchParams }: { searchParams: SearchParams }) 
   const returning = paymentId !== null && !failed;
 
   const today = todayInSeoul();
-  const [thisMonday, nextMonday] = startWeekOptions(today);
-  const horizon = {
-    startsAt: thisMonday,
-    endsAt: promotionPeriod(nextMonday, LONGEST_WEEKS).endsAt,
-  };
+  const lastStart = addDays(today, START_WINDOW_DAYS - 1);
+  const horizon = { startsAt: today, endsAt: promotionPeriod(lastStart, LONGEST_WEEKS).endsAt };
   const [dashboard, paid] = returning
     ? [null, []]
     : await Promise.all([getChurchDashboard(user.churchId), getPaidPromotionsOverlapping(horizon)]);
@@ -71,15 +66,17 @@ async function PromoteContent({ searchParams }: { searchParams: SearchParams }) 
     dashboard?.managed
       .filter((job) => job.isPubliclyOpen)
       .map((job) => ({ id: job.id, title: job.title })) ?? [];
-  // 화면에는 **주별 집계**와 **이 교회 공고의 잡힌 창**만 내려간다 — 남의 예약 행은 실어 보내지 않는다.
-  // 판정 함수(`lib/exposure-order`)는 결제 액션과 같다 — 화면은 안내, 액션이 최종.
-  const sales = weeklySales(weeksOf(horizon), paid);
-  const pending = Object.fromEntries(
-    openJobs.flatMap((job) => {
-      const window = pendingWindow(job.id, today, paid);
-      return window ? [[job.id, window] as const] : [];
-    }),
-  ) as Record<string, PendingWindow>;
+  // 화면에는 **기간 조각**(등급·시작·종료)과 **이 교회 공고의 마지막 종료일**만 내려간다 — 남의 예약이 누구
+  // 것인지는 싣지 않는다. 판정 함수(`lib/exposure-order`)는 결제 액션과 같다 — 화면은 안내, 액션이 최종.
+  const spans: CapacitySpan[] = paid.map(({ tier, startsAt, endsAt }) => ({
+    tier,
+    startsAt,
+    endsAt,
+  }));
+  const held = periodsByJob(
+    paid,
+    openJobs.map((job) => job.id),
+  );
 
   return (
     <>
@@ -110,8 +107,9 @@ async function PromoteContent({ searchParams }: { searchParams: SearchParams }) 
           jobs={openJobs}
           payerEmail={user.email}
           today={today}
-          sales={sales}
-          pending={pending}
+          startDates={startDateOptions(today)}
+          spans={spans}
+          held={held}
           initialError={failed ? (one(params.message) ?? "결제가 취소되었거나 실패했어요.") : null}
         />
       )}

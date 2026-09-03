@@ -43,9 +43,12 @@ export function ConfirmButton({
 }) {
   const [asking, setAsking] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  // 처리가 시작되면(=`disabled`) 확인 상태를 **렌더에서** 접는다 — 끝난 뒤 확인 버튼이 남아 있으면
+  // 두 번 눌린다. effect로 되돌리면 한 프레임 동안 확인 상태가 남고 렌더가 한 번 더 돈다
+  const confirming = asking && !disabled;
 
   useEffect(() => {
-    if (!asking) return;
+    if (!confirming) return;
     const cancelOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setAsking(false);
     };
@@ -59,26 +62,21 @@ export function ConfirmButton({
       window.removeEventListener("keydown", cancelOnEscape);
       window.removeEventListener("pointerdown", cancelOnOutside);
     };
-  }, [asking]);
-
-  // 처리가 시작되면 확인 상태를 닫는다 — 끝난 뒤 확인 버튼이 남아 있으면 두 번 눌린다
-  useEffect(() => {
-    if (disabled) setAsking(false);
-  }, [disabled]);
+  }, [confirming]);
 
   return (
     // 기본은 글자 폭(표 한 칸) · `flex-1`을 받으면 늘어난다(편집 화면의 저장과 1:1)
     <div ref={ref} className={cn("inline-flex flex-col", className)}>
       <Button
-        variant={asking ? confirmVariant : "outline"}
+        variant={confirming ? confirmVariant : "outline"}
         size={size}
         disabled={disabled}
         className="w-full"
         /* 확인 단계의 보이는 말은 짧아야 해서("마감 확인") 보조기기에는 **무슨 동작인지**를 실어
            준다 — `confirmLabel`만으로는 접근성 이름이 문맥을 잃는다. 평소엔 버튼 글자가 이름이다 */
-        aria-label={asking ? `${label} — 다시 누르면 실행됩니다` : undefined}
+        aria-label={confirming ? `${label} — 다시 누르면 실행됩니다` : undefined}
         onClick={() => {
-          if (!asking) {
+          if (!confirming) {
             setAsking(true);
             return;
           }
@@ -86,9 +84,9 @@ export function ConfirmButton({
           onConfirm();
         }}
       >
-        {asking ? confirmLabel : label}
+        {confirming ? confirmLabel : label}
       </Button>
-      {asking && hint && (
+      {confirming && hint && (
         <p className="mt-1.5 text-xs break-keep text-muted-foreground" role="status">
           {hint} 취소는 Esc.
         </p>

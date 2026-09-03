@@ -62,19 +62,19 @@ export function MyJobRow({ job }: { job: MyJob }) {
         <p className="mt-0.5 text-xs text-muted-foreground">
           {job.postedAt} 게시 · {job.deadline ? `${job.deadline} 마감` : "상시모집"}
         </p>
-        {/* 유료 노출 — 노출 중이면 끝나는 날, 예약이면 시작하는 날. 결제했는데 표시가 없으면 적용 안 된 줄 안다.
+        {/* 유료 노출 — 산 것을 **전부** 보여준다(노출 중 + 예약). 결제했는데 줄이 없으면 적용이 안 된 줄 안다.
             "보기"는 그 등급이 서는 자리로 — 스페셜만 홈에 있다 */}
-        {job.exposure ? (
-          <p className="mt-1 text-xs font-semibold text-gold-ink">
-            {FEATURED_TIERS[job.exposure.tier]}{" "}
-            {job.exposure.active
-              ? `노출 중 · ${job.exposure.until}까지`
-              : `노출 예약 · ${job.exposure.from}부터`}
-            {job.exposure.active ? (
+        {job.exposures.map((window) => (
+          <p key={window.startsAt} className="mt-1 text-xs font-semibold text-gold-ink">
+            {FEATURED_TIERS[window.tier]}{" "}
+            {window.active
+              ? `노출 중 · ${window.endsAt}까지`
+              : `노출 예약 · ${window.startsAt}부터 ${window.endsAt}까지`}
+            {window.active ? (
               <>
                 {" · "}
                 <Link
-                  href={EXPOSURE_PRODUCTS[job.exposure.tier].slots.home ? "/" : "/jobs"}
+                  href={EXPOSURE_PRODUCTS[window.tier].slots.home ? "/" : "/jobs"}
                   className="underline underline-offset-2"
                 >
                   노출 보기
@@ -82,7 +82,7 @@ export function MyJobRow({ job }: { job: MyJob }) {
               </>
             ) : null}
           </p>
-        ) : null}
+        ))}
         {/* 게재중인데 공개 목록에 안 보이는 경우 — 왜 안 보이는지 교회가 알아야 한다(DATA §6-1).
             status는 OPEN이라 배지만으로는 알 수 없어 별도 안내가 필요하다. */}
         {hidden && (

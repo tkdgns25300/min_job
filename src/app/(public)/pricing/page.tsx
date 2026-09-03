@@ -70,16 +70,14 @@ function paidPlan(tier: ExposureProduct): Plan {
     aud: PLAN_AUDIENCE[tier],
     features: [
       ...slots,
-      p.weeklyCapacity === null
-        ? "정원 없음 — 바로 시작"
-        : `주 ${p.weeklyCapacity}건 정원 — 매진이면 다음 주`,
+      p.capacity === null ? "정원 없음 — 바로 시작" : `동시 ${p.capacity}건 한정`,
       `2주 ${price(tier, 2)} · 4주 ${price(tier, 4)}`,
     ],
     // 결제 화면이 게이트를 맡는다 — 비로그인은 proxy가 로그인으로, 미인증 교회는 대시보드(인증 안내)로 보낸다.
     // 그래서 이 정적 페이지가 세션을 읽지 않아도 CTA 하나로 충분하다(PPR 셸 유지)
     cta: { label: "노출 신청하기", href: "/mypage/church/promote", primary: true },
     highlight: tier === "PLUS",
-    badge: tier === "PLUS" ? "추천" : tier === "SPECIAL" ? "주 3건 한정" : undefined,
+    badge: tier === "PLUS" ? "추천" : tier === "SPECIAL" ? "동시 3건 한정" : undefined,
     preview: PREVIEW_GROUP[tier],
   };
 }
@@ -101,7 +99,7 @@ const PLANS: Plan[] = [
 const FAQS = [
   {
     q: "결제는 어떻게 하나요?",
-    a: "교회 인증을 마친 계정으로 노출 신청 화면에서 카드로 결제해요. 결제가 확인되면 노출이 바로 적용돼요(다음 주 시작을 골랐으면 그 월요일부터). 인증이 아직이면 먼저 교회 인증을 진행해 주세요.",
+    a: "교회 인증을 마친 계정으로 노출 신청 화면에서 카드로 결제해요. 결제가 확인되면 고른 시작일부터 노출돼요(오늘을 고르면 바로). 인증이 아직이면 먼저 교회 인증을 진행해 주세요.",
   },
   {
     q: "무료 공고도 노출되나요?",
@@ -109,7 +107,7 @@ const FAQS = [
   },
   {
     q: "노출 기간과 정원은요?",
-    a: "주 단위(월~일)로 1·2·4주 중 고릅니다. 스페셜은 주 3건, 플러스는 주 2건까지만 팔아요. 그 주가 찼으면 다음 주부터 시작할 수 있어요.",
+    a: "시작일을 오늘부터 일주일 안에서 고르고, 그날부터 1·2·4주 중 고릅니다. 자리가 한정이라 스페셜은 동시에 3건, 플러스는 2건까지만 노출돼요. 원하는 날이 찼으면 다른 날짜로 시작할 수 있어요.",
   },
   {
     q: "취소·환불은요?",
@@ -248,12 +246,12 @@ export default async function PricingPage() {
                   </tr>
                 ))}
                 <tr>
-                  <td>주 정원</td>
+                  <td>동시 정원</td>
                   <td>
                     <No />
                   </td>
                   {PAID_TIERS.map((tier) => {
-                    const capacity = EXPOSURE_PRODUCTS[tier].weeklyCapacity;
+                    const capacity = EXPOSURE_PRODUCTS[tier].capacity;
                     return <td key={tier}>{capacity === null ? "없음" : `${capacity}건`}</td>;
                   })}
                 </tr>
@@ -268,7 +266,8 @@ export default async function PricingPage() {
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            ※ 표시가는 VAT 포함. 주 단위(월~일) · 2주·4주 묶음가. 유료 자리에는 “광고”라고 표시돼요.
+            ※ 표시가는 VAT 포함. 고른 시작일부터 주 단위 · 2주·4주 묶음가. 유료 자리에는 “광고”라고
+            표시돼요.
           </p>
         </section>
 

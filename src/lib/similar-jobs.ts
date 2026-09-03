@@ -1,7 +1,6 @@
 import { tiersForSlot, type FeaturedTier } from "@/constants/domain";
 import { churchIdentityKey } from "@/lib/job-church";
-import { isFeaturedOn } from "@/lib/job-visibility";
-import type { Job } from "@/types/domain";
+import type { Job, JobCard } from "@/types/domain";
 
 // 비슷한 공고 = **같은 자격으로 갈 수 있는 자리 중 가까운 것**(확정 2026-09-02 · SPEC 공고 상세 절).
 // 순수 함수 — seam(`getSimilarJobs`)이 후보를 넘기고 결과를 카드로 바꾼다. 여기는 DB도 캐시도 모른다.
@@ -15,7 +14,10 @@ import type { Job } from "@/types/domain";
 // 선다. 점수는 광고에 적용하지 않는다 — 여럿이면 기준 공고 id의 해시로 하나를 고른다. 상세가 캐시라 로드마다
 // 바뀌는 로테이션은 쓸 수 없고, 해시면 페이지마다 다른 광고가 서서 자연히 나눠진다.
 
-/** 판정에 쓰는 필드만 — 카드 컬럼(`JobCardFields`)이 이 모양을 만족한다 */
+/**
+ * 판정에 쓰는 필드만 — 카드 컬럼(`JobCardFields`)에 **오늘 등급**을 얹은 모양이다.
+ * 등급은 공고의 칸이 아니라 원장에서 오므로 seam이 채워 넘긴다(2026-09-03).
+ */
 export type SimilarCandidate = Pick<
   Job,
   | "id"
@@ -27,11 +29,9 @@ export type SimilarCandidate = Pick<
   | "region"
   | "department"
   | "employmentType"
-  | "featuredTier"
-  | "featuredFrom"
-  | "featuredUntil"
   | "postedAt"
->;
+> &
+  Pick<JobCard, "featuredTier">;
 
 export interface SimilarPick<T> {
   /** 첫 칸 광고. 문 통과 + 같은 지역인 유료 공고가 없으면 null */
@@ -83,7 +83,6 @@ const RELATED_TIERS = new Set<FeaturedTier>(tiersForSlot("related"));
 export function pickSimilarJobs<T extends SimilarCandidate>(
   base: SimilarCandidate,
   pool: readonly T[],
-  today: string,
   limit: number,
 ): SimilarPick<T> {
   // ⚠️ 같은 교회 판정에 `churchId` 비교를 쓰면 안 된다 — 미claim 크롤 공고끼리는 둘 다 null이라 무관한
@@ -93,12 +92,9 @@ export function pickSimilarJobs<T extends SimilarCandidate>(
 
   const strict = others.filter((c) => GATES[0](base, c));
 
-  // 광고 — 문 통과 + 같은 지역(둘 다 밝혀진 경우) + 연관 자리를 가진 등급으로 유료 노출 중. id 정렬 뒤 해시로 하나
+  // 광고 — 문 통과 + 같은 지역(둘 다 밝혀진 경우) + 연관 자리를 가진 등급으로 오늘 노출 중. id 정렬 뒤 해시로 하나
   const adPool = strict
-    .filter(
-      (c) =>
-        RELATED_TIERS.has(c.featuredTier) && isFeaturedOn(c, today) && both(base.region, c.region),
-    )
+    .filter((c) => RELATED_TIERS.has(c.featuredTier) && both(base.region, c.region))
     .sort((a, b) => a.id.localeCompare(b.id));
   const ad = adPool.length > 0 ? adPool[hashString(base.id) % adPool.length] : null;
 

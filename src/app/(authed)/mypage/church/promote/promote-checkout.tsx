@@ -18,20 +18,20 @@ import {
   type ExposureWeeks,
 } from "@/constants/domain";
 import {
-  daysLeftInWeek,
-  firstFullWeek,
-  isExtension,
+  daysOf,
+  findClash,
+  firstFullDay,
   promotionPeriod,
-  startWeekOptions,
-  type PendingWindow,
-  type WeekSales,
+  soldOn,
+  type CapacitySpan,
+  type PromotionPeriod,
 } from "@/lib/exposure-order";
 import { addDays } from "@/lib/job-visibility";
 import { completePromotion, type PromotionOrder, type PromotionResult } from "./actions";
 import { PromoteOutcome } from "./promote-outcome";
 
-// 노출 결제 화면 — 공고 · 등급 · 시작 주 · 기간을 고르고 PortOne 결제창을 띄운다.
-// 정원·창 판정은 `lib/exposure-order`(순수)를 **화면과 완료 액션이 같이 쓴다** — 화면은 안내, 액션이 최종.
+// 노출 결제 화면 — 공고 · 등급 · 시작일 · 기간을 고르고 PortOne 결제창을 띄운다.
+// 정원·겹침 판정은 `lib/exposure-order`(순수)를 **화면과 완료 액션이 같이 쓴다** — 화면은 안내, 액션이 최종.
 // 결제번호는 결제창을 띄우기 **전에** localStorage에 남긴다 — 완료 처리 전에 탭이 닫히거나 세션이 풀리거나
 // 모바일에서 돌아오지 못해도, 이 화면을 다시 열면 그 번호로 확인을 이어간다(액션은 멱등).
 //
@@ -39,22 +39,18 @@ import { PromoteOutcome } from "./promote-outcome";
 const STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID;
 const CHANNEL_KEY = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY;
 
-// 이번 주가 기본인 남은 날 수 — 그보다 적으면(목요일 이후) 다음 주가 기본이다. 반 주도 안 남은 이번 주를
-// 기본으로 두면 대부분 다음 주로 바꿔야 하고, 안 바꾸면 값은 그대로인데 노출은 며칠뿐이다.
-const THIS_WEEK_DEFAULT_MIN_DAYS = 5;
-
 type JobOption = { id: string; title: string };
 type Outcome = { result: PromotionResult; paymentId: string };
 
-/** 잡힌 창이 있을 때의 안내 — 이어 살 수 있는 주가 지금 선택지에 있으면 그리 안내하고, 없으면 그때 오라고 */
-function heldMessage(held: PendingWindow, offered: readonly string[]): string {
-  const label = EXPOSURE_PRODUCTS[held.tier].label;
-  const next = addDays(held.endsAt, 1);
-  const base = `이 공고는 ${monthDay(held.endsAt)}까지 ${label} 노출이 잡혀 있어요.`;
-  return offered.includes(next)
-    ? `${base} 이어서 하려면 ${label}로 ${monthDay(next)} 주부터 신청해 주세요.`
-    : `${base} 노출이 끝나는 ${monthDay(next)} 주부터 다시 신청할 수 있어요.`;
-}
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"] as const;
+
+const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
+/** "2026-09-06" → "9/6" — 이 화면의 날짜 표기 */
+const monthDay = (iso: string) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
+const range = (period: PromotionPeriod) =>
+  `${monthDay(period.startsAt)}~${monthDay(period.endsAt)}`;
+/** 요일 — 정오 UTC 기준이라 브라우저 시간대와 무관하게 서버와 같은 답이 나온다 */
+const weekday = (iso: string) => WEEKDAYS[new Date(`${iso}T12:00:00Z`).getUTCDay()];
 
 const rememberPayment = (paymentId: string | null) => {
   try {
@@ -63,39 +59,32 @@ const rememberPayment = (paymentId: string | null) => {
   } catch {}
 };
 
-const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
-/** "2026-09-06" → "9/6" — 이 화면의 기간 표기 */
-const monthDay = (iso: string) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
-const range = (startsAt: string, endsAt: string) => `${monthDay(startsAt)}~${monthDay(endsAt)}`;
-
 export function PromoteCheckout({
   jobs,
   payerEmail,
   today,
-  sales,
-  pending,
+  startDates,
+  spans,
+  held,
   initialError,
 }: {
   jobs: JobOption[];
   payerEmail: string;
   /** KST 오늘(YYYY-MM-DD) — 서버가 만든다(클라이언트 시계를 믿지 않는다) */
   today: string;
-  /** 시작 가능한 주부터 가장 긴 상품이 끝나는 주까지, 주별 등급별 팔린 자리 */
-  sales: WeekSales[];
-  /** 이 교회 공고 중 이미 창이 잡힌 것 — 연장만 된다 */
-  pending: Record<string, PendingWindow>;
+  /** 고를 수 있는 시작일 — 오늘부터 7일 */
+  startDates: string[];
+  /** 정원 판정용 기간 조각 — 누가 샀는지는 없다 */
+  spans: CapacitySpan[];
+  /** 이 교회 공고에 이미 잡힌 기간 — 겹치면 못 산다 */
+  held: Record<string, PromotionPeriod[]>;
   /** 모바일 복귀가 `?code=`를 달고 왔을 때의 결제창 사유(청구 없음) */
   initialError?: string | null;
 }) {
-  const [thisMonday, nextMonday] = startWeekOptions(today);
-  const daysLeft = daysLeftInWeek(today);
-
   const [jobId, setJobId] = useState(jobs[0]?.id ?? "");
   const [tier, setTier] = useState<ExposureProduct>("PLUS");
   const [weeks, setWeeks] = useState<ExposureWeeks>(1);
-  const [startsAt, setStartsAt] = useState(
-    daysLeft >= THIS_WEEK_DEFAULT_MIN_DAYS ? thisMonday : nextMonday,
-  );
+  const [startsAt, setStartsAt] = useState(startDates[0] ?? today);
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [busy, startTransition] = useTransition();
@@ -124,7 +113,7 @@ export function PromoteCheckout({
     });
   }, []);
 
-  // 선택이 바뀌면 지난 결제창의 실패 문구는 치운다 — 새 막힘 이유(매진·창)를 가리면 안 된다
+  // 선택이 바뀌면 지난 결제창의 실패 문구는 치운다 — 새 막힘 이유(매진·겹침)를 가리면 안 된다
   const choose =
     <T,>(set: (v: T) => void) =>
     (v: T) => {
@@ -135,19 +124,30 @@ export function PromoteCheckout({
   const product = EXPOSURE_PRODUCTS[tier];
   const amount = exposurePrice(tier, weeks);
   const period = promotionPeriod(startsAt, weeks);
-  const fullWeek = firstFullWeek(tier, period, sales);
-  // 이 공고에 잡힌 창 — `window`라 부르면 전역과 겹친다
-  const held = pending[jobId] ?? null;
-  const extendable = held !== null && isExtension(held, { tier, startsAt });
+
+  /** 고른 기간 내내 남는 자리 — 하루라도 찬 날이 있으면 그 하루가 상한이다(정원 없는 등급은 null) */
+  const remaining = (key: ExposureProduct): number | null => {
+    const capacity = EXPOSURE_PRODUCTS[key].capacity;
+    if (capacity === null) return null;
+    const busiest = Math.max(...daysOf(period).map((day) => soldOn(key, day, spans)));
+    return Math.max(0, capacity - busiest);
+  };
+
+  const mine = held[jobId] ?? [];
+  const clashWith = (p: PromotionPeriod) => findClash(mine, p);
+  const clash = clashWith(period);
+  const fullDay = firstFullDay(tier, period, spans);
 
   // 결제를 막는 이유 하나 — 버튼 아래에 그대로 적는다(왜 안 눌리는지 모르는 버튼을 두지 않는다).
-  // 잡힌 창이 있으면 같은 등급으로 그 다음 월요일부터 이어 사는 것만 된다(캐시 컬럼이 창 하나라서).
-  const blocker =
-    held !== null && !extendable
-      ? heldMessage(held, [thisMonday, nextMonday])
-      : fullWeek !== null
-        ? `${monthDay(fullWeek)} 주 ${product.label} 자리가 다 찼어요. 다른 주나 기간을 골라 주세요.`
-        : null;
+  // 겹침은 두 갈래로 답한다: **피할 날짜가 선택지에 있으면** 그렇게 안내하고, 잡힌 노출이 선택지 끝까지
+  // 이어져 어느 날을 골라도 겹치면 **언제 다시 오면 되는지**를 말한다(막다른 안내를 두지 않는다).
+  const blocker = clash
+    ? startDates.some((d) => !clashWith(promotionPeriod(d, weeks)))
+      ? `이 공고는 ${range(clash)}에 이미 노출이 잡혀 있어요. 그 기간을 피해 골라 주세요.`
+      : `이 공고는 ${range(clash)}에 노출이 잡혀 있어요. 끝나는 ${monthDay(addDays(clash.endsAt, 1))}부터 다시 신청할 수 있어요.`
+    : fullDay !== null
+      ? `${monthDay(fullDay)}에 ${product.label} 자리가 다 찼어요. 다른 날짜나 기간을 골라 주세요.`
+      : null;
 
   function pay() {
     if (!agreed || blocker !== null || busy) return;
@@ -235,8 +235,7 @@ export function PromoteCheckout({
           {(Object.keys(EXPOSURE_PRODUCTS) as ExposureProduct[]).map((key) => {
             const p = EXPOSURE_PRODUCTS[key];
             const on = tier === key;
-            const sold = sales.find((w) => w.monday === startsAt)?.sold[key] ?? 0;
-            const left = p.weeklyCapacity === null ? null : p.weeklyCapacity - sold;
+            const left = remaining(key);
             return (
               <button
                 key={key}
@@ -266,7 +265,7 @@ export function PromoteCheckout({
                   <span className="mt-0.5 block text-xs break-keep text-muted-foreground">
                     {p.desc}
                   </span>
-                  {/* 정원은 시작 주 기준이다 — 주를 바꾸면 이 숫자도 바뀐다 */}
+                  {/* 남은 자리는 **고른 기간 기준**이다 — 날짜나 주수를 바꾸면 이 숫자도 바뀐다 */}
                   {left !== null ? (
                     <span
                       className={cn(
@@ -275,8 +274,8 @@ export function PromoteCheckout({
                       )}
                     >
                       {left > 0
-                        ? `${monthDay(startsAt)} 주 남은 자리 ${left}/${p.weeklyCapacity}`
-                        : `${monthDay(startsAt)} 주 매진`}
+                        ? `${range(period)} 남은 자리 ${left}/${p.capacity}`
+                        : `${range(period)} 매진`}
                     </span>
                   ) : null}
                 </span>
@@ -287,43 +286,37 @@ export function PromoteCheckout({
       </section>
 
       <section>
-        <h2 className="mb-2.5 text-sm font-bold">시작 주</h2>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            {
-              monday: thisMonday,
-              label: "이번 주",
-              note: `오늘부터 ${daysLeft}일`,
-            },
-            { monday: nextMonday, label: "다음 주", note: "월요일부터" },
-          ].map(({ monday, label, note }) => {
-            const on = startsAt === monday;
+        <h2 className="mb-2.5 text-sm font-bold">시작일</h2>
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+          {startDates.map((date, i) => {
+            const on = startsAt === date;
             return (
               <button
-                key={monday}
+                key={date}
                 type="button"
-                onClick={() => choose(setStartsAt)(monday)}
+                onClick={() => choose(setStartsAt)(date)}
                 aria-pressed={on}
                 className={cn(
-                  "rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
+                  "rounded-lg border py-2 text-center text-sm font-bold transition-colors",
                   on
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border hover:border-primary",
                 )}
               >
-                <span className="block font-bold">
-                  {label}{" "}
-                  <span className="font-medium opacity-80">
-                    {range(monday, promotionPeriod(monday, 1).endsAt)}
-                  </span>
+                {monthDay(date)}
+                <span className="block text-[11px] font-medium opacity-80">
+                  {i === 0 ? "오늘" : `${weekday(date)}요일`}
                 </span>
-                <span className="block text-[11px] font-medium opacity-80">{note}</span>
+                {/* 화면은 "9/10"이지만 스크린리더는 "9 슬래시 10"으로 읽는다 — 날짜를 말로 붙여 준다 */}
+                <span className="sr-only">
+                  {`${Number(date.slice(5, 7))}월 ${Number(date.slice(8, 10))}일 ${weekday(date)}요일 시작`}
+                </span>
               </button>
             );
           })}
         </div>
         <p className="mt-2 text-xs break-keep text-muted-foreground">
-          노출은 주 단위(월~일)로 팔아요. 이번 주를 고르면 남은 요일만 보이고 값은 같아요.
+          고른 날부터 주 단위로 노출돼요. 오늘부터 일주일 안에서 시작일을 정할 수 있어요.
         </p>
       </section>
 
@@ -360,7 +353,7 @@ export function PromoteCheckout({
         <div className="rounded-xl border bg-muted/30 p-4">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              {product.label} · {weeks}주 · {range(period.startsAt, period.endsAt)}
+              {product.label} · {weeks}주 · {range(period)}
             </span>
             <span>{won(amount)}</span>
           </div>
@@ -389,12 +382,18 @@ export function PromoteCheckout({
         </span>
       </label>
 
-      {blocker !== null || error !== null ? (
+      {/* 결제창이 돌려준 실패는 **방금 일어난 일**이라 `role="alert"`로 읽어 준다. 막힘 이유는 처음 그릴 때부터
+          있는 안내라 alert가 아니다 — 그 자리에 있으면 스크린리더가 읽지 않고 지나간다 */}
+      {error !== null ? (
         <p
           className="rounded-lg bg-destructive/10 px-3 py-2.5 text-sm break-keep text-destructive"
           role="alert"
         >
-          {error ?? blocker}
+          {error}
+        </p>
+      ) : blocker !== null ? (
+        <p className="rounded-lg bg-destructive/10 px-3 py-2.5 text-sm break-keep text-destructive">
+          {blocker}
         </p>
       ) : null}
 

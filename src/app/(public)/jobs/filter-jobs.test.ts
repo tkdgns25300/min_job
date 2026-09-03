@@ -45,7 +45,7 @@ describe("splitListAds — 1페이지 맨 위 광고 로우", () => {
     expect(ids(rest)).toEqual([basic.id]);
   });
 
-  it("등급마다 주 정원까지만(스페셜 3 · 플러스 2) — 넘치는 광고는 일반 로우로 내려간다", () => {
+  it("등급마다 정원까지만(스페셜 3 · 플러스 2) — 넘치는 광고는 일반 로우로 내려간다", () => {
     const specials = Array.from({ length: 4 }, () => card({ featuredTier: "SPECIAL" }));
     const pluses = Array.from({ length: 3 }, () => card({ featuredTier: "PLUS" }));
     const organic = card();

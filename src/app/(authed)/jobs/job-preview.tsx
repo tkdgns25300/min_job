@@ -214,9 +214,6 @@ function previewJob(draft: JobDraft, church: Church, postedAt: string, existing?
     payPeriod: row.pay_period,
     // 등록하면 바로 게재된다(검수 없음 · 가드레일 #1). 마감일로 안 뜨는 경우는 `isPubliclyOpen`이 본다
     status: "OPEN",
-    featuredTier: "NONE",
-    featuredFrom: null,
-    featuredUntil: null,
     postedAt,
     deadline: row.deadline,
     workDays: row.work_days,
@@ -260,7 +257,7 @@ function previewCard(
     payMax: job.payMax,
     payNote: job.payNote,
     payPeriod: job.payPeriod,
-    featuredTier: job.featuredTier,
+    featuredTier: "NONE",
     postedAt: job.postedAt,
     deadline: job.deadline,
   };

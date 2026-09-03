@@ -90,7 +90,7 @@ export function JobRow({ job }: { job: AdminJob }) {
           <span className="text-xs font-semibold text-gold-ink">
             {FEATURED_TIERS[job.exposure.tier]}
             <span className="ml-1 font-normal text-muted-foreground tabular-nums">
-              {job.exposure.active ? `~${job.exposure.until}` : `${job.exposure.from}~`}
+              {job.exposure.active ? `~${job.exposure.endsAt}` : `${job.exposure.startsAt}~`}
             </span>
           </span>
         ) : (
