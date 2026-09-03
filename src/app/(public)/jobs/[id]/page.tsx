@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Job } from "@/types/domain";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { JobDetailView } from "./job-detail-view";
@@ -8,6 +9,7 @@ import { breadcrumbJsonLd, jobPostingJsonLd, jobRoleSummary } from "@/lib/seo";
 import { churchLocation, formatPay } from "@/lib/format";
 import { REGIONS } from "@/constants/domain";
 import { SITE_OPEN_GRAPH } from "@/constants/site";
+import { facetHeading, facetKeys, facetPath, facetsOfJob } from "@/lib/job-facets";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -60,7 +62,13 @@ async function JobDetailContent({ params }: Params) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
-            breadcrumbJsonLd([{ name: "청빙 공고", path: "/jobs" }, { name: detail.job.title }]),
+            breadcrumbJsonLd([
+              { name: "청빙 공고", path: "/jobs" },
+              // 지역 랜딩을 중간 칸으로 — 검색 결과에 경로가 보이고 링크가 하나 더 생긴다.
+              // 축이 셋인데 지역 하나로 고정한다: 부모가 여럿이면 경로가 아니라 목록이 된다.
+              ...regionCrumb(detail.job),
+              { name: detail.job.title },
+            ]),
           ),
         }}
       />
@@ -86,6 +94,19 @@ async function JobDetailContent({ params }: Params) {
       <JobDetailView detail={detail} churchJobs={churchJobs} similar={similar} />
     </>
   );
+}
+
+/**
+ * 지역 랜딩을 부모 칸으로. 넣지 않는 두 경우:
+ *  · 지역 미상 — 빈 이름의 빵부스러기는 구조화 데이터 오류가 된다
+ *  · **일반직 공고** — 그 랜딩은 사역직만 담으므로(`facetsOfJob`과 같은 이유) 담지도 않는 목록을
+ *    부모라고 말하게 된다. 판정은 랜딩 규칙이 단일 소스다(`lib/job-facets`).
+ */
+function regionCrumb(job: Job) {
+  const region = job.region;
+  if (facetsOfJob(job).length === 0) return [];
+  if (region === null || !facetKeys("region").includes(region)) return [];
+  return [{ name: facetHeading("region", region), path: facetPath("region", region) }];
 }
 
 function JobDetailSkeleton() {

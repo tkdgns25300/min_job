@@ -14,6 +14,16 @@ import { churchIdentityKey, jobChurchRef } from "@/lib/job-church";
 import { pickSimilarJobs } from "@/lib/similar-jobs";
 import { addDays, hiddenReason, isPubliclyOpen, todayInSeoul } from "@/lib/job-visibility";
 import type { ExposureWindow } from "@/lib/exposure-order";
+import {
+  FACET_JOBS_SHOWN,
+  FACET_AXES,
+  facetGroups,
+  facetKeys,
+  facetPath,
+  filterByFacet,
+  type FacetAxis,
+  type FacetGroup,
+} from "@/lib/job-facets";
 import { getActiveExposure } from "./promotions";
 import { createServiceClient } from "@/lib/supabase/service";
 import { fetchAllRows } from "./fetch-all";
@@ -152,6 +162,67 @@ export async function getAllJobCards(): Promise<JobCard[]> {
   cacheTag("jobs", "churches");
   cacheLife("hours");
   return openCards(todayInSeoul());
+}
+
+/** 지역·직분·부서 랜딩 한 장이 쓰는 것 — 상위 공고 + 총 건수 + 분포 블록 */
+export interface FacetJobs {
+  /** 화면에 그리는 몫만(`FACET_JOBS_SHOWN`) — 나머지는 `/jobs`가 받는다 */
+  jobs: JobCard[];
+  /** 그 축의 전체 건수 — 제목·색인 판정(`FACET_INDEX_MIN`)이 이 값을 본다 */
+  total: number;
+  groups: FacetGroup[];
+}
+
+/**
+ * 랜딩 한 장 — **이미 캐시된 전체 목록을 재사용**한다(`getAllJobCards`).
+ *
+ * 축마다 DB를 새로 훑으면 28개 랜딩이 빌드 때 전수 조회를 28번 돈다. 여기서는 조회가 **한 번**이고
+ * (모든 랜딩이 같은 캐시 엔트리를 나눠 쓴다) 축별 파생은 순수 함수가 한다(`lib/job-facets`).
+ * 태그도 같아서 공고가 바뀌면 목록과 랜딩이 **함께** 비워진다.
+ */
+export async function getFacetJobs(axis: FacetAxis, key: string): Promise<FacetJobs> {
+  "use cache";
+  cacheTag("jobs", "churches");
+  cacheLife("hours");
+  const matched = filterByFacet(await getAllJobCards(), axis, key);
+  return {
+    jobs: matched.slice(0, FACET_JOBS_SHOWN),
+    total: matched.length,
+    groups: facetGroups(matched, axis),
+  };
+}
+
+/** 랜딩 한 칸 — 라벨은 담지 않는다(`facetLabel`이 단일 소스). 허브 블록과 sitemap이 같은 값을 쓴다 */
+export interface FacetCount {
+  key: string;
+  path: string;
+  count: number;
+}
+
+export type FacetCountsByAxis = Record<FacetAxis, FacetCount[]>;
+
+/**
+ * 랜딩 28칸의 건수 — `/jobs` 허브 블록과 `sitemap.xml`이 쓴다. 여기도 전체 목록 하나를 재사용한다.
+ * 순서는 도메인 정의 순(라벨 맵 순서)이다 — 건수 순으로 흔들면 허브 블록이 매시간 재배열된다.
+ *
+ * ⚠️ `getFacetJobs`와 **다른 캐시 엔트리**다(같은 태그·같은 수명). 그래서 건수가 색인 임계값
+ *    (`FACET_INDEX_MIN`) 근처인 축은 둘이 갱신되는 사이 잠깐 어긋날 수 있다 — sitemap엔 있는데
+ *    페이지는 `noindex`이거나 그 반대. 한 시간 안에 맞춰지고 검색엔진은 페이지 쪽을 믿으므로 둔다.
+ */
+export async function getFacetCounts(): Promise<FacetCountsByAxis> {
+  "use cache";
+  cacheTag("jobs", "churches");
+  cacheLife("hours");
+  const all = await getAllJobCards();
+  const byAxis = {} as FacetCountsByAxis;
+  for (const axis of FACET_AXES) {
+    byAxis[axis] = facetKeys(axis).map((key) => ({
+      key,
+      path: facetPath(axis, key),
+      count: filterByFacet(all, axis, key).length,
+    }));
+  }
+  return byAxis;
 }
 
 /**

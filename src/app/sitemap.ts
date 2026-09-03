@@ -2,7 +2,8 @@ import type { MetadataRoute } from "next";
 import { connection } from "next/server";
 import { SITE_URL } from "@/constants/site";
 import { getIndexableChurchIds } from "@/lib/queries/churches";
-import { getAllJobCards } from "@/lib/queries/jobs";
+import { getAllJobCards, getFacetCounts } from "@/lib/queries/jobs";
+import { FACET_INDEX_MIN } from "@/lib/job-facets";
 
 // 정적 공개 페이지. 인증·운영자 영역은 색인 대상이 아니라 넣지 않는다(robots.ts에서도 차단).
 const STATIC_PATHS = ["/", "/jobs", "/about", "/pricing", "/terms", "/privacy"] as const;
@@ -32,10 +33,20 @@ const STATIC_PATHS = ["/", "/jobs", "/about", "/pricing", "/terms", "/privacy"] 
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection(); // 위 ⚠️⚠️ — 정적 렌더 금지를 벗는다(데이터는 계속 캐시에서 온다)
-  const [jobs, churchIds] = await Promise.all([getAllJobCards(), getIndexableChurchIds()]);
+  const [jobs, churchIds, facets] = await Promise.all([
+    getAllJobCards(),
+    getIndexableChurchIds(),
+    getFacetCounts(),
+  ]);
 
   return [
     ...STATIC_PATHS.map((path) => ({ url: `${SITE_URL}${path}` })),
+    // 지역·직분·부서 랜딩 — **공고가 충분한 축만** 넣는다. 3건짜리 페이지의 색인을 재촉하면
+    // 얇은 페이지가 쌓여 사이트 전체 평가가 내려간다(그 판정은 페이지의 `noindex`와 같은 기준).
+    ...Object.values(facets)
+      .flat()
+      .filter((facet) => facet.count >= FACET_INDEX_MIN)
+      .map((facet) => ({ url: `${SITE_URL}${facet.path}` })),
     ...jobs.map((job) => ({ url: `${SITE_URL}/jobs/${job.id}`, lastModified: job.postedAt })),
     ...churchIds.map((id) => ({ url: `${SITE_URL}/churches/${id}` })),
   ];

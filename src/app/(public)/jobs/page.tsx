@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { getAllJobCards, getJobStats } from "@/lib/queries/jobs";
+import { getAllJobCards, getFacetCounts, getJobStats } from "@/lib/queries/jobs";
+import { FacetHub } from "./facet-hub";
 import { JobsView } from "./jobs-view";
 
 export const metadata: Metadata = {
@@ -12,13 +13,20 @@ export const metadata: Metadata = {
   //    지금은 옳다: 필터는 100% 클라이언트 상태라 쿼리가 달라도 **서버 HTML이 동일**하고,
   //    페이지네이션도 <a href>가 아니라 버튼이라 크롤러가 따라갈 링크가 없다.
   // ⚠️ 단 URL을 서버 소스로 승격하면(jobs-url-state 주석 참조) 고유 콘텐츠가 생기므로
-  //    이 canonical을 **반드시 재검토**할 것. 지역·직분 SEO는 쿼리가 아니라 전용 랜딩 라우트로.
+  //    이 canonical을 **반드시 재검토**할 것.
+  // ✅ 지역·직분·부서 SEO는 **전용 랜딩 라우트**가 맡는다(2026-09-03 · `lib/job-facets`).
+  //    쿼리 흡수는 그대로 둔다 — 랜딩이 자기 canonical을 갖고, 필터 쿼리는 계속 이 URL로 모인다.
+  //    그래서 이 페이지의 전제(필터 100% 클라이언트)도 바뀌지 않았다: 서버 필터링은 랜딩 안에서만 한다.
   alternates: { canonical: "/jobs" },
 };
 
 export default async function JobsPage() {
-  const jobs = await getAllJobCards();
-  const stats = await getJobStats();
+  // 세 조회가 서로를 기다릴 이유가 없다(앞의 둘은 한때 직렬이었다)
+  const [jobs, stats, facets] = await Promise.all([
+    getAllJobCards(),
+    getJobStats(),
+    getFacetCounts(),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8">
@@ -35,6 +43,7 @@ export default async function JobsPage() {
       <Suspense fallback={<JobsListSkeleton />}>
         <JobsView jobs={jobs} />
       </Suspense>
+      <FacetHub facets={facets} />
     </div>
   );
 }

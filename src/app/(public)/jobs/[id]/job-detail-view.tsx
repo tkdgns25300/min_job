@@ -17,6 +17,7 @@ import {
   payLabel,
   publicPositionLabel,
 } from "@/lib/format";
+import { facetsOfJob } from "@/lib/job-facets";
 import { cn } from "@/lib/utils";
 import { APPLY_METHODS, EMPLOYMENT_TYPES } from "@/constants/domain";
 import type {
@@ -250,6 +251,11 @@ function MainContent({
 }) {
   // 위치·사택 표기 규칙은 lib/format이 단일 소스(교회 상세도 같은 함수를 쓴다)
   const location = churchPlaceLine(churchRef);
+  const facetLinks = facetsOfJob({
+    region: churchRef.region,
+    position: job.position,
+    department: job.department,
+  });
   const housing = housingDisplay(job);
   const mapUrl = naverMapUrl(churchRef);
 
@@ -326,6 +332,26 @@ function MainContent({
           <div className="mt-3">
             <ApplyMethods job={job} />
           </div>
+        </Section>
+      )}
+
+      {/* 같은 조건 모아보기 — 지역·직분·부서 랜딩으로 가는 링크.
+          사용자에겐 "이 조건의 다른 공고"라는 자연스러운 다음 행동이고, **공고 상세 900여 장이 랜딩 28개를
+          계속 가리키는 내부 링크 그물**이 된다(랜딩의 발견 경로 · `lib/job-facets`). */}
+      {facetLinks.length > 0 && (
+        <Section title="같은 조건 모아보기">
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {facetLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="inline-flex rounded-full border bg-card px-3 py-1.5 text-sm transition-colors hover:bg-muted/40"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </Section>
       )}
 

@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { facetPathForLabel } from "@/lib/job-facets";
 
 // 홈 우측 사이드바 — 추천 검색어(운영자 큐레이션) + 교회 진입 CTA.
 // 추천 검색어는 검색 로그가 없어 손으로 고른 목록. 로그 쌓이면 실제 인기어로 대체.
+//
+// 랜딩이 있는 말(지역·직분·부서)은 **검색 쿼리가 아니라 랜딩으로 보낸다** — 사용자에겐 더 정확한 화면이고,
+// 홈에서 랜딩으로 가는 내부 링크가 공짜로 생긴다(크롤러의 발견 경로). 교단·자유어는 그대로 검색이다.
 const RECOMMENDED_SEARCHES = [
   "전도사",
   "부목사",
@@ -26,7 +30,7 @@ export function HomeSidebar() {
           {RECOMMENDED_SEARCHES.map((term) => (
             <Link
               key={term}
-              href={`/jobs?q=${encodeURIComponent(term)}`}
+              href={facetPathForLabel(term) ?? `/jobs?q=${encodeURIComponent(term)}`}
               className="rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1.5 text-[13px] text-foreground/80 transition-colors hover:bg-primary/10 hover:text-foreground"
             >
               {term}
