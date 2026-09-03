@@ -30,7 +30,7 @@
   2. `stipend_*` → **`pay_*` 개명**(코드 완료, 21파일) — 일반직(GENERAL)은 사례비가 아니라 근로계약 급여라 `stipend`가 절반만 맞았다. 한글 라벨은 `job_kind`로 분기
   3. 연락처 = **`jobs`에 컬럼 4개**(`contact_email`·`tel`·`link`·`post`) — `APPLY_METHODS`가 `ETC` 없는 닫힌 4키라 컬럼이 1:1. 별도 테이블(`church_links` 방식)은 열린 집합용이라 부적합
   4. **`apply_methods` jsonb + `contact` 단일 폐기** — 3번에 흡수(같은 것을 두 형태로 저장하던 설계)
-  5. **`job_promotions` 테이블 신설**(결제 원장, `UNIQUE(payment_id)`로 멱등) + `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — HERO 구좌 판정·환불·이력은 원장이, 정렬 1차 키는 캐시가. 만료는 **seam이 `todayInSeoul()`을 만들어 넘긴다**(cached scope 계산 · 하루 1캐시 · Cron 불필요)
+  5. **`job_promotions` 테이블 신설**(결제 원장, `UNIQUE(payment_id)`로 멱등) + `jobs.featured_tier`·`featured_until`은 **캐시 컬럼으로 유지** — 구좌 판정·환불·이력은 원장이, 정렬 1차 키는 캐시가. 만료는 **seam이 `todayInSeoul()`을 만들어 넘긴다**(cached scope 계산 · 하루 1캐시 · Cron 불필요). → ⛔ **캐시 컬럼은 2026-09-03에 지웠다**(원장 단일화 · DATA §7) — seam이 cached scope 안에서 오늘을 만드는 방식이 정착해 둘 근거가 사라졌고, 정렬 1차 키도 폐기됐다
   6. **최소 조건 = 필수 4 + CHECK 2**(→ `posted_at` 복귀로 **현재는 필수 5**, 2026-08-14) — `description` NOT NULL 승격(요약 없으면 링크만 있는 빈 껍데기 = 가드레일 #1 위반)
 - [x] **최소 조건을 크롤러 실데이터 3,181건으로 검증**(2026-08-05) — 초안 8개를 **6개로 줄였다**. DATA.md §3 "최소 조건" 절이 정본:
   - **필수 4** ~~`church_id`~~ → **`church_name`**(2026-08-06 교체, 아래 항목) · `title` · `job_kind` · `description` / **CHECK 2** 직분 XOR 직무 · **연락처 ≥1**
@@ -332,7 +332,7 @@
    >   - 대상 공고·결제자 이메일을 `customData`·`customer`로 **PortOne 레코드에 실어 둔다** — 주문 테이블이 없어 콘솔이 유일한 원장이고, 없으면 운영자가 *무엇을 누구에게* 적용할지 알 수 없어 수동 처리가 성립하지 않는다(+ 서버가 성공 시 감사 로그)
    >   - **청구 후 검증 실패를 `charged` 상태로 분리** — `error`와 묶으면 "결제 안 됨"으로 읽히고 버튼이 다시 열려 **실연동 채널에서 이중 청구**가 된다. 재결제 버튼 없이 결제번호·문의로 보낸다
    >
-   > ✅ **세 가지 다 됐다(2026-09-03 · `mypage/church/promote/actions.ts` `completePromotion`)**: ① 주문 저장(`job_promotions` INSERT · `payment_id` UNIQUE가 멱등성 · **경계 확정: CANCELLED = 게재 시작 전 전액 취소, REFUNDED = 시작 뒤 운영자 예외 환불, 정원은 PAID만 센다**) ② 노출 실적용(`featured_tier`·`featured_from`·`featured_until`) ③ 모바일 redirect 복귀(`?paymentId=` → 같은 액션 · 주문은 PortOne `customData`에서 다시 읽는다). route handler `/api/payments/complete`는 삭제 — 적용 직후 `updateTag`가 필요해 Server Action으로. (이전 문구 —) 3가지가 함께 가야 한다: ① 주문 저장 ② 노출 실적용 ③ 모바일 복귀 — 지금 모바일은 호출조차 안 된다. ①②는 DB 마이그레이션과 한 묶음. **2026-09-02 상품 확정(2-3)으로 ①②의 모양이 정해졌다** — 3등급 전환·정원 판정·자리 셋·비슷한 공고 규칙 교체가 여기 얹힌다(2-3 체크리스트).
+   > ✅ **세 가지 다 됐다(2026-09-03 · `mypage/church/promote/actions.ts` `completePromotion`)**: ① 주문 저장(`job_promotions` INSERT · `payment_id` UNIQUE가 멱등성 · **경계 확정: CANCELLED = 게재 시작 전 전액 취소, REFUNDED = 시작 뒤 운영자 예외 환불, 정원은 PAID만 센다**) ② 노출 실적용(당시엔 `featured_*` 캐시 컬럼 · 2026-09-03에 원장 단일화로 그 단계가 사라졌다) ③ 모바일 redirect 복귀(`?paymentId=` → 같은 액션 · 주문은 PortOne `customData`에서 다시 읽는다). route handler `/api/payments/complete`는 삭제 — 적용 직후 `updateTag`가 필요해 Server Action으로. (이전 문구 —) 3가지가 함께 가야 한다: ① 주문 저장 ② 노출 실적용 ③ 모바일 복귀 — 지금 모바일은 호출조차 안 된다. ①②는 DB 마이그레이션과 한 묶음. **2026-09-02 상품 확정(2-3)으로 ①②의 모양이 정해졌다** — 3등급 전환·정원 판정·자리 셋·비슷한 공고 규칙 교체가 여기 얹힌다(2-3 체크리스트).
    >
    > ✅ **`/pricing` 카피 전환(2026-09-03)** — 히어로 필 "인증 교회는 카드로 바로 결제", CTA "노출 신청하기" → `/mypage/church/promote`(게이트는 결제 화면이 맡아 이 페이지는 세션을 안 읽는다), FAQ 결제 답변. (이전: "온라인 결제는 준비 중"은 멤버십이 붙기 전까지 사실이었다)
 9. [ ] **실 데이터 + Supabase 백엔드 + 기능 상세 다듬기** → Phase 1 본체(1-1~1-7)와 합류. **심사가 끝나 더 이상 "승인 후" 대기 조건이 아니다** — 이제 여기가 주 트랙
@@ -364,7 +364,7 @@
 **(b-2) `lib/queries` 읽기 → 실 DB (2026-08-22 완료)**
 - [x] **18개 함수 전부 Supabase 쿼리로 교체 + `src/mocks/` 삭제** — jobs 12 · churches 3 · users 2 · verifications 1. **페이지 코드 0줄 변경 · 라우트 모드(`◐`/`○`) 불변**(seam을 둔 값어치가 여기서 드러났다)
   - 새 파일: `lib/queries/row-map.ts`(행 → 도메인 41필드, enum 좁히기 · queries 내부 전용) · `lib/domain-enum.ts`(`keyOf`·`keysOf`·`enumLabel` — `as keyof typeof` 캐스트를 한 곳에 가둔다)
-  - `lib/job-visibility.ts`에 **`isFeaturedOn`** 추가 — `featured_until`은 mock에 없던 개념이라 그대로 옮겼으면 **기한 지난 유료 노출이 영구히 "노출중"** 이 됐다. 기한 없는 등급은 노출로 보지 않는다(fail-closed · 노출 적용 경로를 만들 때 재검토)
+  - `lib/job-visibility.ts`에 **`isFeaturedOn`** 추가 — `featured_until`은 mock에 없던 개념이라 그대로 옮겼으면 **기한 지난 유료 노출이 영구히 "노출중"** 이 됐다. → 2026-09-03 원장 단일화로 이 술어는 `lib/exposure-order`의 `exposureByJob`이 대체했다(칸이 없으니 판정할 칸도 없다)
   - ⚠️ 지킨 규칙 셋: **공개 판정을 SQL로 옮기지 않는다**(`isPubliclyOpen`은 크롤러가 사본을 들고 있어 SQL로 쓰면 사본이 셋 — SQL은 `status='OPEN'`만 미리 거르고 판정은 JS) · **`!inner` 금지**(크롤 공고는 `church_id=NULL`이 정상이라 통째로 탈락) · **`service.ts`는 RLS 우회**라 "검수 통과 교회만"을 쿼리가 직접 건다
   - 검증: 충돌 불가능한 이름의 임시 공고 7 + 교회 2 + 임시 인증신청 2를 심어 **공개 페이지 23항목 실측 통과** 후 전부 삭제, 빈 DB에서도 확인(0건 표시·sitemap 정적 6개)
 - [x] 🔴 **PostgREST 1,000행 상한 (2026-08-22 발견·수정)** — 전수 조회가 **에러 없이** 1,000행에서 잘린다(1,400행을 넣고 실측: 받은 행 1,000 · `count` 1,400 · `range(0,4999)`도 안 통함). 그대로 두면 공고 3천 건에서 `/jobs`·통계·sitemap·운영자 목록이 **조용히 1/3만** 보여줄 자리였다. `lib/queries/fetch-all.ts`로 페이지를 이어 붙이고, 정렬 마지막 키를 `id`로 고정했다(없으면 장 경계에서 행이 겹치거나 빠진다 — 2,350행으로 중복 0 확인). 적용: 공고 카드 전수 2곳 · 교회 집계 · sitemap 교회 목록 · 검수 큐 순서 · 인증 신청
@@ -508,8 +508,8 @@
 - [x] ✅ **상품 3등급 전환(2026-09-03)** — `EXPOSURE_PRODUCTS` 3등급×3기간(자리 표·정원·가격표) · `featured_tier`·`job_promotions.tier` 값 SPECIAL/PLUS/BASIC(마이그레이션 `20260902153342` — 원장 기간 정합성 CHECK 둘 포함) · `/pricing` 카드 4장·비교표·FAQ·미리보기 장면 · 대시보드 사이드바 · 약관 제2조·제10조(환불: 게재 전 전액 / 게재 후 없음). ⬜ `/pricing` CTA 결제 분기·promote 정원 UI는 1-8
 - [x] ✅ **자리 구현(2026-09-03)** — 홈 카드 3칸 고정 + 빈 칸은 최신 공고(라벨 없음 · `getHomeFeed`) · 목록 상단 로우(스페셜→플러스, 등급별 정원이 상한, 필터 통과분만, 1페이지만, 결과가 광고뿐이면 자리 없음 · `splitListAds`) + 정렬 1차 키 제거 · 연관 첫 칸(문 통과 + 같은 지역, 여럿이면 id 해시로 페이지별 분산). 라벨 = 카드·로우마다 회색 "광고"(SPEC 개정) · `JobCard` 통합(홈·연관 공용, `featured-job-card` 삭제) · `ad`는 자리 prop(`PlacedJob`)
 - [x] ✅ **비슷한 공고 규칙 교체(2026-09-03)** — `lib/similar-jobs.ts` 순수 함수(문 → 점수 → 6장 → 보충 · 첫 칸 광고) + vitest 단위 테스트(`npm test` — 이때 vitest 도입). 옛 부서→지역→직분 폐기
-- [x] ✅ **정원 판정(2026-09-03)** — `lib/exposure-order`(순수 · 단위 테스트): 주 = 월~일, 시작은 이번 주·다음 주, 기간의 **모든 주**에 자리가 있어야 판매, 같은 공고 겹침 금지. 화면(잔여 표시·차단)과 `completePromotion`(재확인 · 경합이면 PortOne 전액 취소)이 같은 함수를 쓴다
-- [x] ✅ 만료 자동 강등 — `isFeaturedOn`이 `featured_from <= today <= featured_until`로 판정(시작일 컬럼 추가 2026-09-03 · 다음 주 예약이 결제일부터 보이지 않게), 적용 쓰기는 `completePromotion`
+- [x] ✅ **정원 판정(2026-09-03)** — `lib/exposure-order`(순수 · 단위 테스트): 시작일은 오늘부터 7일, 기간은 그날부터 주수 × 7일, 정원은 **동시 건수**라 기간의 **하루하루**에 자리가 있어야 판매, 같은 공고 기간 겹침 금지. 화면(잔여 표시·차단)과 `completePromotion`(재확인 · 경합이면 PortOne 전액 취소 + CANCELLED)이 같은 함수를 쓴다
+- [x] ✅ 만료·시작 자동 반영 — **원장이 정본**이라 별도 강등이 없다(2026-09-03 단일화 · 마이그레이션 `20260903022405`로 `jobs.featured_*` 삭제). 오늘을 덮는 PAID 행이 등급이고, 지나면 조회에서 빠지고 시작 전이면 예약으로만 보인다
 - [x] ✅ ~~결제 초기 수동 처리~~ → **자동 적용(2026-09-03)** — 주문 저장(`job_promotions` INSERT · 멱등) · `featured_*` 적용 · 모바일 복귀(`?paymentId=`)가 `completePromotion` 하나로. 운영자 몫으로 남는 것은 **환불**(PortOne 콘솔 + 원장 상태 갱신)과 청구됐는데 적용 못 한 예외(결제번호로 문의) — 원장 표 `/admin/promotions`. ⬜ **실결제 1건 확인 뒤 prod 머지**(테스트 채널 키 또는 기본 1주 결제 후 환불)
 
 > **Phase 2 완료 기준**: 거리 필터 + 첫 유료 노출.
