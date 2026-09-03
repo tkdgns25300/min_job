@@ -33,8 +33,8 @@
 
 | 페이지 | 모드 | 이유 |
 |---|---|---|
-| `/`, `/jobs`, `/jobs/[id]`, `/churches/[id]` | `'use cache'` 데이터 + **◐ PPR** | 공고 데이터는 캐시·모든 방문자 동일 뷰. 단 **헤더 계정 영역이 세션 의존 dynamic hole**이라 문서 응답은 `no-store`(셸은 계속 prerender·엣지 스트리밍) |
-| `/jobs`의 검색·필터·정렬·페이지 | **서버는 관여 안 함** | 필터는 **100% 클라이언트 상태**(URL은 시드·반영만). 쿼리가 달라도 서버 HTML이 같아서 `/jobs`는 캐시된 전체 카드만 내려준다 → canonical도 `/jobs` 하나. ⚠️ 서버 필터링(지역·직분 랜딩 라우트)을 만들면 이 전제와 canonical을 함께 재검토 |
+| `/`, `/jobs`, `/jobs/[id]`, `/churches/[id]`, `/jobs/{region,position,department}/[…]` | `'use cache'` 데이터 + **◐ PPR** | 공고 데이터는 캐시·모든 방문자 동일 뷰. 단 **헤더 계정 영역이 세션 의존 dynamic hole**이라 문서 응답은 `no-store`(셸은 계속 prerender·엣지 스트리밍) |
+| `/jobs`의 검색·필터·정렬·페이지 | **서버는 관여 안 함** | 필터는 **100% 클라이언트 상태**(URL은 시드·반영만). 쿼리가 달라도 서버 HTML이 같아서 `/jobs`는 캐시된 전체 카드만 내려준다 → canonical도 `/jobs` 하나. ✅ **랜딩 라우트를 만든 뒤에도 이 전제는 그대로다**(2026-09-03) — 서버 필터링은 랜딩 **안에서만** 하고, 랜딩이 자기 canonical을 가지므로 필터 쿼리는 계속 `/jobs`로 흡수된다 |
 | `/admin/jobs` | `'use cache'` (non-PII read) | 목록은 공개·비개인 데이터(공고 집계) — 모든 운영자 동일 뷰. 공개 헤더를 안 써서 ○ Static 유지. **접근 판정은 proxy가 담당** |
 | `/admin` | dynamic (`<Suspense>` + `requireOperator`) | 홈이 그리는 다섯 수치 중 넷이 캐시 불가(검수·인증 큐는 판정하면 바뀌고 `crawl_run`은 크롤러가 밖에서 쓴다) → `◐`. 셸은 계속 프리렌더되고, dynamic이 된 덕에 **페이지에서도 게이트를 확인**한다 |
 | `/admin/jobs/[id]` | dynamic (`<Suspense>` + `requireOperator`) | 공개 공고 편집 — 쓰기 화면이라 게이트를 페이지에서도 확인한다. 값은 캐시된 seam(`getJobForEdit`)에서 오고 저장 액션이 `updateTag("jobs")`로 비운다 |
@@ -94,8 +94,12 @@ src/
 ├── app/
 │   ├── (public)/                  비로그인 접근 가능 영역
 │   │   ├── layout.tsx             공개 shell            page.tsx  홈(최신·추천 공고)
-│   │   ├── jobs/                  page(목록+필터) · [id]/(상세: generateMetadata + JobPosting JSON-LD)
+│   │   ├── jobs/                  page(목록+필터+랜딩 허브) · [id]/(상세: generateMetadata + JobPosting JSON-LD)
 │   │   │                          jobs-view(client) · filter-jobs · jobs-url-state(순수 헬퍼)
+│   │   │                          region/[region] · position/[position] · department/[department]
+│   │   │                            = **SEO 랜딩 28개**(조합 없음 · 규칙은 lib/job-facets).
+│   │   │                            라우트 파일은 Next가 정적으로 찾는 것만 두고 몸통은 공용:
+│   │   │                            facet-page(metadata·404·JSON-LD) · facet-view · facet-hub · facet-skeleton
 │   │   ├── churches/[id]/         교회 상세 (목록 페이지 없음 — 공고 상세에서 진입)
 │   │   └── pricing/ about/ terms/ privacy/
 │   ├── (authed)/                  로그인 필요 (proxy 1차 차단 + 페이지 requireUser 최종 방어)
@@ -175,6 +179,8 @@ src/
 │   ├── exposure-order.ts          노출 순수 판정 — 기간(시작일+주수×7일)·동시 정원·겹침·경합 + **공고별 지금 등급**
 │   │                              (`exposureByJob` — 원장이 정본이라 `jobs`에 노출 칸이 없다). 화면·액션·seam 공용
 │   ├── similar-jobs.ts            비슷한 공고 규칙(순수) — 문 → 점수 → 보충 · 첫 칸 광고(id 해시)
+│   ├── job-facets.ts              지역·직분·부서 랜딩 규칙(순수) — 슬러그·제외값·담기는 공고·분포·문구.
+│   │                              **조합은 만들지 않는다**(얇은 페이지 · 그 파일 머리말)
 │   ├── portone.ts                 PortOne V2 REST 서버 전용 — 결제 조회·전액 취소 둘만
 │   ├── job-church.ts              공고↔교회 파생 — church_id가 null일 수 있어 생긴 로직
 │   │                              (jobChurchRef=표시값 규칙 · churchIdentityKey=교회 수 집계)
