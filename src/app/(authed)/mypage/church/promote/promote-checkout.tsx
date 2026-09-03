@@ -62,6 +62,7 @@ const rememberPayment = (paymentId: string | null) => {
 export function PromoteCheckout({
   jobs,
   payerEmail,
+  testPricing,
   today,
   startDates,
   spans,
@@ -70,6 +71,8 @@ export function PromoteCheckout({
 }: {
   jobs: JobOption[];
   payerEmail: string;
+  /** ⏳ 운영자 실결제 점검용 임시 가격을 쓸지 — 서버가 판정해 내려준다(`constants/domain`) */
+  testPricing: boolean;
   /** KST 오늘(YYYY-MM-DD) — 서버가 만든다(클라이언트 시계를 믿지 않는다) */
   today: string;
   /** 고를 수 있는 시작일 — 오늘부터 7일 */
@@ -122,7 +125,7 @@ export function PromoteCheckout({
     };
 
   const product = EXPOSURE_PRODUCTS[tier];
-  const amount = exposurePrice(tier, weeks);
+  const amount = exposurePrice(tier, weeks, testPricing);
   const period = promotionPeriod(startsAt, weeks);
 
   /** 고른 기간 내내 남는 자리 — 하루라도 찬 날이 있으면 그 하루가 상한이다(정원 없는 등급은 null) */
@@ -259,7 +262,7 @@ export function PromoteCheckout({
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="text-[15px] font-bold">{p.label}</span>
                     <span className="text-[15px] font-bold text-gold-ink">
-                      주 {formatExposurePrice(p.prices[1])}
+                      주 {formatExposurePrice(exposurePrice(key, 1, testPricing))}
                     </span>
                   </span>
                   <span className="mt-0.5 block text-xs break-keep text-muted-foreground">
@@ -340,7 +343,7 @@ export function PromoteCheckout({
               >
                 {w}주
                 <span className="block text-[11px] font-medium opacity-80">
-                  {formatExposurePrice(exposurePrice(tier, w))}
+                  {formatExposurePrice(exposurePrice(tier, w, testPricing))}
                 </span>
               </button>
             );

@@ -9,6 +9,7 @@ import { getChurchDashboard } from "@/lib/queries/users";
 import { getPaidPromotionsOverlapping } from "@/lib/queries/promotions";
 import { requireUser } from "@/lib/auth-guard";
 import { hasChurchAccess } from "@/lib/auth";
+import { isOperatorEmail } from "@/lib/operator";
 import { EXPOSURE_WEEKS, START_WINDOW_DAYS } from "@/constants/domain";
 import {
   periodsByJob,
@@ -106,6 +107,9 @@ async function PromoteContent({ searchParams }: { searchParams: SearchParams }) 
         <PromoteCheckout
           jobs={openJobs}
           payerEmail={user.email}
+          // ⏳ 운영자 실결제 점검(임시) — 판정은 **서버에서만** 한다. 결제 액션이 같은 판정을 다시 하므로
+          //    이 값을 클라이언트가 뒤집어도 서버 재계산과 어긋나 전액 취소로 끝난다
+          testPricing={isOperatorEmail(user.email)}
           today={today}
           startDates={startDateOptions(today)}
           spans={spans}

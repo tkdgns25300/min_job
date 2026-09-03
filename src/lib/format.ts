@@ -93,6 +93,8 @@ export function housingDisplay(
  *    만원 배수라 문제없지만, 그런 가격을 쓰기로 하면 표기 단위부터 다시 정해야 한다.
  */
 export function formatExposurePrice(won: number): string {
+  // 만원 미만은 원 단위로 — 운영자 임시 점검가(100원)가 "0.01만원"으로 나오는 것을 막는다
+  if (won < KRW_PER_MAN) return `${comma(won)}원`;
   return `${comma(won / KRW_PER_MAN)}만원`;
 }
 

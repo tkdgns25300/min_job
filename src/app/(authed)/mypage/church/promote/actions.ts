@@ -3,6 +3,7 @@
 import { updateTag } from "next/cache";
 import { requireUser } from "@/lib/auth-guard";
 import { hasChurchAccess } from "@/lib/auth";
+import { isOperatorEmail } from "@/lib/operator";
 import {
   exposurePrice,
   isExposureProduct,
@@ -137,8 +138,10 @@ export async function completePromotion(paymentId: string): Promise<PromotionRes
     cancelAndRecord(supabase, paymentId, reason, ledgerRow, message);
 
   // 화면이 낸 주문이 아니다 — 금액·통화가 다르거나, 시작일이 화면의 선택지(오늘부터 7일 + 자정 유예) 밖이다
+  // ⏳ 운영자 실결제 점검 가격은 화면과 **같은 판정**으로 다시 계산한다(임시 · ROADMAP 1-8)
   const priced =
-    payment.currency === KRW && payment.amount.total === exposurePrice(order.tier, order.weeks);
+    payment.currency === KRW &&
+    payment.amount.total === exposurePrice(order.tier, order.weeks, isOperatorEmail(user.email));
   if (!priced || !isAllowedStart(order.startsAt, today)) {
     console.error("[promote] 주문 불일치", paymentId, order, payment.amount, payment.currency);
     return refund("주문 불일치", REFUNDED_INVALID);

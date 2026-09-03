@@ -252,9 +252,27 @@ export function isExposureWeeks(value: unknown): value is ExposureWeeks {
   return (EXPOSURE_WEEKS as readonly unknown[]).includes(value);
 }
 
-/** 노출 금액 — client·server가 같은 표를 읽는다(서버가 재계산해 위변조를 막는다) */
-export function exposurePrice(tier: ExposureProduct, weeks: ExposureWeeks): number {
-  return EXPOSURE_PRODUCTS[tier].prices[weeks];
+/**
+ * ⏳ **운영자 실결제 점검용 임시 가격**(2026-09-03) — 실연동 채널이라 점검도 카드가 실제로 청구된다.
+ * `ADMIN_EMAILS`에 있는 계정에만 적용되고 요금 페이지·다른 교회는 정가를 본다. 기간과 무관한 정액이다.
+ * ⚠️ **점검이 끝나면 이 상수와 `exposurePrice`의 셋째 인자를 지운다**(ROADMAP 1-8) — 남겨 두면
+ *    운영자 계정이 계속 100원에 광고를 산다. 지우는 곳은 여기·결제 화면·결제 액션 셋이다.
+ */
+const TEST_EXPOSURE_PRICES = { SPECIAL: 300, PLUS: 200, BASIC: 100 } as const satisfies Record<
+  ExposureProduct,
+  number
+>;
+
+/**
+ * 노출 금액 — client·server가 **같은 함수**를 부른다(서버가 재계산해 위변조를 막는다).
+ * `testPricing`도 양쪽이 같은 답을 내야 한다 — 어긋나면 서버가 주문 불일치로 보고 전액 취소한다.
+ */
+export function exposurePrice(
+  tier: ExposureProduct,
+  weeks: ExposureWeeks,
+  testPricing = false,
+): number {
+  return testPricing ? TEST_EXPOSURE_PRICES[tier] : EXPOSURE_PRODUCTS[tier].prices[weeks];
 }
 
 // 시작일을 고를 수 있는 범위(오늘 포함, 일). 더 멀리 열면 정원을 미리 잠그는 예약이 생긴다 —
