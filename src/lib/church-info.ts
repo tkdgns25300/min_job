@@ -1,6 +1,7 @@
 import { CHURCH_CHANNELS, REGIONS, type ChurchChannel, type Region } from "@/constants/domain";
 import { keyOf } from "@/lib/domain-enum";
 import { MAX_LENGTHS } from "@/lib/church-verification";
+import { normalizeExternalUrl } from "@/lib/external-url";
 import type { Church } from "@/types/domain";
 import type { TablesUpdate } from "@/types/database";
 
@@ -9,7 +10,9 @@ import type { TablesUpdate } from "@/types/database";
 //
 // ⚠️ **길이 상한은 `church-verification`에서 가져온다.** 같은 컬럼(`city`·`address`·연락처)을
 //    인증 신청 화면이 먼저 받고 있어서, 여기서 새로 선언하면 한 컬럼에 상한이 둘이 되어 갈린다.
-//    새로 정하는 것은 이 파일에 없던 것(`url`·창립연도 범위)뿐이다.
+//    새로 정하는 것은 이 파일에 없던 것(`url` 상한·창립연도 범위)뿐이다.
+// ⚠️ **주소 형식 판정은 `lib/external-url`이 한다** — 공고의 지원 링크 표시가 같은 답을 써야 해서
+//    파일로 뺐다(2026-09-04). 여기서 다시 정하면 저장은 되는데 눌리지 않는 주소가 생긴다.
 // ⚠️ **교회명·교단은 여기서 다루지 않는다.** 인증으로 확정된 값이라 미검증 입력이 덮어쓰면 안 된다
 //    (공고 폼이 교회 값을 읽기만 하는 것과 같은 이유 · `jobs/actions.ts` 머리말).
 // ⛔ **공고에는 전파하지 않는다.** 공고는 등록 시점의 교회 값을 복사해 갖고 있고 그것이 정본이다
@@ -65,40 +68,6 @@ const blankToNull = (value: string): string | null => trimmed(value) || null;
 const tooLong = (value: string, limit: number) => trimmed(value).length > limit;
 
 /**
- * 채널 주소 정규화 — 스킴이 없으면 `https://`를 붙인다. 교회는 `andongtaehwa.org`처럼
- * 주소만 적는데, 그대로 저장하면 공개 페이지에서 **상대 경로 링크가 되어 깨진다**.
- *
- * 🔴 **스킴을 확인하는 것이 핵심이다.** `javascript:alert(1)`은 스킴이 **있어서** 위 부착을
- *    비껴가고 `new URL()`도 통과한다. 그 값이 교회 상세의 `href`로 그대로 나가면
- *    (`components/church/church-channels.tsx` — 컬럼에 CHECK도 없다) 누른 사람 브라우저에서
- *    실행된다. `data:`·`mailto:`·`tel:`도 같은 문으로 들어온다.
- *    그래서 **`http`/`https`만** 통과시킨다.
- * ⚠️ **호스트 모양도 본다.** `https://foo`(점 없음)·`https://.com`·`https://a.`은 파싱만 보면
- *    통과하는데 전부 죽은 링크다 — 교회는 "형식이 맞다"는 답을 듣고 저장하게 된다.
- *    점으로 나뉜 조각이 모두 비어 있지 않아야 한다.
- * ⚠️ **자격증명은 지운다.** `https://naver.com@evil.com/`처럼 아는 도메인을 앞에 세워 사람을
- *    속이는 모양이 되고, 교회가 실수로 붙여 넣은 비밀번호가 공개 페이지에 박힐 수도 있다.
- */
-const HOSTNAME = /^[^.]+(\.[^.]+)+$/;
-
-function normalizeChannelUrl(raw: string): string | null {
-  const value = trimmed(raw);
-  if (!value) return null;
-  const withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value) ? value : `https://${value}`;
-  let url: URL;
-  try {
-    url = new URL(withScheme);
-  } catch {
-    return null;
-  }
-  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-  if (!HOSTNAME.test(url.hostname)) return null;
-  url.username = "";
-  url.password = "";
-  return url.toString();
-}
-
-/**
  * 저장 전 검증 — **`churches`의 CHECK와 폼의 필수 표시에 맞춘다.**
  *
  * ⚠️ **지역·시·군·구를 필수로 둔다.** 둘 다 인증 신청에서 이미 필수로 받는 값이라
@@ -138,7 +107,7 @@ export function infoErrors(draft: ChurchInfoDraft): InfoErrors {
     const raw = draft.links[key] ?? "";
     if (!trimmed(raw)) continue;
     if (tooLong(raw, MAX_CHANNEL_URL)) errors[`link:${key}`] = "주소가 너무 길어요.";
-    else if (normalizeChannelUrl(raw) === null)
+    else if (normalizeExternalUrl(raw) === null)
       errors[`link:${key}`] = "주소 형식이 아니에요. 예) cafe.naver.com/andongtaehwa";
   }
 
@@ -181,7 +150,7 @@ export function toChannelRows(
   churchId: string,
 ): { church_id: string; type: ChurchChannel; url: string }[] {
   return (Object.keys(CHURCH_CHANNELS) as ChurchChannel[]).flatMap((type) => {
-    const url = normalizeChannelUrl(draft.links[type] ?? "");
+    const url = normalizeExternalUrl(draft.links[type] ?? "");
     return url === null ? [] : [{ church_id: churchId, type, url }];
   });
 }

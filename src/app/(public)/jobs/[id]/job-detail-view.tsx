@@ -18,6 +18,7 @@ import {
   publicPositionLabel,
 } from "@/lib/format";
 import { facetsOfJob } from "@/lib/job-facets";
+import { normalizeExternalUrl } from "@/lib/external-url";
 import { cn } from "@/lib/utils";
 import { APPLY_METHODS, EMPLOYMENT_TYPES } from "@/constants/domain";
 import type {
@@ -141,7 +142,9 @@ function ConditionRow({
   return (
     <div>
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm font-medium break-keep">
+      {/* 크롤러가 원문 줄바꿈을 살려 넘긴다(모집 인원 "- 유아유치부 1명 / - 고등부 1명"). 여기서 접으면
+          한 줄로 붙어 읽히지 않는다 — 공고 안내 본문과 같은 규칙으로 줄을 살린다 */}
+      <dd className="mt-0.5 text-sm font-medium break-keep whitespace-pre-line">
         {value}
         {note && (
           <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{note}</span>
@@ -206,8 +209,11 @@ function PostHeader({
  * 지원 방법 — 공고가 공개한 연락처를 **전부** 보여준다. 순서는 `APPLY_METHODS` 정의 순서
  * (링크 > 이메일 > 우편 > 전화 — 앞셋은 서류를 내는 경로, 전화는 대개 문의용).
  *
- * **클릭 대상으로 만들지 않는다** — `mailto:`·`tel:`은 기기 설정에 따라 아무 일도 일어나지 않거나
- * 엉뚱한 앱이 열리고, 우편 주소는 애초에 열 것이 없다. 값을 읽고 직접 쓰는 편이 어긋남이 없다.
+ * **홈페이지 링크만 클릭 대상이고, 그것도 주소 하나로 파싱될 때만이다**(`normalizeExternalUrl` —
+ * 스킴 없는 도메인은 살리고, 쉼표·괄호가 섞이거나 주소가 아니면 글자로 둔다). 이메일·전화는 글자로만
+ * 보인다 — `mailto:`·`tel:`은 기기 설정에 따라 아무 일도 일어나지 않거나 엉뚱한 앱이 열리고, 전화는
+ * 실데이터 절반에 "(행정)" 같은 꼬리표가 붙어 있어 링크로 만들면 틀린다(2026-09-04 실측 1074건 중 563건).
+ * 우편 주소는 애초에 열 것이 없다.
  *
  * ⚠️ 가드레일 #3 — 여기 있는 값은 공고가 **지원용으로 명시 공개**한 것뿐이다(`jobs.contact_*`).
  *    `churches.contact_*`(사무용, 인증 검수 대조용)는 **공개 화면에 렌더하지 않는다**(DATA §3).
@@ -225,12 +231,28 @@ function ApplyMethods({ job }: { job: Job }) {
 
   return (
     <dl className="space-y-2.5">
-      {shown.map(({ key, value }) => (
-        <div key={key}>
-          <dt className="text-xs text-muted-foreground">{APPLY_METHODS[key]}</dt>
-          <dd className="mt-0.5 text-sm font-medium break-words">{value}</dd>
-        </div>
-      ))}
+      {shown.map(({ key, value }) => {
+        const href = key === "LINK" && value ? normalizeExternalUrl(value) : null;
+        return (
+          <div key={key}>
+            <dt className="text-xs text-muted-foreground">{APPLY_METHODS[key]}</dt>
+            <dd className="mt-0.5 text-sm font-medium break-words">
+              {/* 글자는 원문 그대로, href만 정규화 — 교회가 적은 모양을 바꾸지 않는다 */}
+              {href ? (
+                <a
+                  href={href}
+                  {...externalLinkAttrs}
+                  className="text-primary underline underline-offset-4"
+                >
+                  {value}
+                </a>
+              ) : (
+                value
+              )}
+            </dd>
+          </div>
+        );
+      })}
     </dl>
   );
 }

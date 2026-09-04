@@ -230,7 +230,7 @@ export function ChurchInfoForm({ church }: { church: Church }) {
                     붙여 준다"로 설계했는데, `type="url"`은 스킴 없는 값을 **무효로 보고 제출
                     자체를 막는다** — 클릭은 되는데 `submit`이 안 나가 아무 일도 일어나지 않았다
                     (실측 2026-08-27: `andongtaehwa.org` → "URL을 입력하세요"). 형식 판정은
-                    `normalizeChannelUrl`이 하므로 브라우저 검사는 필요 없고, `inputMode`로
+                    `normalizeExternalUrl`이 하므로 브라우저 검사는 필요 없고, `inputMode`로
                     모바일 자판만 URL용으로 둔다. */}
                 <Input
                   type="text"
