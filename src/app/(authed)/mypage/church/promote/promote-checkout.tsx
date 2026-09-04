@@ -415,7 +415,8 @@ export function PromoteCheckout({
         <div className="mt-2.5 space-y-1 text-center text-[11px] leading-relaxed break-keep text-muted-foreground">
           <p>카드가 실제로 청구되고, 결제가 확인되면 노출이 바로 적용돼요.</p>
           <p>
-            <b>게재 시작 전에는 전액 환불</b>, 게재가 시작된 뒤에는 환불되지 않아요.{" "}
+            <b>게재 시작 전에는 전액 환불</b>, 게재가 시작된 뒤에는 남은 일수만큼 일할 환불해
+            드려요(요청 접수일 기준, 3영업일 이내).{" "}
             <a href={contactMailto("노출 결제 취소·환불 문의")} className="underline">
               취소·환불 문의
             </a>
