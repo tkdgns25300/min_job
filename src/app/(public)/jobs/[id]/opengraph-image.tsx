@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getJobDetail } from "@/lib/queries/jobs";
 import { jobShareLines } from "@/lib/seo";
-import { SITE_DOMAIN } from "@/constants/site";
+import { OG_COLORS, SITE_DOMAIN } from "@/constants/site";
 
 // 공고별 공유 카드 — 카카오톡·SNS에 링크를 붙였을 때 뜨는 1200×630 썸네일(운영자 요청 2026-09-05).
 // 그전엔 전 페이지가 로고 한 장(`app/opengraph-image.tsx`)이었다. 세 줄의 내용은 `jobShareLines`가
@@ -19,9 +19,6 @@ export const alt = "공고 요약 카드 — 교회·자리·사례비·마감";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// globals.css 브랜드 토큰과 같은 값 — satori는 CSS 변수를 못 읽는다(`app/opengraph-image.tsx`와 같은 주의)
-const BRAND_900 = "#15332a";
-const GOLD = "#d3ad63";
 const FONT = "Pretendard";
 
 const fontData = await readFile(join(process.cwd(), "src/app/fonts/pretendard-bold-subset.ttf"));
@@ -42,7 +39,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         flexDirection: "column",
         justifyContent: "space-between",
         padding: "64px 72px",
-        background: BRAND_900,
+        background: OG_COLORS.brand900,
         color: "#ffffff",
         fontFamily: FONT,
       }}
@@ -65,12 +62,14 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         >
           {headline}
         </div>
-        <div style={{ display: "flex", fontSize: 38, color: GOLD, lineClamp: 1 }}>{facts}</div>
+        <div style={{ display: "flex", fontSize: 38, color: OG_COLORS.gold, lineClamp: 1 }}>
+          {facts}
+        </div>
       </div>
 
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
         <div style={{ display: "flex", fontSize: 44, letterSpacing: -1 }}>
-          <span style={{ color: GOLD }}>Min</span>
+          <span style={{ color: OG_COLORS.gold }}>Min</span>
           <span>Job</span>
         </div>
         <div style={{ display: "flex", fontSize: 26, color: "rgba(255,255,255,0.6)" }}>

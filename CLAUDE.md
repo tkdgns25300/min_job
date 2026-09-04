@@ -221,7 +221,7 @@ scripts/subset-og-font.py          공고별 OG 이미지용 한글 글꼴 만�
 - 끝에서 `updateTag(resource)` — read-your-own-writes
 - ⚠️ **`updateTag`은 Server Action에서만 부를 수 있다**(문서 명시 — route handler·client에서는 던진다). route handler에서 무효화해야 하면 `revalidateTag`뿐이고 그건 stale-while-revalidate라 **다음 방문자가 아직 옛 데이터를 본다**. 즉시 반영이 필요하면 경로가 Server Action이어야 한다.
 - ⚠️ **공고는 크롤러(별개 프로세스)가 `jobs`에 직접 쓴다** → 우리 캐시를 무효화할 방법이 없다. 그래서 공개 데이터는 `cacheLife("hours")`로 한 시간마다 스스로 갱신되고(바닥선), 즉시 반영이 필요할 때 운영자가 `/admin`의 **공개 목록 새로고침**(`refreshPublicCache`)을 누른다(가속기).
-- **데이터 CRUD용 REST API 라우트 만들지 않는다.** 외부 규약이 HTTP 엔드포인트를 강제할 때만 route handler 허용 — 현재 예외는 `app/auth/callback`(OAuth 리다이렉트 수신) **하나**. 결제 검증도 한때 route handler였는데(`/api/payments/complete`) 적용 직후 `updateTag("jobs")`가 필요해 Server Action(`mypage/church/promote/actions.ts`)으로 옮겼다(2026-09-03) — 주문은 PortOne `customData`에서 다시 읽으므로 모바일 복귀도 같은 액션이 처리한다.
+- **데이터 CRUD용 REST API 라우트 만들지 않는다.** 외부 규약이 HTTP 엔드포인트를 강제할 때만 route handler 허용 — 현재 예외는 `app/auth/callback`(OAuth 리다이렉트 수신) **하나**. (⚠️ **메타데이터 파일 규약은 이 규칙의 대상이 아니다** — `sitemap.ts`·`robots.ts`·`opengraph-image.tsx`는 우리가 만든 엔드포인트가 아니라 Next가 정한 파일 이름이고, 데이터는 `lib/queries` seam에서 온다.) 결제 검증도 한때 route handler였는데(`/api/payments/complete`) 적용 직후 `updateTag("jobs")`가 필요해 Server Action(`mypage/church/promote/actions.ts`)으로 옮겼다(2026-09-03) — 주문은 PortOne `customData`에서 다시 읽으므로 모바일 복귀도 같은 액션이 처리한다.
 
 ### Query (`lib/queries/*.ts`) — 데이터 소스 seam
 - **페이지·view는 데이터를 여기서만 가져온다.** 데이터 출처를 이 레이어에 은닉한다 — 2026-08-22 mock→DB 전환에서 **페이지 코드가 0줄** 바뀌었고 라우트 모드(`◐`/`○`)도 그대로였다.
