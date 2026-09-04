@@ -297,81 +297,21 @@ export default async function PricingPage() {
           </div>
         </section>
 
-        {/* 문의 */}
-        <section id="contact" className="scroll-mt-20">
+        {/* 문의 — 이메일 하나만. 그전엔 폼(교회명·연락처·상품·내용)처럼 보였는데 실제로는 `mailto`를 여는 것뿐이라
+            "문의 보내기"를 누르면 접수된 줄 알기 쉬웠다(운영자 2026-09-05). 문의는 이메일로만 받기로 한 결정
+            (2026-08-31)과도 맞는다. */}
+        <section id="contact" className="scroll-mt-20 rounded-2xl border bg-card p-5">
           <h2 className="text-xl font-bold">노출 문의</h2>
-          <p className="mt-1 mb-4 text-sm text-muted-foreground">
-            결제 전에 상품·기간이 궁금하거나 세금계산서 등이 필요하면 남겨 주세요. 보내기를 누르면
-            메일 앱이 열립니다.
+          <p className="mt-1.5 text-sm leading-relaxed break-keep text-muted-foreground">
+            결제 전에 상품·기간이 궁금하거나 세금계산서가 필요하면 이메일로 보내 주세요. 영업일 기준
+            1일 안에 답해 드려요.
           </p>
-          <form
-            action={contactMailto()}
-            method="post"
-            encType="text/plain"
-            className="rounded-2xl border bg-card p-5"
+          <a
+            href={contactMailto("노출 상품 문의")}
+            className="mt-3 inline-block text-sm font-semibold text-primary hover:underline"
           >
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-1.5 text-xs font-bold">
-                교회명
-                <input
-                  name="교회명"
-                  required
-                  placeholder="○○교회"
-                  className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
-                />
-              </label>
-              <label className="flex flex-col gap-1.5 text-xs font-bold">
-                연락처
-                <input
-                  name="연락처"
-                  required
-                  placeholder="이메일 또는 전화"
-                  className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
-                />
-              </label>
-              <label className="flex flex-col gap-1.5 text-xs font-bold">
-                관심 상품
-                <select
-                  name="관심상품"
-                  className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
-                >
-                  {PAID_TIERS.map((tier) => (
-                    <option key={tier}>{EXPOSURE_PRODUCTS[tier].label}</option>
-                  ))}
-                  <option>상담 후 결정</option>
-                </select>
-              </label>
-              <label className="flex flex-col gap-1.5 text-xs font-bold">
-                공고(선택)
-                <input
-                  name="공고"
-                  placeholder="공고 제목 또는 링크"
-                  className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
-                />
-              </label>
-              <label className="flex flex-col gap-1.5 text-xs font-bold sm:col-span-2">
-                문의 내용
-                <textarea
-                  name="내용"
-                  rows={3}
-                  placeholder="원하시는 노출 기간 등"
-                  className="rounded-lg border border-input px-3 py-2 text-sm font-normal"
-                />
-              </label>
-            </div>
-            <button
-              type="submit"
-              className="mt-3 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              문의 보내기
-            </button>
-            <p className="mt-3 text-xs text-muted-foreground">
-              영업일 기준 1일 내 연락드려요 · 급하시면{" "}
-              <a href={contactMailto()} className="font-medium text-foreground hover:underline">
-                {BUSINESS_INFO.email}
-              </a>
-            </p>
-          </form>
+            {BUSINESS_INFO.email}
+          </a>
         </section>
 
         {/* FAQ */}
