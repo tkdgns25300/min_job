@@ -217,7 +217,7 @@ export const EXPOSURE_PRODUCTS = {
     label: "스페셜",
     slots: { home: true, list: true, related: true },
     capacity: 3,
-    prices: { 1: 99_000, 2: 189_000, 4: 299_000 },
+    prices: { 1: 69_000, 2: 129_000, 4: 209_000 },
     desc: "홈 추천 카드 + 목록 상단 + 비슷한 공고 상단",
   },
   PLUS: {

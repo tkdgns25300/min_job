@@ -46,7 +46,7 @@ export default async function HomePage() {
             </h1>
             <p className="mx-auto mt-5 max-w-lg text-[17px] leading-relaxed break-keep text-white/70">
               여러 신학교·교단 게시판을 돌아다닐 필요 없이,
-              <br className="hidden sm:block" /> 사례비·지역·부서까지 한눈에 확인하세요.
+              <br className="hidden sm:block" /> 지역·부서·사례비까지 한눈에 확인하세요.
             </p>
 
             <div className="mx-auto mt-8 w-full max-w-xl">

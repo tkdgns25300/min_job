@@ -21,7 +21,7 @@ const price = (tier: ExposureProduct, weeks: ExposureWeeks) =>
 export const metadata: Metadata = {
   title: "공고 노출 안내 | 민잡",
   description:
-    "무료로 공고를 올리고, 더 많은 교역자에게 빠르게 닿고 싶을 때만 노출을 더하세요. 기본·플러스·스페셜 노출 상품 안내.",
+    "무료로 공고를 올리고, 더 많은 사역자에게 빠르게 닿고 싶을 때만 노출을 더하세요. 기본·플러스·스페셜 노출 상품 안내.",
   alternates: { canonical: "/pricing" },
 };
 
@@ -186,7 +186,7 @@ export default async function PricingPage() {
         <div className="mx-auto w-full max-w-5xl px-4 py-14 sm:py-16">
           <p className="text-sm font-semibold text-gold">공고 노출 안내</p>
           <h1 className="mt-3 text-2xl leading-snug font-extrabold tracking-[-0.02em] break-keep sm:text-3xl">
-            공고를 더 많은 교역자에게 노출하세요
+            공고를 더 많은 사역자에게 알리세요
           </h1>
           <p className="mt-3.5 max-w-xl leading-relaxed break-keep text-white/80">
             무료로 공고를 올리고, 노출을 더하세요. 각 상품에서 실제 노출 화면을 미리 볼 수 있어요.
