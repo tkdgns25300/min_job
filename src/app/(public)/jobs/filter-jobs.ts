@@ -10,10 +10,11 @@ import {
   type PayPeriod,
 } from "@/constants/domain";
 import { normalizeChurchName } from "@/lib/job-church";
-import type { FilterDim, JobCard } from "@/types/domain";
+import type { FacetCounts, FilterDim, JobCard } from "@/types/domain";
 
 // 클라이언트 필터/정렬 (순수 함수) — `/jobs`는 서버가 전체 카드를 한 번 내리고 여기서 다 거른다.
-// 실제 데이터 연동 시 이 로직은 lib/queries의 서버 쿼리로 이전한다.
+// **서버로 옮기지 않는다**(CLAUDE.md 아키텍처 표): 쿼리가 달라도 서버 HTML이 같아서 `/jobs`가 캐시되고
+// canonical도 하나로 남는다. 규모가 문제가 되면 그때 재검토한다(ROADMAP `/jobs` payload 항목).
 
 const MONTHS_PER_YEAR = 12;
 
@@ -38,66 +39,120 @@ function monthlyPay(amount: number, period: PayPeriod): number {
   return period === "YEAR" ? amount / MONTHS_PER_YEAR : amount;
 }
 
+/**
+ * 축(`FilterDim`)마다 **그 공고가 가진 값** — 미상(null)이면 빈 배열이다.
+ * 필터 판정과 칩 건수가 이 한 곳을 같이 본다. 둘이 갈리면 "유초등부 58"을 눌러 다른 수가 나온다.
+ *
+ * ⚠️ 미상은 어느 칸에도 세지 않고, 그래서 그 축을 고른 순간 탈락한다 — 모르는 값을 아무 칸에나 넣으면
+ *    필터가 거짓말이 된다(DATA §3). 부서를 고르면 부서 미상 공고가 통째로 빠지는데, 그 사실은
+ *    칩에 붙는 건수가 대신 말해 준다(`facetCounts` · 2026-09-04).
+ */
+const DIM_VALUES: Record<FilterDim, (job: JobCard) => readonly string[]> = {
+  denomination: (j) => (j.church.denomination ? [j.church.denomination] : []),
+  region: (j) => (j.church.region ? [j.church.region] : []),
+  // 직분만 배열이다 — 자리가 여럿이거나 자격을 열어 둔 공고는 그 직분들에 모두 센다(DATA §3)
+  position: (j) => j.position,
+  department: (j) => (j.department ? [j.department] : []),
+  employmentType: (j) => (j.employmentType ? [j.employmentType] : []),
+  qualification: (j) => (j.qualification ? [j.qualification] : []),
+};
+
+const DIMS = Object.keys(DIM_VALUES) as FilterDim[];
+
+/** 한 축의 판정 — 안 고른 축은 통과, 고른 축은 값이 하나라도 겹치면 통과(축 안은 OR) */
+function matchesDim(job: JobCard, dim: FilterDim, chosen: Set<string>): boolean {
+  return chosen.size === 0 || DIM_VALUES[dim](job).some((value) => chosen.has(value));
+}
+
+/** 사례비 — 숫자가 없는 공고(협의)를 넣을지는 `includeNego`가 정한다 */
+function matchesPay(job: JobCard, c: JobFilterCriteria): boolean {
+  if (job.payMin === null && job.payMax === null) return c.includeNego;
+  const max = monthlyPay(job.payMax ?? job.payMin ?? 0, job.payPeriod);
+  const min = monthlyPay(job.payMin ?? job.payMax ?? 0, job.payPeriod);
+  return (c.payMin === null || max >= c.payMin) && (c.payMax === null || min <= c.payMax);
+}
+
+// 검색어는 **공백으로 나눠 단어마다** 본다 — "방주교회 전임교역자"처럼 교회명과 제목 단어를 함께 적으면
+// 통짜 substring으로는 아무것도 안 나온다(실측 2026-08-29: 0건). 단어가 전부 들어 있으면 매칭(AND).
+function searchTerms(q: string): string[] {
+  return q.trim().split(/\s+/).filter(Boolean);
+}
+
+function matchesTerms(job: JobCard, terms: string[]): boolean {
+  if (terms.length === 0) return true;
+  // 자유검색 매칭 소스 = 교회명·제목·지역·도시 + 직분·직무·부서·교단·고용형태
+  // (직무는 일반직의 직분 짝이라 빠지면 "행정간사"로 검색해도 그 공고가 안 나온다.
+  //  단 검색어 **제안**에는 넣지 않는다 — 자유 텍스트라 표기가 제각각이어서 후보로 부적합하다)
+  // (검색어 완성 후보와 소스를 맞춰, 제안한 검색어가 반드시 결과로 이어지게 한다)
+  const hay = [
+    job.church.name,
+    // 정규화형도 넣는다 — 검색어 완성이 교회명 표기 흔들림("○○ 교회"/"예장합동 ○○교회")을
+    // 하나로 묶어 대표 하나만 제안하므로, 원문 표기만 훑으면 **제안한 말로 검색했는데 안 나오는**
+    // 공고가 생긴다(getSearchSuggestions와 짝을 이루는 계약).
+    normalizeChurchName(job.church.name),
+    job.title,
+    job.church.region ? REGIONS[job.church.region] : "",
+    job.church.city ?? "",
+    ...job.position.map((p) => POSITIONS[p]),
+    job.role ?? "",
+    job.department ? DEPARTMENTS[job.department] : "",
+    job.church.denomination ? DENOMINATIONS[job.church.denomination] : "",
+    job.employmentType ? EMPLOYMENT_TYPES[job.employmentType] : "",
+    job.qualification ? QUALIFICATIONS[job.qualification] : "",
+  ].join(" ");
+  return terms.every((term) => hay.includes(term));
+}
+
+/** 축이 아닌 조건 — 사택·사례비·검색어. 건수를 셀 때도 **항상** 적용한다(축만 하나 풀어서 센다) */
+function matchesRest(job: JobCard, c: JobFilterCriteria, terms: string[]): boolean {
+  if (c.housingOnly && job.housingProvided !== true) return false;
+  return matchesPay(job, c) && matchesTerms(job, terms);
+}
+
 export function filterAndSortJobs(jobs: JobCard[], c: JobFilterCriteria): JobCard[] {
-  // 검색어는 **공백으로 나눠 단어마다** 본다 — "방주교회 전임교역자"처럼 교회명과 제목 단어를 함께 적으면
-  // 통짜 substring으로는 아무것도 안 나온다(실측 2026-08-29: 0건). 단어가 전부 들어 있으면 매칭(AND).
-  const terms = c.q.trim().split(/\s+/).filter(Boolean);
-  const s = c.selected;
-
-  const result = jobs.filter((j) => {
-    // 미상(null)은 축을 고른 순간 탈락한다 — 모르는 값을 아무 칸에나 넣으면 필터가 거짓말이 된다.
-    // (지역 미상 공고가 사실상 안 보이게 되는 건 알고 있는 대가 — 검수에서 먼저 채운다, DATA §3)
-    if (s.denomination.size && !s.denomination.has(j.church.denomination ?? "")) return false;
-    if (s.region.size && !s.region.has(j.church.region ?? "")) return false;
-    if (s.position.size && !j.position.some((p) => s.position.has(p))) return false;
-    if (s.department.size && (!j.department || !s.department.has(j.department))) return false;
-    if (s.employmentType.size && (!j.employmentType || !s.employmentType.has(j.employmentType)))
-      return false;
-    if (s.qualification.size && (!j.qualification || !s.qualification.has(j.qualification)))
-      return false;
-    if (c.housingOnly && !j.housingProvided) return false;
-
-    const hasNumber = j.payMin !== null || j.payMax !== null;
-    if (!hasNumber) {
-      if (!c.includeNego) return false;
-    } else {
-      const jMax = monthlyPay(j.payMax ?? j.payMin ?? 0, j.payPeriod);
-      const jMin = monthlyPay(j.payMin ?? j.payMax ?? 0, j.payPeriod);
-      if (c.payMin !== null && jMax < c.payMin) return false;
-      if (c.payMax !== null && jMin > c.payMax) return false;
-    }
-
-    if (terms.length > 0) {
-      // 자유검색 매칭 소스 = 교회명·제목·지역·도시 + 직분·직무·부서·교단·고용형태
-      // (직무는 일반직의 직분 짝이라 빠지면 "행정간사"로 검색해도 그 공고가 안 나온다.
-      //  단 검색어 **제안**에는 넣지 않는다 — 자유 텍스트라 표기가 제각각이어서 후보로 부적합하다)
-      // (검색어 완성 후보와 소스를 맞춰, 제안한 검색어가 반드시 결과로 이어지게 한다)
-      const hay = [
-        j.church.name,
-        // 정규화형도 넣는다 — 검색어 완성이 교회명 표기 흔들림("○○ 교회"/"예장합동 ○○교회")을
-        // 하나로 묶어 대표 하나만 제안하므로, 원문 표기만 훑으면 **제안한 말로 검색했는데 안 나오는**
-        // 공고가 생긴다(getSearchSuggestions와 짝을 이루는 계약).
-        normalizeChurchName(j.church.name),
-        j.title,
-        j.church.region ? REGIONS[j.church.region] : "",
-        j.church.city ?? "",
-        ...j.position.map((p) => POSITIONS[p]),
-        j.role ?? "",
-        j.department ? DEPARTMENTS[j.department] : "",
-        j.church.denomination ? DENOMINATIONS[j.church.denomination] : "",
-        j.employmentType ? EMPLOYMENT_TYPES[j.employmentType] : "",
-        j.qualification ? QUALIFICATIONS[j.qualification] : "",
-      ].join(" ");
-      if (!terms.every((term) => hay.includes(term))) return false;
-    }
-    return true;
-  });
+  const terms = searchTerms(c.q);
+  const result = jobs.filter(
+    (job) =>
+      matchesRest(job, c, terms) && DIMS.every((dim) => matchesDim(job, dim, c.selected[dim])),
+  );
 
   // 순수 최신순 — 사용자가 고르는 정렬축은 없다(SPEC 정렬·필터 규칙). 유료 노출은 정렬이 아니라
   // **자리**다(`splitListAds`) — 한때 등급이 정렬 1차 키였는데 정원 없이 정렬로 올리면 팔릴수록 목록이
   // 광고판이 되어 폐기했다(2026-09-02).
   result.sort((a, b) => b.postedAt.localeCompare(a.postedAt));
   return result;
+}
+
+/**
+ * "이 값을 고르면 몇 건" — 칩마다 붙는 수다. **자기 축의 선택만 무시하고** 나머지 조건(다른 축·검색어·
+ * 사례비·사택)은 그대로 적용한다. 그래서 지역을 서울로 좁히면 부서 칩의 수가 함께 줄고, 0이 되는 칩은
+ * 누르기 전에 보인다(아마존·에어비앤비식 facet count).
+ *
+ * 미상 공고는 어느 칩에도 세지 않아 **칩 수의 합이 "총 N건"보다 작다.** 그게 이 숫자가 하는 말이다 —
+ * 부서 없는 공고 643건(실측 2026-09-04)은 부서를 고르는 순간 빠지고, 사용자는 누르기 전에 그걸 안다.
+ *
+ * 축을 하나씩 풀어 6번 훑지 않고 한 번만 훑는다 — 공고마다 **어긋난 축의 개수**를 세서, 0개면 모든 축의
+ * 건수에, 1개면 그 축의 건수에만 넣는다(2개 이상 어긋나면 어느 한 축을 풀어도 걸리지 않는다).
+ *
+ * ⚠️ **이 수는 공고를 세고 "총 N건"은 광고 로우를 뺀 수다**(`splitListAds` · SPEC 수익화 절) — 광고가 서면
+ *    칩이 라벨보다 최대 5 크다. 화면에 서는 줄 수와는 맞으므로 그대로 둔 값 차이다(근거는 SPEC 정렬·필터 절).
+ * ⚠️ 값 배열에 **중복이 없어야** 한 공고를 두 번 세지 않는다 — `position`은 `row-map`이 seam에서 지운다.
+ */
+export function facetCounts(jobs: JobCard[], c: JobFilterCriteria): FacetCounts {
+  const terms = searchTerms(c.q);
+  const counts = Object.fromEntries(DIMS.map((dim) => [dim, {}])) as FacetCounts;
+
+  for (const job of jobs) {
+    if (!matchesRest(job, c, terms)) continue;
+    const missed = DIMS.filter((dim) => !matchesDim(job, dim, c.selected[dim]));
+    if (missed.length > 1) continue;
+
+    for (const dim of missed.length === 0 ? DIMS : missed) {
+      const tally = counts[dim];
+      for (const value of DIM_VALUES[dim](job)) tally[value] = (tally[value] ?? 0) + 1;
+    }
+  }
+  return counts;
 }
 
 /**

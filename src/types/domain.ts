@@ -25,6 +25,13 @@ export type { JobStatus };
 export type FilterDim =
   "denomination" | "region" | "position" | "department" | "employmentType" | "qualification";
 
+/**
+ * 필터 칩에 붙는 건수 — 축마다 `{ 값: 건수 }`, 0인 값은 키가 없다.
+ * 계산은 `(public)/jobs/filter-jobs`의 `facetCounts`가 하고, 여기 두는 이유는 `components/`의
+ * 필터 UI가 같은 모양을 받아야 하는데 **`components/`는 `app/`을 import하지 않기** 때문이다.
+ */
+export type FacetCounts = Record<FilterDim, Record<string, number>>;
+
 // 교회 채널 링크 (홈페이지·SNS)
 export interface ChurchLink {
   type: ChurchChannel;

@@ -125,7 +125,9 @@ export function toJobCardFields(row: JobCardRow): JobCardFields {
     title: row.title,
     // 카드가 그리지는 않지만 카드 컬럼에 둔다 — "비슷한 공고"의 문(사역직/일반직 같음)이 이 값을 본다
     jobKind: keysOf(JOB_KINDS, row.job_kind),
-    position: keysOf(POSITIONS, row.position ?? []),
+    // 중복을 지운다 — 컬럼에 유일성 제약이 없고 값은 AI 구조화에서 온다(`{EVANGELIST, EVANGELIST}`가 가능).
+    // 남기면 필터 칩 건수가 **한 공고를 두 번 센다**(`facetCounts`는 값마다 세고 목록은 한 번 담는다).
+    position: [...new Set(keysOf(POSITIONS, row.position ?? []))],
     role: row.role,
     department: keyOf(DEPARTMENTS, row.department),
     employmentType: keyOf(EMPLOYMENT_TYPES, row.employment_type),

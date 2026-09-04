@@ -11,7 +11,7 @@ import {
   EMPLOYMENT_TYPES,
   QUALIFICATIONS,
 } from "@/constants/domain";
-import type { FilterDim } from "@/types/domain";
+import type { FacetCounts, FilterDim } from "@/types/domain";
 
 const CHIP_LIMIT = 8; // 이보다 많은 그룹은 "더보기"로 접음
 
@@ -24,20 +24,92 @@ const GROUPS: { dim: FilterDim; title: string; options: Record<string, string> }
   { dim: "qualification", title: "자격 / 경력", options: QUALIFICATIONS },
 ];
 
+/**
+ * 접힌 상태에서 보일 칩 — **건수 많은 것부터 고르고, 그리는 순서는 선언 순서를 지킨다.**
+ *
+ * 선언 순서로 그냥 자르면 세종 3건이 보이고 경북 68건이 숨는다. 칩에 건수가 붙고 0건이 비활성이 된
+ * 뒤로는 그게 **살아 있는 칩이 전부 더보기 뒤에 숨는** 화면을 만든다(실측 2026-09-04: 부서=영유아부 +
+ * 자격=목사안수 → 보이는 지역 8개가 전부 0건, 유일한 대구는 접힘 뒤). 그 축이 고장 난 것처럼 보인다.
+ *
+ * ⚠️ **고르기만 건수로 하고 순서는 바꾸지 않는다** — 순서까지 건수로 세우면 필터를 만질 때마다 칩이
+ *    자리를 옮겨 누르려던 것을 놓친다. 고른 칩은 0건이어도 남긴다(해제할 자리가 사라지면 안 된다).
+ */
+function visibleChips(
+  entries: [string, string][],
+  selected: Set<string>,
+  counts: Record<string, number>,
+): [string, string][] {
+  if (entries.length <= CHIP_LIMIT) return entries;
+  const kept = new Set(
+    [...entries]
+      .sort(
+        ([a], [b]) =>
+          Number(selected.has(b)) - Number(selected.has(a)) || (counts[b] ?? 0) - (counts[a] ?? 0),
+      )
+      .slice(0, CHIP_LIMIT)
+      .map(([key]) => key),
+  );
+  return entries.filter(([key]) => kept.has(key));
+}
+
+/**
+ * 칩 하나 — 라벨 + "고르면 몇 건".
+ * ⚠️ `components/job/chip-select`의 폼 칩과는 별개다(그쪽은 건수도 비활성도 없다).
+ */
+function FilterChip({
+  label,
+  count,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  count: number;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const empty = count === 0 && !selected;
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      // 라벨과 숫자가 붙어 "유초등부 53"으로 읽히면 무슨 53인지 알 수 없다 — 단위를 붙여 준다
+      aria-label={`${label} ${count}건`}
+      // 0건 칩은 막는다 — 눌러도 결과가 달라지지 않는다(축 안은 OR라 아무것도 더해지지 않고,
+      // 그 축에 고른 게 없으면 총 0건이 된다). 흐리게 남겨 그 조합이 비어 있다는 것은 보인다.
+      disabled={empty}
+      onClick={onToggle}
+      className={cn(
+        "rounded-md border px-2.5 py-1 text-xs transition-colors disabled:opacity-60",
+        selected
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border bg-background text-muted-foreground enabled:hover:text-foreground",
+      )}
+    >
+      {label}
+      {/* 고른 칩 위에서도 읽히도록 색이 아니라 투명도로 낮춘다(배경이 primary로 바뀐다).
+          ⚠️ 비활성 칩에서는 낮추지 않는다 — 버튼 투명도와 곱해져 0.36이 되면 숫자가 사라지고,
+             "비어 있다는 사실을 보여준다"는 이 칩의 목적이 함께 사라진다. */}
+      <span className={cn("ml-1", empty ? "opacity-100" : "opacity-60")}>{count}</span>
+    </button>
+  );
+}
+
 function ChipGroup({
   title,
   options,
   selected,
+  counts,
   onToggle,
 }: {
   title: string;
   options: Record<string, string>;
   selected: Set<string>;
+  counts: Record<string, number>;
   onToggle: (value: string) => void;
 }) {
   const entries = Object.entries(options);
   const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? entries : entries.slice(0, CHIP_LIMIT);
+  const visible = expanded ? entries : visibleChips(entries, selected, counts);
   const hasMore = entries.length > CHIP_LIMIT;
 
   return (
@@ -45,19 +117,13 @@ function ChipGroup({
       <h3 className="mb-2 text-xs font-bold text-muted-foreground">{title}</h3>
       <div className="flex flex-wrap gap-1.5">
         {visible.map(([key, label]) => (
-          <button
+          <FilterChip
             key={key}
-            type="button"
-            onClick={() => onToggle(key)}
-            className={cn(
-              "rounded-md border px-2.5 py-1 text-xs transition-colors",
-              selected.has(key)
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {label}
-          </button>
+            label={label}
+            count={counts[key] ?? 0}
+            selected={selected.has(key)}
+            onToggle={() => onToggle(key)}
+          />
         ))}
         {hasMore && (
           <button
@@ -75,6 +141,8 @@ function ChipGroup({
 
 export interface JobFilterProps {
   selected: Record<FilterDim, Set<string>>;
+  /** 칩마다 "고르면 몇 건" — 자기 축을 뺀 나머지 조건이 반영된 수(`facetCounts`) */
+  counts: FacetCounts;
   onToggle: (dim: FilterDim, value: string) => void;
   payMin: string;
   payMax: string;
@@ -88,6 +156,7 @@ export interface JobFilterProps {
 
 export function JobFilter({
   selected,
+  counts,
   onToggle,
   payMin,
   payMax,
@@ -117,6 +186,7 @@ export function JobFilter({
           title={g.title}
           options={g.options}
           selected={selected[g.dim]}
+          counts={counts[g.dim]}
           onToggle={(v) => onToggle(g.dim, v)}
         />
       ))}

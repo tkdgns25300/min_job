@@ -14,7 +14,12 @@ import { RecentlyViewed } from "@/components/job/recently-viewed";
 import { ChurchCtaCard } from "@/components/job/church-cta-card";
 import { cn } from "@/lib/utils";
 import type { JobCard as JobCardData } from "@/types/domain";
-import { filterAndSortJobs, splitListAds } from "./filter-jobs";
+import {
+  facetCounts,
+  filterAndSortJobs,
+  splitListAds,
+  type JobFilterCriteria,
+} from "./filter-jobs";
 import {
   buildJobsQuery,
   emptySelected,
@@ -39,8 +44,26 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
   const [page, setPage] = useState(seed.page);
   const [pageSize, setPageSize] = useState<number>(seed.pageSize);
 
+  // 필터 판정과 칩 건수가 같은 조건을 봐야 한다 — 한 곳에서 만들어 둘에 넘긴다
+  const criteria = useMemo<JobFilterCriteria>(
+    () => ({
+      q,
+      selected,
+      payMin: payMin ? Number(payMin) : null,
+      payMax: payMax ? Number(payMax) : null,
+      includeNego,
+      housingOnly,
+    }),
+    [q, selected, payMin, payMax, includeNego, housingOnly],
+  );
+
+  const filtered = useMemo(() => filterAndSortJobs(jobs, criteria), [jobs, criteria]);
+  // 칩마다 "고르면 몇 건" — 미상 공고가 조용히 빠지는 걸 누르기 전에 보여 준다(`facetCounts` 머리말)
+  const counts = useMemo(() => facetCounts(jobs, criteria), [jobs, criteria]);
+
   const filterProps: JobFilterProps = {
     selected,
+    counts,
     onToggle: (dim, value) => {
       setSelected((prev) => {
         const next = new Set(prev[dim]);
@@ -77,19 +100,6 @@ export function JobsView({ jobs }: { jobs: JobCardData[] }) {
       setPage(1);
     },
   };
-
-  const filtered = useMemo(
-    () =>
-      filterAndSortJobs(jobs, {
-        q,
-        selected,
-        payMin: payMin ? Number(payMin) : null,
-        payMax: payMax ? Number(payMax) : null,
-        includeNego,
-        housingOnly,
-      }),
-    [jobs, q, selected, payMin, payMax, includeNego, housingOnly],
-  );
 
   // 광고 로우는 결과 수·페이지 계산에 들어가지 않는다 — 1페이지 맨 위에 최대 5줄 따로 선다(SPEC 수익화 절)
   const { ads, rest } = useMemo(() => splitListAds(filtered), [filtered]);

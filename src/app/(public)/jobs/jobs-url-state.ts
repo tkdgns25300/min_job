@@ -23,9 +23,11 @@ import type { FilterDim } from "@/types/domain";
  *    값(`?qualification=ANY`)이 들어오면 **0건이 뜨는데 눌린 칩은 없어** 왜 안 나오는지 알 수
  *    없는 막다른 화면이 됐다(실측 2026-08-27). 바로 아래 파서의 주석이 *"오래된 링크에도
  *    깨지지 않게 한다"* 고 약속하는데 이 축들만 그 약속 밖에 있었다.
- * ⚠️ 축이 늘면 **여기 한 줄만** 추가한다 — `job-filter.tsx`의 그룹 정의와 같은 짝이다.
+ * ⚠️ 축이 늘면 **`FilterDim`으로 키를 잡은 표 네 개**를 함께 채운다 — 여기(URL 검증) ·
+ *    `active-filter-chips`(해제 칩 라벨) · `job-filter`(그룹 정의) · `filter-jobs`(판정·건수용 값 추출).
+ *    넷 다 `Record<FilterDim, …>`라 하나를 빠뜨리면 타입이 막는다(런타임에 조용히 새지 않는다).
  */
-const DIM_OPTIONS: Record<FilterDim, Record<string, string>> = {
+export const DIM_OPTIONS: Record<FilterDim, Record<string, string>> = {
   denomination: DENOMINATIONS,
   region: REGIONS,
   position: POSITIONS,
