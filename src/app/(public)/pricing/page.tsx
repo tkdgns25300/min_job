@@ -192,9 +192,6 @@ export default async function PricingPage() {
             무료로 공고를 올리고, 더 빨리 채우고 싶을 때만 노출을 더하면 됩니다. 각 상품에서 실제
             노출 화면을 미리 볼 수 있어요.
           </p>
-          <span className="mt-4 inline-block rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold">
-            인증 교회는 카드로 바로 결제 — 확인되면 즉시 적용
-          </span>
         </div>
       </section>
 
