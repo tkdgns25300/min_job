@@ -8,7 +8,13 @@ import { SITE_DOMAIN } from "@/constants/site";
 
 export type Device = "mobile" | "pc";
 export type Group = "basic" | "plus" | "special";
-export type Scene = { cap: string; node: ReactNode };
+/**
+ * 장면 하나 — `cap`은 어느 화면의 어느 자리인지(한 줄), `desc`는 **그 자리가 실제로 어떻게 동작하는지**
+ * (몇 칸 · 누가 서나 · 순서 · 광고 표시). 그림만 두면 광고 줄을 눈으로 찾아야 해서 붙였다(운영자 요청 2026-09-05).
+ * ⚠️ `desc`의 수치는 `constants/domain`의 정원·자리 규칙과 `lib/similar-jobs`·`queries/jobs` 머리말의 말이다 —
+ *    규칙이 바뀌면 여기도 같이 고친다.
+ */
+export type Scene = { cap: string; desc: string; node: ReactNode };
 
 export const DEVICE: Record<Device, { w: number; label: string }> = {
   mobile: { w: 360, label: "모바일 화면" },
@@ -62,9 +68,15 @@ const AdText = () => <span className="text-[9px] font-medium text-muted-foregrou
 const BookmarkGlyph = () => <span className="text-[11px] text-neutral-300">▢</span>;
 
 // 홈 추천 카드·비슷한 공고 카드 — `components/job/job-card`의 축소판
+// 광고 자리 강조 — **미리보기에만** 있는 표시다. 실제 화면은 회색 "광고" 글자 하나뿐이라 그림에서 그 줄을 눈으로
+// 찾아야 했다. 점선 테두리로 "여기"를 가리키고, 테두리 안쪽 모양은 실제와 같게 둔다.
+const AD_HIGHLIGHT = "outline-2 outline-offset-1 outline-dashed outline-primary/50";
+
 function MiniCard({ posting, ad = false }: { posting: Posting; ad?: boolean }) {
   return (
-    <div className="flex flex-col gap-1 rounded-[10px] border border-border bg-white p-2.5">
+    <div
+      className={`flex flex-col gap-1 rounded-[10px] border border-border bg-white p-2.5 ${ad ? AD_HIGHLIGHT : ""}`}
+    >
       <div className="flex min-h-3 items-center justify-between">
         {ad ? <AdText /> : <span />}
         <BookmarkGlyph />
@@ -85,7 +97,9 @@ function MiniCard({ posting, ad = false }: { posting: Posting; ad?: boolean }) {
 // 목록 로우 — `components/job/job-row`의 축소판
 function Row({ posting, ad = false }: { posting: Posting; ad?: boolean }) {
   return (
-    <div className="flex items-center gap-3 border-t border-border px-3 py-2.5 first:border-t-0">
+    <div
+      className={`flex items-center gap-3 border-t border-border px-3 py-2.5 first:border-t-0 ${ad ? AD_HIGHLIGHT : ""}`}
+    >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span className="truncate text-[12px] font-bold">{posting.title}</span>
@@ -217,6 +231,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
   // 비슷한 공고 첫 칸 — 세 등급 모두 걸리는 자리(기본은 이것 하나)
   const related: Scene = {
     cap: "공고 상세 — 하단 ‘비슷한 공고’ 첫 칸",
+    desc: "다른 공고를 읽는 사람에게 닿는 자리예요. 같은 지역이고 같은 자격으로 갈 수 있는 공고의 상세 아래, ‘비슷한 공고’ 6칸 중 첫 칸에 서요. 기본·플러스·스페셜 모두 서고, 해당하는 광고가 여럿이면 페이지마다 다른 하나가 서요.",
     node: (
       <Chrome device={device} url="/jobs/…">
         <div className="p-3.5">
@@ -250,6 +265,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
   // 목록 1페이지 맨 위 로우 — 플러스·스페셜
   const list: Scene = {
     cap: "공고 목록 — 1페이지 맨 위 광고 로우",
+    desc: "공고 목록 1페이지 맨 위에 최대 5줄이 서요. 스페셜 3줄, 그 아래 플러스 2줄이에요. 사용자가 지역·직분 필터를 걸어도 그 조건에 맞는 공고면 그대로 맨 위에 남아요. 줄 모양은 일반 목록과 같고 ‘광고’ 표시만 붙어요.",
     node: (
       <Chrome device={device} url="/jobs">
         <Band>
@@ -276,6 +292,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
   // 홈 추천 청빙 3칸 — 스페셜만
   const home: Scene = {
     cap: "홈 — 첫 화면 ‘추천 청빙’ 카드",
+    desc: "홈에 들어오면 가장 먼저 보이는 추천 청빙 3칸이에요. 스페셜 공고만 서고, 셋을 넘으면 최신순으로 3장까지예요. 카드에 ‘광고’ 표시가 작게 붙고, 모양은 다른 카드와 같아요.",
     node: (
       <Chrome device={device} url={SITE_DOMAIN}>
         <div

@@ -87,6 +87,10 @@ function Carousel({ scenes, device }: { scenes: Scene[]; device: Device }) {
       </div>
       <div className="pt-3 text-center">
         <div className="text-sm font-bold">{scenes[index]?.cap}</div>
+        {/* 그림 아래 "이 자리가 어떻게 동작하나" — 점선 테두리가 가리키는 칸의 규칙이다(`Scene.desc`) */}
+        <p className="mx-auto mt-1.5 max-w-lg text-xs leading-relaxed break-keep text-muted-foreground">
+          {scenes[index]?.desc}
+        </p>
         {count > 1 && (
           <div className="mt-2 flex justify-center gap-1.5">
             {scenes.map((s, k) => (
