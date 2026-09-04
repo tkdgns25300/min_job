@@ -143,7 +143,7 @@ function PlanCard({ plan }: { plan: Plan }) {
         )}
       </div>
       <p className="mt-1 min-h-8 text-xs break-keep text-muted-foreground">{plan.aud}</p>
-      <ul className="mt-3.5 flex flex-col gap-2 border-t pt-3.5">
+      <ul className="mt-3.5 flex flex-1 flex-col gap-2 border-t pt-3.5">
         {plan.features.map((f) => (
           <li key={f} className="relative pl-4.5 text-sm break-keep">
             <span className="absolute left-0 font-bold text-primary">✓</span>
@@ -200,7 +200,9 @@ export default async function PricingPage() {
 
       <div className="mx-auto w-full max-w-5xl space-y-14 px-4 pt-12 pb-24">
         {/* 상품 카드 */}
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-start">
+        {/* 네 카드 높이를 맞춘다(운영자 요청 2026-09-05) — `items-start`를 두면 내용 길이대로 들쭉날쭉해진다.
+            카드 안에서는 기능 목록이 남는 높이를 먹어 CTA가 같은 줄에 선다(`PlanCard`의 `flex-1`). */}
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {PLANS.map((plan) => (
             <PlanCard key={plan.name} plan={plan} />
           ))}
