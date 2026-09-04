@@ -4,9 +4,9 @@ import { SITE_DOMAIN } from "@/constants/site";
 // 사이트 공통 OG 이미지 — 링크 공유(특히 카카오톡) 미리보기 썸네일. 전 페이지가 이 한 장을 쓴다.
 //
 // ⚠️ 한글을 쓰지 않는다: ImageResponse(satori)는 ttf·otf·woff만 지원하는데 우리 폰트는
-//    PretendardVariable.**woff2**라 못 읽고, 번들 500KB 제한 때문에 한글 폰트를 넣기도 어렵다.
-//    다행히 로고 자체가 영문(MinJob)이라 브랜드 카드로는 충분하다.
-//    공고 제목이 박힌 **공고별 이미지**를 원하면 한글 정적 폰트(ttf/otf)가 먼저 필요하다(ROADMAP 1-5).
+//    PretendardVariable.**woff2**라 못 읽는다. 로고 자체가 영문(MinJob)이라 브랜드 카드로는 충분하다.
+//    공고 상세는 **공고별 카드**를 따로 그린다(`(public)/jobs/[id]/opengraph-image.tsx` · 2026-09-05) — 그쪽은
+//    KS X 1001 2,350자로 잘라 둔 정적 TTF(`fonts/pretendard-bold-subset.ttf`)를 읽는다.
 //
 // ℹ️ 파일 규약의 `alt` export는 두지 않는다 — root layout이 `openGraph.images`를 직접 지정해서
 //    Next의 자동 주입 경로를 우회하므로 여기 적어도 태그에 안 나온다. alt는 `SITE_OPEN_GRAPH`에 있다.

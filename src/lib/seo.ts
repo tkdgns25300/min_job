@@ -1,5 +1,5 @@
 import { REGIONS, type EmploymentType } from "@/constants/domain";
-import { churchMetaLine, jobRoleLine } from "@/lib/format";
+import { churchMetaLine, formatPayShort, jobRoleLine, publicPositionLabel } from "@/lib/format";
 import { BUSINESS_INFO } from "@/constants/business";
 import { SITE_OPEN_GRAPH, SITE_URL } from "@/constants/site";
 import type { JobDetail } from "@/types/domain";
@@ -21,6 +21,42 @@ export function jobRoleSummary(detail: JobDetail): string {
   return [churchRef.name, churchMetaLine(churchRef), jobRoleLine(detail.job)]
     .filter(Boolean)
     .join(" · ");
+}
+
+/** 출근 문구가 이보다 길면 공유 카드에 넣지 않는다 — "예배 전(9시 30분부터), 예배 후…"는 썸네일이 못 담는다 */
+const SHARE_WORK_DAYS_MAX = 12;
+
+/**
+ * 공유 카드(OG) 세 줄 — 이미지(`jobs/[id]/opengraph-image`)와 `og:description`이 **같은 줄**을 쓴다.
+ *
+ *   맥락   새소망교회 · 예장합동 · 경기 성남
+ *   제목   유초등부 전임전도사              ← 자리 한 줄. 비면(직분 "기타"뿐) 교회가 쓴 제목으로
+ *   사실   월 220만원 · 주일·수요 출근 · 마감 7/20   ← 사례비는 카드 규칙(금액 아니면 "협의")
+ *
+ * 교회가 쓴 제목은 `og:title`이 그대로 맡는다(알아보는 이름이라 고치지 않는다). 여기는 그 제목이 말하지
+ * 않는 **비교 가능한 사실**만 — 공유받은 사람이 열지 않고도 조건을 읽게(운영자 요청 2026-09-05).
+ */
+export function jobShareLines(detail: JobDetail): {
+  context: string;
+  headline: string;
+  facts: string;
+} {
+  const { job, churchRef } = detail;
+  const workDays =
+    job.workDays && job.workDays.length <= SHARE_WORK_DAYS_MAX ? `${job.workDays} 출근` : null;
+  // deadline은 "YYYY-MM-DD"(date 컬럼 · 시간대 없음)라 자르기만 한다 — `formatKstDate`는 timestamptz용
+  const deadline = job.deadline
+    ? `마감 ${Number(job.deadline.slice(5, 7))}/${Number(job.deadline.slice(8, 10))}`
+    : "상시모집";
+  const pay = formatPayShort(job);
+  // 자리 이름(직분·직무)이 있을 때만 자리 한 줄을 제목으로 — 직분이 "기타"뿐이면 자리 줄이 "찬양·예배"처럼
+  // 부서만 남아 무엇을 뽑는지 안 보인다. 그때는 교회가 쓴 제목("오르간 반주자 모십니다")이 더 정확하다
+  const hasRole = publicPositionLabel(job.position, { full: true }) !== "" || job.role !== null;
+  return {
+    context: [churchRef.name, churchMetaLine(churchRef)].filter(Boolean).join(" · "),
+    headline: hasRole ? jobRoleLine(job, { full: true }) : job.title,
+    facts: [pay === "협의" ? "사례비 협의" : pay, workDays, deadline].filter(Boolean).join(" · "),
+  };
 }
 
 // schema.org JobPosting JSON-LD — 검색엔진 구조화 노출 (SEO 성장 엔진)

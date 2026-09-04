@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { JobDetailView } from "./job-detail-view";
 import { RecordRecentlyViewed } from "@/components/job/record-recently-viewed";
 import { getChurchOpenJobs, getJobDetail, getSimilarJobs } from "@/lib/queries/jobs";
-import { breadcrumbJsonLd, jobPostingJsonLd, jobRoleSummary } from "@/lib/seo";
+import { breadcrumbJsonLd, jobPostingJsonLd, jobRoleSummary, jobShareLines } from "@/lib/seo";
 import { churchLocation, formatPay } from "@/lib/format";
 import { REGIONS } from "@/constants/domain";
 import { SITE_OPEN_GRAPH } from "@/constants/site";
@@ -20,10 +20,24 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   // `||` — DB는 NOT NULL이지만 빈 문자열이 가능하다(`lib/seo.ts` 같은 이유)
   const description = detail.job.description || jobRoleSummary(detail);
+  // 공유 미리보기는 교회 소개문 대신 **비교 가능한 사실 한 줄**을 쓴다(자리 · 사례비 · 출근 · 마감).
+  // 검색 스니펫용 `description`은 그대로 — 검색엔진엔 문장이, 카톡엔 조건이 맞다(운영자 2026-09-05).
+  const share = jobShareLines(detail);
+  // 제목이 자리 줄로 폴백된 공고(직분 "기타"뿐)는 `og:title`과 겹치니 그 자리에 맥락(교회·교단·지역)을 쓴다
+  const shareLead = share.headline === detail.job.title ? share.context : share.headline;
   return {
     title: `${detail.job.title} | 민잡`,
     description,
-    openGraph: { ...SITE_OPEN_GRAPH, title: detail.job.title, description, type: "article" },
+    // ⚠️ `openGraph.images`를 여기서 적지 않는다 — 이 세그먼트의 `./opengraph-image.tsx`가 자동으로 붙인다.
+    //    빌드가 그 라우트에 해시를 붙여(`/jobs/[id]/opengraph-image-1y46gx`) 손으로 쓴 주소는 404였다(실측 2026-09-05).
+    //    `SITE_OPEN_GRAPH`를 통째로 펴면 그 안의 사이트 로고 `images`가 자동 주입을 막으므로 필드를 골라 쓴다.
+    openGraph: {
+      siteName: SITE_OPEN_GRAPH.siteName,
+      locale: SITE_OPEN_GRAPH.locale,
+      title: detail.job.title,
+      description: `${shareLead} · ${share.facts}`,
+      type: "article",
+    },
     // 공유 링크에 붙는 추적 쿼리(?utm_source=…)가 별도 페이지로 색인되지 않게 대표 URL 고정
     alternates: { canonical: `/jobs/${id}` },
   };
