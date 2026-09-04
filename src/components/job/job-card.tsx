@@ -38,17 +38,16 @@ export function JobCard({
         aria-label={job.title}
       />
 
-      {/* 라벨 줄은 광고가 아니어도 자리를 지킨다 — 한 줄에 선 세 장의 제목 높이가 맞아야 한다 */}
-      <div className="flex min-h-6 items-center justify-between">
-        {ad ? (
-          <span className="text-[11px] font-medium text-muted-foreground">광고</span>
-        ) : (
-          <span />
-        )}
-        {preview ? null : <BookmarkButton jobId={job.id} className="-mt-1 -mr-1.5" />}
+      {/* 저장 버튼은 **제목 줄 오른쪽**에 — 그전엔 라벨 줄(광고 표시 자리)에 혼자 떠서, 광고가 아닌 카드에서는
+          아이콘 하나가 한 줄을 통째로 차지했다(운영자 2026-09-05). "광고"도 그 옆에 같은 줄로 붙인다: 줄이 항상
+          있어야 한 줄에 선 세 장의 제목 높이가 맞는다(광고일 때만 줄이 생기면 어긋난다). */}
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="line-clamp-2 leading-snug font-bold tracking-tight">{job.title}</h3>
+        <div className="-mt-1 -mr-1.5 flex shrink-0 items-center gap-1">
+          {ad && <span className="text-[11px] font-medium text-muted-foreground">광고</span>}
+          {preview ? null : <BookmarkButton jobId={job.id} />}
+        </div>
       </div>
-
-      <h3 className="line-clamp-2 leading-snug font-bold tracking-tight">{job.title}</h3>
 
       {/* 조각 단위 줄바꿈 — `job-row`의 메타 줄과 같은 규칙(그 파일 주석 참조) */}
       <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground">

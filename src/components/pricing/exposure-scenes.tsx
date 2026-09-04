@@ -77,11 +77,14 @@ function MiniCard({ posting, ad = false }: { posting: Posting; ad?: boolean }) {
     <div
       className={`flex flex-col gap-1 rounded-[10px] border border-border bg-white p-2.5 ${ad ? AD_HIGHLIGHT : ""}`}
     >
-      <div className="flex min-h-3 items-center justify-between">
-        {ad ? <AdText /> : <span />}
-        <BookmarkGlyph />
+      {/* 실제 카드(`components/job/job-card`)와 같은 줄 구성 — 제목 오른쪽에 "광고"·저장 */}
+      <div className="flex items-start justify-between gap-1.5">
+        <div className="text-[12px] leading-snug font-bold break-keep">{posting.title}</div>
+        <div className="flex shrink-0 items-center gap-1">
+          {ad ? <AdText /> : null}
+          <BookmarkGlyph />
+        </div>
       </div>
-      <div className="text-[12px] leading-snug font-bold break-keep">{posting.title}</div>
       <div className="text-[10px] text-muted-foreground">{posting.meta}</div>
       {posting.role ? (
         <div className="text-[10px] text-muted-foreground">{posting.role}</div>
