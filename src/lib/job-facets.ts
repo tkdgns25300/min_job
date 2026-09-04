@@ -1,5 +1,5 @@
 import { DENOMINATIONS, DEPARTMENTS, POSITIONS, REGIONS } from "@/constants/domain";
-import type { JobCard } from "@/types/domain";
+import type { FilterDim, JobCard } from "@/types/domain";
 
 // 지역·직분·부서 **랜딩 라우트**의 규칙 — 어떤 값이 페이지를 갖는지, 주소가 어떻게 생기는지,
 // 그 페이지에 어떤 공고가 들어가는지. 순수 함수만 있고 DB·요청·화면을 모른다.
@@ -239,18 +239,6 @@ export function siblingFacets(axis: FacetAxis, key: string): { label: string; hr
 }
 
 /**
- * 한글 라벨로 랜딩을 찾는다 — 홈의 손으로 고른 추천 검색어("전도사"·"서울")를 랜딩 링크로 승격하는 데 쓴다.
- * 랜딩이 없는 말(교단 "예장합동"·자유 검색어)은 `null`이고 호출부가 검색 쿼리로 폴백한다.
- */
-export function facetPathForLabel(label: string): string | null {
-  for (const axis of FACET_AXES) {
-    const key = facetKeys(axis).find((candidate) => facetLabel(axis, candidate) === label);
-    if (key !== undefined) return facetPath(axis, key);
-  }
-  return null;
-}
-
-/**
  * 공고 하나가 속한 랜딩들 — 상세 페이지의 "같은 조건 모아보기". 여기가 내부 링크의 주 공급원이다.
  *
  * ⚠️ **일반직 공고는 아무 링크도 주지 않는다.** 랜딩이 사역직만 담으므로(`isMinistryCard`), 링크를 주면
@@ -275,7 +263,11 @@ export function facetsOfJob(job: {
   return links;
 }
 
-/** `/jobs`로 넘길 때 쓰는 필터 시드 — 기존 클라이언트 필터가 읽는 쿼리 모양이다(`jobs-url-state`) */
-export function facetJobsHref(axis: FacetAxis, key: string): string {
-  return `/jobs?${axis}=${key}`;
+/**
+ * `/jobs`로 넘길 때 쓰는 필터 시드 — 기존 클라이언트 필터가 읽는 쿼리 모양이다(`jobs-url-state`).
+ * 축은 랜딩 세 축에 한정되지 않는다 — 파라미터 이름이 필터 축 이름과 같아 어느 축이든 같은 모양이고,
+ * 홈 추천 검색어가 교단(`denomination`)으로도 보낸다.
+ */
+export function facetJobsHref(dim: FilterDim, key: string): string {
+  return `/jobs?${dim}=${key}`;
 }

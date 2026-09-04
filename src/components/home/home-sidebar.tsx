@@ -1,21 +1,24 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { facetPathForLabel } from "@/lib/job-facets";
+import { DENOMINATIONS, DEPARTMENTS, POSITIONS, REGIONS } from "@/constants/domain";
+import { facetJobsHref } from "@/lib/job-facets";
 
 // 홈 우측 사이드바 — 추천 검색어(운영자 큐레이션) + 교회 진입 CTA.
 // 추천 검색어는 검색 로그가 없어 손으로 고른 목록. 로그 쌓이면 실제 인기어로 대체.
 //
-// 랜딩이 있는 말(지역·직분·부서)은 **검색 쿼리가 아니라 랜딩으로 보낸다** — 사용자에겐 더 정확한 화면이고,
-// 홈에서 랜딩으로 가는 내부 링크가 공짜로 생긴다(크롤러의 발견 경로). 교단·자유어는 그대로 검색이다.
+// 칩은 **`/jobs`에 그 필터가 걸린 상태**로 보낸다(2026-09-05 운영자 결정). 한때 랜딩(`/jobs/region/…`)으로
+// 보냈는데, 사이트 안에서 검색어를 누른 사람은 "이 조건의 전체 목록"을 기대하고 랜딩은 사역직만·20건·분포
+// 블록이 붙은 검색엔진용 입구라 기대와 어긋났다. 랜딩의 발견 경로는 공고 상세·`/jobs` 허브·sitemap이 맡는다.
+// 라벨은 도메인 라벨 맵에서 가져온다 — 칩 글자와 도착한 화면의 필터 칩 글자가 같아야 한다.
 const RECOMMENDED_SEARCHES = [
-  "전도사",
-  "부목사",
-  "유초등부",
-  "청년부",
-  "중고등부",
-  "서울",
-  "경기",
-  "예장합동",
+  { label: POSITIONS.EVANGELIST, href: facetJobsHref("position", "EVANGELIST") },
+  { label: POSITIONS.ASSOCIATE_PASTOR, href: facetJobsHref("position", "ASSOCIATE_PASTOR") },
+  { label: DEPARTMENTS.CHILDREN, href: facetJobsHref("department", "CHILDREN") },
+  { label: DEPARTMENTS.YOUNG_ADULT, href: facetJobsHref("department", "YOUNG_ADULT") },
+  { label: DEPARTMENTS.YOUTH, href: facetJobsHref("department", "YOUTH") },
+  { label: REGIONS.SEOUL, href: facetJobsHref("region", "SEOUL") },
+  { label: REGIONS.GYEONGGI, href: facetJobsHref("region", "GYEONGGI") },
+  { label: DENOMINATIONS.HAPDONG, href: facetJobsHref("denomination", "HAPDONG") },
 ] as const;
 
 export function HomeSidebar() {
@@ -27,13 +30,13 @@ export function HomeSidebar() {
           추천 검색어
         </h3>
         <div className="flex flex-wrap gap-2">
-          {RECOMMENDED_SEARCHES.map((term) => (
+          {RECOMMENDED_SEARCHES.map(({ label, href }) => (
             <Link
-              key={term}
-              href={facetPathForLabel(term) ?? `/jobs?q=${encodeURIComponent(term)}`}
+              key={href}
+              href={href}
               className="rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1.5 text-[13px] text-foreground/80 transition-colors hover:bg-primary/10 hover:text-foreground"
             >
-              {term}
+              {label}
             </Link>
           ))}
         </div>
