@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SIMILAR_AD_SLOTS } from "@/constants/domain";
 import { pickSimilarJobs, type SimilarCandidate } from "./similar-jobs";
 
 let seq = 0;
@@ -105,52 +106,92 @@ describe("보충 — 6장이 안 채워지면 직분 → 교단 순으로 문을
   });
 });
 
-describe("첫 칸 광고 — 문 통과 + 같은 지역 + 유료 노출 중", () => {
+describe("상단 광고 칸 — 문 통과 + 같은 지역 + 유료 노출 중", () => {
   const paid = (over: Partial<SimilarCandidate> = {}) =>
     candidate({ featuredTier: "BASIC", ...over });
+  const byId = (a: string, b: string) => a.localeCompare(b);
 
-  it("조건을 만족하는 유료 공고가 첫 칸에 서고 유기 목록에서는 빠진다", () => {
+  it("조건을 만족하는 유료 공고가 위 칸에 서고 유기 목록에서는 빠진다", () => {
     const ad = paid();
     const organic = Array.from({ length: 6 }, () => candidate());
     const pick = pickSimilarJobs(base, [ad, ...organic], 6);
-    expect(pick.ad?.id).toBe(ad.id);
-    expect(pick.organic).toHaveLength(5);
+    expect(ids(pick.ads)).toEqual([ad.id]);
+    expect(pick.organic).toHaveLength(5); // 광고가 하나면 남는 칸은 유기가 채운다 — 합은 늘 6
     expect(ids(pick.organic)).not.toContain(ad.id);
+  });
+
+  it("광고가 3곳까지는 전부 위 칸에 선다 — 유기는 3장", () => {
+    const ads = [paid(), paid(), paid()];
+    const organic = Array.from({ length: 6 }, () => candidate());
+    const pick = pickSimilarJobs(base, [...ads, ...organic], 6);
+    expect(ids(pick.ads).sort(byId)).toEqual(ids(ads).sort(byId));
+    expect(pick.organic).toHaveLength(3);
+  });
+
+  it("광고가 3곳을 넘으면 3칸만 광고고, 밀린 광고는 유기 후보로 남는다", () => {
+    const ads = [paid(), paid(), paid(), paid(), paid()];
+    const pick = pickSimilarJobs(base, ads, 6);
+    expect(pick.ads).toHaveLength(SIMILAR_AD_SLOTS);
+    expect(pick.organic).toHaveLength(2); // 광고 칸을 못 받은 둘 — 같은 페이지에 두 번 서지는 않는다
+    expect(new Set([...ids(pick.ads), ...ids(pick.organic)]).size).toBe(5);
+  });
+
+  it("3칸은 id 순 후보에서 **연달아** 가져온다 — 끝을 넘으면 처음으로(당번표)", () => {
+    const ads = [paid(), paid(), paid(), paid(), paid(), paid()];
+    const sorted = ids(ads).sort(byId);
+    for (const pageId of ["p1", "p2", "p3", "p4", "p5", "p6"]) {
+      const picked = ids(pickSimilarJobs(candidate({ id: pageId }), ads, 6).ads);
+      const start = sorted.indexOf(picked[0]);
+      expect(picked).toEqual([0, 1, 2].map((k) => sorted[(start + k) % sorted.length]));
+    }
+  });
+
+  it("`limit`이 광고 칸보다 작으면 광고도 그만큼만 — 합이 청한 장 수를 넘지 않는다", () => {
+    const pick = pickSimilarJobs(base, [paid(), paid(), paid(), paid()], 2);
+    expect(pick.ads).toHaveLength(2);
+    expect(pick.organic).toHaveLength(0);
   });
 
   it("다른 지역 유료 공고는 광고가 아니다 — 유기 후보로만 남는다", () => {
     const farAd = paid({ region: "BUSAN" });
     const pick = pickSimilarJobs(base, [farAd], 6);
-    expect(pick.ad).toBeNull();
+    expect(pick.ads).toEqual([]);
     expect(ids(pick.organic)).toEqual([farAd.id]);
   });
 
   it("오늘 노출 중이 아닌 공고는 광고가 아니다 — seam이 등급을 NONE으로 내려보낸다", () => {
-    const notToday = paid({ featuredTier: "NONE" });
-    expect(pickSimilarJobs(base, [notToday], 6).ad).toBeNull();
+    expect(pickSimilarJobs(base, [paid({ featuredTier: "NONE" })], 6).ads).toEqual([]);
   });
 
   it("문을 못 넘는 유료 공고(직분 불일치)는 광고가 아니다", () => {
-    const pastorAd = paid({ position: ["ASSOCIATE_PASTOR"] });
-    expect(pickSimilarJobs(base, [pastorAd], 6).ad).toBeNull();
+    expect(pickSimilarJobs(base, [paid({ position: ["ASSOCIATE_PASTOR"] })], 6).ads).toEqual([]);
   });
 
   it("지역 미상 기준 공고에는 광고가 서지 않는다", () => {
     const unknownRegion = candidate({ id: "b3", region: null });
-    expect(pickSimilarJobs(unknownRegion, [paid()], 6).ad).toBeNull();
+    expect(pickSimilarJobs(unknownRegion, [paid()], 6).ads).toEqual([]);
   });
 
-  it("여럿이면 기준 공고 id로 결정적으로 하나를 고른다 — 같은 입력이면 늘 같은 광고", () => {
-    const ads = [paid(), paid(), paid()];
-    const first = pickSimilarJobs(base, ads, 6).ad?.id;
-    const again = pickSimilarJobs(base, [...ads].reverse(), 6).ad?.id;
-    expect(first).toBe(again);
-    // 다른 기준 공고들은 서로 다른 광고를 고를 수 있다(페이지마다 나눠 보이는 근거) — 셋 중 둘 이상이 나온다
-    const chosen = new Set(
-      ["p1", "p2", "p3", "p4", "p5", "p6"].map(
-        (id) => pickSimilarJobs(candidate({ id }), ads, 6).ad?.id,
-      ),
-    );
-    expect(chosen.size).toBeGreaterThan(1);
+  it("같은 입력이면 늘 같은 광고 — 후보를 거꾸로 넣어도", () => {
+    const ads = [paid(), paid(), paid(), paid()];
+    const first = ids(pickSimilarJobs(base, ads, 6).ads);
+    const again = ids(pickSimilarJobs(base, [...ads].reverse(), 6).ads);
+    expect(first).toEqual(again);
+  });
+
+  it("여럿이 겹치면 페이지마다 나눠 갖는다 — 6곳·600페이지면 각자 절반 안팎", () => {
+    const ads = [paid(), paid(), paid(), paid(), paid(), paid()];
+    const count = new Map(ids(ads).map((id) => [id, 0]));
+    const pages = 600;
+    for (let i = 0; i < pages; i++) {
+      for (const id of ids(pickSimilarJobs(candidate({ id: `page-${i}` }), ads, 6).ads)) {
+        count.set(id, (count.get(id) ?? 0) + 1);
+      }
+    }
+    // 3/6 = 50%가 목표. 한 곳이 독식하거나(99%) 굶으면(1%) 여기서 잡힌다
+    for (const n of count.values()) {
+      expect(n / pages).toBeGreaterThan(0.4);
+      expect(n / pages).toBeLessThan(0.6);
+    }
   });
 });

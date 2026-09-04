@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
+import { SIMILAR_AD_SLOTS } from "@/constants/domain";
 import { SITE_DOMAIN } from "@/constants/site";
 
 // /pricing 노출 미리보기의 "장면" — 실제 페이지 주요 섹션을 담은 근사(마케팅 일러스트).
 // 인터랙션 없는 순수 프레젠테이션. 셸(캐러셀·모달)은 exposure-preview.tsx.
-// 자리 셋(홈 추천 카드 · 목록 상단 로우 · 비슷한 공고 첫 칸)을 **실제 컴포넌트와 같은 모양**으로 그린다 —
+// 자리 셋(홈 추천 카드 · 목록 상단 로우 · 비슷한 공고 상단 3칸)을 **실제 컴포넌트와 같은 모양**으로 그린다 —
 // 카드·로우 모양, 회색 "광고" 텍스트 하나. 등급명·틴트는 실제 화면에 없으니 여기도 없다(2026-09-03).
 
 export type Device = "mobile" | "pc";
@@ -18,9 +19,9 @@ export type Group = "basic" | "plus" | "special";
  * ⛔ **등급 이름(스페셜·플러스·기본)을 쓰지 않는다** — 이 모달은 이미 한 등급의 카드에서 열렸으니 읽는
  *    사람은 자기 등급을 안다. 다른 등급 이름이 섞이면 "내가 뭘 사는지"가 오히려 흐려진다.
  * ⚠️ ③의 근거가 자리마다 다르다 — 홈·목록은 **정원이 칸 수와 같아** 산 기간에는 자리가 비지 않는다
- *    (홈 3칸 = 스페셜 정원 3 · 목록 5줄 = 3+2). 반면 비슷한 공고는 **한 페이지에 첫 칸이 하나뿐인데
- *    정원 없는 등급도 사서** 여럿이 겹칠 수 있고, 그때는 페이지별로 나눠 갖는다
- *    (`lib/similar-jobs`: 겹치면 기준 공고 id 해시로 하나를 고른다). 규칙이 바뀌면 이 줄도 고친다.
+ *    (홈 3칸 = 스페셜 정원 3 · 목록 5줄 = 3+2). 반면 비슷한 공고는 **광고 칸이 3개인데 정원 없는 등급도
+ *    사서** 넷 이상 겹칠 수 있고, 그때는 페이지별로 나눠 갖는다(`lib/similar-jobs`의 당번표).
+ *    규칙이 바뀌면 이 줄도 고친다.
  */
 export type Scene = { cap: string; desc: string[]; node: ReactNode };
 
@@ -239,9 +240,9 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
   const isPc = device === "pc";
   const cardGrid = isPc ? "grid-cols-3" : "grid-cols-1";
 
-  // 비슷한 공고 첫 칸 — 세 등급 모두 걸리는 자리(기본은 이것 하나)
+  // 비슷한 공고 상단 3칸 — 세 등급 모두 걸리는 자리(기본은 이것 하나)
   const related: Scene = {
-    cap: "공고 상세 — 하단 ‘비슷한 공고’ 첫 칸",
+    cap: "공고 상세 — 하단 ‘비슷한 공고’",
     desc: [
       "다른 교회 공고를 읽던 사역자에게 ‘비슷한 공고’로 함께 보여요.",
       "같은 지역에서 비슷한 자리를 찾는 사람에게 닿는 자리예요.",
@@ -266,9 +267,11 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
             <span className="text-[10px] font-semibold text-primary underline">더 보기 →</span>
           </div>
           <div className={`grid gap-2 ${cardGrid}`}>
+            {/* 위 3칸이 광고 자리(`SIMILAR_AD_SLOTS`) — 홈 카드와 같은 취급이다: 팔린 칸을 다 표시한다.
+                내 공고가 첫 칸이고 뒤 둘은 같은 조건을 산 다른 교회 광고다 */}
             <MiniCard posting={mine} ad />
-            {others.slice(0, isPc ? 5 : 2).map((p) => (
-              <MiniCard key={p.title} posting={p} />
+            {others.slice(0, isPc ? 5 : 3).map((p, i) => (
+              <MiniCard key={p.title} posting={p} ad={i < SIMILAR_AD_SLOTS - 1} />
             ))}
           </div>
         </div>

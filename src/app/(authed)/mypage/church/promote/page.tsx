@@ -97,7 +97,7 @@ async function PromoteContent({ searchParams }: { searchParams: SearchParams }) 
           )}
         </h1>
         <p className="mt-1.5 text-sm leading-relaxed break-keep text-muted-foreground">
-          공고를 홈 추천·목록 상단·비슷한 공고 첫 칸에 노출해 더 많은 교역자에게 닿아요.
+          공고를 홈 추천·목록 상단·비슷한 공고 상단에 노출해 더 많은 교역자에게 닿아요.
         </p>
       </header>
       {returning ? (

@@ -1,4 +1,4 @@
-import { tiersForSlot, type FeaturedTier } from "@/constants/domain";
+import { SIMILAR_AD_SLOTS, tiersForSlot, type FeaturedTier } from "@/constants/domain";
 import { churchIdentityKey } from "@/lib/job-church";
 import type { Job, JobCard } from "@/types/domain";
 
@@ -10,9 +10,13 @@ import type { Job, JobCard } from "@/types/domain";
 // ③ **보충**: 6장이 안 채워지면 문을 한 단계씩 연다 — 직분, 그다음 교단. 사역직/일반직은 끝까지 안 섞는다.
 // 실측 889건이 전부 ①에서 채워져 보충은 보험이다.
 //
-// **첫 칸은 광고 자리**다(SPEC 수익화 절): 이 페이지의 문을 통과하고 **같은 지역**인 유료 공고가 있으면 첫 칸에
-// 선다. 점수는 광고에 적용하지 않는다 — 여럿이면 기준 공고 id의 해시로 하나를 고른다. 상세가 캐시라 로드마다
-// 바뀌는 로테이션은 쓸 수 없고, 해시면 페이지마다 다른 광고가 서서 자연히 나눠진다.
+// **위 3칸은 광고 자리**다(SPEC 수익화 절 · `SIMILAR_AD_SLOTS` · 2026-09-05까지는 첫 칸 하나): 이 페이지의 문을
+// 통과하고 **같은 지역**인 유료 공고가 그 칸에 선다. 등급은 보지 않는다 — 스페셜·기본이 여기서는 같은 한 표다.
+// 여럿이면 **당번표**로 나눈다: 후보를 id로 세우고 기준 공고 id의 해시를 시작점으로 연달아 3곳을 가져간다
+// (끝을 넘으면 처음으로). 상세가 캐시라 로드마다 바뀌는 로테이션은 쓸 수 없고, 시작점이 고르게 흩어지면
+// 각 후보의 몫도 고르다 — 실측 2026-09-05: 공개 공고 953장의 시작점 `%6` 분포가 16.7% ±2%p.
+// ⚠️ "페이지 id + 광고 id"를 이어 붙여 해시하는 방식은 쓰지 않는다 — djb2는 뒷글자가 결과를 좌우해 이어 붙이는
+//    순서에 따라 한 곳이 99%를 독식했다(같은 날 실측). 페이지 id 하나만 해시하고 나머지는 나눗셈이 한다.
 
 /**
  * 판정에 쓰는 필드만 — 카드 컬럼(`JobCardFields`)에 **오늘 등급**을 얹은 모양이다.
@@ -34,9 +38,9 @@ export type SimilarCandidate = Pick<
   Pick<JobCard, "featuredTier">;
 
 export interface SimilarPick<T> {
-  /** 첫 칸 광고. 문 통과 + 같은 지역인 유료 공고가 없으면 null */
-  ad: T | null;
-  /** 점수순 유기 결과. `ad`가 있으면 한 장 적게 담아 합이 `limit`이 된다 */
+  /** 위 칸 광고들(최대 `SIMILAR_AD_SLOTS`). 문 통과 + 같은 지역인 유료 공고가 없으면 빈 배열 */
+  ads: T[];
+  /** 점수순 유기 결과. 광고 수만큼 적게 담아 합이 `limit`이 된다 */
   organic: T[];
 }
 
@@ -44,7 +48,7 @@ export interface SimilarPick<T> {
 const sameKind = (a: SimilarCandidate, b: SimilarCandidate) =>
   a.jobKind.some((k) => b.jobKind.includes(k));
 // 직분도 **양쪽 다 있을 때만** 대조한다 — 일반직 공고는 직분이 없다(직무만 · DB CHECK ①). 한쪽만 보면
-// 사역직+일반직 혼합 공고의 페이지에 일반직 공고가 끝까지 못 서고, 그 공고가 기본 등급을 사도 첫 칸에 못 간다.
+// 사역직+일반직 혼합 공고의 페이지에 일반직 공고가 끝까지 못 서고, 그 공고가 기본 등급을 사도 광고 칸에 못 선다.
 const samePosition = (a: SimilarCandidate, b: SimilarCandidate) =>
   a.position.length === 0 ||
   b.position.length === 0 ||
@@ -77,7 +81,7 @@ function hashString(s: string): number {
   return h;
 }
 
-// 연관 첫 칸에 설 수 있는 등급 — 상품 정의(`slots.related`)가 정본이다(홈·목록이 자기 자리 표를 보는 것과 같다)
+// 연관 광고 칸에 설 수 있는 등급 — 상품 정의(`slots.related`)가 정본이다(홈·목록이 자기 자리 표를 보는 것과 같다)
 const RELATED_TIERS = new Set<FeaturedTier>(tiersForSlot("related"));
 
 export function pickSimilarJobs<T extends SimilarCandidate>(
@@ -92,20 +96,26 @@ export function pickSimilarJobs<T extends SimilarCandidate>(
 
   const strict = others.filter((c) => GATES[0](base, c));
 
-  // 광고 — 문 통과 + 같은 지역(둘 다 밝혀진 경우) + 연관 자리를 가진 등급으로 오늘 노출 중. id 정렬 뒤 해시로 하나
+  // 광고 — 문 통과 + 같은 지역(둘 다 밝혀진 경우) + 연관 자리를 가진 등급으로 오늘 노출 중.
+  // id로 세운 뒤 기준 공고 id의 해시를 시작점으로 연달아 가져간다(당번표 · 머리말). 후보가 칸보다 적으면 있는 만큼만
   const adPool = strict
     .filter((c) => RELATED_TIERS.has(c.featuredTier) && both(base.region, c.region))
     .sort((a, b) => a.id.localeCompare(b.id));
-  const ad = adPool.length > 0 ? adPool[hashString(base.id) % adPool.length] : null;
+  const start = adPool.length > 0 ? hashString(base.id) % adPool.length : 0;
+  const ads = Array.from(
+    // `limit`도 상한이다 — 광고 칸이 부르는 쪽이 청한 장 수를 넘어서는 안 된다
+    { length: Math.min(SIMILAR_AD_SLOTS, adPool.length, limit) },
+    (_, k) => adPool[(start + k) % adPool.length],
+  );
 
-  const organicLimit = limit - (ad ? 1 : 0);
+  const organicLimit = limit - ads.length;
   const byCloseness = (a: T, b: T) =>
     score(base, b) - score(base, a) ||
     b.postedAt.localeCompare(a.postedAt) ||
     a.id.localeCompare(b.id);
 
   const organic: T[] = [];
-  const taken = new Set<string>(ad ? [ad.id] : []);
+  const taken = new Set<string>(ads.map((a) => a.id));
   for (const [i, gate] of GATES.entries()) {
     if (organic.length >= organicLimit) break;
     const passing = i === 0 ? strict : others.filter((c) => gate(base, c));
@@ -116,5 +126,5 @@ export function pickSimilarJobs<T extends SimilarCandidate>(
       taken.add(c.id);
     }
   }
-  return { ad, organic };
+  return { ads, organic };
 }

@@ -522,7 +522,7 @@ function SummaryAside({
 // 페이지에서 유일한 구분선 + 큰 여백이 "여기서 공고가 끝난다"를 말하고(본문은 여백형이라 선이 없다),
 // 제목은 본문 구획보다 한 단계 크며 "더 보기"는 제목 줄 끝에 둔다 — 한때 제목 크기가 본문 구획과 같아서
 // 이 공고의 아홉 번째 구획처럼 읽혔다.
-// 첫 칸은 광고 자리다(`PlacedJob.ad`) — 카드 모양은 같고 회색 "광고" 텍스트만 다르다(SPEC 수익화 절).
+// 위 3칸은 광고 자리다(`PlacedJob.ad` · `SIMILAR_AD_SLOTS`) — 카드 모양은 같고 회색 "광고" 텍스트만 다르다(SPEC 수익화 절).
 function SimilarJobsSection({ jobs, moreHref }: { jobs: PlacedJob[]; moreHref: string }) {
   return (
     <section id="similar-jobs" className="mt-12 scroll-mt-20 border-t pt-10">

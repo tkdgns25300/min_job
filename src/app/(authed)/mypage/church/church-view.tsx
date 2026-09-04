@@ -20,7 +20,7 @@ function ExposurePromo() {
         <p className="text-[11px] font-bold text-gold">MinJob 노출 광고</p>
         <h3 className="mt-1.5 font-bold">공고를 더 눈에 띄게</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-          홈 추천·목록 상단·비슷한 공고 첫 칸에 노출해 더 많은 교역자에게 닿아요.
+          홈 추천·목록 상단·비슷한 공고 상단에 노출해 더 많은 교역자에게 닿아요.
         </p>
         {/* 상품명·가격 모두 도메인 상수에서 읽는다 — 여기 적으면 요금 페이지·실제 청구액과 갈린다 */}
         <div className="mt-3 space-y-1.5">

@@ -186,15 +186,15 @@ export const RECENT_WINDOW_DAYS = 7;
 // 노출 상품(결제) — 사다리 3등급(확정 2026-09-02 · SPEC 수익화 절 · DATA §7). **가격 단일 소스**:
 // 요금 페이지·결제 화면·서버 금액 검증이 전부 여기서 읽는다. VAT 포함가(원).
 //
-// 자리는 셋이다 — 홈 추천 카드 3칸 · 공고 목록 1페이지 상단 로우(최대 5줄) · 공고 상세 "비슷한 공고" 첫 칸.
+// 자리는 셋이다 — 홈 추천 카드 3칸 · 공고 목록 1페이지 상단 로우(최대 5줄) · 공고 상세 "비슷한 공고" 상단 3칸.
 // 등급은 **닿는 범위**로 갈린다: 스페셜 = 셋 다 · 플러스 = 목록 + 연관 · 기본 = 연관만.
 // 정원(`capacity`)은 **동시 건수**다(개정 2026-09-03 — 그전엔 주 단위였다) — 홈 3칸·목록 5줄이 자리 수라
 // 어느 날이든 그보다 많이 노출할 수 없다. 기간은 시작일부터 주수 × 7일이고 정원은 하루 단위로 센다.
-// 기본은 정원이 없다 — 연관 첫 칸은 **같은 지역** 광고만 서서 지역별로 자연히 나뉜다.
+// 기본은 정원이 없다 — 연관 상단 칸은 **같은 지역** 광고만 서서 지역별로 자연히 나뉜다.
 export const EXPOSURE_SLOTS = {
   home: "홈 추천 카드",
   list: "목록 상단 로우",
-  related: "비슷한 공고 첫 칸",
+  related: "비슷한 공고 상단",
 } as const;
 export type ExposureSlot = keyof typeof EXPOSURE_SLOTS;
 
@@ -218,21 +218,21 @@ export const EXPOSURE_PRODUCTS = {
     slots: { home: true, list: true, related: true },
     capacity: 3,
     prices: { 1: 99_000, 2: 189_000, 4: 299_000 },
-    desc: "홈 추천 카드 + 목록 상단 + 비슷한 공고 첫 칸",
+    desc: "홈 추천 카드 + 목록 상단 + 비슷한 공고 상단",
   },
   PLUS: {
     label: "플러스",
     slots: { home: false, list: true, related: true },
     capacity: 2,
     prices: { 1: 49_000, 2: 94_000, 4: 149_000 },
-    desc: "목록 상단 + 비슷한 공고 첫 칸",
+    desc: "목록 상단 + 비슷한 공고 상단",
   },
   BASIC: {
     label: "기본",
     slots: { home: false, list: false, related: true },
     capacity: null,
     prices: { 1: 29_000, 2: 55_000, 4: 89_000 },
-    desc: "같은 지역 공고 상세의 비슷한 공고 첫 칸",
+    desc: "같은 지역 공고 상세의 비슷한 공고 상단",
   },
 } as const satisfies Record<string, ExposureProductDef>;
 export type ExposureProduct = keyof typeof EXPOSURE_PRODUCTS;
@@ -279,10 +279,17 @@ export function exposurePrice(
 // 자리가 3·2칸뿐이라 한 주면 충분하다. 요금 페이지·약관 문구가 이 값을 말한다.
 export const START_WINDOW_DAYS = 7;
 
-// 자리 크기 — 홈 추천 카드 칸 수 · 공고 상세 "비슷한 공고" 장 수(첫 칸이 광고 자리).
+// 자리 크기 — 홈 추천 카드 칸 수 · 공고 상세 "비슷한 공고" 장 수와 그중 광고 칸 수.
 // 목록 상단 로우는 상수가 없다 — 등급별 정원(스페셜 3 + 플러스 2 = 최대 5줄)이 그대로 상한이다(`splitListAds`).
 export const HOME_AD_SLOTS = 3;
 export const SIMILAR_JOBS_COUNT = 6;
+/**
+ * 비슷한 공고 6장 중 **위에서 몇 장이 광고 칸인가**(운영자 결정 2026-09-05 · 그전엔 첫 칸 하나).
+ * 광고가 이보다 적으면 남는 칸은 유기 공고가 채운다. 자격 있는 광고가 이보다 많으면 페이지마다 나눠 선다
+ * (`lib/similar-jobs` — 기준 공고 id로 시작점을 정해 연달아 가져간다). ⚠️ 이 값을 늘리는 것은 먼저 산 교회의
+ * 노출을 묽게 하는 결정이다(SPEC 수익화 절 "정원이 아니라 값을 올린다") — 1 → 3은 운영자가 알고 택했다.
+ */
+export const SIMILAR_AD_SLOTS = 3;
 
 // 노출 구매 원장(`job_promotions.status`)의 상태 — 결제 이력 한 줄이 지금 어떤 상태인가.
 // 원장은 append-only라 행을 지우지 않고 이 값을 바꾼다(DATA.md §3 `job_promotions`). **정원 판정은 PAID만 센다.**

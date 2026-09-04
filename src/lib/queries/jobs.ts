@@ -417,7 +417,7 @@ export async function getJobDetail(id: string): Promise<JobDetail | null> {
 
 /**
  * 비슷한 공고 — 규칙은 `lib/similar-jobs`(순수)가, 후보 조회와 카드 변환은 여기가 한다.
- * 첫 칸이 광고 자리라 `PlacedJob`으로 내려준다(광고가 없으면 전부 `ad=false`, 합은 늘 `limit` 이하).
+ * 위 칸이 광고 자리라 `PlacedJob`으로 내려준다(광고가 없으면 전부 `ad=false`, 합은 늘 `limit` 이하).
  * 지역 매칭은 `jobs.region`으로 한다 — 조인 없이 도는 값이다(DATA §1 예외).
  */
 export async function getSimilarJobs(id: string, limit = SIMILAR_JOBS_COUNT): Promise<PlacedJob[]> {
@@ -433,7 +433,7 @@ export async function getSimilarJobs(id: string, limit = SIMILAR_JOBS_COUNT): Pr
   if (!base) return [];
 
   const byId = new Map(entries.map((e) => [e.job.id, e]));
-  // 규칙(`lib/similar-jobs`)은 후보의 **오늘 등급**만 본다 — 첫 칸 광고 자격이 거기서 갈린다
+  // 규칙(`lib/similar-jobs`)은 후보의 **오늘 등급**만 본다 — 광고 칸 자격이 거기서 갈린다
   const pick = pickSimilarJobs(
     { ...base, featuredTier: activeTier(exposure, base.id) },
     entries.map((e) => ({ ...e.job, featuredTier: activeTier(exposure, e.job.id) })),
@@ -444,7 +444,7 @@ export async function getSimilarJobs(id: string, limit = SIMILAR_JOBS_COUNT): Pr
     ad,
   });
   return [
-    ...(pick.ad ? [place(pick.ad.id, true)] : []),
+    ...pick.ads.map((c) => place(c.id, true)),
     ...pick.organic.map((c) => place(c.id, false)),
   ];
 }

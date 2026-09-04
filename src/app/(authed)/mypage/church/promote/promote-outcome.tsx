@@ -34,7 +34,7 @@ export function PromoteOutcome({
           결제번호 <span className="font-mono break-all">{paymentId}</span>
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-          {/* 스페셜만 홈에 선다 — 나머지는 목록 상단·비슷한 공고 첫 칸이라 목록으로 보낸다 */}
+          {/* 스페셜만 홈에 선다 — 나머지는 목록 상단·비슷한 공고 상단이라 목록으로 보낸다 */}
           <Link href={product.slots.home ? "/" : "/jobs"} className={cn(buttonVariants())}>
             {product.slots.home ? "홈에서 보기" : "목록에서 보기"}
           </Link>
