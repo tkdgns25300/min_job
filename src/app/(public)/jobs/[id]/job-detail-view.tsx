@@ -293,9 +293,16 @@ function MainContent({
               사라진다(DATA §3) */}
           {housing && <ConditionRow label="사택" value={housing.label} note={housing.note} />}
           {job.benefitNote && <ConditionRow label="복리후생" value={job.benefitNote} />}
+          {/* 수집 공고(원문 링크 있음)에는 첨부 안내 한 줄 — 원문 게시판에 이력서 양식 같은 파일이 붙어 있어도 우리는
+              파일을 저장·링크하지 않는다(저작권 · 첨부 URL이 게시판 세션에 묶여 어차피 안 열린다). 그런데 본문에는
+              "(첨부파일 다운로드)"가 168건 남아 있어 받을 곳이 없어 보였다. **임시 방식**(운영자 결정 2026-09-05):
+              첨부 유무를 모르므로 수집 공고 전부에 "있으면 원문에서"로 쓴다. 정식은 크롤러가 `jobs`에 첨부 이름
+              칸을 채우는 것(ROADMAP 크롤러 전달) — 그때 이 줄을 "있는 공고에만 · 파일 이름과 함께"로 바꾼다.
+              링크는 걸지 않는다 — 원문 링크는 우측 카드 한 곳에만 둔다(`SummaryAside` 주석). */}
           <ConditionRow
             label="제출 서류"
             value={<DocList required={job.requiredDocs} optional={job.optionalDocs} />}
+            note={job.sourceUrl ? "첨부 양식이 있으면 ‘원문 공고 보기’에서 받아 주세요." : null}
           />
         </dl>
       </Section>
