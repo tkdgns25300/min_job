@@ -9,10 +9,12 @@ import { SITE_DOMAIN } from "@/constants/site";
 export type Device = "mobile" | "pc";
 export type Group = "basic" | "plus" | "special";
 /**
- * 장면 하나 — `cap`은 어느 화면의 어느 자리인지(한 줄), `desc`는 **그 자리가 실제로 어떻게 동작하는지**
- * (몇 칸 · 누가 서나 · 순서 · 광고 표시). 그림만 두면 광고 줄을 눈으로 찾아야 해서 붙였다(운영자 요청 2026-09-05).
- * ⚠️ `desc`의 수치는 `constants/domain`의 정원·자리 규칙과 `lib/similar-jobs`·`queries/jobs` 머리말의 말이다 —
- *    규칙이 바뀌면 여기도 같이 고친다.
+ * 장면 하나 — `cap`은 어느 화면의 어느 자리인지, `desc`는 **그 자리가 누구에게 닿는지** 두 문장.
+ * 그림만 두면 광고 줄을 눈으로 찾아야 해서 붙였다(운영자 요청 2026-09-05).
+ *
+ * ⛔ **등급 이름(스페셜·플러스·기본)을 쓰지 않는다**(운영자 2026-09-05) — 이 모달은 이미 한 등급의 카드에서
+ *    열렸으니 읽는 사람은 자기 등급을 안다. 다른 등급 이름이 섞이면 "내가 뭘 사는지"가 오히려 흐려진다.
+ *    정원·가격은 카드가 말한다(`pricing/page.tsx`의 `SLOT_FEATURE`·`capacity`). 여기는 **자리 설명만**.
  */
 export type Scene = { cap: string; desc: string; node: ReactNode };
 
@@ -234,7 +236,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
   // 비슷한 공고 첫 칸 — 세 등급 모두 걸리는 자리(기본은 이것 하나)
   const related: Scene = {
     cap: "공고 상세 — 하단 ‘비슷한 공고’ 첫 칸",
-    desc: "다른 공고를 읽는 사람에게 닿는 자리예요. 같은 지역이고 같은 자격으로 갈 수 있는 공고의 상세 아래, ‘비슷한 공고’ 6칸 중 첫 칸에 서요. 기본·플러스·스페셜 모두 서고, 해당하는 광고가 여럿이면 페이지마다 다른 하나가 서요.",
+    desc: "다른 교회 공고를 읽던 사역자에게 ‘비슷한 공고’ 첫 칸으로 보여요. 같은 지역에서 비슷한 자리를 찾는 사람에게 닿는 자리예요.",
     node: (
       <Chrome device={device} url="/jobs/…">
         <div className="p-3.5">
@@ -268,7 +270,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
   // 목록 1페이지 맨 위 로우 — 플러스·스페셜
   const list: Scene = {
     cap: "공고 목록 — 1페이지 맨 위 광고 로우",
-    desc: "공고 목록 1페이지 맨 위에 최대 5줄이 서요. 스페셜 3줄, 그 아래 플러스 2줄이에요. 사용자가 지역·직분 필터를 걸어도 그 조건에 맞는 공고면 그대로 맨 위에 남아요. 줄 모양은 일반 목록과 같고 ‘광고’ 표시만 붙어요.",
+    desc: "공고를 찾아 목록을 훑는 사역자에게 맨 위에서 먼저 보여요. 지역이나 직분으로 걸러도 조건에 맞으면 그대로 맨 위에 남아요.",
     node: (
       <Chrome device={device} url="/jobs">
         <Band>
@@ -295,7 +297,7 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
   // 홈 추천 청빙 3칸 — 스페셜만
   const home: Scene = {
     cap: "홈 — 첫 화면 ‘추천 청빙’ 카드",
-    desc: "홈에 들어오면 가장 먼저 보이는 추천 청빙 3칸이에요. 스페셜 공고만 서고, 셋을 넘으면 최신순으로 3장까지예요. 카드에 ‘광고’ 표시가 작게 붙고, 모양은 다른 카드와 같아요.",
+    desc: "민잡에 들어온 사역자가 가장 먼저 보는 자리예요. 홈 첫 화면의 추천 청빙 카드로 서요.",
     node: (
       <Chrome device={device} url={SITE_DOMAIN}>
         <div

@@ -87,8 +87,9 @@ function Carousel({ scenes, device }: { scenes: Scene[]; device: Device }) {
       </div>
       <div className="pt-3 text-center">
         <div className="text-sm font-bold">{scenes[index]?.cap}</div>
-        {/* 그림 아래 "이 자리가 어떻게 동작하나" — 점선 테두리가 가리키는 칸의 규칙이다(`Scene.desc`) */}
-        <p className="mx-auto mt-1.5 max-w-lg text-xs leading-relaxed break-keep text-muted-foreground">
+        {/* 그림 아래 설명 — 점선 테두리가 가리키는 자리가 누구에게 닿는지(`Scene.desc`).
+            본문 크기(`text-sm`)로 둔다 — 이 모달에서 유일한 설명인데 캡션보다 작으면 안 읽힌다 */}
+        <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed break-keep text-muted-foreground">
           {scenes[index]?.desc}
         </p>
         {count > 1 && (
