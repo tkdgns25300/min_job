@@ -9,14 +9,20 @@ import { SITE_DOMAIN } from "@/constants/site";
 export type Device = "mobile" | "pc";
 export type Group = "basic" | "plus" | "special";
 /**
- * 장면 하나 — `cap`은 어느 화면의 어느 자리인지, `desc`는 **그 자리가 누구에게 닿는지** 두 문장.
+ * 장면 하나 — `cap`은 어느 화면의 어느 자리인지, `desc`는 **그 자리가 누구에게 닿는지**.
  * 그림만 두면 광고 줄을 눈으로 찾아야 해서 붙였다(운영자 요청 2026-09-05).
  *
- * ⛔ **등급 이름(스페셜·플러스·기본)을 쓰지 않는다**(운영자 2026-09-05) — 이 모달은 이미 한 등급의 카드에서
- *    열렸으니 읽는 사람은 자기 등급을 안다. 다른 등급 이름이 섞이면 "내가 뭘 사는지"가 오히려 흐려진다.
- *    정원·가격은 카드가 말한다(`pricing/page.tsx`의 `SLOT_FEATURE`·`capacity`). 여기는 **자리 설명만**.
+ * `desc`는 **한 줄씩 끊어 담는다**(문단 하나로 이으면 읽다가 놓친다 · 운영자 2026-09-05). 줄 순서는
+ * ① 어디에 어떻게 올라가나 ② 누구에게 닿나 ③ **자리가 보장되나** — ③이 사는 사람의 실제 질문이다.
+ *
+ * ⛔ **등급 이름(스페셜·플러스·기본)을 쓰지 않는다** — 이 모달은 이미 한 등급의 카드에서 열렸으니 읽는
+ *    사람은 자기 등급을 안다. 다른 등급 이름이 섞이면 "내가 뭘 사는지"가 오히려 흐려진다.
+ * ⚠️ ③의 근거가 자리마다 다르다 — 홈·목록은 **정원이 칸 수와 같아** 산 기간에는 자리가 비지 않는다
+ *    (홈 3칸 = 스페셜 정원 3 · 목록 5줄 = 3+2). 반면 비슷한 공고는 **한 페이지에 첫 칸이 하나뿐인데
+ *    정원 없는 등급도 사서** 여럿이 겹칠 수 있고, 그때는 페이지별로 나눠 갖는다
+ *    (`lib/similar-jobs`: 겹치면 기준 공고 id 해시로 하나를 고른다). 규칙이 바뀌면 이 줄도 고친다.
  */
-export type Scene = { cap: string; desc: string; node: ReactNode };
+export type Scene = { cap: string; desc: string[]; node: ReactNode };
 
 export const DEVICE: Record<Device, { w: number; label: string }> = {
   mobile: { w: 360, label: "모바일 화면" },
@@ -236,7 +242,10 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
   // 비슷한 공고 첫 칸 — 세 등급 모두 걸리는 자리(기본은 이것 하나)
   const related: Scene = {
     cap: "공고 상세 — 하단 ‘비슷한 공고’ 첫 칸",
-    desc: "다른 교회 공고를 읽던 사역자에게 ‘비슷한 공고’ 첫 칸으로 보여요. 같은 지역에서 비슷한 자리를 찾는 사람에게 닿는 자리예요.",
+    desc: [
+      "다른 교회 공고를 읽던 사역자에게 ‘비슷한 공고’로 함께 보여요.",
+      "같은 지역에서 비슷한 자리를 찾는 사람에게 닿는 자리예요.",
+    ],
     node: (
       <Chrome device={device} url="/jobs/…">
         <div className="p-3.5">
@@ -270,7 +279,11 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
   // 목록 1페이지 맨 위 로우 — 플러스·스페셜
   const list: Scene = {
     cap: "공고 목록 — 1페이지 맨 위 광고 로우",
-    desc: "공고를 찾아 목록을 훑는 사역자에게 맨 위에서 먼저 보여요. 지역이나 직분으로 걸러도 조건에 맞으면 그대로 맨 위에 남아요.",
+    desc: [
+      "공고 목록 첫 페이지 맨 위로 올라가요.",
+      "목록을 훑어보는 사역자가 스크롤하기 전에 먼저 만나요.",
+      "지역이나 직분으로 걸러도, 그 조건에 맞으면 그대로 맨 위에 남아요.",
+    ],
     node: (
       <Chrome device={device} url="/jobs">
         <Band>
@@ -297,7 +310,10 @@ export function buildScenes(device: Device): Record<Group, Scene[]> {
   // 홈 추천 청빙 3칸 — 스페셜만
   const home: Scene = {
     cap: "홈 — 첫 화면 ‘추천 청빙’ 카드",
-    desc: "민잡에 들어온 사역자가 가장 먼저 보는 자리예요. 홈 첫 화면의 추천 청빙 카드로 서요.",
+    desc: [
+      "민잡을 열면 가장 먼저 보이는 카드 세 칸 중 하나로 올라가요.",
+      "아직 검색하기 전인 사역자에게도 눈에 들어와요.",
+    ],
     node: (
       <Chrome device={device} url={SITE_DOMAIN}>
         <div

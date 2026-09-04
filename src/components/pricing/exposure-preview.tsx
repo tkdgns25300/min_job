@@ -86,12 +86,15 @@ function Carousel({ scenes, device }: { scenes: Scene[]; device: Device }) {
         )}
       </div>
       <div className="pt-3 text-center">
-        <div className="text-sm font-bold">{scenes[index]?.cap}</div>
+        <div className="text-base font-bold">{scenes[index]?.cap}</div>
         {/* 그림 아래 설명 — 점선 테두리가 가리키는 자리가 누구에게 닿는지(`Scene.desc`).
-            본문 크기(`text-sm`)로 둔다 — 이 모달에서 유일한 설명인데 캡션보다 작으면 안 읽힌다 */}
-        <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed break-keep text-muted-foreground">
-          {scenes[index]?.desc}
-        </p>
+            **한 줄씩 끊어 그린다** — 이 모달에서 유일한 설명이라 한 문단으로 이으면 읽다가 놓친다.
+            글자도 캡션에 가깝게 키운다(작으면 그림만 보고 닫는다). */}
+        <div className="mx-auto mt-2.5 max-w-xl space-y-1 text-[15px] leading-relaxed break-keep text-muted-foreground">
+          {scenes[index]?.desc.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
         {count > 1 && (
           <div className="mt-2 flex justify-center gap-1.5">
             {scenes.map((s, k) => (
