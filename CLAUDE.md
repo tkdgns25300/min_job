@@ -140,6 +140,8 @@ src/
 │   ├── layout.tsx · fonts/        root layout (Pretendard self-host · 메타 · metadataBase). fonts/에는 사이트용 woff2와
 │   │                              **OG 이미지용 정적 TTF**(굵기 700 · KS X 1001 2,350자 · 447KB)가 있다 — satori가 woff2를
 │   │                              못 읽어서. 만드는 법은 `scripts/subset-og-font.py`
+│   ├── icon.svg · favicon.ico · apple-icon.png        브랜드 마크(딥그린 타일 + 골드 M) — Next 파일 규약이라
+│   │                              link 태그는 자동 주입. 세 파일 다 `scripts/make-icons.py`가 만든다(손으로 고치지 않는다)
 │   ├── error.tsx · global-error.tsx · not-found.tsx    에러·404 바운더리
 │   ├── globals.css                디자인 토큰(브랜드 색 단일 소스)
 │   └── sitemap.ts · robots.ts · opengraph-image.tsx    SEO — URL은 lib/queries seam에서(DB 전환 무관)
@@ -199,6 +201,8 @@ supabase/migrations/               DB 마이그레이션 SQL (Supabase CLI 관�
 └── 20260821051500_drop_job_status_pending.sql   jobs.status = OPEN·CLOSED 둘뿐
 
 scripts/subset-og-font.py          공고별 OG 이미지용 한글 글꼴 만들기 — 프로젝트 의존성이 아니라 로컬 python(fonttools)으로 돈다
+scripts/make-icons.py              파비콘·앱 아이콘 만들기 — 표준 라이브러리만 쓴다(로컬에 SVG 래스터라이저가 없다).
+                                   M은 폴리곤 좌표라 폰트를 타지 않는다 — 파비콘이 만드는 기계·보는 브라우저에 따라 달라지면 안 된다
 ```
 
 > **⬜ = 계획만 있고 아직 없는 것.** 그 외는 2026-07-29 기준 실제 구조.
