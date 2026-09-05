@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { AdminStatus } from "./admin-status";
 import { STATUS_SECTIONS, StatusSection } from "./status-cards";
 
-export const metadata: Metadata = { title: "운영자 홈 | 민잡 운영자" };
+export const metadata: Metadata = { title: "운영자 홈" };
 
 // 운영자 홈 — **"지금 손댈 게 있나"에 답하는 화면**. 하루 한두 번 열어 대부분은 "이상 없음"만
 // 확인하고 닫으므로, 평상시엔 조용하고 이상이 있을 때만 눈에 띄게 만든다(색은 그때만 쓴다).

@@ -19,7 +19,7 @@ const price = (tier: ExposureProduct, weeks: ExposureWeeks) =>
   formatExposurePrice(exposurePrice(tier, weeks));
 
 export const metadata: Metadata = {
-  title: "공고 노출 안내 | 민잡",
+  title: "공고 노출 안내",
   description:
     "무료로 공고를 올리고, 더 많은 사역자에게 빠르게 닿고 싶을 때만 노출을 더하세요. 기본·플러스·스페셜 노출 상품 안내.",
   alternates: { canonical: "/pricing" },

@@ -3,7 +3,7 @@ import { LegalDoc, type LegalSection } from "@/components/layout/legal-doc";
 import { BUSINESS_INFO, businessInfoLines, TERMS_EFFECTIVE_DATE } from "@/constants/business";
 
 export const metadata: Metadata = {
-  title: "이용약관 | 민잡",
+  title: "이용약관",
   description: "민잡 서비스 이용약관.",
   alternates: { canonical: "/terms" },
 };

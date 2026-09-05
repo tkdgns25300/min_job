@@ -6,7 +6,7 @@ import type { ChurchDashboard } from "@/lib/queries/users";
 import { requireUser } from "@/lib/auth-guard";
 import { hasChurchAccess } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "교회 공고 관리 | 민잡" };
+export const metadata: Metadata = { title: "교회 공고 관리" };
 
 // 교회 관리 view — dynamic(인증 의존). 인증 완료(APPROVED)면 대시보드, 아니면 게이트 화면.
 export default function ChurchManagePage() {

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { getAdminJobs } from "@/lib/queries/jobs";
 import { AdminJobsView } from "./admin-jobs-view";
 
-export const metadata: Metadata = { title: "공고 관리 | 민잡 운영자" };
+export const metadata: Metadata = { title: "공고 관리" };
 
 // 전체 공고 관리 — 목록은 'use cache'(getAdminJobs) 결과, 탭·필터·수정/노출 시트는 client(AdminJobsView).
 // AdminJobsView가 useSearchParams(딥링크 시드)를 읽으므로 <Suspense>로 감싼다 — 정적 셸 유지(cacheComponents).

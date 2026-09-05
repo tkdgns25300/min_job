@@ -13,7 +13,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   const church = await getChurch(id);
-  if (!church) return { title: "교회를 찾을 수 없습니다 | 민잡" };
+  if (!church) return { title: "교회를 찾을 수 없습니다" };
 
   const openCount = (await getChurchOpenJobs(id)).length;
   // 교단·지역이 모두 미상이면 괄호를 통째로 뺀다 — "○○교회 () 교역자 청빙"이 검색결과에 나간다
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     openCount > 0 ? ` · 현재 ${openCount}건 모집 중` : ""
   }. 교회 정보·채널·지난 공고를 민잡에서 확인하세요.`;
   return {
-    title: `${church.name} 청빙 | 민잡`,
+    title: `${church.name} 청빙`,
     description,
     openGraph: { ...SITE_OPEN_GRAPH, title: `${church.name} 청빙`, description, type: "profile" },
     alternates: { canonical: `/churches/${id}` },

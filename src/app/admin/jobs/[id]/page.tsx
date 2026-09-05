@@ -9,7 +9,7 @@ import { todayInSeoul } from "@/lib/job-visibility";
 import { getJobForEdit } from "@/lib/queries/jobs";
 import { JobEditForm } from "./job-edit-form";
 
-export const metadata: Metadata = { title: "공고 수정 | 민잡 운영자" };
+export const metadata: Metadata = { title: "공고 수정" };
 
 // 공개된 공고 하나를 고치고 내리는 화면. dynamic(운영자 게이트가 쿠키를 읽는다) — 값은 캐시된
 // seam(`getJobForEdit`)에서 오고 저장 액션이 `updateTag("jobs")`로 비운다.

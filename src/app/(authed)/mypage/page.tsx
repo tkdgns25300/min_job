@@ -4,7 +4,7 @@ import { MypageView } from "./mypage-view";
 import { getBookmarkedJobCards } from "@/lib/queries/bookmarks";
 import { requireUser } from "@/lib/auth-guard";
 
-export const metadata: Metadata = { title: "마이페이지 | 민잡" };
+export const metadata: Metadata = { title: "마이페이지" };
 
 // 사역자 view — 모든 계정 기본. dynamic(인증 의존). 교회 관리는 /mypage/church.
 export default function MyPage() {

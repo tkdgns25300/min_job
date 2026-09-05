@@ -12,7 +12,7 @@ import { VERIFICATION_STATUS_VARIANT } from "../verification-row";
 import { DecisionPanel } from "./decision-panel";
 import { DocView } from "./doc-view";
 
-export const metadata: Metadata = { title: "교회 인증 판정 | 민잡 운영자" };
+export const metadata: Metadata = { title: "교회 인증 판정" };
 
 // 교회 인증 판정 — 증빙 서류를 크게 놓고 옆에서 값을 맞춰 본다.
 //

@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth-guard";
 import { VerifyForm } from "./verify-form";
 import type { CurrentUser } from "@/types/domain";
 
-export const metadata: Metadata = { title: "교회 인증 | 민잡" }; // noindex는 (authed) layout 상속
+export const metadata: Metadata = { title: "교회 인증" }; // noindex는 (authed) layout 상속
 
 // 교회 인증 — 사역자 → 교회 담당자 승격 관문. dynamic(인증 의존).
 // **접수는 실 배선됐다**(`actions.ts`) — 판정은 운영자가 직접 한다(승인 액션 없음).

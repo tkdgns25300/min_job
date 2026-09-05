@@ -23,7 +23,7 @@ import { SITE_OPEN_GRAPH } from "@/constants/site";
 /** 랜딩 metadata — 없는 슬러그면 제목만 돌려주고, 얇은 축이면 색인을 요청하지 않는다 */
 export async function facetMetadata(axis: FacetAxis, slug: string): Promise<Metadata> {
   const key = facetKeyFromSlug(axis, slug);
-  if (key === null) return { title: "페이지를 찾을 수 없습니다 | 민잡" };
+  if (key === null) return { title: "페이지를 찾을 수 없습니다" };
 
   const { total } = await getFacetJobs(axis, key);
   const title = facetTitle(axis, key);

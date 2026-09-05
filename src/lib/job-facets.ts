@@ -86,15 +86,13 @@ export function facetHeading(axis: FacetAxis, key: string): string {
   return [facetLabel(axis, key), noun, "청빙 공고"].filter(Boolean).join(" ");
 }
 
-const AXIS_TITLE_TAIL: Record<FacetAxis, string> = {
-  region: "부목사·전도사 모집",
-  position: "지역·교단·사례비 비교",
-  department: "지역·교단·사례비 비교",
-};
-
-/** `<title>` — 축마다 다른 꼬리말을 붙인다(자기 축을 "비교" 항목으로 다시 말하지 않게) */
+/**
+ * `<title>` — 화면 이름(= H1)만. 접미사 " | 민잡"은 루트 layout의 template이 붙인다(2026-09-06).
+ * 그전엔 "— 직분·부서·교단·사례비" 꼬리를 달았는데, 탭에서는 잘려 안 보이고 검색 결과에서도 60자 뒤는
+ * 잘린다. 핵심 검색어("서울 사역자 청빙 공고")는 앞에 있고 비교 축 나열은 description이 이미 한다.
+ */
 export function facetTitle(axis: FacetAxis, key: string): string {
-  return `${facetHeading(axis, key)} — ${AXIS_TITLE_TAIL[axis]} | 민잡`;
+  return facetHeading(axis, key);
 }
 
 const AXIS_DESC_TAIL: Record<FacetAxis, string> = {

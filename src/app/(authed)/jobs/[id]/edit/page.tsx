@@ -10,7 +10,7 @@ import { hasChurchAccess } from "@/lib/auth";
 
 type Params = { params: Promise<{ id: string }> };
 
-export const metadata: Metadata = { title: "공고 수정 | 민잡" };
+export const metadata: Metadata = { title: "공고 수정" };
 
 // 인증 + 소유권 페이지 — dynamic. 등록 폼을 그대로 공유(초기값·카피만 다름).
 export default function JobEditPage({ params }: Params) {

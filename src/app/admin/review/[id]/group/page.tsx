@@ -9,7 +9,7 @@ import { enumLabel } from "@/lib/domain-enum";
 import { getReviewGroup, getReviewRow } from "@/lib/queries/review";
 import { GroupView } from "./group-view";
 
-export const metadata: Metadata = { title: "묶음 판정 | 민잡 운영자" };
+export const metadata: Metadata = { title: "묶음 판정" };
 
 // 묶음 판정 — `dedup_state='UNCERTAIN'`인 건만 온다. 라우트를 `dedup_key`가 아니라 **구성원 id**로
 // 잡은 이유 둘: 판정 대상이 특정 구성원 하나이고, `dedup_key`엔 교회명(한글)이 들어가 URL에

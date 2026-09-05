@@ -3,7 +3,11 @@ import { Suspense } from "react";
 import { AdminSidebar, AdminSidebarFallback } from "./admin-sidebar";
 
 // 운영자 전체 색인 제외 — 하위 admin 페이지가 상속(개별 noindex 불필요).
-export const metadata: Metadata = { robots: { index: false } };
+export const metadata: Metadata = {
+  robots: { index: false },
+  // 운영자 화면 접미사 — 루트의 "%s | 민잡"을 이 서브트리에서 덮는다. 페이지는 화면 이름만 적는다
+  title: { default: "민잡 운영자", template: "%s | 민잡 운영자" },
+};
 
 // 운영자 전용 셸 — 좌측 사이드바 + 콘텐츠(공개 헤더/푸터 없음).
 // 접근 판정은 proxy.ts가 한다 — /admin/** 은 비로그인 307, 로그인했어도 비운영자면 홈으로.

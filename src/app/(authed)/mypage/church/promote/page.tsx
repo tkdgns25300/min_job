@@ -19,7 +19,7 @@ import {
 } from "@/lib/exposure-order";
 import { addDays, todayInSeoul } from "@/lib/job-visibility";
 
-export const metadata: Metadata = { title: "노출 신청 | 민잡" }; // noindex는 (authed) layout 상속
+export const metadata: Metadata = { title: "노출 신청" }; // noindex는 (authed) layout 상속
 
 // 가장 긴 상품을 가장 늦은 시작일에 사면 끝나는 날까지 — 정원 판정에 필요한 원장 범위
 const LONGEST_WEEKS = Math.max(...EXPOSURE_WEEKS) as (typeof EXPOSURE_WEEKS)[number];

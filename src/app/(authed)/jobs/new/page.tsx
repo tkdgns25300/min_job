@@ -8,7 +8,7 @@ import { getClaimCandidates } from "@/lib/queries/users";
 import { requireUser } from "@/lib/auth-guard";
 import { hasChurchAccess } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "공고 등록 | 민잡" };
+export const metadata: Metadata = { title: "공고 등록" };
 
 // 인증 페이지 — dynamic. 등록 무료 강조(거부감 완화, pricing과 동일 메시지).
 export default function JobNewPage() {

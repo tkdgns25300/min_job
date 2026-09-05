@@ -4,7 +4,7 @@ import { requireOperator } from "@/lib/auth-guard";
 import { getPromotionLedger } from "@/lib/queries/promotions";
 import { PromotionLedgerTable } from "./promotion-ledger-table";
 
-export const metadata: Metadata = { title: "노출 원장 | 민잡 운영자" };
+export const metadata: Metadata = { title: "노출 원장" };
 
 // 노출 구매 원장 — **읽기만**. 결제·취소·환불 이력을 한 표로 본다(정산 대조·문의 응대).
 // dynamic(운영자 전용 · 결제가 들어오는 순간 바뀐다 · 'use cache' 금지). 셸 헤더는 정적, 표는 <Suspense>.

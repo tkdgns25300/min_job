@@ -4,7 +4,7 @@ import Link from "next/link";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
-  title: "로그인 | 민잡",
+  title: "로그인",
   description: "민잡 로그인 — Google 계정으로 간편하게 시작하세요.",
   robots: { index: false }, // 로그인은 검색 색인 제외(SEO 위생)
 };

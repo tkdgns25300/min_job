@@ -11,7 +11,7 @@ import { getQueueNavigation, getReviewDetail, type QueueNeighbor } from "@/lib/q
 import { ReviewForm } from "./review-form";
 import { SourcePane, sourceShape, type SourceShape } from "./source-pane";
 
-export const metadata: Metadata = { title: "공고 검수 | 민잡 운영자" };
+export const metadata: Metadata = { title: "공고 검수" };
 
 // 단건 검수 — 원문과 구조화된 값을 나란히 놓고 판정한다. dynamic(운영자 전용 · 미검수 데이터 ·
 // 포스터 signed URL 만료). 셸에 정적으로 그릴 것이 없어 전체를 <Suspense>로 감싼다.

@@ -11,7 +11,7 @@ import {
 } from "@/lib/queries/review";
 import { ReviewQueueView } from "./review-queue-view";
 
-export const metadata: Metadata = { title: "수집 검수 | 민잡 운영자" };
+export const metadata: Metadata = { title: "수집 검수" };
 
 // 수집 검수 — 크롤러가 "사람이 봐야 답이 나온다"고 판단한 공고만 온다(SPEC 수집 검수 절).
 // dynamic: 미검수 데이터는 판정하는 순간 바뀌고, 포스터 signed URL은 만료가 있어 캐시할 수 없다.

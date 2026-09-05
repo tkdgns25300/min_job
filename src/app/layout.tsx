@@ -16,7 +16,10 @@ export const metadata: Metadata = {
   // metadataBase = 상대 경로 메타데이터(canonical·Open Graph)를 절대 URL로 바꾸는 기준.
   // 없으면 OG URL이 비거나 프리뷰 도메인이 새어 들어간다.
   metadataBase: new URL(SITE_URL),
-  title: "MinJob — 사역자 청빙 공고",
+  // `<title>` 규칙(2026-09-06): 페이지는 **화면 이름만** 적고 접미사 " | 민잡"은 이 template이 붙인다 —
+  // 그전엔 페이지마다 손으로 붙여 브랜드가 MinJob/민잡, 구분자가 —/| 로 갈렸다. 운영자 화면은 admin layout이
+  // "%s | 민잡 운영자"로 덮는다. 홈은 default 그대로(브랜드 + 한 줄).
+  title: { default: "민잡 — 사역자 청빙 공고", template: "%s | 민잡" },
   description:
     "흩어진 교회 사역자(담임·부목사·전도사) 청빙 공고를 한곳에 모아 교단·지역·사례비로 검색·비교하세요.",
   // 카카오톡 공유가 주 유통 경로라 링크 미리보기가 실제 유입에 영향을 준다.

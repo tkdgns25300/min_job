@@ -7,7 +7,7 @@ import { getChurch } from "@/lib/queries/churches";
 import { requireUser } from "@/lib/auth-guard";
 import { hasChurchAccess } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "교회 정보 관리 | 민잡" }; // noindex는 (authed) layout 상속
+export const metadata: Metadata = { title: "교회 정보 관리" }; // noindex는 (authed) layout 상속
 
 // 교회 정보 관리 — dynamic + 인증. 인증 교회 관리자만. 공고 관리(/mypage/church)와 분리된 전용 페이지.
 export default function ChurchInfoPage() {

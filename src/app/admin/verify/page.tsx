@@ -4,7 +4,7 @@ import { requireOperator } from "@/lib/auth-guard";
 import { getVerifications } from "@/lib/queries/verifications";
 import { AdminVerifyView } from "./admin-verify-view";
 
-export const metadata: Metadata = { title: "교회 인증 검수 | 민잡 운영자" };
+export const metadata: Metadata = { title: "교회 인증 검수" };
 
 // 교회 인증 검수 — 유일한 검수 게이트(공고 검수 없음). dynamic(운영자 전용 + PII, 'use cache' 금지).
 // 셸 헤더는 정적, 목록은 <Suspense>로 스트리밍. 검수 대기 수는 검수중 탭(기본 선택) 배지로.

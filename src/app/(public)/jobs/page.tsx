@@ -5,7 +5,7 @@ import { FacetHub } from "./facet-hub";
 import { JobsView } from "./jobs-view";
 
 export const metadata: Metadata = {
-  title: "사역자 청빙 공고 — 교단·지역·사례비로 검색 | 민잡",
+  title: "사역자 청빙 공고",
   description:
     "부목사·전도사·담임 청빙 공고를 한곳에서. 교단·지역·부서·사례비로 검색하고 비교하세요.",
   // ⚠️ 필터·정렬·페이지 쿼리가 붙은 URL(?region=…&page=2…)이 각각 별도 페이지로 색인되면

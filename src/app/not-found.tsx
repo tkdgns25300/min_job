@@ -4,7 +4,7 @@ import Link from "next/link";
 // 앱 루트 not-found — (public) 그룹 레이아웃(헤더·푸터)을 받지 않고 루트 레이아웃 안에서만
 // 렌더된다. 그래서 로그인 페이지처럼 로고를 상단에 두고 스스로 완결되는 브랜드 화면으로 구성한다.
 export const metadata: Metadata = {
-  title: "페이지를 찾을 수 없어요 | 민잡",
+  title: "페이지를 찾을 수 없어요",
   description: "요청하신 공고나 페이지를 찾을 수 없습니다.",
 };
 
