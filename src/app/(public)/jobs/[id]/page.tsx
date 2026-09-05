@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { JobDetailView } from "./job-detail-view";
 import { RecordRecentlyViewed } from "@/components/job/record-recently-viewed";
 import { getChurchOpenJobs, getJobDetail, getSimilarJobs } from "@/lib/queries/jobs";
-import { breadcrumbJsonLd, jobPostingJsonLd, jobRoleSummary, jobShareLines } from "@/lib/seo";
+import { breadcrumbJsonLd, jobPostingJsonLd, jobRoleSummary, shareDescription } from "@/lib/seo";
 import { churchLocation, formatPay } from "@/lib/format";
 import { REGIONS } from "@/constants/domain";
 import { SITE_OPEN_GRAPH } from "@/constants/site";
@@ -16,17 +16,12 @@ type Params = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   const detail = await getJobDetail(id);
-  if (!detail) return { title: "공고를 찾을 수 없습니다 | 민잡" };
+  if (!detail) return { title: "공고를 찾을 수 없습니다" };
 
   // `||` — DB는 NOT NULL이지만 빈 문자열이 가능하다(`lib/seo.ts` 같은 이유)
   const description = detail.job.description || jobRoleSummary(detail);
-  // 공유 미리보기는 교회 소개문 대신 **비교 가능한 사실 한 줄**을 쓴다(자리 · 사례비 · 출근 · 마감).
-  // 검색 스니펫용 `description`은 그대로 — 검색엔진엔 문장이, 카톡엔 조건이 맞다(운영자 2026-09-05).
-  const share = jobShareLines(detail);
-  // 제목이 자리 줄로 폴백된 공고(직분 "기타"뿐)는 `og:title`과 겹치니 그 자리에 맥락(교회·교단·지역)을 쓴다
-  const shareLead = share.headline === detail.job.title ? share.context : share.headline;
   return {
-    title: `${detail.job.title} | 민잡`,
+    title: detail.job.title,
     description,
     // ⚠️ `openGraph.images`를 여기서 적지 않는다 — 이 세그먼트의 `./opengraph-image.tsx`가 자동으로 붙인다.
     //    빌드가 그 라우트에 해시를 붙여(`/jobs/[id]/opengraph-image-1y46gx`) 손으로 쓴 주소는 404였다(실측 2026-09-05).
@@ -35,7 +30,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       siteName: SITE_OPEN_GRAPH.siteName,
       locale: SITE_OPEN_GRAPH.locale,
       title: detail.job.title,
-      description: `${shareLead} · ${share.facts}`,
+      // 공유 설명은 **본문 첫 80자** — 이미지가 구조(자리·지역·사례비·마감), 제목이 교회의 말을 맡으니
+      // 설명까지 같은 사실을 되풀이하지 않는다(2026-09-06 · 그전엔 이미지와 같은 줄이었다)
+      description: shareDescription(detail),
       type: "article",
     },
     // 공유 링크에 붙는 추적 쿼리(?utm_source=…)가 별도 페이지로 색인되지 않게 대표 URL 고정

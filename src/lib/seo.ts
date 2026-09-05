@@ -1,5 +1,5 @@
 import { REGIONS, type EmploymentType } from "@/constants/domain";
-import { churchMetaLine, formatPayShort, jobRoleLine, publicPositionLabel } from "@/lib/format";
+import { churchMetaLine, denominationLabel, formatPayShort, jobRoleLine } from "@/lib/format";
 import { BUSINESS_INFO } from "@/constants/business";
 import { SITE_OPEN_GRAPH, SITE_URL } from "@/constants/site";
 import type { JobDetail } from "@/types/domain";
@@ -23,43 +23,72 @@ export function jobRoleSummary(detail: JobDetail): string {
     .join(" · ");
 }
 
-/** 출근 문구가 이보다 길면 공유 카드에 넣지 않는다 — "예배 전(9시 30분부터), 예배 후…"는 썸네일이 못 담는다 */
-const SHARE_WORK_DAYS_MAX = 12;
+/** `og:description` 길이 — 카톡·슬랙 미리보기 두 줄 안에 들어오는 길이 */
+const SHARE_DESCRIPTION_MAX = 80;
+
+export interface ShareCell {
+  label: string;
+  value: string;
+  /** 값이 없어 "협의"·"상시"·"미상"으로 채운 칸 — 흐리게 그려 값 있는 공고가 눈에 띈다 */
+  muted: boolean;
+}
+
+export interface ShareCard {
+  /** 교회 · 교단 — 이미지 맨 위 작은 줄 */
+  context: string;
+  /** 자리 한 줄(직분·부서·고용) — 이미지의 큰 글자 */
+  role: string;
+  /** 지역 · 사례비 · 마감 — 라벨+값 칸 셋 */
+  cells: ShareCell[];
+}
+
+// "전북 전주시" — 시·군까지만. 구·동은 카드가 못 담는다
+function shareRegion(church: JobDetail["churchRef"]): string | null {
+  if (!church.region) return null;
+  return [REGIONS[church.region], church.city?.split(" ")[0]].filter(Boolean).join(" ");
+}
 
 /**
- * 공유 카드(OG) 세 줄 — 이미지(`jobs/[id]/opengraph-image`)와 `og:description`이 **같은 줄**을 쓴다.
- *
- *   맥락   새소망교회 · 예장합동 · 경기 성남
- *   제목   유초등부 전임전도사              ← 자리 한 줄. 비면(직분 "기타"뿐) 교회가 쓴 제목으로
- *   사실   월 220만원 · 주일·수요 출근 · 마감 7/20   ← 사례비는 카드 규칙(금액 아니면 "협의")
- *
- * 교회가 쓴 제목은 `og:title`이 그대로 맡는다(알아보는 이름이라 고치지 않는다). 여기는 그 제목이 말하지
- * 않는 **비교 가능한 사실**만 — 공유받은 사람이 열지 않고도 조건을 읽게(운영자 요청 2026-09-05).
+ * 공고 공유 카드(OG 이미지)의 재료 — 이미지는 **글이 아니라 구조**를 그린다(2026-09-06).
+ * 카톡·슬랙은 이미지 아래에 제목·설명을 따로 붙이므로 이미지에 공고 제목을 넣으면 같은 말이 세 번 나온다
+ * (그전 카드가 그랬다 — 제목 두 번, 교회·교단·지역 두 번, "사례비 협의 · 상시모집"은 모집중의 73%·89%가 같은 글자).
+ * 그래서 이미지 = 자리 한 줄 + 지역·사례비·마감 칸, 제목 = 교회가 쓴 말(`og:title`), 설명 = 본문 맛보기(`shareDescription`).
  */
-export function jobShareLines(detail: JobDetail): {
-  context: string;
-  headline: string;
-  facts: string;
-} {
+export function jobShareCard(detail: JobDetail): ShareCard {
   const { job, churchRef } = detail;
-  const workDays =
-    job.workDays && job.workDays.length <= SHARE_WORK_DAYS_MAX ? `${job.workDays} 출근` : null;
+  const region = shareRegion(churchRef);
+  const pay = formatPayShort(job);
   // deadline은 "YYYY-MM-DD"(date 컬럼 · 시간대 없음)라 자르기만 한다 — `formatKstDate`는 timestamptz용
   const deadline = job.deadline
-    ? `마감 ${Number(job.deadline.slice(5, 7))}/${Number(job.deadline.slice(8, 10))}`
-    : "상시모집";
-  const pay = formatPayShort(job);
-  // 자리 이름(직분·직무)이 있을 때만 자리 한 줄을 제목으로 — 직분이 "기타"뿐이면 자리 줄이 "찬양·예배"처럼
-  // 부서만 남아 무엇을 뽑는지 안 보인다. 그때는 교회가 쓴 제목("오르간 반주자 모십니다")이 더 정확하다
-  const hasRole = publicPositionLabel(job.position, { full: true }) !== "" || job.role !== null;
+    ? `${Number(job.deadline.slice(5, 7))}/${Number(job.deadline.slice(8, 10))}`
+    : null;
+  // 직분이 "기타"뿐이고 직무도 없으면 자리 줄이 빈다 — 그때는 공고 종류로 말한다
+  const role =
+    jobRoleLine(job, { full: true }) || (job.jobKind.includes("GENERAL") ? "일반직" : "사역자");
   return {
-    context: [churchRef.name, churchMetaLine(churchRef)].filter(Boolean).join(" · "),
-    headline: hasRole ? jobRoleLine(job, { full: true }) : job.title,
-    facts: [pay === "협의" ? "사례비 협의" : pay, workDays, deadline].filter(Boolean).join(" · "),
+    context: [churchRef.name, denominationLabel(churchRef.denomination)]
+      .filter(Boolean)
+      .join(" · "),
+    role,
+    cells: [
+      { label: "지역", value: region ?? "미상", muted: region === null },
+      { label: "사례비", value: pay, muted: pay === "협의" },
+      { label: "마감", value: deadline ?? "상시", muted: deadline === null },
+    ],
   };
 }
 
-// schema.org JobPosting JSON-LD — 검색엔진 구조화 노출 (SEO 성장 엔진)
+/**
+ * `og:description` — **교회가 쓴 본문의 첫 80자**. 이미지(구조)·제목(교회의 말)과 겹치지 않는 세 번째 정보다.
+ * 본문이 빈 공고(DB는 NOT NULL이지만 빈 문자열이 가능)만 자리 요약으로 폴백한다.
+ */
+export function shareDescription(detail: JobDetail): string {
+  const text = (detail.job.description || jobRoleSummary(detail)).replace(/\s+/g, " ").trim();
+  return text.length > SHARE_DESCRIPTION_MAX
+    ? `${text.slice(0, SHARE_DESCRIPTION_MAX).trimEnd()}…`
+    : text;
+}
+
 export function jobPostingJsonLd(detail: JobDetail) {
   const { job, churchRef: church } = detail;
 
