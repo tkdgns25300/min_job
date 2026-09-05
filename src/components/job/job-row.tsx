@@ -4,6 +4,7 @@ import type { JobCard } from "@/types/domain";
 import { churchLocation, denominationLabel, formatPayShort, jobRoleLine } from "@/lib/format";
 import { RelativeTime } from "@/components/relative-time";
 import { BookmarkButton } from "./bookmark-button";
+import { JobBadges } from "./job-badges";
 
 // 홈·목록 리스트 로우 — 제목이 주인공, 직분·부서·지역은 평문.
 // `ad`는 **공고가 아니라 자리의 속성**이다 — 목록 1페이지 맨 위 광고 로우(최대 5줄)에 선 것만 true다
@@ -23,7 +24,11 @@ export function JobRow({ job, ad = false }: { job: JobCard; ad?: boolean }) {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <h3 className="truncate font-bold tracking-tight">{job.title}</h3>
+          {/* 폰은 두 줄, sm부터 한 줄 — 한 줄로 자르면 390px에서 "로뎀교회에서 전임 목사님을 모십니…"처럼
+              제목이 곧 차별점인데 그걸 잃었다(시안 검토 2026-09-06) */}
+          <h3 className="line-clamp-2 leading-snug font-bold tracking-tight sm:line-clamp-1">
+            {job.title}
+          </h3>
           {ad ? (
             <span className="shrink-0 text-[11px] font-medium text-muted-foreground">광고</span>
           ) : null}
@@ -49,7 +54,11 @@ export function JobRow({ job, ad = false }: { job: JobCard; ad?: boolean }) {
             </span>
           )}
         </p>
-        <p className="mt-1 truncate text-sm text-muted-foreground">{role}</p>
+        {/* 직분 줄 오른쪽에 배지(마감 임박·사택) — 줄을 늘리지 않고, 좁으면 `flex-wrap`으로 아래로 내려간다 */}
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          {role ? <span className="min-w-0 truncate">{role}</span> : null}
+          <JobBadges job={job} />
+        </p>
       </div>
 
       {/* 사례비는 카드용 두 값(금액/협의)만 온다 — 자유 텍스트를 그대로 넣던 때는 174자짜리가 이 칸을
@@ -61,6 +70,8 @@ export function JobRow({ job, ad = false }: { job: JobCard; ad?: boolean }) {
           <div className="text-sm font-semibold text-muted-foreground">{pay}</div>
         )}
         <div className="mt-1.5 text-xs text-muted-foreground/80">
+          {/* 목록은 최신순이라 1페이지가 통째로 "새 공고"다 — 여기서 시각을 강조하면 구분이 아니라 장식이 된다.
+              강조는 날짜순이 아닌 자리(홈 추천 카드·비슷한 공고·교회 페이지)에서만 */}
           <RelativeTime date={job.postedAt} />
         </div>
       </div>

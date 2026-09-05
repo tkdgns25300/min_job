@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { FRESH_POST_DAYS } from "@/constants/domain";
+import { JobBadges } from "@/components/job/job-badges";
+import { RelativeTime } from "@/components/relative-time";
 import { ChurchChannels } from "@/components/church/church-channels";
 import {
   churchMetaLine,
@@ -35,11 +38,16 @@ function OpenJobCard({ job }: { job: JobCardData }) {
     >
       <h3 className="leading-snug font-bold break-keep">{job.title}</h3>
       <p className="text-sm text-muted-foreground">{jobRoleLine(job)}</p>
-      <p
-        className={cn("mt-auto pt-1 font-bold", hasPay ? "text-primary" : "text-muted-foreground")}
-      >
-        {formatPayShort(job)}
-      </p>
+      {/* 교회명·지역은 없다(페이지가 그 교회) — 자리 사이의 차이(마감 임박·사택)가 전부라 배지가 더 크게 일한다 */}
+      <JobBadges job={job} />
+      <div className="mt-auto flex items-center justify-between pt-1">
+        <span className={cn("font-bold", hasPay ? "text-primary" : "text-muted-foreground")}>
+          {formatPayShort(job)}
+        </span>
+        <span className="text-xs text-muted-foreground/80">
+          <RelativeTime date={job.postedAt} highlightWithinDays={FRESH_POST_DAYS} />
+        </span>
+      </div>
     </Link>
   );
 }

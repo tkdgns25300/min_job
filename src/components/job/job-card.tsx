@@ -3,7 +3,9 @@ import { MapPin } from "lucide-react";
 import type { JobCard as JobCardData } from "@/types/domain";
 import { churchLocation, denominationLabel, formatPayShort, jobRoleLine } from "@/lib/format";
 import { RelativeTime } from "@/components/relative-time";
+import { FRESH_POST_DAYS } from "@/constants/domain";
 import { BookmarkButton } from "./bookmark-button";
+import { JobBadges } from "./job-badges";
 import { cn } from "@/lib/utils";
 
 // 공고 카드 — 홈 "추천 청빙" 3칸과 공고 상세 "비슷한 공고" 6장이 **같은 카드**를 쓴다(2026-09-03 통합.
@@ -69,6 +71,9 @@ export function JobCard({
         )}
       </p>
       {role ? <p className="truncate text-sm text-muted-foreground">{role}</p> : null}
+      {/* 배지 줄(마감 임박·사택) — 있을 때만 그려져 카드마다 높이가 다를 수 있다. 그리드가 `h-full` 카드를 같은
+          높이로 늘리고 아래 footer가 `mt-auto`라 사례비 줄은 늘 바닥에 맞는다 */}
+      <JobBadges job={job} />
 
       <div className="mt-auto flex items-center justify-between border-t border-border pt-2.5">
         <span
@@ -79,7 +84,7 @@ export function JobCard({
           {formatPayShort(job)}
         </span>
         <span className="text-xs text-muted-foreground/80">
-          <RelativeTime date={job.postedAt} />
+          <RelativeTime date={job.postedAt} highlightWithinDays={FRESH_POST_DAYS} />
         </span>
       </div>
     </article>

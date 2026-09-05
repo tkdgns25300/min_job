@@ -183,6 +183,11 @@ export const ALWAYS_OPEN_MAX_DAYS = 90;
 // "이번 주 새 공고" 집계 창(일). 홈 스탯과 운영자 홈이 같은 값을 써야 숫자가 갈리지 않는다.
 export const RECENT_WINDOW_DAYS = 7;
 
+// 카드 배지 기준(일) — 마감이 이 안이면 "D-n" 배지, 게시가 이 안이면 게시 시각을 강조한다(카드 4종 공용 · `lib/job-badges`).
+// 마감 7일 = 지원 서류를 준비할 마지막 주 · 게시 3일 = "새 공고" 대신 시각의 색으로 말하는 범위(시안 검토 2026-09-06).
+export const DEADLINE_SOON_DAYS = 7;
+export const FRESH_POST_DAYS = 3;
+
 // 노출 상품(결제) — 사다리 3등급(확정 2026-09-02 · SPEC 수익화 절 · DATA §7). **가격 단일 소스**:
 // 요금 페이지·결제 화면·서버 금액 검증이 전부 여기서 읽는다. VAT 포함가(원).
 //

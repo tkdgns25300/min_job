@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { useBookmarks } from "@/components/job/bookmark-provider";
+import { JobBadges } from "@/components/job/job-badges";
 import { cn } from "@/lib/utils";
 import { clearRecentJobs, readRecentJobs } from "@/lib/recent-jobs";
 import { churchLocation, formatPayShort, jobRoleLine } from "@/lib/format";
@@ -173,18 +174,17 @@ function JobRow({ job, action }: { job: JobCard; action?: ReactNode }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <h3 className="truncate font-semibold tracking-tight">{job.title}</h3>
-          {/* 만료 공고도 보여준다(조용히 사라지면 안 됨) — 대신 모집중이 아님을 표시 */}
-          {!job.isPubliclyOpen && (
-            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground">
-              마감
-            </span>
-          )}
         </div>
         {/* 지역 미상이면 churchLocation이 ""라 " · 교회명"으로 점이 앞에 매달린다 */}
         <p className="mt-1 truncate text-xs text-muted-foreground">
           {[churchLocation(job.church), job.church.name].filter(Boolean).join(" · ")}
         </p>
-        <p className="mt-0.5 truncate text-xs text-muted-foreground">{jobRoleLine(job)}</p>
+        {/* 만료 공고도 보여준다(조용히 사라지면 안 됨) — 공용 배지가 "마감"으로 표시하고, 모집중이면 마감 임박·사택.
+            목록 로우(`components/job/job-row`)와 같은 자리·같은 모양 */}
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          <span className="min-w-0 truncate">{jobRoleLine(job)}</span>
+          <JobBadges job={job} />
+        </p>
       </div>
       <div className="shrink-0 text-right">
         <div className={cn(hasPay ? "font-bold text-primary" : "text-sm text-muted-foreground")}>
