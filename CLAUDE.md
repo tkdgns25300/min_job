@@ -82,7 +82,7 @@
 
 검색 유입("OO지역 전도사 청빙", "유초등부 전도사 모집")이 트래픽의 핵심. 기존 청빙 사이트들이 구식이라 SEO가 약해 비집고 들어갈 틈이 크다. 모든 페이지는:
 
-- `generateMetadata`로 title·description·Open Graph 설정
+- `generateMetadata`로 title·description·Open Graph 설정. **`title`은 화면 이름만** — 접미사 " | 민잡"은 루트 layout `title.template`이 붙인다(운영자는 admin layout " | 민잡 운영자"). 손으로 " | 민잡"을 붙이면 두 번 붙는다
 - 공고 상세 = schema.org **`JobPosting`** JSON-LD (title·hiringOrganization·jobLocation·datePosted·employmentType 등)
 - `app/sitemap.ts`·`app/robots.ts`로 sitemap·robots 생성, `<html lang="ko">`
 - 구조화된 공고 데이터를 검색엔진이 읽기 좋은 형태로 출력
