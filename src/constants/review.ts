@@ -42,15 +42,6 @@ export const CONFIDENCE_LEVELS = {
 } as const;
 export type ConfidenceLevel = keyof typeof CONFIDENCE_LEVELS;
 
-/** 중복 판정 라벨 — `UNCERTAIN`만 사람이 결정한다(묶음 화면) */
-export const DEDUP_STATES = {
-  ALONE: "단독",
-  MASTER: "대표",
-  DUPLICATE: "중복",
-  UNCERTAIN: "같은 자리 불확실",
-} as const;
-export type DedupState = keyof typeof DEDUP_STATES;
-
 /**
  * 거절 사유. ⚠️⚠️ **우리가 쓰는 값은 `OPERATOR` 하나뿐이다.**
  * 나머지 셋은 크롤러가 자동 거절할 때 쓰고 검수 큐에 오지 않는다 — 표시용으로만 둔다.
@@ -86,14 +77,6 @@ export const PUBLISHED_DENOMINATION_SOURCES: readonly DenominationSource[] = [
   "registry",
   "operator",
 ];
-
-/** 1차 게이트 — `NO`는 `review_data`를 만들지 않으므로 화면에 오지 않는다 */
-export const CHURCH_RECRUITMENT_VERDICTS = {
-  YES: "개교회 채용",
-  UNCERTAIN: "개교회 여부 애매",
-  NO: "채용 공고 아님",
-} as const;
-export type ChurchRecruitmentVerdict = keyof typeof CHURCH_RECRUITMENT_VERDICTS;
 
 /** 포스터를 담아 둔 비공개 Storage 버킷 — 화면은 signed URL을 만들어 띄운다(경로 직접 노출 X) */
 export const POSTER_BUCKET = "postings";
