@@ -59,6 +59,10 @@ npm run dev        # http://localhost:3000
   NEXT_PUBLIC_PORTONE_CHANNEL_KEY=       # 공개 — KCP 채널 키(channel-key-...)
   PORTONE_API_SECRET=                    # 서버 전용 — 결제 조회·검증용, 절대 노출 금지
   ```
+- **이용 측정(GA4)** — 측정 ID 하나. **Vercel Production에만** 넣는다 — 로컬·프리뷰는 비워 두면 스크립트 자체가 붙지 않아 통계가 섞이지 않는다. 이벤트 계약·콘솔 상태는 `docs/ANALYTICS.md`.
+  ```
+  NEXT_PUBLIC_GA_ID=                     # 공개 — GA4 측정 ID(G-...). Production만
+  ```
 - 배포(Vercel)는 대시보드 env 사용. 로컬로 당길 땐 `vercel env pull .env`.
 
 ## 구조 / 컨벤션

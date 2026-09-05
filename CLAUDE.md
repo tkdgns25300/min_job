@@ -1,6 +1,6 @@
 # CLAUDE.md — MinJob
 
-> **이 파일은 HOW** — 아키텍처·데이터 수집 파이프라인·코드 컨벤션·가드레일. 페이지 기능은 [`docs/SPEC.md`](./docs/SPEC.md), 데이터 모델·테이블은 [`docs/DATA.md`](./docs/DATA.md), 작업은 [`docs/ROADMAP.md`](./docs/ROADMAP.md), 사용자 인터뷰·피드백은 [`docs/INTERVIEWS.md`](./docs/INTERVIEWS.md), 환경·재개는 [`README.md`](./README.md), 시점 핸드오프는 [`docs/SNAPSHOT.md`](./docs/SNAPSHOT.md).
+> **이 파일은 HOW** — 아키텍처·데이터 수집 파이프라인·코드 컨벤션·가드레일. 페이지 기능은 [`docs/SPEC.md`](./docs/SPEC.md), 데이터 모델·테이블은 [`docs/DATA.md`](./docs/DATA.md), 작업은 [`docs/ROADMAP.md`](./docs/ROADMAP.md), 사용자 인터뷰·피드백은 [`docs/INTERVIEWS.md`](./docs/INTERVIEWS.md), 환경·재개는 [`README.md`](./README.md), 시점 핸드오프는 [`docs/SNAPSHOT.md`](./docs/SNAPSHOT.md), 이용 측정(GA4 이벤트)은 [`docs/ANALYTICS.md`](./docs/ANALYTICS.md).
 >
 > **문서 책임 분리** — 같은 사실을 두 곳에 쓰지 않는다. 아키텍처·컨벤션·가드레일은 여기, 페이지 명세는 SPEC, 데이터는 DATA, 작업은 ROADMAP.
 
@@ -159,7 +159,9 @@ src/
 │   ├── admin/value-fields.tsx     두 값 화면이 같이 쓰는 칸 — 사택 3상태·연락처 4칸·금액 파서
 │   ├── tab-bar.tsx                상태 탭 + 건수 배지 — 공고·검수 목록 3곳 공용(제네릭 key)
 │   ├── enum-filter-select.tsx     "○○ 전체" + 도메인 라벨 맵 필터 select — admin 6곳 공용
-│   └── relative-time.tsx          시간 표시(클라이언트 계산)
+│   ├── relative-time.tsx          시간 표시(클라이언트 계산)
+│   └── analytics/                 GA4 — google-analytics(로더 · 루트 레이아웃 한 번) · track-event(그려질 때) ·
+│                                  tracked-link(클릭). 이벤트 계약은 lib/analytics, 운영 규칙은 docs/ANALYTICS.md
 ├── constants/                     domain.ts(도메인 enum + 그 값에 딸린 입력 안내) · business.ts(사업자정보) ·
 │                                  review.ts(검수 상수 + 게시판 이름·목록 주소 — 크롤러 `sources.json` 사본) ·
 │                                  storage.ts(localStorage 키) · site.ts(SITE_URL·SITE_OPEN_GRAPH)
@@ -190,6 +192,8 @@ src/
 │   ├── job-church.ts              공고↔교회 파생 — church_id가 null일 수 있어 생긴 로직
 │   │                              (jobChurchRef=표시값 규칙 · churchIdentityKey=교회 수 집계)
 │   ├── recent-jobs.ts · recent-searches.ts   localStorage 클라이언트 헬퍼(북마크는 2026-08-28 DB로 — `queries/bookmarks.ts`)
+│   ├── analytics.ts               GA4 이벤트 계약(닫힌 union · 콘솔 맞춤 측정기준과 1:1) + track() — **클라이언트 전용**,
+│                                  `/admin`은 보내지 않는다. 서버에서 세지 않는 이유는 docs/ANALYTICS.md
 │   └── seo.ts · format.ts · utils.ts
 ├── types/                         domain.ts(공유 도메인 타입 = 화면이 쓰는 모양) ·
 │                                  database.ts(**자동 생성** — DB 행의 모양. 손으로 고치지 않는다)
@@ -338,7 +342,7 @@ cacheComponents 활성(`next.config.ts`). 어기면 빌드 실패·캐시 깨짐
 - ⚠️ **Tailwind v4는 `button`에 `cursor: pointer`를 주지 않는다**(v3 preflight는 줬다). `globals.css`의 `@layer base`가 되돌려 놓았으니 버튼마다 `cursor-pointer`를 붙이지 않는다 — 붙이기 시작하면 새 버튼마다 기억해야 하고, 그래서 한때 54개가 전부 빠져 있었다.
 - shadcn/ui 우선. **모바일 퍼스트** (`base` → `sm` → `md` → `lg`) — 구직 교역자가 폰으로 공고를 본다. (디자인 방향은 SPEC.)
 - **알림은 성공=토스트 / 실패=인라인.** 성공은 `toast.success()`(`@/components/ui/sonner` — `sonner`를 직접 import하지 않는다), 실패는 그 화면에 남는 `role="alert"` 문구다. 실패는 **읽고 조치해야 하는 말**이라 4초 뒤 사라지면 안 되고, sonner의 라이브 영역은 polite 고정이라 assertive 안내를 잃는다. `<Toaster />`는 **루트 레이아웃에 한 벌**만 둔다(로그아웃처럼 라우트 그룹을 넘는 이동이 있어 그룹별로 두면 방금 띄운 것이 사라진다).
-  - ⚠️ **성공을 `redirect`로 알릴 수 없다** — Server Action의 `redirect`는 **던지므로** `await action()` 다음 줄이 죽은 코드가 된다. 이동이 필요한 판정 화면은 액션이 결과를 **돌려주고**, 호출부가 토스트를 띄운 뒤 `router.push`한다(2026-08-27 실측으로 걷어낸 함정).
+  - ⚠️ **성공을 `redirect`로 알릴 수 없다** — Server Action의 `redirect`는 **던지므로** `await action()` 다음 줄이 죽은 코드가 된다. 이동이 필요한 화면(운영자 판정 · 교회의 공고 등록·수정 · 인증 신청)은 액션이 결과를 **돌려주고**, 호출부가 토스트를 띄운 뒤 `router.push`한다(2026-08-27 실측으로 걷어낸 함정 · 등록·인증은 2026-09-06 GA4 계측을 붙이며 같은 모양으로). 액션 안에 `redirect`가 남은 곳은 없다.
   - **토스트는 화면을 가리지 않고 습니다체다**(운영자 결정 2026-08-27) — 교회 화면의 토스트도 "저장했습니다."다. 반면 **인라인 문구는 그 화면의 문체를 따른다**(어드민=습니다체 / 교회·구직자=해요체) — 그래서 `church-info-form`은 토스트가 "저장했습니다."이고 실패 인라인이 "저장하지 못했어요…"다. 같은 동작이 두 화면에 있으면 **문구를 한 글자도 다르게 두지 않는다**(공고 마감은 교회·어드민 모두 "마감했습니다."). 남은 혼용은 ROADMAP 문체 항목.
 
 **Imports**
