@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { TrackedLink } from "@/components/analytics/tracked-link";
 import { CHURCH_CHANNELS, type ChurchChannel } from "@/constants/domain";
 import type { ChurchLink } from "@/types/domain";
 
@@ -58,29 +59,35 @@ const CHANNEL_BRAND: Record<ChurchChannel, string> = {
 };
 
 // 교회 채널 — 없으면 렌더 X. variant: plain(텍스트 칩) / brand(브랜드 색·아이콘 틴트 버튼)
+// `trackClicks` — 클릭을 `church_link_click`으로 센다. 등록 폼 미리보기만 끈다(교회가 자기 링크를 눌러 보는 것).
 export function ChurchChannels({
   links,
   variant = "plain",
+  trackClicks = true,
 }: {
   links: ChurchLink[];
   variant?: "plain" | "brand";
+  trackClicks?: boolean;
 }) {
   const urlByType = new Map(links.map((l) => [l.type, l.url]));
   const shown = CHANNEL_ORDER.filter((type) => urlByType.has(type));
   if (shown.length === 0) return null;
+  const clickEvent = (channel: ChurchChannel) =>
+    trackClicks ? ({ name: "church_link_click", params: { channel } } as const) : null;
 
   if (variant === "plain") {
     return (
       <div className="flex flex-wrap gap-2">
         {shown.map((type) => (
-          <a
+          <TrackedLink
             key={type}
             href={urlByType.get(type)}
             {...externalAttrs}
+            event={clickEvent(type)}
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             {CHURCH_CHANNELS[type]}
-          </a>
+          </TrackedLink>
         ))}
       </div>
     );
@@ -89,10 +96,11 @@ export function ChurchChannels({
   return (
     <div className="flex flex-wrap gap-2">
       {shown.map((type) => (
-        <a
+        <TrackedLink
           key={type}
           href={urlByType.get(type)}
           {...externalAttrs}
+          event={clickEvent(type)}
           className={cn(
             "inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80",
             CHANNEL_BRAND[type],
@@ -100,7 +108,7 @@ export function ChurchChannels({
         >
           {CHANNEL_ICON[type]}
           {CHURCH_CHANNELS[type]}
-        </a>
+        </TrackedLink>
       ))}
     </div>
   );

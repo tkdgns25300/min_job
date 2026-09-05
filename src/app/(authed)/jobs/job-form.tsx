@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from "react";
-import { unstable_rethrow } from "next/navigation";
+import { unstable_rethrow, useRouter } from "next/navigation";
+import { toast } from "@/components/ui/sonner";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { jobChurchRef } from "@/lib/job-church";
 import { Button } from "@/components/ui/button";
@@ -15,6 +17,9 @@ import { StepBar, FlowSection, TOTAL_STEPS } from "./job-wizard";
 import { ChurchSummaryCard } from "./church-fields";
 import { JobPreview } from "./job-preview";
 import { createJob, updateJob } from "./actions";
+
+// 저장 뒤 가는 곳 — 방금 올린 공고가 목록에 보인다
+const DASHBOARD = "/mypage/church";
 import {
   APPLY_METHODS,
   DEPARTMENTS,
@@ -609,6 +614,7 @@ export function JobForm({
   const [errors, setErrors] = useState<DraftErrors>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [saving, startSave] = useTransition();
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   // 미리보기 카드의 "며칠 전"에 쓰는 오늘 — 첫 렌더에 고정한다(렌더마다 만들면 값이 흔들린다)
   const [today] = useState(() =>
@@ -707,15 +713,20 @@ export function JobForm({
     startSave(async () => {
       try {
         const result = initialJob ? await updateJob(initialJob.id, draft) : await createJob(draft);
-        // 성공하면 redirect가 나가 이 줄에 오지 않는다
-        if (result?.errors) {
+        if (result.errors) {
           const fromServer = result.errors;
           const at = Math.min(
             ...(Object.keys(fromServer) as DraftField[]).map((field) => FIELD_STEP[field]),
           );
           setErrors(errorsOnStep(fromServer, at));
           goTo(at);
-        } else if (result?.message) setFailure(result.message);
+        } else if (result.message) setFailure(result.message);
+        else {
+          // 성공 — 알림·계측·이동은 여기서(액션의 redirect는 던져서 그 뒤가 죽는다 · CLAUDE Styling)
+          if (!initialJob) track({ name: "job_post", params: { via: "form" } });
+          toast.success(initialJob ? "저장했습니다." : "공고를 등록했습니다.");
+          router.push(DASHBOARD);
+        }
       } catch (thrown) {
         // 리다이렉트 등 Next 제어 신호는 삼키지 않는다(admin/review와 같은 관용구)
         unstable_rethrow(thrown);

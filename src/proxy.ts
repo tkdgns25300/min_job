@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { nextWithHeaders, updateSession } from "@/lib/supabase/session";
 import { isOperatorEmail } from "@/lib/operator";
-import { PATHNAME_HEADER, loginPathWithNext } from "@/lib/auth";
+import { ADMIN_PREFIX, PATHNAME_HEADER, loginPathWithNext } from "@/lib/auth";
 
 // Next 16 Proxy — ① Supabase 세션 refresh ② 비로그인 1차 차단 ③ /admin 운영자 판정.
 // ① 서버 컴포넌트는 쿠키를 쓸 수 없어 만료 토큰 갱신을 여기서 한다(없으면 토큰 만료 후 로그인이 풀린다).
@@ -58,7 +58,6 @@ function redirectKeepingCookies(source: NextResponse, path: string, request: Nex
 
 // 로그인 필요 경로 — (authed) 라우트 그룹은 URL에 안 드러나므로 접두사를 직접 적는다.
 // 새 인증 페이지를 추가하면 여기도 추가할 것(안 해도 페이지 게이트가 막지만 307을 잃는다).
-const ADMIN_PREFIX = "/admin";
 const PROTECTED_PREFIXES = ["/mypage", "/jobs/new", ADMIN_PREFIX] as const;
 
 function isAdminPath(pathname: string): boolean {

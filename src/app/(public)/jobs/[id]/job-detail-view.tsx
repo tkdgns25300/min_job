@@ -6,6 +6,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { JobActions } from "@/components/job/job-actions";
 import { JobCard } from "@/components/job/job-card";
 import { ChurchChannels } from "@/components/church/church-channels";
+import { TrackedLink } from "@/components/analytics/tracked-link";
+import { jobParams, type SourceLabel } from "@/lib/analytics";
 import {
   churchMetaLine,
   churchPlaceLine,
@@ -35,6 +37,8 @@ const externalLinkAttrs = { target: "_blank", rel: "noopener noreferrer" } as co
 interface SourceLink {
   url: string;
   label: string;
+  /** 계측용 종류 — 원문(`source`) / 교회 홈페이지(`homepage`) */
+  kind: SourceLabel;
 }
 
 /**
@@ -51,11 +55,11 @@ function getSourceLink(
   church: Church | null,
   isPubliclyOpen: boolean,
 ): SourceLink | null {
-  if (job.sourceUrl) return { url: job.sourceUrl, label: "원문 공고 보기" };
+  if (job.sourceUrl) return { url: job.sourceUrl, label: "원문 공고 보기", kind: "source" };
   // 미claim 공고는 교회 채널을 모른다 — 수집 공고라 위의 원문 링크가 동선을 맡는다
   const homepage = church?.links.find((l) => l.type === "HOMEPAGE")?.url ?? null;
   if (isPubliclyOpen && homepage) {
-    return { url: homepage, label: "교회 홈페이지 보기" };
+    return { url: homepage, label: "교회 홈페이지 보기", kind: "homepage" };
   }
   return null;
 }
@@ -264,12 +268,14 @@ function MainContent({
   churchRef,
   churchJobs,
   isPubliclyOpen,
+  preview,
 }: {
   job: Job;
   church: Church | null;
   churchRef: JobChurchRef;
   churchJobs: JobCardData[];
   isPubliclyOpen: boolean;
+  preview: boolean;
 }) {
   // 위치·사택 표기 규칙은 lib/format이 단일 소스(교회 상세도 같은 함수를 쓴다)
   const location = churchPlaceLine(churchRef);
@@ -403,7 +409,7 @@ function MainContent({
           </Link>
           {church.links.length > 0 && (
             <div className="mt-4">
-              <ChurchChannels links={church.links} />
+              <ChurchChannels links={church.links} trackClicks={!preview} />
             </div>
           )}
           {churchJobs.length > 0 && (
@@ -450,10 +456,12 @@ function SummaryAside({
   job,
   sourceLink,
   isPubliclyOpen,
+  preview,
 }: {
   job: Job;
   sourceLink: SourceLink | null;
   isPubliclyOpen: boolean;
+  preview: boolean;
 }) {
   const hasPay = job.payMin !== null || job.payMax !== null;
 
@@ -479,14 +487,20 @@ function SummaryAside({
               교회가 직접 등록한 공고예요
             </p>
           )}
+          {/* 이 클릭이 곧 "지원하러 갔다"다 — 사이트의 핵심 지표(`source_click` · docs/ANALYTICS.md) */}
           {sourceLink && (
-            <a
+            <TrackedLink
               href={sourceLink.url}
               {...externalLinkAttrs}
+              event={
+                preview
+                  ? null
+                  : { name: "source_click", params: { ...jobParams(job), label: sourceLink.kind } }
+              }
               className={cn(buttonVariants({ size: "lg", variant: "outline" }), "w-full")}
             >
               {sourceLink.label}
-            </a>
+            </TrackedLink>
           )}
         </div>
       )}
@@ -575,7 +589,7 @@ export function JobDetailView({
   detail: JobDetail;
   churchJobs: JobCardData[];
   similar: PlacedJob[];
-  /** 등록 폼의 미리보기(`JobPreview`) — 아직 없는 공고라 저장·공유 버튼을 끈다 */
+  /** 등록 폼의 미리보기(`JobPreview`) — 아직 없는 공고라 저장·공유 버튼을 끄고 클릭을 세지 않는다 */
   preview?: boolean;
 }) {
   const { job, church, churchRef } = detail;
@@ -608,8 +622,14 @@ export function JobDetailView({
           churchRef={churchRef}
           churchJobs={churchJobs}
           isPubliclyOpen={detail.isPubliclyOpen}
+          preview={preview}
         />
-        <SummaryAside job={job} sourceLink={sourceLink} isPubliclyOpen={detail.isPubliclyOpen} />
+        <SummaryAside
+          job={job}
+          sourceLink={sourceLink}
+          isPubliclyOpen={detail.isPubliclyOpen}
+          preview={preview}
+        />
       </div>
 
       {/* 하단 "운영자 등록 공고예요. 잘못된 정보가 있으면 문의해 주세요." 문장은 뺐다(2026-08-30) —

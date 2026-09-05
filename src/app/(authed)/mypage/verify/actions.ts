@@ -1,7 +1,6 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { redirect } from "next/navigation";
 import { PRIVACY_EFFECTIVE_DATE } from "@/constants/business";
 import { requireUser } from "@/lib/auth-guard";
 import {
@@ -69,14 +68,15 @@ export async function lookupChurch(input: string): Promise<LookupResult> {
 }
 
 /**
- * 제출 결과 — 성공하면 `redirect`가 나가므로 **실패 모양만** 있다.
+ * 제출 결과 — 성공은 빈 객체(알림·계측·다시 그리기는 폼이 한다 · CLAUDE Styling), 실패만 말이 있다.
+ * ⚠️ 한때 성공을 `redirect`로 알렸는데 그건 **던져서** `await` 다음 줄이 죽는다(2026-09-06 · 등록 액션과 같이 고침).
  * ⚠️ 초기값 상수를 여기서 export하지 않는다: `"use server"` 파일은 **async 함수만** 내보낼 수 있고
  *    객체를 내보내면 빌드는 통과한 뒤 요청에서 터진다(실측 2026-08-25).
  */
 export type ApplyResult = { message?: string; errors?: FieldErrors };
 
 /**
- * 인증 신청 접수. 성공하면 같은 페이지로 되돌려 **접수 안내**를 보여준다(성공 반환값이 없는 이유).
+ * 인증 신청 접수. 성공하면 폼이 같은 페이지를 다시 그려 **접수 안내**(PENDING)를 보여준다.
  *
  * 순서가 뜻을 갖는다: **새 파일 업로드 → DB 기록 → 옛 파일 삭제.** 옛 파일을 먼저 지우면 DB가
  * 실패했을 때 **DB가 없는 파일을 가리킨다.**
@@ -184,7 +184,7 @@ export async function applyChurchVerification(form: FormData): Promise<ApplyResu
   // ⛔ `updateTag`을 부르지 않는다 — 캐시된 교회 조회는 전부 `verification_status='APPROVED'`로
   //    거르므로(`lib/queries/churches.ts`) 방금 만든 `PENDING` 행을 볼 수 있는 cached read가 없다.
   //    승인은 운영자가 DB에서 직접 하고, 그때는 `/admin`의 "공개 목록 새로고침"이 캐시를 비운다.
-  redirect("/mypage/verify");
+  return {};
 }
 
 type ServerClient = Awaited<ReturnType<typeof createClient>>;

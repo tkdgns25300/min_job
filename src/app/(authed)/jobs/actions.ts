@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { requireUser } from "@/lib/auth-guard";
 import { hasChurchAccess } from "@/lib/auth";
@@ -27,15 +26,18 @@ import type { Church } from "@/types/domain";
 // ⚠️ **검수가 없다.** 교회가 등록하면 바로 `OPEN`이다 — 인증이 게이트다(가드레일 #1 개정
 //    2026-08-21). 그래서 `status`는 DB 기본값(`OPEN`)에 맡긴다 — 노출은 `jobs`에 칸이 없다(원장이 답한다).
 
-/** 실패만 말이 필요하다 — 성공하면 `redirect`가 나가거나(등록·수정) 호출부가 이어받는다(마감·클레임) */
+/**
+ * 실패만 말이 필요하다 — 성공은 빈 객체고 이동·알림은 호출부가 한다.
+ * ⚠️ 등록·수정도 `redirect`를 쓰지 않는다(2026-09-06) — 액션의 `redirect`는 **던져서** `await` 다음 줄이 죽고,
+ *    호출부가 토스트도 계측(`job_post`)도 할 수 없다(CLAUDE Styling · 2026-08-27 판정 화면과 같은 함정).
+ */
 export type JobActionResult = { message?: string; errors?: DraftErrors };
 
-const DASHBOARD = "/mypage/church";
 const GONE = "이미 없는 공고예요. 목록을 새로 불러 주세요.";
 const SAVE_FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
 
 /**
- * 등록 — 인증 교회의 새 공고. 성공하면 대시보드로 보낸다(방금 올린 공고가 목록에 보인다).
+ * 등록 — 인증 교회의 새 공고. 이동은 폼이 한다(대시보드 — 방금 올린 공고가 목록에 보인다).
  *
  * ⚠️ 게이트를 **여기서 다시 본다.** 페이지가 이미 `hasChurchAccess`를 확인하지만 액션은 직접
  *    호출될 수 있고, 신뢰 경계는 서버다(CLAUDE 2단 방어).
@@ -57,7 +59,7 @@ export async function createJob(draft: JobDraft): Promise<JobActionResult> {
   }
 
   updateTag("jobs");
-  redirect(DASHBOARD);
+  return {};
 }
 
 /**
@@ -97,7 +99,7 @@ export async function updateJob(id: string, draft: JobDraft): Promise<JobActionR
   if (saved.data.length === 0) return { message: GONE };
 
   updateTag("jobs");
-  redirect(DASHBOARD);
+  return {};
 }
 
 /**

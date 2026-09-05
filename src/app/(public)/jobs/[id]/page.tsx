@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { JobDetailView } from "./job-detail-view";
 import { RecordRecentlyViewed } from "@/components/job/record-recently-viewed";
+import { TrackEvent } from "@/components/analytics/track-event";
+import { jobParams } from "@/lib/analytics";
 import { getChurchOpenJobs, getJobDetail, getSimilarJobs } from "@/lib/queries/jobs";
 import { breadcrumbJsonLd, jobPostingJsonLd, jobRoleSummary, shareDescription } from "@/lib/seo";
 import { churchLocation, formatPay } from "@/lib/format";
@@ -102,6 +104,8 @@ async function JobDetailContent({ params }: Params) {
             : undefined
         }
       />
+      {/* 조회 계측 — 등록 폼의 미리보기는 이 페이지를 거치지 않으므로 여기가 곧 실제 조회다 */}
+      <TrackEvent event={{ name: "job_view", params: jobParams(detail.job) }} />
       <JobDetailView detail={detail} churchJobs={churchJobs} similar={similar} />
     </>
   );

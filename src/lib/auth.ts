@@ -37,6 +37,9 @@ const DEFAULT_REDIRECT = "/mypage";
  */
 export const PATHNAME_HEADER = "x-pathname";
 
+/** 운영자 화면 접두사 — proxy의 접근 판정과 `lib/analytics`의 계측 제외가 같은 값을 본다 */
+export const ADMIN_PREFIX = "/admin";
+
 // 안전하지 않은 문자 — 제어문자(C0 전체: TAB·CR·LF 포함)·공백·DEL·역슬래시.
 // 정규식 대신 문자코드로 비교한다(이스케이프 표기 실수로 범위가 어긋나는 사고를 원천 차단).
 function hasUnsafeChar(value: string): boolean {

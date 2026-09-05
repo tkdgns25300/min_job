@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { TrackEvent } from "@/components/analytics/track-event";
+import { purchaseEvent } from "@/lib/analytics";
 import { contactMailto } from "@/constants/business";
 import { EXPOSURE_PRODUCTS } from "@/constants/domain";
 import type { PromotionResult } from "./actions";
@@ -20,6 +22,8 @@ export function PromoteOutcome({
     const product = EXPOSURE_PRODUCTS[result.order.tier];
     return (
       <div className="mt-6 rounded-2xl border bg-card p-8 text-center">
+        {/* 결제 계측 — 결과가 도착한 이 자리가 PC·모바일 두 경로의 합류점이다. 같은 결제번호는 GA가 하나로 합친다 */}
+        <TrackEvent event={purchaseEvent(result.order, paymentId)} />
         <p className="text-lg font-bold text-primary">노출이 적용됐어요</p>
         <p className="mt-2 text-sm break-keep text-muted-foreground">
           <b className="text-foreground">{product.label}</b> · {result.order.startsAt} ~{" "}

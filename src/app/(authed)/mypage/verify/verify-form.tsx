@@ -1,6 +1,9 @@
 "use client";
 
 import { useRef, useState, useTransition, type FormEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/sonner";
+import { track } from "@/lib/analytics";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
@@ -66,6 +69,7 @@ export function VerifyForm({
   const [checking, startCheck] = useTransition();
   const [submitting, startSubmit] = useTransition();
   const [result, setResult] = useState<ApplyResult>({});
+  const router = useRouter();
 
   /**
    * 지금 입력창에 있는 번호. **`regNo` state와 따로 두는 이유가 있다** — 조회 콜백은 자기 렌더의
@@ -111,8 +115,16 @@ export function VerifyForm({
     // 이벤트가 끝나면 `currentTarget`이 비므로 지금 만들어 둔다
     const formData = new FormData(event.currentTarget);
     startSubmit(async () => {
-      // 성공하면 액션이 redirect하므로 여기로 돌아오지 않는다
-      setResult(await applyChurchVerification(formData));
+      const next = await applyChurchVerification(formData);
+      if (next.errors || next.message) {
+        setResult(next);
+        return;
+      }
+      // 접수됨 — 알림·계측 뒤 같은 페이지를 다시 그리면 상태(PENDING) 안내가 폼을 대신한다
+      // (액션의 redirect는 던져서 이 줄에 못 온다 · CLAUDE Styling)
+      track({ name: "verify_submit" });
+      toast.success("인증 신청을 접수했습니다.");
+      router.refresh();
     });
   };
 

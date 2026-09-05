@@ -5,6 +5,7 @@ import { Bookmark, Check, Share2 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { useBookmarks } from "./bookmark-provider";
+import { track } from "@/lib/analytics";
 
 // 공고 상세 헤더 액션 — 북마크(저장) 토글 + 링크 공유.
 // 저장 여부·저장 동작은 `useBookmarks`에서 온다(목록 행의 `BookmarkButton`과 같은 소스).
@@ -22,6 +23,7 @@ export function JobActions({ id, disabled = false }: { id: string; disabled?: bo
       // 아이콘이 체크로 바뀌는 것만으로는 **무엇이 됐는지**를 말하지 않는다 — 공유 버튼이 링크를 복사한다는
       // 것 자체를 모르는 사람이 많다(운영자 지적 2026-08-30). 성공=토스트 규칙(CLAUDE.md Styling)대로 말한다.
       toast.success("링크를 복사했습니다.");
+      track({ name: "share", params: { method: "copy", content_type: "job", item_id: id } });
     } catch {
       // ⚠️ **삼키지 않는다.** 클립보드는 권한·브라우저 설정으로 막힐 수 있는데, 그냥 두면
       //    아이콘도 안 바뀌고 아무 말도 없어 **고장으로 읽힌다**(전에는 `// 무시`였다).

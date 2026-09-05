@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/sonner";
 import { loginPathWithNext } from "@/lib/auth";
+import { track } from "@/lib/analytics";
 
 // 저장한 공고(북마크)의 클라이언트 단일 소스 — 저장 버튼 세 곳(목록 행·홈 카드·상세 헤더)과
 // 마이페이지의 "저장 해제"가 전부 여기만 본다.
@@ -83,7 +84,11 @@ export function BookmarkProvider({
 
       void setBookmark(jobId, next)
         .then((result) => {
-          if (result.kind === "saved") return;
+          if (result.kind === "saved") {
+            // 서버가 확정한 저장만 센다 — 낙관 갱신은 되돌려질 수 있다. 해제는 세지 않는다
+            if (result.saved) track({ name: "bookmark_add", params: { job_id: jobId } });
+            return;
+          }
           revert();
           if (result.kind === "login") {
             const { pathname, search } = window.location;

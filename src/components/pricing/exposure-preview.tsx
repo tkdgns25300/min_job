@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { track } from "@/lib/analytics";
 import {
   buildScenes,
   DEVICE,
@@ -171,7 +172,10 @@ export function PreviewButton({ group }: { group: Group }) {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          track({ name: "pricing_preview_open", params: { label: group } });
+          setOpen(true);
+        }}
         className="mt-3 w-full rounded-xl border border-primary/40 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
       >
         노출 화면 미리보기

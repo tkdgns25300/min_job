@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { SITE_OPEN_GRAPH, SITE_URL } from "@/constants/site";
 import "./globals.css";
 
@@ -50,6 +51,8 @@ export default function RootLayout({
             ⚠️ `{children}` **뒤에** 둔다 — `body`가 flex column이라 앞에 두면 첫 항목이 된다
                (sonner 컨테이너는 높이가 0이지만 순서는 지킨다). */}
         <Toaster />
+        {/* GA4 — 측정 ID가 있을 때만 그려진다(Production). 계측 규칙은 docs/ANALYTICS.md */}
+        <GoogleAnalytics />
       </body>
     </html>
   );

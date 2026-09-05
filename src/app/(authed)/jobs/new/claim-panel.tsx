@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/confirm-button";
 import { REGIONS } from "@/constants/domain";
 import type { ClaimCandidate } from "@/lib/queries/users";
+import { track } from "@/lib/analytics";
 import { claimJob } from "../actions";
 
 // 처음에 보여줄 후보 수 — 목록은 확실한 순이라 앞쪽이 답일 확률이 높다.
@@ -48,6 +49,7 @@ export function ClaimPanel({
         if (result.message) setFailure({ id, message: result.message });
         else {
           // 가져왔으면 남은 일은 값 손보기 — 바로 수정 화면으로(토스트 후 이동, CLAUDE Styling)
+          track({ name: "job_post", params: { via: "claim" } });
           toast.success("공고를 가져왔습니다.");
           router.push(`/jobs/${id}/edit`);
         }
