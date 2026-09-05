@@ -37,7 +37,8 @@ export default async function JobsPage() {
           교회 청빙 공고를 한곳에서. 교단·지역·사례비로 검색하고 비교하세요.
         </p>
         <p className="mt-2 text-sm font-semibold text-primary">
-          지금 모집 중 {stats.openCount}건 · 이번 주 새 공고 {stats.newThisWeek}건
+          <span className="whitespace-nowrap">지금 모집 중 {stats.openCount}건</span> ·{" "}
+          <span className="whitespace-nowrap">이번 주 새 공고 {stats.newThisWeek}건</span>
         </p>
       </div>
       <Suspense fallback={<JobsListSkeleton />}>

@@ -36,6 +36,9 @@
 }
 
 @theme inline {
+  /* 폰 최소 폭 브레이크포인트(360px · 보급형 안드로이드). 320px(iPhone SE 1세대급)에서만 다르게 그려야 할 때
+     `xs:`로 쓴다 — 헤더 pill 라벨이 첫 사용처(2026-09-05). 클래스에 `min-[360px]:`처럼 숫자를 박지 않는다. */
+  --breakpoint-xs: 22.5rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

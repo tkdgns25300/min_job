@@ -99,7 +99,7 @@ export function AdminJobsView({ jobs }: { jobs: AdminJob[] }) {
             조건에 맞는 공고가 없어요.
           </p>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full min-w-2xl text-sm">
             <thead>
               <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
                 <th className="px-4 py-2.5 font-medium">공고</th>

@@ -67,15 +67,18 @@ export function CheckList({
               aria-label={name}
               onClick={() => toggle(name)}
               className={cn(
-                "flex size-[18px] shrink-0 items-center justify-center rounded-[5px] border transition-colors",
+                // 보이는 상자는 18px, 누르는 영역은 ::before로 34px — 폰에서 18px은 맞추기 어렵다(전수 점검 2026-09-05)
+                "relative flex size-[18px] shrink-0 items-center justify-center rounded-[5px] border transition-colors before:absolute before:-inset-2 before:content-['']",
                 on ? "border-primary bg-primary text-primary-foreground" : "border-input",
               )}
             >
               {on && <Check className="size-3" />}
             </button>
+            {/* 이름을 눌러도 토글된다 — 상자만 누르게 두면 폰에서 절반은 빗나간다. 접근성 이름은 위 버튼이 맡는다 */}
             <span
+              onClick={() => toggle(name)}
               className={cn(
-                "min-w-0 flex-1 text-sm break-keep",
+                "min-w-0 flex-1 cursor-pointer text-sm break-keep select-none",
                 on ? "font-semibold" : "text-muted-foreground",
               )}
             >

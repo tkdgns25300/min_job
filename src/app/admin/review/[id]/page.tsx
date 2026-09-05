@@ -77,7 +77,8 @@ async function DetailContent({ params }: { params: Promise<{ id: string }> }) {
         </div>
       </header>
 
-      <div className={`mt-4 grid items-start gap-4 ${COLUMNS[sourceShape(detail)]}`}>
+      {/* 기본 `grid-cols-1`이 있어야 한다 — 없으면 암묵 auto 트랙이 내용 최소 폭으로 늘어나 320px에서 원문 상자가 화면을 넘는다(전수 점검 2026-09-05) */}
+      <div className={`mt-4 grid grid-cols-1 items-start gap-4 ${COLUMNS[sourceShape(detail)]}`}>
         {/* 원문은 붙어 있어야 한다 — 값을 아래로 훑는 동안 포스터가 화면에서 나가면 대조가 끊긴다 */}
         <div className="lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto">
           <SourcePane detail={detail} />

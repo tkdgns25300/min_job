@@ -125,8 +125,10 @@ export function ReviewForm({ row, today }: { row: Tables<"review_data">; today: 
 
       <div className="mt-3">
         {tab === "values" ? (
-          /* fieldset 하나로 하위 컨트롤 전체가 잠긴다 — 칸마다 disabled를 붙이면 새 칸에서 잊는다 */
-          <fieldset disabled={processed || pending} className="disabled:opacity-60">
+          /* fieldset 하나로 하위 컨트롤 전체가 잠긴다 — 칸마다 disabled를 붙이면 새 칸에서 잊는다.
+             `min-w-0` — fieldset은 브라우저 기본이 `min-width: min-content`라 grid 칸보다 넓어져 320px에서
+             화면을 넘겼다(전수 점검 2026-09-05). 폼 요소 중 유일하게 이 기본값을 가진 태그다 */
+          <fieldset disabled={processed || pending} className="min-w-0 disabled:opacity-60">
             <ValueList
               draft={draft}
               original={original}

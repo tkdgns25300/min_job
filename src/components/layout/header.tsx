@@ -14,7 +14,7 @@ const NAV_LINKS = [
 export function Header() {
   return (
     <header className="sticky top-0 z-40 bg-brand-900 text-white">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-4">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-4 sm:gap-6">
         {/* 모바일 전용 햄버거(sm 미만) — 데스크톱은 아래 인라인 nav(sm:flex) */}
         <MobileNav />
         <Link href="/" className="text-xl font-extrabold tracking-tight">

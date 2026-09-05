@@ -14,6 +14,17 @@ import type { CurrentUser } from "@/types/domain";
 //    `<BookmarkSeed>`로 흘려 넣는다(2026-08-28) — 세션 읽는 셸 컴포넌트를 하나 더 두는 대신 같은 요청,
 //    같은 hole에서 끝낸다. 비로그인은 조회도 seed도 없다.
 // 아바타는 마이페이지 직행 링크(로그아웃·회원탈퇴는 /mypage 안).
+// 320px 폰에서는 햄버거·로고·pill·아바타가 한 줄에 안 들어가 pill 글자가 "등/록"으로 꺾였다(전수 점검 2026-09-05).
+// 360px(`xs`)부터는 넉넉하므로 그 아래에서만 "교회"를 뗀다 — 모바일 메뉴에는 이 진입점이 없어 pill을 숨길 수는 없다.
+function PostJobLabel() {
+  return (
+    <>
+      <span className="xs:hidden">공고 등록</span>
+      <span className="hidden xs:inline">교회 공고 등록</span>
+    </>
+  );
+}
+
 export async function HeaderAccount() {
   const user = await getCurrentUser();
   const bookmarkIds = user ? await getBookmarkIds(user.id) : null;
@@ -23,9 +34,9 @@ export async function HeaderAccount() {
       {bookmarkIds && <BookmarkSeed ids={bookmarkIds} />}
       <Link
         href={postJobHref(user)}
-        className="rounded-full border border-white/25 px-3 py-1.5 text-sm font-semibold text-white/85 transition-colors hover:border-white/45 hover:text-white"
+        className="rounded-full border border-white/25 px-3 py-1.5 text-sm font-semibold whitespace-nowrap text-white/85 transition-colors hover:border-white/45 hover:text-white"
       >
-        교회 공고 등록
+        <PostJobLabel />
       </Link>
       {user ? (
         <Link
@@ -50,8 +61,8 @@ export async function HeaderAccount() {
 export function HeaderAccountFallback() {
   return (
     <div className="ml-auto flex items-center gap-3 sm:gap-4" aria-hidden>
-      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-semibold text-transparent">
-        교회 공고 등록
+      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-semibold whitespace-nowrap text-transparent">
+        <PostJobLabel />
       </span>
       <span className="text-sm text-transparent">로그인</span>
     </div>

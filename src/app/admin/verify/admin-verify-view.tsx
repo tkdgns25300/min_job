@@ -78,7 +78,7 @@ export function AdminVerifyView({ verifications }: { verifications: ChurchVerifi
             조건에 맞는 인증 신청이 없어요.
           </p>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full min-w-2xl text-sm">
             <thead>
               <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
                 <th className="px-4 py-2.5 font-medium">교회</th>
